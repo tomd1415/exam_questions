@@ -1,0 +1,3 @@
+<%
+const body = include('_question_body', it);
+%><%~ include('_chrome', { ...it, body, currentUser: it.user }) %>

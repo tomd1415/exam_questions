@@ -12,9 +12,12 @@ import { pool } from './db/pool.js';
 import { UserRepo, type UserRow } from './repos/users.js';
 import { SessionRepo } from './repos/sessions.js';
 import { AuditRepo } from './repos/audit.js';
+import { QuestionRepo } from './repos/questions.js';
+import { AttemptRepo } from './repos/attempts.js';
 import { AuditService } from './services/audit.js';
 import { AuthService } from './services/auth.js';
 import { registerAuthRoutes } from './routes/auth.js';
+import { registerQuestionRoutes } from './routes/questions.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const TEMPLATES_DIR = resolve(__dirname, 'templates');
@@ -25,6 +28,10 @@ declare module 'fastify' {
     services: {
       auth: AuthService;
       audit: AuditService;
+    };
+    repos: {
+      questions: QuestionRepo;
+      attempts: AttemptRepo;
     };
   }
   interface FastifyRequest {
@@ -70,10 +77,13 @@ export async function buildApp(): Promise<FastifyInstance> {
   const userRepo = new UserRepo(pool);
   const sessionRepo = new SessionRepo(pool);
   const auditRepo = new AuditRepo(pool);
+  const questionRepo = new QuestionRepo(pool);
+  const attemptRepo = new AttemptRepo(pool);
   const auditService = new AuditService(auditRepo);
   const authService = new AuthService(userRepo, sessionRepo, auditService);
 
   app.decorate('services', { auth: authService, audit: auditService });
+  app.decorate('repos', { questions: questionRepo, attempts: attemptRepo });
   app.decorateRequest('currentUser', null);
   app.decorateRequest('sessionId', null);
 
@@ -97,6 +107,7 @@ export async function buildApp(): Promise<FastifyInstance> {
   });
 
   registerAuthRoutes(app);
+  registerQuestionRoutes(app);
 
   app.get('/healthz', () => ({ ok: true }));
 

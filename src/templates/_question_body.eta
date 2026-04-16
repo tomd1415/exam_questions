@@ -1,0 +1,34 @@
+<section class="question-card">
+  <header class="question-card__meta">
+    <span class="badge">Question <%= it.question.id %></span>
+    <span class="badge badge--muted"><%= it.question.topic_code %> · <%= it.question.subtopic_code %></span>
+    <span class="badge badge--muted"><%= it.question.command_word_code %></span>
+    <span class="badge badge--muted"><%= it.question.marks_total %> marks</span>
+  </header>
+
+  <% if (it.savedAttemptId) { %>
+    <div class="flash flash--ok">Submitted. Saved as attempt #<%= it.savedAttemptId %>.</div>
+  <% } %>
+
+  <p class="question-card__stem"><%= it.question.stem %></p>
+
+  <form method="post" action="/q/<%= it.question.id %>" class="question-form">
+    <input type="hidden" name="_csrf" value="<%= it.csrfToken %>" />
+    <% it.question.parts.forEach(function(part) { %>
+      <fieldset class="question-part">
+        <legend>
+          <span class="question-part__label"><%= part.part_label %></span>
+          <span class="question-part__prompt"><%= part.prompt %></span>
+          <span class="question-part__marks">[<%= part.marks %> marks]</span>
+        </legend>
+        <textarea name="part_<%= part.id %>"
+                  rows="5"
+                  required
+                  autocapitalize="sentences"
+                  spellcheck="true"
+        ></textarea>
+      </fieldset>
+    <% }) %>
+    <button type="submit">Submit answer</button>
+  </form>
+</section>
