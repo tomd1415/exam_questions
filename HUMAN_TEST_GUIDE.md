@@ -42,15 +42,30 @@
 **Maps to:** [PLAN.md](PLAN.md) Phase 0 user test ("teacher logs in,
 opens `/q/1`, types an answer, submits ... data survives reboot").
 
-> **Prefer the interactive walker.** `npm run test:human:phase0` runs
-> every step below in sequence: it executes the deterministic commands
-> (docker, psql, curl) itself, prompts you only for things a human must
-> verify (what the screen shows, whether a flash reads correctly), and
-> writes a full markdown report with captured output and your verdicts
-> to `tmp/human-tests/phase0-<utc-ts>.md`. That report is what you
-> attach to RUNBOOK.md §10 for sign-off. Use the hand-walked steps
-> below when you need to debug a specific step, or when rerunning just
-> one thing (`--step N` on the walker also works).
+> **Prefer the automated walker.** `npm run test:human:phase0` runs
+> every step below end-to-end:
+>
+> - HTTP-only checks (steps 1, 2, 3, 10, 11) → curl + assert, no prompt
+> - browser flows (steps 4–9, 16) → headless Chromium via Playwright,
+>   driving login, view, submit, pupil-isolation, and post-reboot
+>   session check; per-step PASS/FAIL with screenshots on failure
+> - reboot survival (steps 12–15) → scripted, with one prompt to
+>   confirm "Ctrl-C the dev server" and one for "dev server back up"
+> - backup + restore drill (steps 17, 18) → fully scripted; verifies a
+>   new `.dump` + `.sha256` and that `[restore-drill] PASS:` is in the
+>   output
+> - RUNBOOK.md entry (step 19) → reminder + human PASS/FAIL only
+>
+> A timestamped markdown report is written to
+> `tmp/human-tests/phase0-<utc-ts>.md` containing every captured
+> stdout/stderr, the per-step verdicts, and links to any Playwright
+> failure screenshots in `tmp/human-tests/phase0-<utc-ts>-screenshots/`.
+> That report is what you attach to RUNBOOK.md §10 for sign-off. Use
+> the hand-walked steps below when you need to debug a specific step
+> or rerun one (`--step N` on the walker also works).
+>
+> First run only: `npx playwright install chromium` (≈170 MB into
+> `~/.cache/ms-playwright/`).
 
 ### 0.A Prerequisites
 
