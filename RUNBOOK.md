@@ -223,11 +223,8 @@ Richer telemetry (Sentry, dashboards, prompt-cost tracking) is Phase 3+.
 
 Append-only. One line per significant operation. Keep it terse.
 
-| Date (UTC)   | Operator   | Action                                   | Outcome                    |
-| ------------ | ---------- | ---------------------------------------- | -------------------------- |
-| _yyyy-mm-dd_ | _initials_ | _e.g. restore drill / rotation / deploy_ | _PASS / FAIL — short note_ |
-
-<!-- Examples (delete the placeholder above once real entries land):
-| 2026-04-20 | TD       | First restore drill (scripts/restore-drill.sh) | PASS — 2 users, 1 question, 1 attempt restored      |
-| 2026-04-21 | TD       | Rotated SESSION_SECRET                  | OK — sessions invalidated, app restarted at 17:02   |
--->
+| Date (UTC) | Operator | Action                                                                                   | Outcome                                                                                                           |
+| ---------- | -------- | ---------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| 2026-04-16 | TD       | First restore drill (`npm run db:restore-drill`, dev — drill reference for VM procedure) | PASS — 4 users, 1 question, 1 part, 42 audit events, 7 migrations restored into scratch DB; scratch DB dropped.   |
+| 2026-04-16 | TD       | Phase 0 human test (`npm run test:human:phase0`)                                         | PASS — 20/20 steps; report: `tmp/human-tests/phase0-20260416T173722Z.md`. Satisfies Phase 0.E sign-off checklist. |
+| 2026-04-16 | TD       | DPIA first draft written ([DPIA.md](DPIA.md))                                            | DRAFT — awaiting DPO and safeguarding lead sign-off. No pupil data to be processed until both signatures land.    |
