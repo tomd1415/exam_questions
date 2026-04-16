@@ -1,0 +1,63 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Cancel in-progress runs for the same ref when a new commit is pushed.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    services:
+      postgres:
+        # pgvector image so the `vector` extension is available, matching dev.
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: exam
+          POSTGRES_PASSWORD: exam
+          POSTGRES_DB: postgres
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U exam"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+
+    env:
+      # tests/global-setup.ts creates a scratch DB; this URL points at the
+      # admin "postgres" database so it has rights to CREATE/DROP DATABASE.
+      TEST_ADMIN_DATABASE_URL: postgres://exam:exam@localhost:5433/postgres
+      # Satisfy src/config.ts when modules load it transitively in tests.
+      DATABASE_URL: postgres://exam:exam@localhost:5433/postgres
+      SESSION_SECRET: ci-session-secret-ci-session-secret-ci-session-secret-ci
+      ADMIN_INITIAL_PASSWORD: ci-admin-password
+      NODE_ENV: test
+      LOG_LEVEL: silent
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck, lint, format-check, test (with coverage gate)
+        run: npm run check
+
+      - name: Build
+        run: npm run build

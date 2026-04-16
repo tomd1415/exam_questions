@@ -126,15 +126,15 @@ Storage rules:
 
 ## 7. Documentation and policy
 
-| Document                                      | Owner                             | Phase |
-| --------------------------------------------- | --------------------------------- | ----- |
-| Data Protection Impact Assessment (DPIA)      | You, signed off by school DPO/SLT | 0     |
-| Privacy notice (pupil and parent versions)    | You                               | 0     |
-| Acceptable use statement                      | You                               | 0     |
-| Safeguarding flowchart for AI-flagged content | You + safeguarding lead           | 1     |
-| Operational runbook                           | You                               | 7     |
-| Prompt change log                             | You                               | 3+    |
-| Incident response checklist                   | You                               | 3+    |
+| Document                                      | Owner                             | Phase               |
+| --------------------------------------------- | --------------------------------- | ------------------- |
+| Data Protection Impact Assessment (DPIA)      | You, signed off by school DPO/SLT | 0                   |
+| Privacy notice (pupil and parent versions)    | You                               | 0                   |
+| Acceptable use statement                      | You                               | 0                   |
+| Safeguarding flowchart for AI-flagged content | You + safeguarding lead           | 1                   |
+| Operational runbook                           | You                               | 0 (draft), 7 (full) |
+| Prompt change log                             | You                               | 3+                  |
+| Incident response checklist                   | You                               | 3+                  |
 
 ## 8. Skills and knowledge to acquire (if not already held)
 

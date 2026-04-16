@@ -1,8 +1,10 @@
 import { readdir, readFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
-import { pool } from './pool.js';
+import { pathToFileURL } from 'node:url';
+import type { Pool } from 'pg';
+import { pool as defaultPool } from './pool.js';
 
-const MIGRATIONS_DIR = resolve(process.cwd(), 'migrations');
+const DEFAULT_MIGRATIONS_DIR = resolve(process.cwd(), 'migrations');
 const MIGRATION_PATTERN = /^(\d{4})_[\w-]+\.sql$/;
 
 interface PendingMigration {
@@ -11,8 +13,8 @@ interface PendingMigration {
   body: string;
 }
 
-async function listMigrationsOnDisk(): Promise<PendingMigration[]> {
-  const entries = await readdir(MIGRATIONS_DIR);
+async function listMigrationsOnDisk(dir: string): Promise<PendingMigration[]> {
+  const entries = await readdir(dir);
   const matched = entries
     .filter((name) => MIGRATION_PATTERN.test(name))
     .sort((a, b) => a.localeCompare(b));
@@ -21,13 +23,13 @@ async function listMigrationsOnDisk(): Promise<PendingMigration[]> {
     const match = MIGRATION_PATTERN.exec(filename);
     if (!match) continue;
     const version = match[1]!;
-    const body = await readFile(join(MIGRATIONS_DIR, filename), 'utf8');
+    const body = await readFile(join(dir, filename), 'utf8');
     out.push({ version, filename, body });
   }
   return out;
 }
 
-async function ensureMigrationsTable(): Promise<void> {
+async function ensureMigrationsTable(pool: Pool): Promise<void> {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS schema_migrations (
       version     TEXT PRIMARY KEY,
@@ -37,12 +39,16 @@ async function ensureMigrationsTable(): Promise<void> {
   `);
 }
 
-async function appliedVersions(): Promise<Set<string>> {
+async function appliedVersions(pool: Pool): Promise<Set<string>> {
   const { rows } = await pool.query<{ version: string }>('SELECT version FROM schema_migrations');
   return new Set(rows.map((r) => r.version));
 }
 
-async function applyMigration(m: PendingMigration): Promise<void> {
+async function applyMigration(
+  pool: Pool,
+  m: PendingMigration,
+  log: (msg: string) => void,
+): Promise<void> {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
@@ -52,7 +58,7 @@ async function applyMigration(m: PendingMigration): Promise<void> {
       m.filename,
     ]);
     await client.query('COMMIT');
-    console.log(`  applied ${m.filename}`);
+    log(`  applied ${m.filename}`);
   } catch (err) {
     await client.query('ROLLBACK');
     throw err;
@@ -61,28 +67,55 @@ async function applyMigration(m: PendingMigration): Promise<void> {
   }
 }
 
-async function main(): Promise<void> {
-  await ensureMigrationsTable();
-  const onDisk = await listMigrationsOnDisk();
-  const applied = await appliedVersions();
+export interface RunMigrationsOptions {
+  dir?: string;
+  log?: (msg: string) => void;
+}
+
+export interface RunMigrationsResult {
+  applied: string[];
+  alreadyApplied: number;
+}
+
+export async function runMigrations(
+  pool: Pool,
+  options: RunMigrationsOptions = {},
+): Promise<RunMigrationsResult> {
+  const dir = options.dir ?? DEFAULT_MIGRATIONS_DIR;
+  const log = options.log ?? ((): void => undefined);
+
+  await ensureMigrationsTable(pool);
+  const onDisk = await listMigrationsOnDisk(dir);
+  const applied = await appliedVersions(pool);
   const pending = onDisk.filter((m) => !applied.has(m.version));
 
   if (pending.length === 0) {
-    console.log(`No pending migrations. ${applied.size} already applied.`);
-    return;
+    log(`No pending migrations. ${String(applied.size)} already applied.`);
+    return { applied: [], alreadyApplied: applied.size };
   }
 
-  console.log(`Applying ${pending.length} migration(s):`);
+  log(`Applying ${String(pending.length)} migration(s):`);
+  const appliedNow: string[] = [];
   for (const m of pending) {
-    await applyMigration(m);
+    await applyMigration(pool, m, log);
+    appliedNow.push(m.filename);
   }
-  console.log('Done.');
+  log('Done.');
+  return { applied: appliedNow, alreadyApplied: applied.size };
 }
 
-main()
-  .then(() => pool.end())
-  .catch(async (err) => {
-    console.error('Migration failed:', err);
-    await pool.end();
-    process.exit(1);
-  });
+async function main(): Promise<void> {
+  await runMigrations(defaultPool, { log: (msg) => console.log(msg) });
+}
+
+const invokedAs = process.argv[1];
+const isCli = invokedAs !== undefined && import.meta.url === pathToFileURL(invokedAs).href;
+if (isCli) {
+  main()
+    .then(() => defaultPool.end())
+    .catch(async (err) => {
+      console.error('Migration failed:', err);
+      await defaultPool.end();
+      process.exit(1);
+    });
+}

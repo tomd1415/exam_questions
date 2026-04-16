@@ -7,8 +7,9 @@ import fastifyFormbody from '@fastify/formbody';
 import fastifyStatic from '@fastify/static';
 import fastifyView from '@fastify/view';
 import { Eta } from 'eta';
+import type { Pool } from 'pg';
 import { config } from './config.js';
-import { pool } from './db/pool.js';
+import { pool as defaultPool } from './db/pool.js';
 import { UserRepo, type UserRow } from './repos/users.js';
 import { SessionRepo } from './repos/sessions.js';
 import { AuditRepo } from './repos/audit.js';
@@ -40,7 +41,15 @@ declare module 'fastify' {
   }
 }
 
-export async function buildApp(): Promise<FastifyInstance> {
+export interface BuildAppOptions {
+  pool?: Pool;
+  logger?: boolean;
+}
+
+export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyInstance> {
+  const pool = options.pool ?? defaultPool;
+  const loggerEnabled = options.logger ?? true;
+
   const loggerOptions =
     config.NODE_ENV === 'development'
       ? {
@@ -52,7 +61,7 @@ export async function buildApp(): Promise<FastifyInstance> {
         }
       : { level: config.LOG_LEVEL };
 
-  const app: FastifyInstance = Fastify({ logger: loggerOptions });
+  const app: FastifyInstance = Fastify({ logger: loggerEnabled ? loggerOptions : false });
 
   await app.register(fastifyCookie, { secret: config.SESSION_SECRET });
   await app.register(fastifyFormbody);

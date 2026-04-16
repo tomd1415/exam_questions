@@ -19,6 +19,9 @@ coverage/
 *.log
 .DS_Store
 
+# Local dev scratch (DB dumps from npm run db:backup, etc.)
+tmp/
+
 # Editor — keep shared VSCode config, ignore per-user files
 .vscode/*
 !.vscode/extensions.json

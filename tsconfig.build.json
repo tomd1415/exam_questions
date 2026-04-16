@@ -1,9 +1,12 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
+    "rootDir": "src",
     "sourceMap": false,
     "inlineSources": false,
-    "removeComments": true
+    "removeComments": true,
+    "types": ["node"]
   },
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
   "exclude": ["node_modules", "dist", "coverage", "**/*.test.ts", "**/*.spec.ts", "tests/**"]
 }
