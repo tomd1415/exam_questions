@@ -8,8 +8,45 @@
         <%= it.detail.question.subtopic_code %> <%= it.detail.question.subtopic_title %>
       </p>
     </div>
-    <a href="/admin/questions">Back to questions</a>
+    <div class="admin-card__actions">
+      <a href="/admin/questions/<%= it.detail.question.id %>/edit" class="button button--muted">Edit</a>
+      <a href="/admin/questions">Back to questions</a>
+    </div>
   </header>
+
+  <% if (it.flash) { %>
+    <p class="flash" role="status"><%= it.flash %></p>
+  <% } %>
+
+  <%
+    const status = it.detail.question.approval_status;
+    const canApprove = status === 'draft' || status === 'pending_review';
+    const canReject = status === 'pending_review';
+    const canSubmit = status === 'draft';
+    const canArchive = status === 'approved' || status === 'rejected';
+  %>
+  <% if (canApprove || canReject || canSubmit || canArchive) { %>
+    <div class="admin-card__approval-actions">
+      <% if (canSubmit) { %>
+        <form method="post" action="/admin/questions/<%= it.detail.question.id %>/approve" style="display:inline">
+          <input type="hidden" name="_csrf" value="<%= it.csrfToken %>" />
+          <button type="submit" class="button button--primary">Approve</button>
+        </form>
+      <% } else if (canApprove) { %>
+        <form method="post" action="/admin/questions/<%= it.detail.question.id %>/approve" style="display:inline">
+          <input type="hidden" name="_csrf" value="<%= it.csrfToken %>" />
+          <button type="submit" class="button button--primary">Approve</button>
+        </form>
+      <% } %>
+      <% if (canReject) { %>
+        <form method="post" action="/admin/questions/<%= it.detail.question.id %>/reject" class="inline-reject">
+          <input type="hidden" name="_csrf" value="<%= it.csrfToken %>" />
+          <input type="text" name="review_notes" placeholder="Reason for rejection" maxlength="2000" required />
+          <button type="submit" class="button button--danger">Reject</button>
+        </form>
+      <% } %>
+    </div>
+  <% } %>
 
   <dl class="meta-grid">
     <dt>Command word</dt><dd><%= it.detail.question.command_word_code %></dd>

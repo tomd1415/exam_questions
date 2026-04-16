@@ -1,0 +1,382 @@
+<%
+const issues = it.issues ?? [];
+const issueByPath = new Map();
+issues.forEach(function(i) {
+  if (!issueByPath.has(i.path)) issueByPath.set(i.path, []);
+  issueByPath.get(i.path).push(i.message);
+});
+function issueFor(path) { return issueByPath.get(path) || []; }
+function has(path) { return issueByPath.has(path); }
+
+// Group topics by component for optgroups, and subtopics by topic for
+// the client-side dropdown swap.
+const topicsByComponent = new Map();
+it.refs.topics.forEach(function(t) {
+  if (!topicsByComponent.has(t.component_code)) topicsByComponent.set(t.component_code, []);
+  topicsByComponent.get(t.component_code).push(t);
+});
+const subtopicsByTopic = new Map();
+it.refs.subtopics.forEach(function(s) {
+  if (!subtopicsByTopic.has(s.topic_code)) subtopicsByTopic.set(s.topic_code, []);
+  subtopicsByTopic.get(s.topic_code).push(s);
+});
+const subtopicData = {};
+subtopicsByTopic.forEach(function(list, topic) {
+  subtopicData[topic] = list.map(function(s) { return { code: s.code, title: s.title }; });
+});
+%>
+<section class="admin-card">
+  <header class="admin-card__header">
+    <h1><%= it.mode === 'edit' ? 'Edit question' : 'New question' %></h1>
+    <a href="/admin/questions">Back to questions</a>
+  </header>
+
+  <% if (it.flash) { %>
+    <p class="flash flash--error" role="alert"><%= it.flash %></p>
+  <% } %>
+
+  <% if (issues.length > 0) { %>
+    <div class="issue-summary" role="alert">
+      <p><strong><%= issues.length %> issue<%= issues.length === 1 ? '' : 's' %> to fix:</strong></p>
+      <ul>
+        <% issues.forEach(function(i) { %>
+          <li><code><%= i.path %></code>: <%= i.message %></li>
+        <% }); %>
+      </ul>
+    </div>
+  <% } %>
+
+  <form method="post" action="<%= it.postUrl %>" class="admin-form question-form" id="question-form">
+    <input type="hidden" name="_csrf" value="<%= it.csrfToken %>" />
+
+    <fieldset class="admin-form__group">
+      <legend>Classification</legend>
+
+      <label class="<%= has('component_code') ? 'has-error' : '' %>">
+        <span>Component</span>
+        <select name="component_code" id="component_code" required>
+          <option value="">—</option>
+          <% it.refs.components.forEach(function(c) { %>
+            <option value="<%= c.code %>"<% if (it.values.component_code === c.code) { %> selected<% } %>><%= c.code %> · <%= c.title %></option>
+          <% }); %>
+        </select>
+      </label>
+
+      <label class="<%= has('topic_code') ? 'has-error' : '' %>">
+        <span>Topic</span>
+        <select name="topic_code" id="topic_code" required>
+          <option value="">—</option>
+          <% it.refs.topics.forEach(function(t) { %>
+            <option value="<%= t.code %>" data-component="<%= t.component_code %>"<% if (it.values.topic_code === t.code) { %> selected<% } %>><%= t.code %> · <%= t.title %></option>
+          <% }); %>
+        </select>
+      </label>
+
+      <label class="<%= has('subtopic_code') ? 'has-error' : '' %>">
+        <span>Subtopic</span>
+        <select name="subtopic_code" id="subtopic_code" required>
+          <option value="">—</option>
+          <% it.refs.subtopics.forEach(function(s) { %>
+            <option value="<%= s.code %>" data-topic="<%= s.topic_code %>"<% if (it.values.subtopic_code === s.code) { %> selected<% } %>><%= s.code %> · <%= s.title %></option>
+          <% }); %>
+        </select>
+      </label>
+
+      <label class="<%= has('command_word_code') ? 'has-error' : '' %>">
+        <span>Command word</span>
+        <select name="command_word_code" required>
+          <option value="">—</option>
+          <% it.refs.commandWords.forEach(function(c) { %>
+            <option value="<%= c.code %>"<% if (it.values.command_word_code === c.code) { %> selected<% } %>><%= c.code %></option>
+          <% }); %>
+        </select>
+      </label>
+
+      <label class="<%= has('archetype_code') ? 'has-error' : '' %>">
+        <span>Archetype</span>
+        <select name="archetype_code" required>
+          <option value="">—</option>
+          <% it.refs.archetypes.forEach(function(a) { %>
+            <option value="<%= a.code %>"<% if (it.values.archetype_code === a.code) { %> selected<% } %>><%= a.code %></option>
+          <% }); %>
+        </select>
+      </label>
+    </fieldset>
+
+    <fieldset class="admin-form__group">
+      <legend>Question</legend>
+
+      <label class="<%= has('stem') ? 'has-error' : '' %>">
+        <span>Stem</span>
+        <textarea name="stem" rows="4" required maxlength="4000"><%= it.values.stem %></textarea>
+      </label>
+
+      <label class="<%= has('expected_response_type') ? 'has-error' : '' %>">
+        <span>Expected response type</span>
+        <select name="expected_response_type" required>
+          <% it.refs.expectedResponseTypes.forEach(function(t) { %>
+            <option value="<%= t %>"<% if (it.values.expected_response_type === t) { %> selected<% } %>><%= t %></option>
+          <% }); %>
+        </select>
+      </label>
+
+      <label class="<%= has('model_answer') ? 'has-error' : '' %>">
+        <span>Model answer</span>
+        <textarea name="model_answer" rows="4" required maxlength="4000"><%= it.values.model_answer %></textarea>
+      </label>
+
+      <label>
+        <span>Feedback template (optional)</span>
+        <textarea name="feedback_template" rows="2" maxlength="4000"><%= it.values.feedback_template %></textarea>
+      </label>
+
+      <div class="admin-form__row">
+        <label class="<%= has('difficulty_band') ? 'has-error' : '' %>">
+          <span>Difficulty band (1–9)</span>
+          <input type="number" name="difficulty_band" min="1" max="9" value="<%= it.values.difficulty_band %>" required />
+        </label>
+        <label class="<%= has('difficulty_step') ? 'has-error' : '' %>">
+          <span>Difficulty step (1–3)</span>
+          <input type="number" name="difficulty_step" min="1" max="3" value="<%= it.values.difficulty_step %>" required />
+        </label>
+        <label class="<%= has('source_type') ? 'has-error' : '' %>">
+          <span>Source</span>
+          <select name="source_type" required>
+            <% it.refs.sourceTypes.forEach(function(s) { %>
+              <option value="<%= s %>"<% if (it.values.source_type === s) { %> selected<% } %>><%= s %></option>
+            <% }); %>
+          </select>
+        </label>
+      </div>
+    </fieldset>
+
+    <fieldset class="admin-form__group">
+      <legend>Parts</legend>
+      <input type="hidden" name="parts_count" id="parts_count" value="<%= it.values.parts.length %>" />
+      <div id="parts-container">
+        <% it.values.parts.forEach(function(p, i) { %>
+          <fieldset class="part-card" data-part-index="<%= i %>">
+            <legend>Part <%= i + 1 %></legend>
+            <div class="admin-form__row">
+              <label>
+                <span>Label</span>
+                <input type="text" name="part_<%= i %>_label" value="<%= p.part_label %>" required maxlength="20" />
+              </label>
+              <label>
+                <span>Marks</span>
+                <input type="number" name="part_<%= i %>_marks" value="<%= p.marks %>" min="0" max="100" required />
+              </label>
+              <label>
+                <span>Response type</span>
+                <select name="part_<%= i %>_response_type" required>
+                  <% it.refs.expectedResponseTypes.forEach(function(t) { %>
+                    <option value="<%= t %>"<% if (p.expected_response_type === t) { %> selected<% } %>><%= t %></option>
+                  <% }); %>
+                </select>
+              </label>
+            </div>
+            <label>
+              <span>Prompt</span>
+              <textarea name="part_<%= i %>_prompt" rows="2" required maxlength="2000"><%= p.prompt %></textarea>
+            </label>
+
+            <h4>Mark points</h4>
+            <input type="hidden" name="part_<%= i %>_mp_count" class="mp-count" value="<%= p.mark_points.length %>" />
+            <div class="mark-points-container" data-part="<%= i %>">
+              <% p.mark_points.forEach(function(mp, j) { %>
+                <div class="mark-point-row" data-mp-index="<%= j %>">
+                  <label>
+                    <span>Text</span>
+                    <textarea name="part_<%= i %>_mp_<%= j %>_text" rows="2" maxlength="1000" required><%= mp.text %></textarea>
+                  </label>
+                  <div class="admin-form__row">
+                    <label>
+                      <span>Marks</span>
+                      <input type="number" name="part_<%= i %>_mp_<%= j %>_marks" value="<%= mp.marks %>" min="0" max="10" />
+                    </label>
+                    <label class="checkbox">
+                      <input type="checkbox" name="part_<%= i %>_mp_<%= j %>_required"<% if (mp.is_required) { %> checked<% } %> />
+                      <span>Required</span>
+                    </label>
+                  </div>
+                  <label>
+                    <span>Accepted alternatives (one per line, optional)</span>
+                    <textarea name="part_<%= i %>_mp_<%= j %>_alternatives" rows="2"><%= mp.alternatives %></textarea>
+                  </label>
+                  <button type="button" class="button button--danger" data-action="remove-mark-point">Remove mark point</button>
+                </div>
+              <% }); %>
+            </div>
+            <button type="button" class="button button--muted" data-action="add-mark-point" data-part="<%= i %>">+ mark point</button>
+
+            <input type="hidden" name="part_<%= i %>_misc_count" value="<%= p.misconceptions.length %>" />
+            <% p.misconceptions.forEach(function(m, j) { %>
+              <div class="misconception-row">
+                <label>
+                  <span>Misconception label</span>
+                  <input type="text" name="part_<%= i %>_misc_<%= j %>_label" value="<%= m.label %>" />
+                </label>
+                <label>
+                  <span>Description</span>
+                  <input type="text" name="part_<%= i %>_misc_<%= j %>_description" value="<%= m.description %>" />
+                </label>
+              </div>
+            <% }); %>
+
+            <button type="button" class="button button--danger" data-action="remove-part">Remove part</button>
+          </fieldset>
+        <% }); %>
+      </div>
+      <button type="button" class="button button--muted" id="add-part">+ part</button>
+    </fieldset>
+
+    <div class="admin-form__actions">
+      <button type="submit" class="button button--primary"><%= it.mode === 'edit' ? 'Save changes' : 'Create draft' %></button>
+      <a href="/admin/questions" class="button button--muted">Cancel</a>
+    </div>
+  </form>
+</section>
+
+<script>
+(function () {
+  const SUBTOPICS = <%- JSON.stringify(subtopicData) %>;
+  const partsContainer = document.getElementById('parts-container');
+  const partsCountInput = document.getElementById('parts_count');
+  const addPartBtn = document.getElementById('add-part');
+  const componentSelect = document.getElementById('component_code');
+  const topicSelect = document.getElementById('topic_code');
+  const subtopicSelect = document.getElementById('subtopic_code');
+  const responseTypes = <%- JSON.stringify(it.refs.expectedResponseTypes) %>;
+
+  function refreshTopicOptions() {
+    const wanted = componentSelect.value;
+    for (const opt of topicSelect.options) {
+      if (!opt.value) continue;
+      opt.hidden = wanted !== '' && opt.dataset.component !== wanted;
+    }
+    if (topicSelect.selectedOptions[0] && topicSelect.selectedOptions[0].hidden) {
+      topicSelect.value = '';
+    }
+    refreshSubtopicOptions();
+  }
+
+  function refreshSubtopicOptions() {
+    const wanted = topicSelect.value;
+    for (const opt of subtopicSelect.options) {
+      if (!opt.value) continue;
+      opt.hidden = wanted !== '' && opt.dataset.topic !== wanted;
+    }
+    if (subtopicSelect.selectedOptions[0] && subtopicSelect.selectedOptions[0].hidden) {
+      subtopicSelect.value = '';
+    }
+  }
+
+  componentSelect.addEventListener('change', refreshTopicOptions);
+  topicSelect.addEventListener('change', refreshSubtopicOptions);
+  refreshTopicOptions();
+
+  function reindexParts() {
+    const cards = partsContainer.querySelectorAll('.part-card');
+    cards.forEach(function (card, idx) {
+      card.setAttribute('data-part-index', idx);
+      card.querySelector('legend').textContent = 'Part ' + (idx + 1);
+      card.querySelectorAll('[name]').forEach(function (el) {
+        el.name = el.name.replace(/^part_\d+/, 'part_' + idx);
+      });
+      const mpCount = card.querySelector('.mp-count');
+      mpCount.name = 'part_' + idx + '_mp_count';
+      const mpContainer = card.querySelector('.mark-points-container');
+      mpContainer.setAttribute('data-part', idx);
+      const addMpBtn = card.querySelector('[data-action="add-mark-point"]');
+      if (addMpBtn) addMpBtn.setAttribute('data-part', idx);
+      mpContainer.querySelectorAll('.mark-point-row').forEach(function (row, j) {
+        row.setAttribute('data-mp-index', j);
+        row.querySelectorAll('[name]').forEach(function (el) {
+          el.name = el.name.replace(/_mp_\d+_/, '_mp_' + j + '_');
+        });
+      });
+      mpCount.value = mpContainer.querySelectorAll('.mark-point-row').length;
+    });
+    partsCountInput.value = cards.length;
+  }
+
+  function makeMarkPointHtml(partIdx, j) {
+    return (
+      '<div class="mark-point-row" data-mp-index="' + j + '">' +
+        '<label><span>Text</span>' +
+          '<textarea name="part_' + partIdx + '_mp_' + j + '_text" rows="2" maxlength="1000" required></textarea>' +
+        '</label>' +
+        '<div class="admin-form__row">' +
+          '<label><span>Marks</span>' +
+            '<input type="number" name="part_' + partIdx + '_mp_' + j + '_marks" value="1" min="0" max="10" />' +
+          '</label>' +
+          '<label class="checkbox">' +
+            '<input type="checkbox" name="part_' + partIdx + '_mp_' + j + '_required" />' +
+            '<span>Required</span>' +
+          '</label>' +
+        '</div>' +
+        '<label><span>Accepted alternatives (one per line, optional)</span>' +
+          '<textarea name="part_' + partIdx + '_mp_' + j + '_alternatives" rows="2"></textarea>' +
+        '</label>' +
+        '<button type="button" class="button button--danger" data-action="remove-mark-point">Remove mark point</button>' +
+      '</div>'
+    );
+  }
+
+  function makePartHtml(idx) {
+    const rtOptions = responseTypes.map(function(t) {
+      return '<option value="' + t + '">' + t + '</option>';
+    }).join('');
+    return (
+      '<fieldset class="part-card" data-part-index="' + idx + '">' +
+        '<legend>Part ' + (idx + 1) + '</legend>' +
+        '<div class="admin-form__row">' +
+          '<label><span>Label</span><input type="text" name="part_' + idx + '_label" value="" required maxlength="20" /></label>' +
+          '<label><span>Marks</span><input type="number" name="part_' + idx + '_marks" value="1" min="0" max="100" required /></label>' +
+          '<label><span>Response type</span><select name="part_' + idx + '_response_type" required>' + rtOptions + '</select></label>' +
+        '</div>' +
+        '<label><span>Prompt</span><textarea name="part_' + idx + '_prompt" rows="2" required maxlength="2000"></textarea></label>' +
+        '<h4>Mark points</h4>' +
+        '<input type="hidden" name="part_' + idx + '_mp_count" class="mp-count" value="1" />' +
+        '<div class="mark-points-container" data-part="' + idx + '">' + makeMarkPointHtml(idx, 0) + '</div>' +
+        '<button type="button" class="button button--muted" data-action="add-mark-point" data-part="' + idx + '">+ mark point</button>' +
+        '<input type="hidden" name="part_' + idx + '_misc_count" value="0" />' +
+        '<button type="button" class="button button--danger" data-action="remove-part">Remove part</button>' +
+      '</fieldset>'
+    );
+  }
+
+  addPartBtn.addEventListener('click', function () {
+    const idx = partsContainer.querySelectorAll('.part-card').length;
+    const wrapper = document.createElement('div');
+    wrapper.innerHTML = makePartHtml(idx);
+    partsContainer.appendChild(wrapper.firstChild);
+    reindexParts();
+  });
+
+  partsContainer.addEventListener('click', function (ev) {
+    const action = ev.target && ev.target.dataset ? ev.target.dataset.action : null;
+    if (action === 'remove-part') {
+      const card = ev.target.closest('.part-card');
+      if (partsContainer.querySelectorAll('.part-card').length <= 1) return;
+      card.remove();
+      reindexParts();
+    } else if (action === 'add-mark-point') {
+      const partIdx = parseInt(ev.target.dataset.part, 10);
+      const card = ev.target.closest('.part-card');
+      const mpContainer = card.querySelector('.mark-points-container');
+      const j = mpContainer.querySelectorAll('.mark-point-row').length;
+      const wrapper = document.createElement('div');
+      wrapper.innerHTML = makeMarkPointHtml(partIdx, j);
+      mpContainer.appendChild(wrapper.firstChild);
+      reindexParts();
+    } else if (action === 'remove-mark-point') {
+      const row = ev.target.closest('.mark-point-row');
+      const mpContainer = row.parentElement;
+      if (mpContainer.querySelectorAll('.mark-point-row').length <= 1) return;
+      row.remove();
+      reindexParts();
+    }
+  });
+})();
+</script>

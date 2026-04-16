@@ -20,6 +20,7 @@ import { CurriculumRepo } from './repos/curriculum.js';
 import { AuditService } from './services/audit.js';
 import { AuthService } from './services/auth.js';
 import { ClassService } from './services/classes.js';
+import { QuestionService } from './services/questions.js';
 import { registerAuthRoutes } from './routes/auth.js';
 import { registerQuestionRoutes } from './routes/questions.js';
 import { registerAdminClassRoutes } from './routes/admin-classes.js';
@@ -35,6 +36,7 @@ declare module 'fastify' {
       auth: AuthService;
       audit: AuditService;
       classes: ClassService;
+      questions: QuestionService;
     };
     repos: {
       questions: QuestionRepo;
@@ -101,8 +103,14 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
   const auditService = new AuditService(auditRepo);
   const authService = new AuthService(userRepo, sessionRepo, auditService);
   const classService = new ClassService(classRepo, auditService);
+  const questionService = new QuestionService(questionRepo, curriculumRepo, auditService);
 
-  app.decorate('services', { auth: authService, audit: auditService, classes: classService });
+  app.decorate('services', {
+    auth: authService,
+    audit: auditService,
+    classes: classService,
+    questions: questionService,
+  });
   app.decorate('repos', {
     questions: questionRepo,
     attempts: attemptRepo,

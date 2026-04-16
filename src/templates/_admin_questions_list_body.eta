@@ -13,9 +13,16 @@ for (const t of it.topics) {
 %>
 <section class="admin-card">
   <header class="admin-card__header">
-    <h1>Questions</h1>
-    <span class="admin-card__sub"><%= it.questions.length %> match<%= it.questions.length === 1 ? '' : 'es' %></span>
+    <div>
+      <h1>Questions</h1>
+      <span class="admin-card__sub"><%= it.questions.length %> match<%= it.questions.length === 1 ? '' : 'es' %></span>
+    </div>
+    <a href="/admin/questions/new" class="button button--primary">New question</a>
   </header>
+
+  <% if (it.flash) { %>
+    <p class="flash" role="status"><%= it.flash %></p>
+  <% } %>
 
   <form method="get" action="/admin/questions" class="admin-form admin-form--inline filter-form">
     <label>

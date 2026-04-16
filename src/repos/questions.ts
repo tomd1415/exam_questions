@@ -1,4 +1,5 @@
-import type { Pool } from 'pg';
+import type { Pool, PoolClient } from 'pg';
+import type { NormalisedQuestionDraft } from '../lib/question-invariants.js';
 
 export type ApprovalStatus = 'draft' | 'pending_review' | 'approved' | 'rejected' | 'archived';
 
@@ -269,5 +270,179 @@ export class QuestionRepo {
       misconceptionsByPart,
       topicMisconceptions: topicMiscRes.rows,
     };
+  }
+
+  async findApprovalMeta(
+    id: string,
+  ): Promise<{ approval_status: ApprovalStatus; created_by: string; active: boolean } | null> {
+    const { rows } = await this.pool.query<{
+      approval_status: ApprovalStatus;
+      created_by: string;
+      active: boolean;
+    }>(
+      `SELECT approval_status, created_by::text, active
+         FROM questions
+        WHERE id = $1::bigint`,
+      [id],
+    );
+    return rows[0] ?? null;
+  }
+
+  async createWithChildren(input: CreateQuestionInput): Promise<string> {
+    const client = await this.pool.connect();
+    try {
+      await client.query('BEGIN');
+      const id = await insertQuestion(client, input);
+      await insertPartsAndMarkPoints(client, id, input.parts);
+      await client.query('COMMIT');
+      return id;
+    } catch (err) {
+      await client.query('ROLLBACK').catch(() => undefined);
+      throw err;
+    } finally {
+      client.release();
+    }
+  }
+
+  async updateWithChildren(id: string, input: CreateQuestionInput): Promise<void> {
+    const client = await this.pool.connect();
+    try {
+      await client.query('BEGIN');
+      await client.query(
+        `UPDATE questions
+            SET component_code = $2,
+                topic_code = $3,
+                subtopic_code = $4,
+                command_word_code = $5,
+                archetype_code = $6,
+                stem = $7,
+                marks_total = $8,
+                expected_response_type = $9,
+                model_answer = $10,
+                feedback_template = $11,
+                difficulty_band = $12,
+                difficulty_step = $13,
+                source_type = $14,
+                review_notes = $15,
+                updated_at = now()
+          WHERE id = $1::bigint`,
+        [
+          id,
+          input.component_code,
+          input.topic_code,
+          input.subtopic_code,
+          input.command_word_code,
+          input.archetype_code,
+          input.stem,
+          input.marks_total,
+          input.expected_response_type,
+          input.model_answer,
+          input.feedback_template,
+          input.difficulty_band,
+          input.difficulty_step,
+          input.source_type,
+          input.review_notes,
+        ],
+      );
+      // Part cascade deletes mark_points + part-level misconceptions.
+      await client.query(`DELETE FROM question_parts WHERE question_id = $1::bigint`, [id]);
+      await insertPartsAndMarkPoints(client, id, input.parts);
+      await client.query('COMMIT');
+    } catch (err) {
+      await client.query('ROLLBACK').catch(() => undefined);
+      throw err;
+    } finally {
+      client.release();
+    }
+  }
+
+  async setApprovalStatus(
+    id: string,
+    input: {
+      approval_status: ApprovalStatus;
+      approved_by: string | null;
+      active: boolean;
+      review_notes: string | null;
+    },
+  ): Promise<void> {
+    await this.pool.query(
+      `UPDATE questions
+          SET approval_status = $2,
+              approved_by     = $3::bigint,
+              active          = $4,
+              review_notes    = $5,
+              updated_at      = now()
+        WHERE id = $1::bigint`,
+      [id, input.approval_status, input.approved_by, input.active, input.review_notes],
+    );
+  }
+}
+
+export interface CreateQuestionInput extends NormalisedQuestionDraft {
+  created_by: string;
+}
+
+async function insertQuestion(client: PoolClient, input: CreateQuestionInput): Promise<string> {
+  const { rows } = await client.query<{ id: string }>(
+    `INSERT INTO questions
+       (component_code, topic_code, subtopic_code, command_word_code, archetype_code,
+        stem, marks_total, expected_response_type, model_answer, feedback_template,
+        difficulty_band, difficulty_step, source_type, review_notes,
+        approval_status, active, created_by)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14,
+             'draft', false, $15::bigint)
+     RETURNING id::text`,
+    [
+      input.component_code,
+      input.topic_code,
+      input.subtopic_code,
+      input.command_word_code,
+      input.archetype_code,
+      input.stem,
+      input.marks_total,
+      input.expected_response_type,
+      input.model_answer,
+      input.feedback_template,
+      input.difficulty_band,
+      input.difficulty_step,
+      input.source_type,
+      input.review_notes,
+      input.created_by,
+    ],
+  );
+  return rows[0]!.id;
+}
+
+async function insertPartsAndMarkPoints(
+  client: PoolClient,
+  questionId: string,
+  parts: CreateQuestionInput['parts'],
+): Promise<void> {
+  for (let i = 0; i < parts.length; i++) {
+    const p = parts[i]!;
+    const partRes = await client.query<{ id: string }>(
+      `INSERT INTO question_parts
+         (question_id, part_label, prompt, marks, expected_response_type, display_order)
+       VALUES ($1::bigint, $2, $3, $4, $5, $6)
+       RETURNING id::text`,
+      [questionId, p.part_label, p.prompt, p.marks, p.expected_response_type, i + 1],
+    );
+    const partId = partRes.rows[0]!.id;
+    for (let j = 0; j < p.mark_points.length; j++) {
+      const mp = p.mark_points[j]!;
+      await client.query(
+        `INSERT INTO mark_points
+           (question_part_id, text, accepted_alternatives, marks, is_required, display_order)
+         VALUES ($1::bigint, $2, $3, $4, $5, $6)`,
+        [partId, mp.text, mp.accepted_alternatives, mp.marks, mp.is_required, j + 1],
+      );
+    }
+    for (const misc of p.misconceptions) {
+      await client.query(
+        `INSERT INTO common_misconceptions (question_part_id, label, description)
+         VALUES ($1::bigint, $2, $3)`,
+        [partId, misc.label, misc.description],
+      );
+    }
   }
 }
