@@ -1,0 +1,91 @@
+{
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit",
+    "source.organizeImports": "never"
+  },
+  "editor.rulers": [100],
+  "files.eol": "\n",
+  "files.insertFinalNewline": true,
+  "files.trimTrailingWhitespace": true,
+
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+  "typescript.preferences.importModuleSpecifier": "relative",
+  "typescript.updateImportsOnFileMove.enabled": "always",
+
+  "eslint.useFlatConfig": true,
+  "eslint.validate": ["javascript", "typescript"],
+  "eslint.run": "onType",
+
+  "[javascript]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  "[typescript]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  "[json]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  "[jsonc]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  "[yaml]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  "[markdown]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.quickSuggestions": { "comments": "off", "strings": "off", "other": "off" }
+  },
+
+  "files.exclude": {
+    "**/.git": true,
+    "**/node_modules": true,
+    "**/dist": true,
+    "**/coverage": true
+  },
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/dist": true,
+    "**/coverage": true,
+    "**/package-lock.json": true,
+    "OCR_Docs/**": true
+  },
+
+  "cSpell.words": [
+    "argon",
+    "CSRF",
+    "DPIA",
+    "Fastify",
+    "GCSE",
+    "gitignored",
+    "HSTS",
+    "HTMX",
+    "KCSIE",
+    "moderator",
+    "OCR",
+    "pgvector",
+    "pseudonym",
+    "pseudonymous",
+    "SLT",
+    "subtopic",
+    "subtopics",
+    "tsconfig",
+    "Vitest",
+    "Zod"
+  ],
+  "cSpell.enableFiletypes": ["markdown", "typescript", "javascript"],
+
+  "markdownlint.config": {
+    "MD013": false,
+    "MD024": { "siblings_only": true },
+    "MD033": false,
+    "MD041": false
+  },
+
+  "sqltools.connections": [
+    {
+      "name": "exam_dev (docker)",
+      "driver": "PostgreSQL",
+      "server": "localhost",
+      "port": 5433,
+      "database": "exam_dev",
+      "username": "exam",
+      "password": "exam",
+      "askForPassword": false,
+      "connectionTimeout": 30
+    }
+  ],
+  "sqltools.useNodeRuntime": true
+}

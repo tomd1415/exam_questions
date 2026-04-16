@@ -62,6 +62,7 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for detail.
 exam_questions/
 ├── AI_STARTING_POINT.md       single bootstrap document for AI agents
 ├── README.md                  this file
+├── DEV_SETUP.md               dev loop: prerequisites, Docker Postgres, VSCode tasks
 ├── PLAN.md                    phased development plan
 ├── RISKS.md                   risks & mitigations
 ├── RESOURCES_REQUIRED.md      everything needed to build & run this
@@ -69,36 +70,38 @@ exam_questions/
 ├── DATA_MODEL.md              database schema and relationships
 ├── SECURITY_AND_PRIVACY.md    GDPR, DPIA, safeguarding, auth
 ├── PROMPTS.md                 LLM prompt families and JSON schemas
-├── .gitignore                 excludes OCR copyright material, secrets, build output
+├── package.json               npm scripts + dependencies
+├── tsconfig*.json             TypeScript config (editor + build)
+├── eslint.config.js           ESLint flat config
+├── .prettierrc.json           Prettier rules (+ .prettierignore)
+├── .editorconfig              editor-agnostic formatting
+├── .nvmrc                     Node 22 LTS pin
+├── .env.example               copy to .env (gitignored)
+├── docker-compose.yml         dev Postgres 16 + pgvector on :5433
+├── .dockerignore / .gitignore
+├── .vscode/                   shared extensions, settings, launch, tasks
 ├── OCR_Docs/                  OCR source materials (spec, papers, mark schemes); see OCR_Docs/CONTENT_INDEX.md
+├── scripts/                   admin scripts (e.g. db-init.sh)
 ├── src/                       (Phase 0+) application code
 ├── content/                   (Phase 1+) curated question bank, OCR mappings
 ├── prompts/                   (Phase 3+) versioned prompt templates
-├── migrations/                (Phase 0+) SQL migrations
-└── scripts/                   admin scripts (backup, import, seed)
+└── migrations/                (Phase 0+) SQL migrations
 ```
 
 ## Getting started
 
-> The project is in planning. Build steps below are the **target** for end of Phase 0.
+Full step-by-step in [DEV_SETUP.md](DEV_SETUP.md). The short version:
 
 ```bash
-# clone and install
-git clone <repo> exam_questions
+git clone git@github.com:tomd1415/exam_questions.git
 cd exam_questions
+cp .env.example .env                 # then generate a SESSION_SECRET
 npm install
-
-# environment
-cp .env.example .env
-# edit DATABASE_URL, SESSION_SECRET, OPENAI_API_KEY
-
-# database
-npm run db:migrate
-npm run db:seed         # loads OCR J277 topic map + command words
-
-# dev
-npm run dev             # http://localhost:3000
+npm run db:up                        # Postgres 16 + pgvector in Docker on :5433
+npm run dev                          # once src/index.ts exists (Phase 0)
 ```
+
+Dev is tested on **Gentoo Linux**; production target is **Debian**. The database runs in Docker locally and natively on the Debian server — see [DEV_SETUP.md](DEV_SETUP.md) for the rationale and for what differs in production.
 
 ## Documentation map
 

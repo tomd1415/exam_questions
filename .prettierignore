@@ -1,0 +1,7 @@
+dist/
+coverage/
+node_modules/
+OCR_Docs/
+content/source/
+*.min.js
+package-lock.json

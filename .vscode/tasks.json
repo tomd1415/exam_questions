@@ -1,0 +1,51 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "dev: start everything",
+      "dependsOn": ["db: up", "dev: run app"],
+      "dependsOrder": "sequence",
+      "problemMatcher": [],
+      "group": { "kind": "build", "isDefault": true }
+    },
+    {
+      "label": "dev: run app",
+      "type": "npm",
+      "script": "dev",
+      "presentation": { "reveal": "always", "panel": "dedicated" },
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "db: up",
+      "type": "shell",
+      "command": "docker compose up -d postgres",
+      "problemMatcher": []
+    },
+    {
+      "label": "db: down",
+      "type": "shell",
+      "command": "docker compose down",
+      "problemMatcher": []
+    },
+    {
+      "label": "db: reset (wipes volume)",
+      "type": "shell",
+      "command": "docker compose down -v && docker compose up -d postgres",
+      "problemMatcher": []
+    },
+    {
+      "label": "db: psql",
+      "type": "shell",
+      "command": "docker compose exec postgres psql -U exam -d exam_dev",
+      "presentation": { "reveal": "always", "panel": "new" },
+      "problemMatcher": []
+    },
+    {
+      "label": "checks: typecheck + lint + format + test",
+      "type": "npm",
+      "script": "check",
+      "problemMatcher": ["$tsc", "$eslint-stylish"]
+    }
+  ]
+}

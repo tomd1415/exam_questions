@@ -12,13 +12,14 @@ The platform serves OCR-style questions, marks pupil responses against rubric-st
 
 ## Project status (as of 2026-04-16)
 
-- **Phase:** Pre-Phase-0. Planning only.
-- **Code:** None.
-- **Git:** Not initialised. A `.gitignore` is already in place; OCR copyright material will be excluded the moment `git init` runs.
-- **Hosting / accounts:** None procured yet.
+- **Phase:** Pre-Phase-0. Planning and dev-environment scaffolding complete; application code not yet written.
+- **Code:** None in `src/` yet. Tooling (TypeScript, ESLint, Prettier, Vitest, Docker Postgres+pgvector) is wired up.
+- **Git:** Initialised. Remote: `https://github.com/tomd1415/exam_questions.git`, branch `main`.
+- **Dev environment:** Configured. See [DEV_SETUP.md](DEV_SETUP.md). Dev machine runs Gentoo Linux; target production host is Debian.
+- **Hosting / accounts (production):** None procured yet.
 - **Pupil data:** None. Do not solicit any until Phase 0's DPIA is signed off.
 
-The next concrete deliverable is **Phase 0** as defined in [PLAN.md](PLAN.md): repository scaffolding, hosting decision, DPIA sign-off, curriculum seed data, and a single end-to-end happy path from pupil login to a static "hello world" question.
+The next concrete deliverable is **Phase 0** as defined in [PLAN.md](PLAN.md): hosting decision, DPIA sign-off, curriculum seed data, and a single end-to-end happy path from pupil login to a static "hello world" question.
 
 ## Who the user is
 
@@ -52,6 +53,7 @@ There is more in [memory/user_role.md](#memory-system-on-disk).
 
 | Doc | Length | What it tells you |
 | --- | --- | --- |
+| [DEV_SETUP.md](DEV_SETUP.md) | medium | How to run the dev loop: Node/Docker prerequisites, `.env`, Postgres+pgvector container on port 5433, npm scripts, VSCode tasks and debug configs, Gentoo→Debian differences, troubleshooting. |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | medium | Component diagram, services-vs-repos split, request lifecycles, the single LLM client wrapper, kill switch, target folder structure, things deliberately out of scope. |
 | [DATA_MODEL.md](DATA_MODEL.md) | long | Full Postgres schema with phase markers per table; conventions; indexes; retention policy. |
 | [PROMPTS.md](PROMPTS.md) | long | Four prompt families (generation, marking, clustering, summaries) with inputs, Zod-style output schemas, safety gates, evaluation fixtures, and version-control rules. Header points to the OpenAI Documentation MCP. |
@@ -124,8 +126,9 @@ Node.js + TypeScript + Fastify on the server; server-rendered HTML + HTMX on the
 
 ```text
 exam_questions/
-├── AI_STARTING_POINT.md   ← this file (read first)
+├── AI_STARTING_POINT.md        ← this file (read first)
 ├── README.md
+├── DEV_SETUP.md                how to run the dev loop
 ├── PLAN.md
 ├── RISKS.md
 ├── RESOURCES_REQUIRED.md
@@ -133,13 +136,23 @@ exam_questions/
 ├── DATA_MODEL.md
 ├── SECURITY_AND_PRIVACY.md
 ├── PROMPTS.md
+├── package.json                deps + npm scripts
+├── tsconfig.json / tsconfig.build.json
+├── eslint.config.js            flat config, type-checked rules
+├── .prettierrc.json            + .prettierignore
+├── .editorconfig
+├── .nvmrc                      Node 22
+├── .env.example                → copy to .env (gitignored)
+├── docker-compose.yml          dev Postgres 16 + pgvector on :5433
+├── .dockerignore
 ├── .gitignore
-├── OCR_Docs/              (catalogued; gitignored except CONTENT_INDEX.md)
-├── src/                   (Phase 0+) application code
-├── content/               (Phase 1+) curated questions, OCR mappings (source/ gitignored)
-├── prompts/               (Phase 3+) versioned prompt templates
-├── migrations/            (Phase 0+) SQL migrations
-└── scripts/               admin scripts (backup, import, seed)
+├── .vscode/                    extensions.json, settings.json, launch.json, tasks.json (shared)
+├── OCR_Docs/                   catalogued; gitignored except CONTENT_INDEX.md
+├── scripts/                    admin scripts (e.g. db-init.sh)
+├── src/                        (Phase 0+) application code
+├── content/                    (Phase 1+) curated questions, OCR mappings (source/ gitignored)
+├── prompts/                    (Phase 3+) versioned prompt templates
+└── migrations/                 (Phase 0+) SQL migrations
 ```
 
 ### Naming and style

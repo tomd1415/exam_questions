@@ -19,7 +19,18 @@ coverage/
 *.log
 .DS_Store
 
-# Editor
-.vscode/
+# Editor — keep shared VSCode config, ignore per-user files
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/launch.json
+!.vscode/tasks.json
 .idea/
 *.swp
+
+# TypeScript / test artefacts
+*.tsbuildinfo
+.vitest/
+
+# OS
+Thumbs.db
