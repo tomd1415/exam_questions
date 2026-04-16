@@ -38,9 +38,7 @@ async function ensureMigrationsTable(): Promise<void> {
 }
 
 async function appliedVersions(): Promise<Set<string>> {
-  const { rows } = await pool.query<{ version: string }>(
-    'SELECT version FROM schema_migrations',
-  );
+  const { rows } = await pool.query<{ version: string }>('SELECT version FROM schema_migrations');
   return new Set(rows.map((r) => r.version));
 }
 
@@ -49,10 +47,10 @@ async function applyMigration(m: PendingMigration): Promise<void> {
   try {
     await client.query('BEGIN');
     await client.query(m.body);
-    await client.query(
-      'INSERT INTO schema_migrations (version, filename) VALUES ($1, $2)',
-      [m.version, m.filename],
-    );
+    await client.query('INSERT INTO schema_migrations (version, filename) VALUES ($1, $2)', [
+      m.version,
+      m.filename,
+    ]);
     await client.query('COMMIT');
     console.log(`  applied ${m.filename}`);
   } catch (err) {

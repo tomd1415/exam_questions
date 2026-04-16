@@ -8,15 +8,15 @@ This document is the single source of truth for getting a working dev loop on th
 
 Already confirmed on this machine at setup time:
 
-| Tool | Minimum | This machine |
-| --- | --- | --- |
-| Node.js | 22 LTS | 24 (works; `.nvmrc` targets 22 for parity with Debian deploy) |
-| npm | 10 | 11 |
-| Docker | 24 | 28 |
-| Docker Compose | v2 | v2.39 |
-| PostgreSQL client (`psql`) | 15 | 18 (system; dev DB runs in Docker) |
-| git | 2.40 | 2.52 |
-| VSCode | 1.90 | 1.115 |
+| Tool                       | Minimum | This machine                                                  |
+| -------------------------- | ------- | ------------------------------------------------------------- |
+| Node.js                    | 22 LTS  | 24 (works; `.nvmrc` targets 22 for parity with Debian deploy) |
+| npm                        | 10      | 11                                                            |
+| Docker                     | 24      | 28                                                            |
+| Docker Compose             | v2      | v2.39                                                         |
+| PostgreSQL client (`psql`) | 15      | 18 (system; dev DB runs in Docker)                            |
+| git                        | 2.40    | 2.52                                                          |
+| VSCode                     | 1.90    | 1.115                                                         |
 
 If any of these are missing on a new machine, install via the Gentoo package manager (`emerge`) before proceeding.
 
@@ -63,11 +63,11 @@ Extensions enabled on first init: `vector`, `pg_trgm`, `citext`. See [scripts/db
 
 Useful variations:
 
-| Command | Purpose |
-| --- | --- |
-| `npm run db:down` | stop the container (data persists) |
+| Command            | Purpose                                                               |
+| ------------------ | --------------------------------------------------------------------- |
+| `npm run db:down`  | stop the container (data persists)                                    |
 | `npm run db:reset` | stop and **wipe** the volume, then recreate (runs `db-init.sh` again) |
-| `npm run db:logs` | tail the container logs |
+| `npm run db:logs`  | tail the container logs                                               |
 
 ## Daily workflow
 
@@ -114,28 +114,28 @@ Alternative: `npm run db:psql` drops you into a psql shell inside the container.
 
 ### Files at the project root
 
-| File | Purpose |
-| --- | --- |
-| [package.json](package.json) | npm scripts + dependency pins |
-| [tsconfig.json](tsconfig.json) | strict TypeScript config used by editor + tests |
-| [tsconfig.build.json](tsconfig.build.json) | build-only config (excludes tests, drops sourcemaps) |
-| [eslint.config.js](eslint.config.js) | ESLint flat config with the type-checked rule set |
-| [.prettierrc.json](.prettierrc.json) | Prettier rules (100-col, single quote, trailing commas) |
-| [.editorconfig](.editorconfig) | editor-agnostic formatting (LF, 2 spaces, UTF-8) |
-| [.nvmrc](.nvmrc) | Node version pin (22) |
-| [.env.example](.env.example) | template for `.env` |
-| [docker-compose.yml](docker-compose.yml) | Postgres 16 + pgvector for dev |
-| [scripts/db-init.sh](scripts/db-init.sh) | first-run SQL to enable extensions |
-| [.dockerignore](.dockerignore) | keeps OCR_Docs and secrets out of future Docker builds |
+| File                                       | Purpose                                                 |
+| ------------------------------------------ | ------------------------------------------------------- |
+| [package.json](package.json)               | npm scripts + dependency pins                           |
+| [tsconfig.json](tsconfig.json)             | strict TypeScript config used by editor + tests         |
+| [tsconfig.build.json](tsconfig.build.json) | build-only config (excludes tests, drops sourcemaps)    |
+| [eslint.config.js](eslint.config.js)       | ESLint flat config with the type-checked rule set       |
+| [.prettierrc.json](.prettierrc.json)       | Prettier rules (100-col, single quote, trailing commas) |
+| [.editorconfig](.editorconfig)             | editor-agnostic formatting (LF, 2 spaces, UTF-8)        |
+| [.nvmrc](.nvmrc)                           | Node version pin (22)                                   |
+| [.env.example](.env.example)               | template for `.env`                                     |
+| [docker-compose.yml](docker-compose.yml)   | Postgres 16 + pgvector for dev                          |
+| [scripts/db-init.sh](scripts/db-init.sh)   | first-run SQL to enable extensions                      |
+| [.dockerignore](.dockerignore)             | keeps OCR_Docs and secrets out of future Docker builds  |
 
 ### .vscode/ (shared across contributors)
 
-| File | Purpose |
-| --- | --- |
-| [.vscode/extensions.json](.vscode/extensions.json) | recommended extensions for this project |
-| [.vscode/settings.json](.vscode/settings.json) | format-on-save, ESLint flat config, cSpell words, markdownlint rules, SQLTools connection |
-| [.vscode/launch.json](.vscode/launch.json) | debug configurations |
-| [.vscode/tasks.json](.vscode/tasks.json) | build task `Ctrl+Shift+B`, db helpers, full-checks task |
+| File                                               | Purpose                                                                                   |
+| -------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| [.vscode/extensions.json](.vscode/extensions.json) | recommended extensions for this project                                                   |
+| [.vscode/settings.json](.vscode/settings.json)     | format-on-save, ESLint flat config, cSpell words, markdownlint rules, SQLTools connection |
+| [.vscode/launch.json](.vscode/launch.json)         | debug configurations                                                                      |
+| [.vscode/tasks.json](.vscode/tasks.json)           | build task `Ctrl+Shift+B`, db helpers, full-checks task                                   |
 
 Per-user `.vscode/` files (history, local overrides) are gitignored; the four files above are the only ones tracked.
 

@@ -42,33 +42,33 @@ There is more in [memory/user_role.md](#memory-system-on-disk).
 
 ### Tier 1 — read before doing anything
 
-| Doc | Length | What it tells you |
-| --- | --- | --- |
-| [README.md](README.md) | short | Project purpose, core principles, planned tech stack, repo-layout target, doc map. |
-| [PLAN.md](PLAN.md) | medium | Eight phases (0–7) with goals, builds, "do not build" lists, user tests, success criteria, and a section recording what changed from the original brainstorm. |
-| [RISKS.md](RISKS.md) | medium | 24 risks across 7 categories with L×I scoring; explains why design choices look the way they do. The five highest-scoring risks drive the architecture. |
+| Doc                                                | Length | What it tells you                                                                                                                                                                     |
+| -------------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [README.md](README.md)                             | short  | Project purpose, core principles, planned tech stack, repo-layout target, doc map.                                                                                                    |
+| [PLAN.md](PLAN.md)                                 | medium | Eight phases (0–7) with goals, builds, "do not build" lists, user tests, success criteria, and a section recording what changed from the original brainstorm.                         |
+| [RISKS.md](RISKS.md)                               | medium | 24 risks across 7 categories with L×I scoring; explains why design choices look the way they do. The five highest-scoring risks drive the architecture.                               |
 | [SECURITY_AND_PRIVACY.md](SECURITY_AND_PRIVACY.md) | medium | UK GDPR roles, DPIA requirements, what is and is not sent to the LLM, safeguarding flow for disclosures in answer boxes, prompt-injection assumptions, retention. **Non-negotiable.** |
 
 ### Tier 2 — build-time references
 
-| Doc | Length | What it tells you |
-| --- | --- | --- |
-| [DEV_SETUP.md](DEV_SETUP.md) | medium | How to run the dev loop: Node/Docker prerequisites, `.env`, Postgres+pgvector container on port 5433, npm scripts, VSCode tasks and debug configs, Gentoo→Debian differences, troubleshooting. |
-| [ARCHITECTURE.md](ARCHITECTURE.md) | medium | Component diagram, services-vs-repos split, request lifecycles, the single LLM client wrapper, kill switch, target folder structure, things deliberately out of scope. |
-| [DATA_MODEL.md](DATA_MODEL.md) | long | Full Postgres schema with phase markers per table; conventions; indexes; retention policy. |
-| [PROMPTS.md](PROMPTS.md) | long | Four prompt families (generation, marking, clustering, summaries) with inputs, Zod-style output schemas, safety gates, evaluation fixtures, and version-control rules. Header points to the OpenAI Documentation MCP. |
-| [RESOURCES_REQUIRED.md](RESOURCES_REQUIRED.md) | medium | People, hardware, hosting, third-party APIs (incl. OpenAI MCP reference), software dependencies, content sources, recurring ops checklist, Phase-0 setup checklist. |
+| Doc                                            | Length | What it tells you                                                                                                                                                                                                     |
+| ---------------------------------------------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [DEV_SETUP.md](DEV_SETUP.md)                   | medium | How to run the dev loop: Node/Docker prerequisites, `.env`, Postgres+pgvector container on port 5433, npm scripts, VSCode tasks and debug configs, Gentoo→Debian differences, troubleshooting.                        |
+| [ARCHITECTURE.md](ARCHITECTURE.md)             | medium | Component diagram, services-vs-repos split, request lifecycles, the single LLM client wrapper, kill switch, target folder structure, things deliberately out of scope.                                                |
+| [DATA_MODEL.md](DATA_MODEL.md)                 | long   | Full Postgres schema with phase markers per table; conventions; indexes; retention policy.                                                                                                                            |
+| [PROMPTS.md](PROMPTS.md)                       | long   | Four prompt families (generation, marking, clustering, summaries) with inputs, Zod-style output schemas, safety gates, evaluation fixtures, and version-control rules. Header points to the OpenAI Documentation MCP. |
+| [RESOURCES_REQUIRED.md](RESOURCES_REQUIRED.md) | medium | People, hardware, hosting, third-party APIs (incl. OpenAI MCP reference), software dependencies, content sources, recurring ops checklist, Phase-0 setup checklist.                                                   |
 
 ### Tier 3 — source material
 
-| Doc | Length | What it tells you |
-| --- | --- | --- |
+| Doc                                                    | Length | What it tells you                                                                                                                                                                                                  |
+| ------------------------------------------------------ | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | [OCR_Docs/CONTENT_INDEX.md](OCR_Docs/CONTENT_INDEX.md) | medium | Catalogue of all 24 OCR source documents (specification, teacher support, sample papers, three series of past papers / mark schemes / examiners' reports), their page counts, and how each feeds into which phase. |
 
 ### File on disk that is not a planning doc
 
-| File | Purpose |
-| --- | --- |
+| File                     | Purpose                                                                                                                                  |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
 | [.gitignore](.gitignore) | Excludes `OCR_Docs/**` (allowlisting `CONTENT_INDEX.md`), `content/source/**`, `.env`, `node_modules/`, build artefacts, editor folders. |
 
 ## Hard rules (do not break these without explicit user instruction)
@@ -160,7 +160,7 @@ exam_questions/
 - Markdown documents use sentence case in headings, ATX-style headings (`#`), and tables for catalogues.
 - Code (when it arrives) will be TypeScript, ESLint + Prettier, services-do-not-import-each-other-circularly. See [ARCHITECTURE.md](ARCHITECTURE.md).
 - Database identifiers are `snake_case` and pluralised for tables.
-- Comments in code: avoid unless the *why* is non-obvious. Identifiers should explain *what*.
+- Comments in code: avoid unless the _why_ is non-obvious. Identifiers should explain _what_.
 
 ### Communication
 

@@ -4,7 +4,7 @@ import prettier from 'eslint-config-prettier';
 
 export default tseslint.config(
   {
-    ignores: ['dist/**', 'coverage/**', 'node_modules/**', '**/*.min.js'],
+    ignores: ['dist/**', 'coverage/**', 'node_modules/**', '**/*.min.js', 'eslint.config.js'],
   },
   js.configs.recommended,
   ...tseslint.configs.recommendedTypeChecked,
@@ -31,6 +31,12 @@ export default tseslint.config(
     files: ['**/*.test.ts', '**/*.spec.ts', 'tests/**'],
     rules: {
       '@typescript-eslint/no-unsafe-assignment': 'off',
+      'no-console': 'off',
+    },
+  },
+  {
+    files: ['src/scripts/**', 'src/db/migrate.ts'],
+    rules: {
       'no-console': 'off',
     },
   },

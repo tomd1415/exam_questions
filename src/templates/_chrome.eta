@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title><%= it.title %> · J277 revision</title>
+    <link rel="stylesheet" href="/static/site.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="site-header__inner">
+        <a class="site-header__brand" href="/">J277 revision</a>
+        <% if (it.currentUser) { %>
+          <form method="post" action="/logout" class="site-header__logout">
+            <input type="hidden" name="_csrf" value="<%= it.csrfToken %>" />
+            <span class="site-header__user"><%= it.currentUser.display_name %></span>
+            <button type="submit">Sign out</button>
+          </form>
+        <% } %>
+      </div>
+    </header>
+    <main class="site-main">
+      <%~ it.body %>
+    </main>
+  </body>
+</html>

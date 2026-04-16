@@ -43,16 +43,16 @@ OCR's own examiner reports for J277 keep highlighting the same issues year after
 
 ## Tech stack (planned)
 
-| Layer | Choice | Why |
-| --- | --- | --- |
-| Backend | Node.js + TypeScript + Fastify | One language across stack, strong typing for LLM JSON schemas |
-| Frontend | Server-rendered HTML + HTMX, progressive enhancement | Works on locked-down school devices, low JS overhead |
-| Database | PostgreSQL with `pgvector` | Relational data for school reporting + vector search without a second DB |
-| Auth | Local accounts, Argon2 password hashing, optional Google SSO later | Schools rarely allow third-party SSO without setup |
-| LLM | OpenAI Responses API + Structured Outputs | Schema-conforming JSON for marking and generation |
-| Embeddings | OpenAI `text-embedding-3-small` via pgvector | Duplicate detection, misconception clustering |
-| Hosting | Debian VM on the school's existing Proxmox hypervisor; LAN-only for MVP | Pupil data never leaves school premises; uses existing infrastructure; sole admin is the teacher |
-| Background jobs | In-process queue (e.g. BullMQ on Redis) added in Phase 4 | Avoid premature infra |
+| Layer           | Choice                                                                  | Why                                                                                              |
+| --------------- | ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| Backend         | Node.js + TypeScript + Fastify                                          | One language across stack, strong typing for LLM JSON schemas                                    |
+| Frontend        | Server-rendered HTML + HTMX, progressive enhancement                    | Works on locked-down school devices, low JS overhead                                             |
+| Database        | PostgreSQL with `pgvector`                                              | Relational data for school reporting + vector search without a second DB                         |
+| Auth            | Local accounts, Argon2 password hashing, optional Google SSO later      | Schools rarely allow third-party SSO without setup                                               |
+| LLM             | OpenAI Responses API + Structured Outputs                               | Schema-conforming JSON for marking and generation                                                |
+| Embeddings      | OpenAI `text-embedding-3-small` via pgvector                            | Duplicate detection, misconception clustering                                                    |
+| Hosting         | Debian VM on the school's existing Proxmox hypervisor; LAN-only for MVP | Pupil data never leaves school premises; uses existing infrastructure; sole admin is the teacher |
+| Background jobs | In-process queue (e.g. BullMQ on Redis) added in Phase 4                | Avoid premature infra                                                                            |
 
 See [ARCHITECTURE.md](ARCHITECTURE.md) for detail.
 
@@ -118,7 +118,7 @@ Then for build-time reference:
 
 ## OCR copyright notice
 
-OCR specifications, past papers, mark schemes, and examiner reports are © OCR. They are used here as a *pattern source* for question style, command words, mark tariffs, and misconceptions. The platform must not reproduce OCR copyrighted material verbatim in pupil-facing screens. Generated questions go through similarity detection against source papers (see [PLAN.md](PLAN.md), Phase 5).
+OCR specifications, past papers, mark schemes, and examiner reports are © OCR. They are used here as a _pattern source_ for question style, command words, mark tariffs, and misconceptions. The platform must not reproduce OCR copyrighted material verbatim in pupil-facing screens. Generated questions go through similarity detection against source papers (see [PLAN.md](PLAN.md), Phase 5).
 
 ## Licence
 

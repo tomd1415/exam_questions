@@ -23,12 +23,12 @@ These apply to every prompt in the system.
 
 There are four families:
 
-| Family | Phase introduced | Purpose |
-| --- | --- | --- |
-| A | 5 | Question generation |
-| B | 3 | Marking open responses |
-| C | 6 | Misconception clustering and labelling |
-| D | 6 | Teacher analytics summaries |
+| Family | Phase introduced | Purpose                                |
+| ------ | ---------------- | -------------------------------------- |
+| A      | 5                | Question generation                    |
+| B      | 3                | Marking open responses                 |
+| C      | 6                | Misconception clustering and labelling |
+| D      | 6                | Teacher analytics summaries            |
 
 Each family has at least one validator-style sibling that re-checks the primary call's output against the spec or against the rubric.
 
@@ -53,27 +53,46 @@ Used in Phase 5 to draft new OCR-style questions from the spec, command-word voc
 ```ts
 const generatedQuestion = z.object({
   stem: z.string().min(20).max(2000),
-  parts: z.array(z.object({
-    part_label: z.string().regex(/^[a-z](\([ivx]+\))?$/),
-    prompt: z.string().min(5).max(1000),
-    marks: z.number().int().min(1).max(20),
-    expected_response_type: z.enum([
-      "multiple_choice", "tick_box", "short_text",
-      "medium_text", "extended_response",
-      "code", "algorithm", "trace_table"
-    ]),
-    mark_points: z.array(z.object({
-      text: z.string().min(3).max(400),
-      accepted_alternatives: z.array(z.string().max(200)).max(10),
-      marks: z.number().int().min(1).max(5),
-      is_required: z.boolean()
-    })).min(1).max(12),
-    model_answer: z.string().min(5).max(2000),
-    common_misconceptions: z.array(z.object({
-      label: z.string().min(2).max(60),
-      description: z.string().min(5).max(400)
-    })).max(8)
-  })).min(1).max(8),
+  parts: z
+    .array(
+      z.object({
+        part_label: z.string().regex(/^[a-z](\([ivx]+\))?$/),
+        prompt: z.string().min(5).max(1000),
+        marks: z.number().int().min(1).max(20),
+        expected_response_type: z.enum([
+          'multiple_choice',
+          'tick_box',
+          'short_text',
+          'medium_text',
+          'extended_response',
+          'code',
+          'algorithm',
+          'trace_table',
+        ]),
+        mark_points: z
+          .array(
+            z.object({
+              text: z.string().min(3).max(400),
+              accepted_alternatives: z.array(z.string().max(200)).max(10),
+              marks: z.number().int().min(1).max(5),
+              is_required: z.boolean(),
+            }),
+          )
+          .min(1)
+          .max(12),
+        model_answer: z.string().min(5).max(2000),
+        common_misconceptions: z
+          .array(
+            z.object({
+              label: z.string().min(2).max(60),
+              description: z.string().min(5).max(400),
+            }),
+          )
+          .max(8),
+      }),
+    )
+    .min(1)
+    .max(8),
   marks_total: z.number().int().min(1).max(20),
   topic_code: z.string(),
   subtopic_code: z.string(),
@@ -82,7 +101,7 @@ const generatedQuestion = z.object({
   difficulty_step: z.number().int().min(1).max(3),
   difficulty_rationale: z.string().min(10).max(500),
   teacher_notes: z.string().max(800).optional(),
-  originality_self_check: z.string().min(10).max(500)
+  originality_self_check: z.string().min(10).max(500),
 });
 ```
 
@@ -92,11 +111,11 @@ A second prompt receives the generated question, the retrieval pack, and the for
 
 ```ts
 const validationResult = z.object({
-  spec_alignment: z.enum(["aligned", "weak", "off_spec"]),
+  spec_alignment: z.enum(['aligned', 'weak', 'off_spec']),
   spec_alignment_reason: z.string(),
   command_word_appropriate: z.boolean(),
   marks_to_response_appropriate: z.boolean(),
-  notes: z.string().optional()
+  notes: z.string().optional(),
 });
 ```
 
@@ -133,26 +152,28 @@ The most important prompt family. Used in Phase 3 onwards.
 ```ts
 const markingResult = z.object({
   marks_awarded: z.number().int().min(0),
-  mark_points_hit: z.array(z.object({
-    mark_point_id: z.string(),
-    evidence_quote: z.string().min(1).max(500)
-  })),
-  mark_points_missed: z.array(z.string()),    // mark_point_ids
+  mark_points_hit: z.array(
+    z.object({
+      mark_point_id: z.string(),
+      evidence_quote: z.string().min(1).max(500),
+    }),
+  ),
+  mark_points_missed: z.array(z.string()), // mark_point_ids
   contradiction_detected: z.boolean(),
   over_answer_detected: z.boolean(),
   confidence: z.number().min(0).max(1),
   feedback_for_pupil: z.object({
     what_went_well: z.string().min(10).max(300),
     how_to_gain_more: z.string().min(10).max(300),
-    next_focus: z.string().min(10).max(300)
+    next_focus: z.string().min(10).max(300),
   }),
   feedback_for_teacher: z.object({
     summary: z.string().max(400),
     suggested_misconception_label: z.string().max(60).optional(),
-    suggested_next_question_type: z.string().max(60).optional()
+    suggested_next_question_type: z.string().max(60).optional(),
   }),
   refusal: z.boolean(),
-  notes: z.string().max(400).optional()
+  notes: z.string().max(400).optional(),
 });
 ```
 
@@ -182,9 +203,7 @@ For a pupil who answered "HTTPS keeps your data safe":
 ```json
 {
   "marks_awarded": 1,
-  "mark_points_hit": [
-    {"mark_point_id": "42", "evidence_quote": "HTTPS keeps your data safe"}
-  ],
+  "mark_points_hit": [{ "mark_point_id": "42", "evidence_quote": "HTTPS keeps your data safe" }],
   "mark_points_missed": ["43", "44"],
   "contradiction_detected": false,
   "over_answer_detected": false,
@@ -212,6 +231,7 @@ Phase 6. Two complementary calls:
 ### C1: cluster summariser
 
 Inputs:
+
 - A list of (pseudonymous) flagged-misconception events with their `inferred_label` and a short text excerpt.
 - Topic and command-word context.
 
@@ -219,12 +239,16 @@ Output schema:
 
 ```ts
 const clusterSummary = z.object({
-  clusters: z.array(z.object({
-    label: z.string().min(2).max(60),
-    description: z.string().min(10).max(400),
-    representative_event_ids: z.array(z.string()).min(1).max(5),
-    suggested_reteach_step: z.string().max(300)
-  })).max(10)
+  clusters: z
+    .array(
+      z.object({
+        label: z.string().min(2).max(60),
+        description: z.string().min(10).max(400),
+        representative_event_ids: z.array(z.string()).min(1).max(5),
+        suggested_reteach_step: z.string().max(300),
+      }),
+    )
+    .max(10),
 });
 ```
 
@@ -243,6 +267,7 @@ Phase 6. One call per artefact (no batched generation across pupils in a single 
 ### D1: weekly pupil summary
 
 Inputs:
+
 - Aggregate counts of attempts, marks, and missed mark points for one pupil over the last week.
 - Top three flagged misconceptions.
 - The pupil's mastery profile snapshot.
@@ -254,14 +279,18 @@ const pupilWeeklySummary = z.object({
   one_line_headline: z.string().max(160),
   strengths: z.array(z.string().max(200)).max(3),
   focus_areas: z.array(z.string().max(200)).max(3),
-  suggested_next_questions: z.array(z.object({
-    topic_code: z.string(),
-    command_word_code: z.string(),
-    response_type: z.string(),
-    difficulty_band: z.number().int().min(1).max(9),
-    difficulty_step: z.number().int().min(1).max(3),
-    rationale: z.string().max(200)
-  })).max(5)
+  suggested_next_questions: z
+    .array(
+      z.object({
+        topic_code: z.string(),
+        command_word_code: z.string(),
+        response_type: z.string(),
+        difficulty_band: z.number().int().min(1).max(9),
+        difficulty_step: z.number().int().min(1).max(3),
+        rationale: z.string().max(200),
+      }),
+    )
+    .max(5),
 });
 ```
 

@@ -142,14 +142,14 @@ Requests are handled within the school's standard response window.
 
 ## Retention
 
-| Data | Retention |
-| --- | --- |
-| Pupil account + attempts + marks | While enrolled, plus up to 12 months. Then deleted unless the school has a documented reason to retain (e.g. appeal). |
-| Anonymised aggregate analytics (counts, distributions) | Indefinite. |
-| Audit log | 24 months minimum, then reviewed. |
-| Application logs | 30 days. |
-| Backups | 35 daily backups, 12 monthly. |
-| LLM call audit | 12 months. |
+| Data                                                   | Retention                                                                                                             |
+| ------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------- |
+| Pupil account + attempts + marks                       | While enrolled, plus up to 12 months. Then deleted unless the school has a documented reason to retain (e.g. appeal). |
+| Anonymised aggregate analytics (counts, distributions) | Indefinite.                                                                                                           |
+| Audit log                                              | 24 months minimum, then reviewed.                                                                                     |
+| Application logs                                       | 30 days.                                                                                                              |
+| Backups                                                | 35 daily backups, 12 monthly.                                                                                         |
+| LLM call audit                                         | 12 months.                                                                                                            |
 
 A retention job runs nightly and is idempotent.
 
