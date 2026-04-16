@@ -1,0 +1,56 @@
+<section class="admin-card">
+  <header class="admin-card__header">
+    <div>
+      <h1><%= it.cls.name %></h1>
+      <p class="admin-card__sub"><%= it.cls.academic_year %><% if (!it.cls.active) { %> · inactive<% } %></p>
+    </div>
+    <a href="/admin/classes">Back to classes</a>
+  </header>
+
+  <% if (it.flash) { %>
+    <p class="flash flash--ok" role="status"><%= it.flash %></p>
+  <% } %>
+
+  <h2>Enrol a pupil</h2>
+  <form method="post" action="/admin/classes/<%= it.cls.id %>/enrol" class="admin-form admin-form--inline">
+    <input type="hidden" name="_csrf" value="<%= it.csrfToken %>" />
+    <label>
+      <span>Pupil username</span>
+      <input type="text" name="pupil_username" required maxlength="120" autocapitalize="none" autocomplete="off" />
+    </label>
+    <button type="submit">Enrol</button>
+  </form>
+
+  <h2>Enrolled pupils</h2>
+  <% if (!it.pupils || it.pupils.length === 0) { %>
+    <p class="empty">No pupils enrolled yet.</p>
+  <% } else { %>
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Display name</th>
+          <th>Username</th>
+          <th>Pseudonym</th>
+          <th>Enrolled</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% it.pupils.forEach(function(p) { %>
+          <tr<% if (!p.active) { %> class="row--muted"<% } %>>
+            <td><%= p.display_name %><% if (!p.active) { %> (inactive)<% } %></td>
+            <td><%= p.username %></td>
+            <td><%= p.pseudonym %></td>
+            <td><%= p.enrolled_at.toISOString().slice(0, 10) %></td>
+            <td>
+              <form method="post" action="/admin/classes/<%= it.cls.id %>/enrolments/<%= p.user_id %>/remove" class="inline-form">
+                <input type="hidden" name="_csrf" value="<%= it.csrfToken %>" />
+                <button type="submit" class="button button--danger">Remove</button>
+              </form>
+            </td>
+          </tr>
+        <% }); %>
+      </tbody>
+    </table>
+  <% } %>
+</section>

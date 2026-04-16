@@ -141,21 +141,53 @@ must run it once for sign-off and confirm the output.
 the teacher's class. The teacher assigns a topic. Pupils complete it.
 The teacher reviews submissions in the admin UI.").
 
-### Stub — to be filled in when Phase 1 ships
+Sections fill in chunk by chunk as Phase 1 ships
+(see [PHASE1_PLAN.md](PHASE1_PLAN.md)). Chunk 1 (classes and
+enrolments) is below; the rest land as the chunks ship.
 
-Will need to cover:
+### 1.A Classes and enrolments (Chunk 1)
 
-- Teacher authoring flow (create a question end-to-end, including parts,
-  marks, command word, model answer, mark points).
-- Pupil topic-pick flow.
-- Save-and-resume across two browser sessions.
-- Teacher review of pupil submissions in the admin UI.
-- Class membership: pupil only sees the topic the teacher assigned to
-  their class.
+**Prereqs:** dev DB up + migrated, app running, `npm run check` green.
+Two extra fixture users for this walk-through:
 
-### Sign-off checklist
+```bash
+npm run user:create -- --role teacher --username cls_teach_a \
+  --display-name "Teacher Alpha" --pseudonym TEA-CLS-A \
+  --password 'cls-teach-a-pw-1'
+npm run user:create -- --role teacher --username cls_teach_b \
+  --display-name "Teacher Beta"  --pseudonym TEA-CLS-B \
+  --password 'cls-teach-b-pw-1'
+npm run user:create -- --role pupil   --username cls_pupil_1 \
+  --display-name "Pupil One"     --pseudonym PUP-CLS-01 \
+  --password 'cls-pupil-1-pw-1'
+```
 
-- [ ] (Filled in during Phase 1.)
+| #   | Action                                                                                                                                 | Expected                                                                                                                                                                           |
+| --- | -------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | While signed out, visit `/admin/classes`.                                                                                              | Redirects to `/login`.                                                                                                                                                             |
+| 2   | Sign in as `cls_pupil_1`. Visit `/admin/classes`.                                                                                      | HTTP 403 ("Forbidden"). Pupils have no classes nav.                                                                                                                                |
+| 3   | Sign in as `cls_teach_a`. Visit `/admin/classes`.                                                                                      | Empty state: "No classes yet." A "New class" button is visible.                                                                                                                    |
+| 4   | Click **New class**. Submit `name="10A Computing"`, `academic_year="2025/26"`.                                                         | Redirects to `/admin/classes/<id>` showing the class header, an enrol form, and "No pupils enrolled yet". `audit_events` has `class.created` for `cls_teach_a`.                    |
+| 5   | Try to create another class with the **same** name + year.                                                                             | HTTP 409 with the flash "You already have a class with that name for that year." The form preserves your typed values.                                                             |
+| 6   | Back on the detail page, enrol `cls_pupil_1` by username.                                                                              | Redirects to the same page with the green flash "Enrolled Pupil One." The pupils table shows their display name, username, pseudonym, and enrolment date. `enrolments` row exists. |
+| 7   | Try to enrol the same username again.                                                                                                  | Flash reads "Pupil One is already enrolled." `enrolments` still has exactly one row for that pair (no duplicate).                                                                  |
+| 8   | Try to enrol a non-existent username (`nope_pupil`).                                                                                   | Flash reads "No active pupil with that username."                                                                                                                                  |
+| 9   | Try to enrol a teacher username (`cls_teach_b`).                                                                                       | Same flash as step 8 — only active pupils are eligible.                                                                                                                            |
+| 10  | In a second private window, sign in as `cls_teach_b`. Visit `/admin/classes`.                                                          | Empty state — Teacher Beta does **not** see Teacher Alpha's class.                                                                                                                 |
+| 11  | As Teacher Beta, paste the URL from step 4 (`/admin/classes/<alpha_class_id>`) directly.                                               | HTTP 403. Teachers are isolated.                                                                                                                                                   |
+| 12  | Back as Teacher Alpha, click **Remove** next to Pupil One.                                                                             | Redirects with the flash "Pupil removed from class." The pupils table reverts to the empty state. `enrolments` row gone. `audit_events` has `enrolment.removed`.                   |
+| 13  | (Optional) If an admin user exists, sign in as admin and visit `/admin/classes`.                                                       | The list shows all teachers' classes with a Teacher column ("Teacher Alpha (cls_teach_a)" etc.). Admin can open Alpha's class detail page without 403.                             |
+| 14  | In `psql`, `SELECT event_type, count(*) FROM audit_events WHERE event_type LIKE 'class%' OR event_type LIKE 'enrolment%' GROUP BY 1;`. | Counts match what you did: at least one `class.created`, one `enrolment.added`, one `enrolment.removed`.                                                                           |
+
+### Sign-off checklist (Chunk 1)
+
+- [ ] All 14 steps above produced the expected result.
+- [ ] `npm run check` green on the same commit.
+- [ ] No console errors in the dev server log during the walk-through.
+
+### Phase 1 sign-off checklist
+
+- [ ] (Filled in once all chunks ship.)
 
 ---
 

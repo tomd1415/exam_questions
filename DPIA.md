@@ -194,39 +194,39 @@ The full mitigation catalogue lives in
 contact details, no SEND flags, and no free-text notes column. See
 [DATA_MODEL.md](DATA_MODEL.md) and
 [SECURITY_AND_PRIVACY.md](SECURITY_AND_PRIVACY.md) §"Data
-minimisation". *(Covers 3.1, 3.2.)*
+minimisation". _(Covers 3.1, 3.2.)_
 
 **Pseudonymisation for AI payloads.** The LLM only ever sees the
 `pseudonym` field, never `display_name` or `username`. A redactor
 also strips pupil display names, common name patterns, and the school
 name from the answer text before the call. See
 [SECURITY_AND_PRIVACY.md](SECURITY_AND_PRIVACY.md) §"What is sent to
-the LLM". *(Covers 3.2.)*
+the LLM". _(Covers 3.2.)_
 
 **Local-first infrastructure.** App and database run on a Debian VM
 on the school's own Proxmox hypervisor. Pupil data never leaves the
 school network in normal operation. No third-party hosting, analytics,
 or trackers. See [RESOURCES_REQUIRED.md](RESOURCES_REQUIRED.md) §3 and
-[RUNBOOK.md](RUNBOOK.md) §1. *(Covers 3.1, 3.2.)*
+[RUNBOOK.md](RUNBOOK.md) §1. _(Covers 3.1, 3.2.)_
 
 **Authentication controls.** Argon2id password hashing; forced change
 on first login; 5-attempt lockout; HttpOnly + Secure + SameSite=Strict
 signed session cookies; 12-hour idle timeout; no "remember me" on
 shared devices. See
 [SECURITY_AND_PRIVACY.md](SECURITY_AND_PRIVACY.md) §"Authentication".
-*(Covers 3.1, 3.4.)*
+_(Covers 3.1, 3.4.)_
 
 **Transport and storage security.** HTTPS only on the LAN; TLS 1.2
 minimum, prefer 1.3; full-disk encryption at the VM level; daily
 encrypted DB dumps; Phase 0 sign-off required a successful restore
-drill (see [RUNBOOK.md](RUNBOOK.md) §10). *(Covers 3.1.)*
+drill (see [RUNBOOK.md](RUNBOOK.md) §10). _(Covers 3.1.)_
 
 **Authorisation at service layer.** Pupils can only see their own
 data; teachers can only see data for pupils in their classes. The
 check lives in the service layer, not only the route layer, so a
 misrouted request cannot bypass it. See
 [SECURITY_AND_PRIVACY.md](SECURITY_AND_PRIVACY.md) §"Authorisation".
-*(Covers 3.1, 3.4.)*
+_(Covers 3.1, 3.4.)_
 
 **Safeguarding flow.** A keyword-and-pattern flagger — deterministic,
 not LLM — runs on every saved answer and surfaces concerning answers
@@ -236,7 +236,7 @@ change in response, because that is a trained adult's role. The
 flagger's keyword list is reviewed termly with the school's
 safeguarding lead. See
 [SECURITY_AND_PRIVACY.md](SECURITY_AND_PRIVACY.md) §"Safeguarding
-flow". *(Covers 3.3.)*
+flow". _(Covers 3.3.)_
 
 **LLM-specific controls (Phase 3+).** Account configured for
 zero data retention, verified against the current OpenAI terms before
@@ -247,20 +247,20 @@ calls, falling back to "your teacher will mark this". System prompt
 isolation; pupil answer passed as a separate user-role chunk; marking
 schema caps marks at the question's tariff. See
 [SECURITY_AND_PRIVACY.md](SECURITY_AND_PRIVACY.md) §"What is sent to
-the LLM" and §"Prompt-injection and abuse". *(Covers 3.2, 3.5, 3.6.)*
+the LLM" and §"Prompt-injection and abuse". _(Covers 3.2, 3.5, 3.6.)_
 
 **Pupil-facing honesty about AI.** Any AI-generated mark is labelled
 "marked with AI assistance — your teacher will check". Pupils may
 request human marking on any AI-marked response. Feedback is written
 at a Year-10 reading level and is examiner-style, not sarcastic. See
 [SECURITY_AND_PRIVACY.md](SECURITY_AND_PRIVACY.md) §"Pupil-facing
-privacy notice" and [RISKS.md](RISKS.md) §4.1. *(Covers 3.2, 3.5.)*
+privacy notice" and [RISKS.md](RISKS.md) §4.1. _(Covers 3.2, 3.5.)_
 
 **Rights paths tested.** Access, rectification, erasure, restriction,
 portability, and objection each have a concrete operational answer
 documented in [SECURITY_AND_PRIVACY.md](SECURITY_AND_PRIVACY.md)
 §"Data subject rights". Erasure cascades through attempts, marks,
-feedback, mastery state, and audit subject references. *(Covers 3.7.)*
+feedback, mastery state, and audit subject references. _(Covers 3.7.)_
 
 **Audit trail.** An append-only `audit_events` table records logins,
 submissions, overrides, and deletions. Pupil answer text is not
@@ -313,15 +313,15 @@ Delivery of each UK GDPR right is defined in
 [SECURITY_AND_PRIVACY.md](SECURITY_AND_PRIVACY.md) §"Data subject
 rights". In summary:
 
-| Right           | Operational answer                                                                                                                                     |
-| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Access          | Teacher exports the pupil's data as a JSON/CSV bundle from the admin UI.                                                                               |
-| Rectification   | Teacher can edit `display_name` and `pseudonym`. Pupil-authored answers are not edited — they are part of the assessment record.                       |
-| Erasure         | Teacher deletes the pupil. Cascade removes attempts, marks, feedback, mastery state, embeddings, and audit subject references. Anonymised counts stay. |
-| Restriction     | Per-pupil AI-marking opt-out routes all open responses to the teacher queue, with no LLM call.                                                         |
-| Portability     | The access bundle is the answer.                                                                                                                       |
-| Objection       | Per-pupil AI-marking opt-out, and/or full erasure.                                                                                                     |
-| No solely-automated decisions with legal or significant effects | The platform does not make such decisions. A teacher is always in the loop for marks that contribute to any formal judgement. |
+| Right                                                           | Operational answer                                                                                                                                     |
+| --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Access                                                          | Teacher exports the pupil's data as a JSON/CSV bundle from the admin UI.                                                                               |
+| Rectification                                                   | Teacher can edit `display_name` and `pseudonym`. Pupil-authored answers are not edited — they are part of the assessment record.                       |
+| Erasure                                                         | Teacher deletes the pupil. Cascade removes attempts, marks, feedback, mastery state, embeddings, and audit subject references. Anonymised counts stay. |
+| Restriction                                                     | Per-pupil AI-marking opt-out routes all open responses to the teacher queue, with no LLM call.                                                         |
+| Portability                                                     | The access bundle is the answer.                                                                                                                       |
+| Objection                                                       | Per-pupil AI-marking opt-out, and/or full erasure.                                                                                                     |
+| No solely-automated decisions with legal or significant effects | The platform does not make such decisions. A teacher is always in the loop for marks that contribute to any formal judgement.                          |
 
 Pupil-facing notice (shown at first login, written for a Year-10
 reader) and parent-facing notice (before AI marking is enabled for
@@ -339,14 +339,14 @@ Mirrors [SECURITY_AND_PRIVACY.md](SECURITY_AND_PRIVACY.md)
 §"Retention". A nightly retention job enforces these and is
 idempotent.
 
-| Data                                                   | Retention                                                                                                              |
-| ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------- |
+| Data                                                   | Retention                                                                                                             |
+| ------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------- |
 | Pupil account + attempts + marks                       | While enrolled, plus up to 12 months. Then deleted unless the school has a documented reason to retain (e.g. appeal). |
-| Anonymised aggregate analytics (counts, distributions) | Indefinite.                                                                                                            |
-| Audit log                                              | 24 months minimum, then reviewed.                                                                                      |
-| Application logs                                       | 30 days.                                                                                                               |
-| Backups                                                | 35 daily backups, 12 monthly.                                                                                          |
-| LLM call audit                                         | 12 months.                                                                                                             |
+| Anonymised aggregate analytics (counts, distributions) | Indefinite.                                                                                                           |
+| Audit log                                              | 24 months minimum, then reviewed.                                                                                     |
+| Application logs                                       | 30 days.                                                                                                              |
+| Backups                                                | 35 daily backups, 12 monthly.                                                                                         |
+| LLM call audit                                         | 12 months.                                                                                                            |
 
 Backup copies under the school's existing regime follow the school's
 standard retention; deletion from the live system will not retroactively
@@ -359,32 +359,32 @@ place. Until then, the platform must not process real pupil data.
 
 ### 8.1 Data Protection Officer
 
-- Name: ______________________________
+- Name: **\*\***\*\***\*\***\_\_**\*\***\*\***\*\***
 - Role: Data Protection Officer (school)
-- Comments / required changes: ______________________________
-- Signature: ______________________________
-- Date: ______________________________
+- Comments / required changes: **\*\***\*\***\*\***\_\_**\*\***\*\***\*\***
+- Signature: **\*\***\*\***\*\***\_\_**\*\***\*\***\*\***
+- Date: **\*\***\*\***\*\***\_\_**\*\***\*\***\*\***
 
 ### 8.2 Safeguarding lead (SLT)
 
-- Name: ______________________________
+- Name: **\*\***\*\***\*\***\_\_**\*\***\*\***\*\***
 - Role: Designated Safeguarding Lead / SLT link
-- Comments / required changes: ______________________________
-- Signature: ______________________________
-- Date: ______________________________
+- Comments / required changes: **\*\***\*\***\*\***\_\_**\*\***\*\***\*\***
+- Signature: **\*\***\*\***\*\***\_\_**\*\***\*\***\*\***
+- Date: **\*\***\*\***\*\***\_\_**\*\***\*\***\*\***
 
 ### 8.3 Processor (project owner)
 
-- Name: ______________________________
+- Name: **\*\***\*\***\*\***\_\_**\*\***\*\***\*\***
 - Role: Teacher, project owner and sole administrator of the
   application VM
-- Signature: ______________________________
-- Date: ______________________________
+- Signature: **\*\***\*\***\*\***\_\_**\*\***\*\***\*\***
+- Date: **\*\***\*\***\*\***\_\_**\*\***\*\***\*\***
 
 ## Appendix A — Review history
 
-| Date       | Author | Change                                                                                     |
-| ---------- | ------ | ------------------------------------------------------------------------------------------ |
+| Date       | Author | Change                                                                                    |
+| ---------- | ------ | ----------------------------------------------------------------------------------------- |
 | 2026-04-16 | TD     | First draft at end of Phase 0. Not yet signed; awaiting DPO and safeguarding lead review. |
 
 ## Appendix B — Documents this DPIA relies on

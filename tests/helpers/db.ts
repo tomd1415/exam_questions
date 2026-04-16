@@ -50,10 +50,14 @@ export async function cleanDb(pool: pg.Pool = getSharedPool()): Promise<void> {
       sessions
     RESTART IDENTITY CASCADE
   `);
-  // Enrolments reference users; clear those for non-seed users only.
+  // No seeded enrolments exist (per 0007_seed_phase0_question.sql), so wipe
+  // all of them — tests own everything in this table.
+  await pool.query(`DELETE FROM enrolments`);
+  // Drop classes owned by non-seed teachers (i.e. test-created ones); the
+  // 'Phase 0 Demo' class belongs to phase0_seed and survives.
   await pool.query(`
-    DELETE FROM enrolments
-     WHERE user_id IN (SELECT id FROM users WHERE username <> 'phase0_seed')
+    DELETE FROM classes
+     WHERE teacher_id <> (SELECT id FROM users WHERE username = 'phase0_seed')
   `);
   await pool.query(`DELETE FROM users WHERE username <> 'phase0_seed'`);
 }

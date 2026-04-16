@@ -1,0 +1,23 @@
+<section class="admin-card">
+  <header class="admin-card__header">
+    <h1>New class</h1>
+    <a href="/admin/classes">Back to classes</a>
+  </header>
+
+  <% if (it.flash) { %>
+    <p class="flash flash--error" role="alert"><%= it.flash %></p>
+  <% } %>
+
+  <form method="post" action="/admin/classes" class="admin-form">
+    <input type="hidden" name="_csrf" value="<%= it.csrfToken %>" />
+    <label>
+      <span>Name</span>
+      <input type="text" name="name" value="<%= it.values.name %>" required maxlength="120" autofocus />
+    </label>
+    <label>
+      <span>Academic year</span>
+      <input type="text" name="academic_year" value="<%= it.values.academic_year %>" required maxlength="20" placeholder="e.g. 2025-26" />
+    </label>
+    <button type="submit">Create class</button>
+  </form>
+</section>

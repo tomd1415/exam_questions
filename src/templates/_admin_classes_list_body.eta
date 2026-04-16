@@ -1,0 +1,39 @@
+<section class="admin-card">
+  <header class="admin-card__header">
+    <h1>Classes</h1>
+    <a class="button" href="/admin/classes/new">New class</a>
+  </header>
+
+  <% if (it.flash) { %>
+    <p class="flash flash--ok" role="status"><%= it.flash %></p>
+  <% } %>
+
+  <% if (!it.classes || it.classes.length === 0) { %>
+    <p class="empty">No classes yet. Create one to start enrolling pupils.</p>
+  <% } else { %>
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Academic year</th>
+          <% if (it.isAdmin) { %><th>Teacher</th><% } %>
+          <th>Active</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% it.classes.forEach(function(cls) { %>
+          <tr>
+            <td><%= cls.name %></td>
+            <td><%= cls.academic_year %></td>
+            <% if (it.isAdmin) { %>
+              <td><%= cls.teacher_display_name %> (<%= cls.teacher_username %>)</td>
+            <% } %>
+            <td><%= cls.active ? 'yes' : 'no' %></td>
+            <td><a href="/admin/classes/<%= cls.id %>">Open</a></td>
+          </tr>
+        <% }); %>
+      </tbody>
+    </table>
+  <% } %>
+</section>

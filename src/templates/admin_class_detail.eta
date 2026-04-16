@@ -1,0 +1,3 @@
+<%
+const body = include('_admin_class_detail_body', it);
+%><%~ include('_admin_chrome', { ...it, body, activeNav: 'classes' }) %>

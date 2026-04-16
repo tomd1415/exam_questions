@@ -1,0 +1,18 @@
+<%
+const navItems = [
+  { href: '/admin/classes', label: 'Classes', key: 'classes' },
+];
+const navHtml = `
+<nav class="admin-nav" aria-label="Admin sections">
+  <ul>
+    ${navItems
+      .map(
+        (n) =>
+          `<li><a href="${n.href}"${it.activeNav === n.key ? ' aria-current="page"' : ''}>${n.label}</a></li>`,
+      )
+      .join('')}
+  </ul>
+</nav>
+`;
+const body = navHtml + (it.body ?? '');
+%><%~ include('_chrome', { ...it, body }) %>
