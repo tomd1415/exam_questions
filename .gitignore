@@ -1,0 +1,25 @@
+# OCR copyright material — pattern source only, never committed.
+# CONTENT_INDEX.md is our own catalogue and is allowed.
+OCR_Docs/**
+!OCR_Docs/CONTENT_INDEX.md
+
+# Curated source content (when populated) is treated the same way.
+content/source/**
+
+# Secrets and local config
+.env
+.env.*
+!.env.example
+
+# Node / build artefacts
+node_modules/
+dist/
+build/
+coverage/
+*.log
+.DS_Store
+
+# Editor
+.vscode/
+.idea/
+*.swp
