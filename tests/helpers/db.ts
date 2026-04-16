@@ -59,5 +59,12 @@ export async function cleanDb(pool: pg.Pool = getSharedPool()): Promise<void> {
     DELETE FROM classes
      WHERE teacher_id <> (SELECT id FROM users WHERE username = 'phase0_seed')
   `);
+  // Drop questions authored by non-seed teachers; question_parts, mark_points
+  // and part-level common_misconceptions cascade. The Phase 0 seed question
+  // (created_by = phase0_seed) survives, as do topic-level misconceptions.
+  await pool.query(`
+    DELETE FROM questions
+     WHERE created_by <> (SELECT id FROM users WHERE username = 'phase0_seed')
+  `);
   await pool.query(`DELETE FROM users WHERE username <> 'phase0_seed'`);
 }

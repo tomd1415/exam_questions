@@ -1,0 +1,91 @@
+<%
+function truncate(s, n) { return s.length > n ? s.slice(0, n - 1) + '\u2026' : s; }
+const components = [];
+const seen = new Map();
+for (const t of it.topics) {
+  if (!seen.has(t.component_code)) {
+    const group = { code: t.component_code, topics: [] };
+    seen.set(t.component_code, group);
+    components.push(group);
+  }
+  seen.get(t.component_code).topics.push(t);
+}
+%>
+<section class="admin-card">
+  <header class="admin-card__header">
+    <h1>Questions</h1>
+    <span class="admin-card__sub"><%= it.questions.length %> match<%= it.questions.length === 1 ? '' : 'es' %></span>
+  </header>
+
+  <form method="get" action="/admin/questions" class="admin-form admin-form--inline filter-form">
+    <label>
+      <span>Topic</span>
+      <select name="topic">
+        <option value="">All</option>
+        <% components.forEach(function(c) { %>
+          <optgroup label="<%= c.code %>">
+            <% c.topics.forEach(function(t) { %>
+              <option value="<%= t.code %>"<% if (it.selected.topic === t.code) { %> selected<% } %>><%= t.code %> · <%= t.title %></option>
+            <% }); %>
+          </optgroup>
+        <% }); %>
+      </select>
+    </label>
+    <label>
+      <span>Approval</span>
+      <select name="approval_status">
+        <option value="">All</option>
+        <% it.approvalStatuses.forEach(function(s) { %>
+          <option value="<%= s %>"<% if (it.selected.approval_status === s) { %> selected<% } %>><%= s %></option>
+        <% }); %>
+      </select>
+    </label>
+    <label>
+      <span>Active</span>
+      <select name="active">
+        <option value="">All</option>
+        <option value="true"<% if (it.selected.active === 'true') { %> selected<% } %>>active</option>
+        <option value="false"<% if (it.selected.active === 'false') { %> selected<% } %>>inactive</option>
+      </select>
+    </label>
+    <button type="submit">Filter</button>
+    <a href="/admin/questions" class="button button--muted">Clear</a>
+  </form>
+
+  <% if (it.questions.length === 0) { %>
+    <p class="empty">No questions match those filters.</p>
+  <% } else { %>
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Topic</th>
+          <th>Subtopic</th>
+          <th>Command</th>
+          <th>Marks</th>
+          <th>Status</th>
+          <th>Active</th>
+          <th>Stem</th>
+          <th>Created by</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% it.questions.forEach(function(q) { %>
+          <tr>
+            <td><%= q.id %></td>
+            <td><%= q.topic_code %> · <%= q.topic_title %></td>
+            <td><%= q.subtopic_code %></td>
+            <td><%= q.command_word_code %></td>
+            <td><%= q.marks_total %></td>
+            <td><%= q.approval_status %></td>
+            <td><%= q.active ? 'yes' : 'no' %></td>
+            <td><%= truncate(q.stem, 90) %></td>
+            <td><%= q.created_by_display_name %></td>
+            <td><a href="/admin/questions/<%= q.id %>">Open</a></td>
+          </tr>
+        <% }); %>
+      </tbody>
+    </table>
+  <% } %>
+</section>

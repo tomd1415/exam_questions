@@ -16,12 +16,14 @@ import { AuditRepo } from './repos/audit.js';
 import { QuestionRepo } from './repos/questions.js';
 import { AttemptRepo } from './repos/attempts.js';
 import { ClassRepo } from './repos/classes.js';
+import { CurriculumRepo } from './repos/curriculum.js';
 import { AuditService } from './services/audit.js';
 import { AuthService } from './services/auth.js';
 import { ClassService } from './services/classes.js';
 import { registerAuthRoutes } from './routes/auth.js';
 import { registerQuestionRoutes } from './routes/questions.js';
 import { registerAdminClassRoutes } from './routes/admin-classes.js';
+import { registerAdminQuestionRoutes } from './routes/admin-questions.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const TEMPLATES_DIR = resolve(__dirname, 'templates');
@@ -38,6 +40,7 @@ declare module 'fastify' {
       questions: QuestionRepo;
       attempts: AttemptRepo;
       classes: ClassRepo;
+      curriculum: CurriculumRepo;
     };
   }
   interface FastifyRequest {
@@ -94,12 +97,18 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
   const questionRepo = new QuestionRepo(pool);
   const attemptRepo = new AttemptRepo(pool);
   const classRepo = new ClassRepo(pool);
+  const curriculumRepo = new CurriculumRepo(pool);
   const auditService = new AuditService(auditRepo);
   const authService = new AuthService(userRepo, sessionRepo, auditService);
   const classService = new ClassService(classRepo, auditService);
 
   app.decorate('services', { auth: authService, audit: auditService, classes: classService });
-  app.decorate('repos', { questions: questionRepo, attempts: attemptRepo, classes: classRepo });
+  app.decorate('repos', {
+    questions: questionRepo,
+    attempts: attemptRepo,
+    classes: classRepo,
+    curriculum: curriculumRepo,
+  });
   app.decorateRequest('currentUser', null);
   app.decorateRequest('sessionId', null);
 
@@ -125,6 +134,7 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
   registerAuthRoutes(app);
   registerQuestionRoutes(app);
   registerAdminClassRoutes(app);
+  registerAdminQuestionRoutes(app);
 
   app.get('/healthz', () => ({ ok: true }));
 

@@ -1,0 +1,98 @@
+<section class="admin-card">
+  <header class="admin-card__header">
+    <div>
+      <h1>Question #<%= it.detail.question.id %></h1>
+      <p class="admin-card__sub">
+        <%= it.detail.question.component_code %> ·
+        <%= it.detail.question.topic_code %> <%= it.detail.question.topic_title %> ·
+        <%= it.detail.question.subtopic_code %> <%= it.detail.question.subtopic_title %>
+      </p>
+    </div>
+    <a href="/admin/questions">Back to questions</a>
+  </header>
+
+  <dl class="meta-grid">
+    <dt>Command word</dt><dd><%= it.detail.question.command_word_code %></dd>
+    <dt>Archetype</dt><dd><%= it.detail.question.archetype_code %></dd>
+    <dt>Expected response</dt><dd><%= it.detail.question.expected_response_type %></dd>
+    <dt>Marks (total)</dt><dd><%= it.detail.question.marks_total %></dd>
+    <dt>Difficulty</dt><dd>band <%= it.detail.question.difficulty_band %>, step <%= it.detail.question.difficulty_step %></dd>
+    <dt>Source</dt><dd><%= it.detail.question.source_type %></dd>
+    <dt>Approval</dt><dd><%= it.detail.question.approval_status %><% if (it.detail.question.approved_by_display_name) { %> · approved by <%= it.detail.question.approved_by_display_name %><% } %></dd>
+    <dt>Active</dt><dd><%= it.detail.question.active ? 'yes' : 'no' %></dd>
+    <dt>Created by</dt><dd><%= it.detail.question.created_by_display_name %> · <%= it.detail.question.created_at.toISOString().slice(0, 10) %></dd>
+    <dt>Updated</dt><dd><%= it.detail.question.updated_at.toISOString().slice(0, 10) %></dd>
+  </dl>
+
+  <h2>Stem</h2>
+  <blockquote class="question-stem"><%= it.detail.question.stem %></blockquote>
+
+  <h2>Model answer</h2>
+  <blockquote class="model-answer"><%= it.detail.question.model_answer %></blockquote>
+
+  <% if (it.detail.question.feedback_template) { %>
+    <h2>Feedback template</h2>
+    <pre class="feedback-template"><%= it.detail.question.feedback_template %></pre>
+  <% } %>
+
+  <% if (it.detail.question.review_notes) { %>
+    <h2>Review notes</h2>
+    <blockquote class="review-notes"><%= it.detail.question.review_notes %></blockquote>
+  <% } %>
+
+  <h2>Parts</h2>
+  <% if (it.detail.parts.length === 0) { %>
+    <p class="empty">This question has no parts.</p>
+  <% } else { %>
+    <% it.detail.parts.forEach(function(p) { %>
+      <article class="question-part-card">
+        <header>
+          <h3><%= p.part_label %></h3>
+          <span class="badge"><%= p.marks %> marks · <%= p.expected_response_type %></span>
+        </header>
+        <p class="prompt"><%= p.prompt %></p>
+
+        <h4>Mark points</h4>
+        <% if (p.markPoints.length === 0) { %>
+          <p class="empty">No mark points.</p>
+        <% } else { %>
+          <ol class="mark-points">
+            <% p.markPoints.forEach(function(mp) { %>
+              <li>
+                <span class="mark-point__text"><%= mp.text %></span>
+                <span class="mark-point__meta">
+                  <%= mp.marks %> mark<%= mp.marks === 1 ? '' : 's' %><% if (mp.is_required) { %> · required<% } %>
+                </span>
+                <% if (mp.accepted_alternatives && mp.accepted_alternatives.length > 0) { %>
+                  <ul class="mark-point__alts">
+                    <% mp.accepted_alternatives.forEach(function(a) { %>
+                      <li><%= a %></li>
+                    <% }); %>
+                  </ul>
+                <% } %>
+              </li>
+            <% }); %>
+          </ol>
+        <% } %>
+
+        <% if (p.misconceptions && p.misconceptions.length > 0) { %>
+          <h4>Common misconceptions (this part)</h4>
+          <ul class="misconceptions">
+            <% p.misconceptions.forEach(function(m) { %>
+              <li><strong><%= m.label %></strong> — <%= m.description %></li>
+            <% }); %>
+          </ul>
+        <% } %>
+      </article>
+    <% }); %>
+  <% } %>
+
+  <% if (it.detail.topicMisconceptions.length > 0) { %>
+    <h2>Topic-level misconceptions</h2>
+    <ul class="misconceptions">
+      <% it.detail.topicMisconceptions.forEach(function(m) { %>
+        <li><strong><%= m.label %></strong> — <%= m.description %></li>
+      <% }); %>
+    </ul>
+  <% } %>
+</section>
