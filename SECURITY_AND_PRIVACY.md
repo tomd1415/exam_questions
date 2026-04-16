@@ -8,7 +8,7 @@ The platform handles personal data of children under 16 in a UK school setting. 
 
 - **Data controller:** the school. The platform is a tool used by a member of staff acting on the school's behalf.
 - **Data processor:** the platform itself, hosted by the developer (the user, in their teacher capacity).
-- **Sub-processors:** the VPS provider, the backup storage provider, the OpenAI API (Phase 3+), the email sender, the embeddings provider (same as OpenAI in current plan).
+- **Sub-processors:** the OpenAI API (Phase 3+), the email sender (if used), and the embeddings provider (same as OpenAI in current plan). Hosting and backups are handled in-house on school infrastructure (Debian VM on the school Proxmox; school's existing backup regime), so no third-party hosting sub-processor is involved for the MVP.
 
 A written processing arrangement between the developer and the school is required, even if the developer is a member of staff. Sub-processors must each have a published data processing addendum that the school can rely on.
 
@@ -75,7 +75,7 @@ OpenAI API account is configured for zero data retention (verify against current
 ## Authentication
 
 - Local accounts only. Pupils cannot self-register.
-- Argon2id password hashing tuned to ~250ms on the production VPS.
+- Argon2id password hashing tuned to ~250ms on the production VM.
 - Passwords stored as hashes only; never logged.
 - Forced password change on first login.
 - Lockout after 5 failed attempts for 15 minutes.
@@ -93,13 +93,13 @@ OpenAI API account is configured for zero data retention (verify against current
 
 ## Transport and storage security
 
-- HTTPS only. HTTP redirects to HTTPS. HSTS enabled with a sensible max-age.
-- TLS via Let's Encrypt; auto-renewal monitored.
-- Database encrypted at rest at the VPS provider level where available.
-- Backups encrypted before leaving the server (e.g. age, gpg).
-- Backup destination in UK/EU.
-- Secrets stored in environment files readable only by the app user; backed up encrypted, separately from the data backup.
+- HTTPS only on the LAN. HTTP redirects to HTTPS. HSTS enabled with a sensible max-age.
+- TLS approach captured in `RUNBOOK.md`: school internal CA, or Let's Encrypt via DNS-01 if a public DNS subdomain is delegated to the school. Renewals monitored.
+- Database lives on the school's Proxmox-hosted Debian VM; full-disk encryption configured at the VM level. Pupil data never leaves the school network in normal operation.
+- Backups: handled by the school's existing backup regime, which captures the application VM (or its DB dump location) on a daily cycle and ships an encrypted copy off-site. The DB-level `pg_dump` / `pg_restore` drill is owned by the application; the off-siting is owned by the school.
+- Secrets stored in environment files readable only by the app user; included in the school's encrypted backup, separately from the data backup.
 - No secrets ever committed to the repository.
+- **Home access is out of scope for the MVP.** If introduced later, it triggers a DPIA addendum and a documented decision on reverse-proxy exposure vs VPN vs cloud frontend.
 
 ## Logging and audit
 

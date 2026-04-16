@@ -51,7 +51,7 @@ OCR's own examiner reports for J277 keep highlighting the same issues year after
 | Auth | Local accounts, Argon2 password hashing, optional Google SSO later | Schools rarely allow third-party SSO without setup |
 | LLM | OpenAI Responses API + Structured Outputs | Schema-conforming JSON for marking and generation |
 | Embeddings | OpenAI `text-embedding-3-small` via pgvector | Duplicate detection, misconception clustering |
-| Hosting | Single small VPS (UK/EU region) for MVP | Keeps pupil data inside UK/EU; cheap; easy to back up |
+| Hosting | Debian VM on the school's existing Proxmox hypervisor; LAN-only for MVP | Pupil data never leaves school premises; uses existing infrastructure; sole admin is the teacher |
 | Background jobs | In-process queue (e.g. BullMQ on Redis) added in Phase 4 | Avoid premature infra |
 
 See [ARCHITECTURE.md](ARCHITECTURE.md) for detail.

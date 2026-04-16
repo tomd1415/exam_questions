@@ -22,7 +22,7 @@ Have a deployable skeleton, a written DPIA, a copy of the OCR specification mapp
 ### Build
 
 - Repository, TypeScript project, lint/format, basic CI.
-- Hosting decision and provisioning. Single small VPS in a UK/EU region. Daily off-server backups.
+- Production VM live on the school's Proxmox hypervisor, with documented firewall rules (pupils → :443, VM → `api.openai.com`:443) captured in `RUNBOOK.md`. Pupil-facing access is LAN-only for the MVP. The school's existing backup regime is confirmed to capture the application VM; a DB-level `pg_dump` / `pg_restore` drill is performed and recorded.
 - PostgreSQL set up with migrations tooling.
 - Auth scaffold: local accounts, Argon2 hashes, session cookies. No "register yourself"; teacher creates accounts.
 - Curriculum seed data: J277/01 and J277/02 components, all topics and subtopics, all command words. Hand-keyed from the spec, reviewed twice.
@@ -49,8 +49,9 @@ Have a deployable skeleton, a written DPIA, a copy of the OCR specification mapp
 
 ### Go/no-go before Phase 1
 
-- Hosting cost is acceptable.
 - DPIA is approved by the relevant person at school, or there is an explicit decision to keep the project on a personal device with no real pupil data until that approval lands.
+- Firewall rules and TLS approach are documented in `RUNBOOK.md`.
+- DB-level restore drill has succeeded at least once.
 
 ---
 

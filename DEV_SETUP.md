@@ -156,14 +156,16 @@ All in [.vscode/extensions.json](.vscode/extensions.json). The opinionated few:
 
 ## Production differences (Debian target)
 
-The Debian server will not run Docker for the database in production. Instead:
+Production runs on a Debian VM on the school's existing Proxmox hypervisor, inside the school network, LAN-only for the MVP. The teacher is the sole admin. The VM does not run Docker for the database. Instead:
 
 - Install Postgres 16 natively (`apt install postgresql-16 postgresql-16-pgvector`).
 - Run the app under a systemd unit as a non-root user.
-- Reverse-proxy via nginx or Caddy, terminating TLS with Let's Encrypt.
-- Back up with pg_dump to an off-server encrypted location (see [SECURITY_AND_PRIVACY.md](SECURITY_AND_PRIVACY.md)).
+- Reverse-proxy via nginx or Caddy. TLS approach captured in `RUNBOOK.md` (school internal CA, or Let's Encrypt via DNS-01 if a public DNS subdomain is delegated).
+- DB backups: a nightly `pg_dump` writes to a directory captured by the school's existing backup regime, which handles encryption and off-siting. The DB-level restore drill (`pg_dump` then `pg_restore` into a scratch DB) is owned by this project.
+- Proxmox snapshots are available as a coarse rollback tool — useful before risky migrations — but do **not** replace the DB-level drill.
+- Firewall rules (pupils → :443 inbound, VM → `api.openai.com`:443 outbound) are documented in `RUNBOOK.md` alongside the TLS decision.
 
-Nothing in the dev config depends on Docker at runtime; only the database lives in a container locally. Code written for dev runs unchanged against a native Debian Postgres as long as `DATABASE_URL` is pointed at it.
+Nothing in the dev config depends on Docker at runtime; only the database lives in a container locally. Code written for dev runs unchanged against the production Postgres as long as `DATABASE_URL` is pointed at it.
 
 See [RESOURCES_REQUIRED.md](RESOURCES_REQUIRED.md) for the full provisioning list and the Phase 0 checklist.
 

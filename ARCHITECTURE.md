@@ -12,7 +12,7 @@ System architecture for the OCR J277 revision platform. Written to be readable o
 
 ## High-level shape
 
-```
+```text
                     ┌─────────────────────────┐
                     │   Browser (pupil/teacher)│
                     │   HTML + HTMX            │
@@ -43,8 +43,10 @@ System architecture for the OCR J277 revision platform. Written to be readable o
                          │
                 ┌────────▼─────┐
                 │ Daily backup │
-                │ (UK/EU obj.  │
-                │  storage)    │
+                │ (school's    │
+                │  existing    │
+                │  off-site    │
+                │  regime)     │
                 └──────────────┘
 ```
 
@@ -142,7 +144,7 @@ Jobs are idempotent. Each job records a start/end row in a `job_runs` table.
 ## Authentication and sessions
 
 - Local accounts only in Phase 1–6. Optional Google SSO in Phase 7 only if the school requests it.
-- Passwords hashed with Argon2id; cost parameters tuned to ~250ms on the production VPS.
+- Passwords hashed with Argon2id; cost parameters tuned to ~250ms on the production VM.
 - Sessions stored server-side (signed session id in cookie, state in Postgres). No JWTs.
 - Roles: `pupil`, `teacher`, `admin`. Admin is an internal role for the user; not exposed in the UI.
 - Pupils cannot self-register. Teachers create pupil accounts and provide a one-time password that must be changed on first login.
@@ -174,7 +176,7 @@ Jobs are idempotent. Each job records a start/end row in a `job_runs` table.
 
 ## Folder structure (target)
 
-```
+```text
 src/
 ├── app.ts                 Fastify wiring
 ├── config.ts              env loading and validation

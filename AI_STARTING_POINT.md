@@ -16,7 +16,7 @@ The platform serves OCR-style questions, marks pupil responses against rubric-st
 - **Code:** None in `src/` yet. Tooling (TypeScript, ESLint, Prettier, Vitest, Docker Postgres+pgvector) is wired up.
 - **Git:** Initialised. Remote: `https://github.com/tomd1415/exam_questions.git`, branch `main`.
 - **Dev environment:** Configured. See [DEV_SETUP.md](DEV_SETUP.md). Dev machine runs Gentoo Linux; target production host is Debian.
-- **Hosting / accounts (production):** None procured yet.
+- **Hosting (production):** Debian VM on the school's existing Proxmox hypervisor, inside the school network. LAN-only for the MVP (no home access). The user is the sole admin. Backups are handled by the school's existing regime.
 - **Pupil data:** None. Do not solicit any until Phase 0's DPIA is signed off.
 
 The next concrete deliverable is **Phase 0** as defined in [PLAN.md](PLAN.md): hosting decision, DPIA sign-off, curriculum seed data, and a single end-to-end happy path from pupil login to a static "hello world" question.
@@ -120,7 +120,7 @@ Add new memories there when you learn something durable about the user, the proj
 
 ### Tech stack (planned, not yet built)
 
-Node.js + TypeScript + Fastify on the server; server-rendered HTML + HTMX on the client; PostgreSQL with `pgvector`; Argon2id for passwords; OpenAI Responses API + Structured Outputs in Phase 3+; Redis only from Phase 4. Single small UK/EU VPS for MVP. Full detail in [ARCHITECTURE.md](ARCHITECTURE.md) and [RESOURCES_REQUIRED.md](RESOURCES_REQUIRED.md).
+Node.js + TypeScript + Fastify on the server; server-rendered HTML + HTMX on the client; PostgreSQL with `pgvector`; Argon2id for passwords; OpenAI Responses API + Structured Outputs in Phase 3+; Redis only from Phase 4. Production runs on an on-premises Debian VM on the school's Proxmox hypervisor, LAN-only for the MVP. Full detail in [ARCHITECTURE.md](ARCHITECTURE.md) and [RESOURCES_REQUIRED.md](RESOURCES_REQUIRED.md).
 
 ### Folder structure (target — most of this does not exist yet)
 

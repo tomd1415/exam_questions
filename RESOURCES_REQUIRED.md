@@ -19,22 +19,29 @@ The single hardest resource is your own evening time. Phases are sized so any on
 | Item | Purpose | Notes |
 | --- | --- | --- |
 | Development machine | Your own | Linux (you already use Gentoo). 16+ GB RAM comfortable. |
-| Server | Production hosting | Single small VPS sufficient for one school. See §3. |
-| Backup destination | Off-server backups | Object storage (e.g. Backblaze B2, Hetzner Storage Box) in UK/EU. |
+| Server | Production hosting | Debian VM on the school's existing Proxmox hypervisor. See §3. Already provisioned. |
+| Backup destination | Off-server backups | Covered by the school's existing backup regime (out of scope for this project to purchase or configure). |
 | Test devices | Realistic compatibility | Borrow at least: a school Chromebook, a school Windows laptop, an iPad. Test on each before Phase 1 user testing. |
 
 ## 3. Hosting and infrastructure
 
-| Service | Purpose | Indicative monthly cost (GBP) |
-| --- | --- | --- |
-| Small VPS (UK/EU region, ~2 vCPU / 4 GB RAM / 80 GB SSD) | App + Postgres in one box for MVP | £8–£15 |
-| Domain name | Stable URL the school can whitelist | £10–£15 / year |
-| Off-server backups (encrypted) | Daily DB dumps + asset bundle | £1–£3 |
-| TLS certificate | HTTPS | Free via Let's Encrypt |
-| Email sender (transactional) | Account creation, password reset, alerts | £0 on a small free tier; budget £5 if it grows |
-| Monitoring/uptime ping | "Is it up at 9am?" alert | £0–£5 |
+Hosting is on-premises, inside the school network, on the school's existing Proxmox hypervisor. The teacher is the sole administrator of the application VM. Pupil data never leaves school premises.
 
-UK/EU region is non-negotiable for pupil data hosting per [SECURITY_AND_PRIVACY.md](SECURITY_AND_PRIVACY.md).
+| Item | Purpose | Cost |
+| --- | --- | --- |
+| Debian VM on school Proxmox (target: 2 vCPU / 4 GB RAM / 40–80 GB disk) | App + Postgres in one VM for MVP | £0 (existing infrastructure) |
+| Internal hostname (e.g. `revision.<school>.internal`) | Stable URL for pupils on the LAN | £0 |
+| TLS certificate | HTTPS on the LAN | £0. Options: school internal CA, or Let's Encrypt via DNS-01 if public DNS for the subdomain is available. Decision captured in the ops runbook. |
+| Firewall rules | Pupils reach the VM on 443; VM reaches `api.openai.com` on 443 outbound | Already sorted; rules to be documented in the ops runbook during Phase 0. |
+| Backups | Daily encrypted DB + config backup, off-site | Covered by the school's existing backup regime. Phase 0 still runs a documented DB-level restore drill (`pg_dump`/`pg_restore` into a scratch database) to prove application-level recovery. |
+| Email sender (transactional) | Password reset, cost alerts, backup-failure alerts | £0 on a small free tier; budget £5 if it grows. Optional in Phase 0; teacher-triggered resets are acceptable initially. |
+| Monitoring/uptime ping | "Is it up at 8:50am?" alert | £0 — internal cron or a simple systemd timer posting to an email. |
+
+**Data residency:** Pupil data is stored only on the school server. No cross-border transfer for hosting. (OpenAI processing in Phase 3+ is a separate cross-border question handled in [SECURITY_AND_PRIVACY.md](SECURITY_AND_PRIVACY.md).)
+
+**Home access is out of scope for the MVP.** If added later (targeted: next academic year if uptake justifies it), it requires a DPIA addendum and a decision on reverse proxy vs VPN vs cloud frontend.
+
+**Proxmox-level snapshots** are available as an additional rollback tool — useful before risky migrations — but do **not** replace the DB-level backup/restore drill.
 
 ## 4. Third-party APIs
 
@@ -94,7 +101,7 @@ Open-source unless stated otherwise.
 | Background jobs (Phase 4+) | BullMQ on Redis | Calibration jobs, embeddings batches |
 | Testing | Vitest + Playwright | Unit + end-to-end |
 | Linting | ESLint, Prettier | House style |
-| Process supervision | systemd unit on the VPS | Restart on crash |
+| Process supervision | systemd unit on the school VM | Restart on crash |
 
 ## 6. Content resources
 
@@ -138,24 +145,27 @@ Storage rules:
 
 | Cadence | Task |
 | --- | --- |
-| Daily | Backup ran (alert on failure) |
+| Daily | Confirm the school backup regime captured last night's DB dump (alert on failure) |
 | Weekly | Skim moderation queue and prompt-injection flags |
-| Half-termly | Run a backup restore drill; review API costs vs budget |
-| Termly | Rotate API keys; review and update DPIA if anything changed |
-| Annually | Renew domain, review hosting plan, full security review |
+| Half-termly | Run a DB-level restore drill; take a fresh Proxmox snapshot before any schema migration; review API costs vs budget |
+| Termly | Rotate OpenAI API keys; review and update DPIA if anything changed; re-confirm firewall rules still match the runbook |
+| Annually | Full security review; revisit the home-access decision |
 
-## 10. Initial purchase / setup checklist
+## 10. Initial setup checklist
 
-Before Phase 0 ends, the following must exist and be paid for:
+Before Phase 0 ends, the following must exist:
 
-- [ ] VPS provisioned in UK/EU region.
-- [ ] Domain registered.
-- [ ] Backup destination account.
+- [ ] Debian VM on the school Proxmox confirmed reachable from the dev machine; SSH key access set up.
+- [ ] Internal hostname assigned and resolvable on the school LAN.
+- [ ] TLS approach decided (school internal CA vs Let's Encrypt via DNS-01) and a cert installed.
+- [ ] Firewall rules documented in `RUNBOOK.md`: pupil → VM:443, VM → `api.openai.com`:443 outbound, plus anything else needed.
+- [ ] DB-level backup/restore drill performed and recorded (`pg_dump` then `pg_restore` into a scratch database).
+- [ ] School backup regime confirmed to capture the application VM (or its DB dump location).
 - [ ] OpenAI account with billing limit, separate dev key, zero-retention configured.
-- [ ] Email sender account.
-- [ ] Calendar reminders set for renewals and key rotation.
+- [ ] Calendar reminders set for key rotation, restore drills, and DPIA review.
 - [ ] Repository created with branch protection on `main`.
-- [ ] Secrets vault chosen (even a `.env` file with restricted permissions plus an encrypted backup is acceptable for a single-person project).
+- [ ] Secrets handling chosen (a `.env` file with `chmod 600`, owned by the app user, included in the school's encrypted backup, is acceptable for a single-admin project).
+- [ ] Signed-off DPIA, privacy notice, and acceptable-use statement.
 
 ## 11. Things deliberately not on this list
 
