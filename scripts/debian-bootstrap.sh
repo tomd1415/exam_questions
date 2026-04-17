@@ -69,6 +69,13 @@ echo "  ✓ Debian codename: ${CODENAME}"
 # 2. Node.js from NodeSource
 # ---------------------------------------------------------------------------
 echo "── 2/5 Node.js ${NODE_MAJOR}.x"
+
+# Debian ships an older nodejs (e.g. 20.x on bookworm). Remove it first so
+# NodeSource's package installs cleanly rather than being masked by the distro
+# version. Safe if the packages aren't present (|| true absorbs the 'not found').
+apt-get purge -y nodejs libnode72 libnode-dev npm >/dev/null 2>&1 || true
+apt-get autoremove -y >/dev/null 2>&1 || true
+
 install -d -m 0755 /etc/apt/keyrings
 if [[ ! -f /etc/apt/keyrings/nodesource.gpg ]]; then
   curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key \
@@ -76,8 +83,21 @@ if [[ ! -f /etc/apt/keyrings/nodesource.gpg ]]; then
 fi
 echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_${NODE_MAJOR}.x nodistro main" \
   > /etc/apt/sources.list.d/nodesource.list
+
+# Pin NodeSource above the Debian repos so `apt install nodejs` always picks it.
+cat > /etc/apt/preferences.d/nodesource <<'PIN'
+Package: nodejs
+Pin: origin deb.nodesource.com
+Pin-Priority: 1001
+PIN
+
 apt-get update -qq
 apt-get install -y --no-install-recommends nodejs
+
+# Node 22 LTS bundles npm 10.x; upgrade npm itself to satisfy any package that
+# requires >=11.
+npm install -g npm@latest >/dev/null
+
 echo "  ✓ node $(node --version), npm $(npm --version)"
 
 # ---------------------------------------------------------------------------
