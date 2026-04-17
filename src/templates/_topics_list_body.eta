@@ -25,7 +25,7 @@
           <%= it.revealMode === 'whole_attempt' ? 'checked' : '' %> />
         Submit the whole attempt at once
       </label>
-      <button type="submit">Save preference</button>
+      <button type="submit" class="btn btn--secondary btn--sm">Save preference</button>
     </fieldset>
   </form>
 
@@ -49,11 +49,11 @@
             <td><%= t.topic_title %></td>
             <td>
               <% if (t.in_progress_attempt_id) { %>
-                <a class="btn" href="/attempts/<%= t.in_progress_attempt_id %>">Resume attempt</a>
+                <a class="btn btn--secondary btn--sm" href="/attempts/<%= t.in_progress_attempt_id %>">Resume attempt</a>
               <% } else { %>
                 <form method="post" action="/topics/<%= encodeURIComponent(t.topic_code) %>/start" class="inline-form">
                   <input type="hidden" name="_csrf" value="<%= it.csrfToken %>" />
-                  <button type="submit">Start attempt</button>
+                  <button type="submit" class="btn btn--primary btn--sm">Start attempt</button>
                 </form>
               <% } %>
             </td>

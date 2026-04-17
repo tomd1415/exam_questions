@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex" />
     <title><%= it.title %> · J277 revision</title>
+    <link rel="stylesheet" href="/static/design-tokens.css" />
     <link rel="stylesheet" href="/static/site.css" />
     <link rel="stylesheet" href="/static/paper.css" />
   </head>
@@ -16,7 +17,7 @@
           <form method="post" action="/logout" class="site-header__logout">
             <input type="hidden" name="_csrf" value="<%= it.csrfToken %>" />
             <span class="site-header__user"><%= it.currentUser.display_name %></span>
-            <button type="submit">Sign out</button>
+            <button type="submit" class="btn btn--ghost btn--sm">Sign out</button>
           </form>
         <% } %>
       </div>

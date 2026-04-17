@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex" />
     <title><%= it.title %> · J277 revision</title>
+    <link rel="stylesheet" href="/static/design-tokens.css" />
     <link rel="stylesheet" href="/static/paper.css" />
     <link rel="stylesheet" href="/static/print.css" />
   </head>

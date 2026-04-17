@@ -99,7 +99,7 @@ it.bundle.questions.forEach(function(q) {
               <input type="text" name="reason" maxlength="500" required
                      placeholder="Why this mark (visible to teachers only)" />
             </label>
-            <button type="submit">Save mark</button>
+            <button type="submit" class="btn btn--primary btn--sm">Save mark</button>
           </form>
         </div>
       <% }); %>

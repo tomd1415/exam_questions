@@ -89,9 +89,9 @@ const timerStartedAt = it.bundle.attempt.started_at instanceof Date
       <% }); %>
 
       <div class="paper-actions">
-        <button type="submit">Save progress</button>
+        <button type="submit" class="btn btn--secondary">Save progress</button>
         <span id="autosave-status" class="autosave-status" role="status" aria-live="polite"></span>
-        <button type="submit" formaction="/attempts/<%= it.bundle.attempt.id %>/submit" class="button button--primary">
+        <button type="submit" formaction="/attempts/<%= it.bundle.attempt.id %>/submit" class="btn btn--primary">
           Submit attempt
         </button>
       </div>
@@ -162,9 +162,9 @@ const timerStartedAt = it.bundle.attempt.started_at instanceof Date
             </div>
           <% }); %>
           <div class="paper-actions">
-            <button type="submit" formaction="/attempts/<%= it.bundle.attempt.id %>/save">Save progress</button>
+            <button type="submit" class="btn btn--secondary" formaction="/attempts/<%= it.bundle.attempt.id %>/save">Save progress</button>
             <span id="autosave-status" class="autosave-status" role="status" aria-live="polite"></span>
-            <button type="submit" class="button button--primary">Submit question</button>
+            <button type="submit" class="btn btn--primary">Submit question</button>
           </div>
         </form>
       <% } else { %>
@@ -228,7 +228,7 @@ const timerStartedAt = it.bundle.attempt.started_at instanceof Date
                          step="1"
                          value="<%= part.pupil_self_marks === null ? '' : part.pupil_self_marks %>" />
                 </label>
-                <button type="submit">Save estimate</button>
+                <button type="submit" class="btn btn--secondary btn--sm">Save estimate</button>
               </form>
             <% } %>
           </div>
@@ -236,9 +236,9 @@ const timerStartedAt = it.bundle.attempt.started_at instanceof Date
 
         <div class="paper-actions">
           <% if (nextUnsubmitted) { %>
-            <a class="btn button button--primary" href="/attempts/<%= it.bundle.attempt.id %>?q=<%= nextUnsubmitted.id %>">Next question →</a>
+            <a class="btn btn--primary" href="/attempts/<%= it.bundle.attempt.id %>?q=<%= nextUnsubmitted.id %>">Next question →</a>
           <% } else { %>
-            <a class="btn button button--primary" href="/attempts/<%= it.bundle.attempt.id %>">Finish &amp; review</a>
+            <a class="btn btn--primary" href="/attempts/<%= it.bundle.attempt.id %>">Finish &amp; review</a>
           <% } %>
         </div>
       <% } %>

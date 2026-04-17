@@ -29,6 +29,6 @@
         ></textarea>
       </fieldset>
     <% }) %>
-    <button type="submit">Submit answer</button>
+    <button type="submit" class="btn btn--primary">Submit answer</button>
   </form>
 </section>

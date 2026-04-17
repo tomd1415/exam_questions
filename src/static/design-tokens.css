@@ -1,0 +1,120 @@
+/* Phase 2 Chunk 6a — Design tokens.
+   Single source of truth for colour, spacing, typography, radius and
+   shadow. Loaded before site.css / paper.css / print.css so every later
+   rule can resolve these custom properties. Legacy tokens (--bg, --fg,
+   --accent, etc.) are kept as aliases so Chunk 1–6 styles keep rendering
+   pixel-identically until their rules are rewritten to reference the new
+   names directly. */
+
+:root {
+  /* ------------------------------------------------------------------ */
+  /* Colour — surfaces, ink, and accents                                */
+  /* ------------------------------------------------------------------ */
+  --color-surface-0: #ffffff;
+  --color-surface-1: #f7f7fb;
+  --color-surface-2: #eef0f7;
+  --color-surface-3: #e0e2ee;
+
+  --color-ink-0: #0f0f1a;
+  --color-ink-1: #1a1a22;
+  --color-ink-2: #3a3a48;
+  --color-ink-3: #5b5b6a;
+  --color-ink-4: #8a8a99;
+
+  --color-border: #d6d6e0;
+  --color-border-strong: #b9b9c6;
+
+  --color-brand-50: #eff4ff;
+  --color-brand-100: #dbe5ff;
+  --color-brand-500: #1d4ed8;
+  --color-brand-600: #1a44c0;
+  --color-brand-700: #163aa1;
+  --color-brand-ink: #ffffff;
+
+  --color-accent-500: #0f766e;
+  --color-accent-ink: #ffffff;
+
+  --color-danger-50: #fdecec;
+  --color-danger-100: #fbd4d4;
+  --color-danger-500: #c03030;
+  --color-danger-600: #a72525;
+  --color-danger-700: #7a1010;
+  --color-danger-ink: #ffffff;
+
+  --color-success-50: #e6f7ea;
+  --color-success-100: #c7ecd0;
+  --color-success-500: #3c9a5a;
+  --color-success-600: #2f7e48;
+  --color-success-700: #145a25;
+  --color-success-ink: #ffffff;
+
+  --color-warn-50: #fff4e0;
+  --color-warn-100: #ffe3b2;
+  --color-warn-500: #b76e00;
+  --color-warn-700: #744200;
+
+  --color-info-50: #e8f1fb;
+  --color-info-500: #1d4ed8;
+  --color-info-700: #15357a;
+
+  /* ------------------------------------------------------------------ */
+  /* Spacing — 4 px base scale                                          */
+  /* ------------------------------------------------------------------ */
+  --space-0: 0;
+  --space-1: 0.25rem; /* 4  */
+  --space-2: 0.5rem; /* 8  */
+  --space-3: 0.75rem; /* 12 */
+  --space-4: 1rem; /* 16 */
+  --space-5: 1.25rem; /* 20 */
+  --space-6: 1.5rem; /* 24 */
+  --space-7: 2rem; /* 32 */
+  --space-8: 2.5rem; /* 40 */
+  --space-9: 3rem; /* 48 */
+  --space-10: 4rem; /* 64 */
+
+  /* ------------------------------------------------------------------ */
+  /* Radius                                                             */
+  /* ------------------------------------------------------------------ */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.4rem;
+  --radius-lg: 0.625rem;
+  --radius-pill: 999px;
+
+  /* ------------------------------------------------------------------ */
+  /* Shadow                                                             */
+  /* ------------------------------------------------------------------ */
+  --shadow-sm: 0 1px 2px rgba(15, 15, 26, 0.06);
+  --shadow-md: 0 2px 6px rgba(15, 15, 26, 0.08);
+  --shadow-lg: 0 8px 24px rgba(15, 15, 26, 0.12);
+
+  /* ------------------------------------------------------------------ */
+  /* Typography                                                         */
+  /* ------------------------------------------------------------------ */
+  --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
+
+  --type-display: 1.75rem; /* big dashboard heroes  */
+  --type-h1: 1.4rem; /* page H1               */
+  --type-h2: 1.15rem; /* section H2            */
+  --type-body: 1rem;
+  --type-small: 0.85rem;
+  --type-micro: 0.78rem;
+
+  /* ------------------------------------------------------------------ */
+  /* Focus ring — single, deliberate, non-default                       */
+  /* ------------------------------------------------------------------ */
+  --focus-ring: 0 0 0 3px rgba(29, 78, 216, 0.35);
+
+  /* ------------------------------------------------------------------ */
+  /* Legacy aliases — existing Chunk 1–6 CSS references these           */
+  /* ------------------------------------------------------------------ */
+  --bg: var(--color-surface-1);
+  --fg: var(--color-ink-1);
+  --muted: var(--color-ink-3);
+  --accent: var(--color-brand-500);
+  --accent-fg: var(--color-brand-ink);
+  --error-bg: var(--color-danger-50);
+  --error-fg: var(--color-danger-700);
+  --border: var(--color-border);
+  --card-bg: var(--color-surface-0);
+}

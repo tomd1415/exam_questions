@@ -4,15 +4,21 @@
 objective marking polish. Duration estimate: 2–3 weeks of evening
 work.
 
-> **Status (2026-04-17):** Chunks 1–4 shipped on `main`. Chunks 1
-> (paper chrome), 2 (per-type widgets), 3 (autosave), and 4 (optional
-> countdown timer) are all covered by `npm run check` green and have
-> filled-in HUMAN_TEST_GUIDE walkthroughs (§2.A–§2.D). Chunks 5–9
-> (review page, print-to-PDF, accessibility pass, teacher
-> quality-of-life, lesson test) remain. Phase 1 signed off in
-> [RUNBOOK.md](RUNBOOK.md) §10 earlier on this date (walker report
-> `tmp/human-tests/phase1-20260417T182602Z.md`, 20/20 auto steps
-> PASS, seeder FK-restrict idempotency fixed in
+> **Status (2026-04-17):** Chunks 1–6 shipped on `main`. Chunks 1
+> (paper chrome), 2 (per-type widgets), 3 (autosave), 4 (optional
+> countdown timer), 5 (review side-by-side), and 6 (print-to-PDF) are
+> all covered by `npm run check` green and have filled-in
+> HUMAN_TEST_GUIDE walkthroughs (§2.A–§2.F). A new **UI polish tier
+> 6a–6g** (design tokens, unified nav, breadcrumbs, pupil/teacher
+> dashboards, empty states, icons & responsive polish) is inserted
+> between Chunks 6 and 7 because end-user feedback on the Chunk 6
+> build flagged the app as "sparse / no consistent menus"; it is
+> important to settle the IA before the Chunk 7 accessibility pass
+> lands on top of it. Chunks 7–9 (accessibility, teacher
+> quality-of-life / walker, lesson test) remain after 6g. Phase 1
+> signed off in [RUNBOOK.md](RUNBOOK.md) §10 earlier on this date
+> (walker report `tmp/human-tests/phase1-20260417T182602Z.md`, 20/20
+> auto steps PASS, seeder FK-restrict idempotency fixed in
 > `src/repos/questions.ts::upsertPartsAndMarkPoints`). Expect edits
 > as the remaining chunks land.
 
@@ -437,6 +443,330 @@ gets a paper-like PDF suitable for photocopying or hand-marking.
 
 **Exit criteria.** A teacher can hand a printed set to a class as a
 revision paper without editing it in another tool.
+
+### Chunk 6a — Visual design tokens and component base
+
+**Goal.** Settle one set of CSS custom properties for colour, spacing,
+typography, radius, and elevation so every existing stylesheet and
+every future component reads from the same palette rather than
+drifting into ad-hoc hex codes. Introduce first-class `.btn`, form
+control, card, and flash classes so every page looks like the same
+product.
+
+**Schema.** None.
+
+**App code.**
+
+- `src/static/design-tokens.css` (new). `:root` block with
+  `--color-brand-*`, `--color-surface-*`, `--color-ink-*`,
+  `--color-accent-*`, `--color-danger-*`, `--color-success-*`;
+  `--space-0` through `--space-10` on a 4/8 scale; `--radius-sm/md/lg`;
+  `--shadow-sm/md`; `--font-sans`, `--font-mono`; `--type-scale-*` for
+  display / h1 / h2 / body / small. Linked first from `_chrome.eta`
+  before `site.css` so later rules can reference the tokens.
+- Retire hard-coded colours and spacings from `site.css`, `paper.css`,
+  `print.css` in favour of tokens, in moves that render pixel-identical
+  output (no visual-regression delta).
+- New component classes (in `site.css`, not a separate file, to keep
+  the cascade simple): `.btn`, `.btn--primary`, `.btn--secondary`,
+  `.btn--ghost`, `.btn--danger`, plus disabled / loading states;
+  `.input`, `.select`, `.textarea` sharing one focus and one invalid
+  style; `.card` and `.card__header`, `.card__body`, `.card__footer`;
+  flash variants `.flash--ok`, `.flash--err`, `.flash--warn` (new),
+  `.flash--info`.
+- Replace ad-hoc button styling on existing pages (admin forms,
+  pupil attempt edit, login, preferences) with the new `.btn`
+  variants in-place.
+
+**Audit events added.** None.
+
+**Tests.**
+
+| Level | File                                 | What it proves                                                                                                                                |
+| ----- | ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| HTTP  | `tests/http/design-tokens.test.ts`   | `/login`, `/topics`, `/admin/classes` responses link `/static/design-tokens.css` before `/static/site.css` (cascade order is load-bearing).   |
+| HTTP  | `tests/http/button-variants.test.ts` | Every `<button>` on a representative page set carries at least one `.btn--*` modifier; no bare `<button>` without a variant sneaks past lint. |
+| Human | HUMAN_TEST_GUIDE §2.F.a              | Visual sweep of the seven core surfaces against a Chunk 6 screenshot baseline: nothing breaks, everything now uses the same palette.          |
+
+**Exit criteria.** No stylesheet in `src/static/` references a
+colour, spacing, radius, or shadow value that is not a token; every
+`<button>` the user can see uses a `.btn--*` variant.
+
+### Chunk 6b — Unified top navigation and footer
+
+**Goal.** Every authenticated page shows the same top bar with
+role-aware links, a live active-state indicator, and a tiny footer
+with app version. Nothing important lives behind a URL you have to
+already know.
+
+**Schema.** None.
+
+**App code.**
+
+- `src/templates/_nav.eta` (new): `<nav class="site-nav"
+aria-label="Primary">` whose link set depends on `it.user.role`:
+  - **Pupil:** Home, Topics, My attempts, Preferences, Sign out.
+  - **Teacher:** Home, Classes, Questions, Topics, Marking queue,
+    Preferences, Sign out.
+  - **Admin:** teacher links plus Users, Audit log (the last two are
+    placeholder stubs for Chunk 8 — they render a "coming soon"
+    empty state rather than 404 so the nav shape stays stable).
+- Active-state: current path gets `aria-current="page"` and
+  `.site-nav__item--active`. Partial-path matching for nested
+  routes (e.g. `/admin/classes/123` highlights "Classes").
+- Responsive: `<640 px` collapses to a toggle button with
+  `aria-expanded` and `aria-controls`; the drawer is a named
+  landmark so screen readers announce it.
+- `_chrome.eta` includes `_nav.eta` immediately after `<body>`.
+- `_admin_chrome.eta` retires its local nav (superseded) but keeps
+  the `.admin-card` content wrapper so existing admin templates are
+  untouched.
+- Two new endpoints the nav now points at:
+  - `GET /me/attempts` — thin list page of the signed-in pupil's
+    attempts (reuses existing `AttemptRepo.listForPupil`).
+  - `GET /admin/attempts` — the teacher's aggregated "marking queue"
+    across every class they own (new repo method
+    `AttemptRepo.listAwaitingMarkingForTeacher`).
+- New `src/templates/_footer.eta`: app version read from
+  `package.json` at boot time into `app.decorate('appVersion', …)`;
+  link to `/healthz` for admins only.
+
+**Audit events added.** None.
+
+**Tests.**
+
+| Level | File                                      | What it proves                                                                                                                                                |
+| ----- | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| HTTP  | `tests/http/nav.test.ts`                  | Pupil, teacher, admin fixtures each render the expected link set; `aria-current` marks the current path; unauthenticated pages render the public header only. |
+| HTTP  | `tests/http/me-attempts.test.ts`          | `/me/attempts` returns only the current pupil's attempts, paginated; a different pupil's attempt id does not appear.                                          |
+| HTTP  | `tests/http/admin-attempts-queue.test.ts` | `/admin/attempts` returns attempts across every class owned by the teacher; non-owning teacher sees an empty list, not a 403.                                 |
+| Human | HUMAN_TEST_GUIDE §2.F.b                   | Teacher and pupil walk the full nav on a 360 px viewport and a 1440 px viewport; every link lands on a live page and highlights when active.                  |
+
+**Exit criteria.** Zero hidden routes — every page the user needs
+day-to-day is reachable from the top nav within two clicks of
+login.
+
+### Chunk 6c — Breadcrumbs and standardised page headers
+
+**Goal.** Any page nested more than one level below a nav root shows
+a breadcrumb trail and the same page-header layout (H1, optional
+subtitle, optional right-aligned action slot); users never have to
+guess where they are or what this screen is called.
+
+**Schema.** None.
+
+**App code.**
+
+- `src/templates/_breadcrumbs.eta` (new): renders `<nav
+aria-label="Breadcrumb">` from `it.crumbs` (`Array<{label, href?}>`).
+  Last item is unlinked and `aria-current="page"`.
+- `src/templates/_page_header.eta` (new): `<header
+class="page-header">` with an H1, an optional subtitle paragraph,
+  and an optional action slot (e.g. "Open print preview", "New
+  class"). Used everywhere in place of ad-hoc `<h1>` + button
+  combinations.
+- Retrofit these surfaces to compute their own `crumbs`: class
+  detail, class attempts, admin attempt detail, pupil attempt edit,
+  pupil review, admin question detail, admin topics list, topic
+  print preview. Each template builds the array from existing `it`
+  fields.
+- Remove ad-hoc "← Back to X" links elsewhere; the breadcrumb's
+  second-to-last crumb is now the canonical "back" affordance.
+
+**Audit events added.** None.
+
+**Tests.**
+
+| Level | File                             | What it proves                                                                                                                      |
+| ----- | -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| HTTP  | `tests/http/breadcrumbs.test.ts` | Class-detail, admin-attempt, review, topic-print-preview each render the expected breadcrumb chain with `aria-current` on the leaf. |
+| Human | HUMAN_TEST_GUIDE §2.F.c          | On every drill-down surface, the teacher can reach a nav root in exactly one breadcrumb click.                                      |
+
+**Exit criteria.** No page deeper than one level from a nav root
+has a visible H1 without breadcrumbs above it; no page has two
+competing "back" affordances.
+
+### Chunk 6d — Pupil home dashboard
+
+**Goal.** When a pupil signs in they land on a real home page that
+tells them what is waiting for them, not a bare redirect to
+`/topics`. The pupil's first click should start or resume work.
+
+**Schema.** None.
+
+**App code.**
+
+- `GET /` for role `pupil` renders the new `pupil_home.eta` instead
+  of redirecting to `/topics`. Teachers and admins on `/` keep
+  their current redirect until Chunk 6e ships.
+- New repo helper `AttemptRepo.summariseForPupil(userId)` returning
+  `{ inProgress, awaitingMarking, recentlyReviewed }` — each bucket
+  has a count and the top three rows (topic code + title, started
+  at, last activity).
+- `pupil_home.eta` shows:
+  - A **Topics assigned to you** card (top 6 topics, each with a
+    single "Start" or "Resume" button in-row — no detour to
+    `/topics`).
+  - A **Pick up where you left off** card listing in-progress
+    attempts.
+  - A **Waiting for your teacher** card for submitted attempts with
+    any open parts still `teacher_pending`.
+  - A **Recently reviewed** card linking to the last three review
+    pages.
+- Each card uses the Chunk 6a `.card` component and a "See all"
+  link to `/me/attempts?status=…` for the full list.
+
+**Audit events added.** None.
+
+**Tests.**
+
+| Level       | File                                                 | What it proves                                                                                                                       |
+| ----------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| Integration | `tests/integration/attempts-summarise-pupil.test.ts` | Bucketing is correct for a pupil with mixed in-progress, submitted-pending, and reviewed attempts; other pupils' rows never leak in. |
+| HTTP        | `tests/http/pupil-home.test.ts`                      | `/` for a pupil renders all four cards with expected counts from seeded fixtures; logged-out users still get `/login`.               |
+| Human       | HUMAN_TEST_GUIDE §2.F.d                              | A pupil who has never used the app signs in and starts a topic from the home page without needing instructions.                      |
+
+**Exit criteria.** A first-time pupil can go from login → starting a
+topic in a single click; a returning pupil can resume the last
+in-progress attempt from the home page in a single click.
+
+### Chunk 6e — Teacher home dashboard
+
+**Goal.** Teachers sign in to a dashboard that tells them what needs
+their attention first — pending approvals, unmarked open parts,
+recent pupil activity — rather than a generic classes list.
+
+**Schema.** None.
+
+**App code.**
+
+- `GET /` for role `teacher` / `admin` renders the new
+  `teacher_home.eta` instead of redirecting to `/admin/classes`.
+- New repo methods, all scoped by the teacher's ownership of
+  classes or authorship of questions:
+  - `QuestionRepo.countPendingForAuthor(authorId)`.
+  - `AttemptRepo.countAwaitingMarkingForTeacher(teacherId)`.
+  - `AttemptRepo.recentSubmissionsForTeacher(teacherId, limit = 5)`.
+  - `ClassRepo.listWithLastActivity(teacherId)` — name, enrolment
+    count, last attempt submitted_at.
+- `teacher_home.eta` shows four cards:
+  - **Marking queue** — count of open parts awaiting a teacher mark;
+    CTA links to `/admin/attempts`.
+  - **Approvals** — count of draft questions this teacher authored;
+    CTA to `/admin/questions?status=draft`.
+  - **Active classes** — per-class table of name, enrolment count,
+    last-activity timestamp; row click → class detail.
+  - **Recent submissions** — last 5 pupil submissions across the
+    teacher's classes; row click → admin attempt view.
+- Prominent "Run a revision lesson" CTA at the top of the
+  dashboard linking to `/admin/topics` (print preview is one step
+  away); this mirrors the Chunk 6 Print-to-PDF intent.
+
+**Audit events added.** None.
+
+**Tests.**
+
+| Level       | File                                          | What it proves                                                                                                                 |
+| ----------- | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| Integration | `tests/integration/teacher-dashboard.test.ts` | Each repo method returns only rows scoped to the teacher's classes / authored questions; a second teacher's rows never leak.   |
+| HTTP        | `tests/http/teacher-home.test.ts`             | `/` for a teacher renders all four cards; counts reflect seeded fixtures; pupil hitting `/` still redirects to the pupil home. |
+| Human       | HUMAN_TEST_GUIDE §2.F.e                       | Teacher signs in before a lesson and can see at a glance what they need to mark, approve, or run, without a second page-load.  |
+
+**Exit criteria.** A teacher can act on the most important thing
+waiting for them without visiting a second page after login.
+
+### Chunk 6f — Empty states, primary CTAs, destructive-action styling
+
+**Goal.** Every list in the app handles the empty case with a
+friendly explanation and a clear next action; primary / secondary /
+destructive buttons look visibly different; currently-hidden
+affordances (most notably the pupil Print link on the review page)
+are surfaced; destructive actions require a confirm.
+
+**Schema.** None.
+
+**App code.**
+
+- `src/templates/_empty_state.eta` (new): H2, a one-line
+  explanation, optional illustration placeholder, a primary CTA.
+- Retrofit: `/topics` (no topics assigned yet), `/admin/classes`
+  (no classes yet), class detail (no pupils enrolled / no topics
+  assigned), class attempts (no submissions yet), question list
+  (no questions in subtopic), `/admin/attempts` marking queue
+  (nothing to mark), pupil home's four cards.
+- Pupil review page now renders a "Print this attempt" link
+  (`/attempts/:id/print?answers=1`, opens in a new tab) — Chunk 6
+  deliberately left this hidden; 6f surfaces it now that empty-state
+  affordances are generally cleaned up.
+- Pupil review page "Next topic" link when the pupil has remaining
+  assigned topics — natural continuation.
+- Destructive-action sweep: every route that deletes or retires
+  rows gets a `.btn--danger` button and a `data-confirm="…"`
+  attribute handled by a tiny `src/static/confirm.js`
+  (non-blocking `window.confirm`; forms submit only on confirm).
+  Audit scope: class archive, pupil unenrol, question retire,
+  topic-assignment remove.
+
+**Audit events added.** None.
+
+**Tests.**
+
+| Level | File                                         | What it proves                                                                                                                              |
+| ----- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| HTTP  | `tests/http/empty-states.test.ts`            | Every retrofitted list renders an `.empty-state` element with a CTA link when seeded empty; the CTA `href` is the expected next-step route. |
+| HTTP  | `tests/http/pupil-review-print-link.test.ts` | Review page for the pupil's own attempt renders a `/attempts/:id/print?answers=1` link.                                                     |
+| HTTP  | `tests/http/destructive-actions.test.ts`     | Every destructive button in admin surfaces carries `data-confirm` and the `.btn--danger` class; no destructive action is a plain link.      |
+| Human | HUMAN_TEST_GUIDE §2.F.f                      | New teacher with a fresh empty class is guided through every setup step by empty-state CTAs without reading docs.                           |
+
+**Exit criteria.** No page renders a bare empty `<table>` or
+`<ul>`; every destructive button looks destructive and prompts for
+confirmation before submitting.
+
+### Chunk 6g — Iconography and responsive polish
+
+**Goal.** A small self-hosted SVG icon set reinforces nav items,
+breadcrumbs, and primary action buttons; every page survives 360 px,
+768 px, 1024 px, and 1440 px widths without horizontal scroll or
+clipped content.
+
+**Schema.** None.
+
+**App code.**
+
+- `src/static/icons/` directory with the Lucide (ISC / MIT,
+  distribution-friendly) subset actually in use: `home`,
+  `book-open`, `users`, `file-text`, `clipboard-check`, `bar-chart`,
+  `log-out`, `menu`, `x`, `arrow-left`, `printer`, `check`,
+  `alert-triangle`, `settings`, `download`. Icons tracked in git
+  (each SVG ≤ 2 KB; LICENSE file in the directory).
+- `src/templates/_icon.eta` (new): inlines an SVG by name with
+  `aria-hidden="true" focusable="false"` so icons inherit
+  `currentColor` and never break screen readers.
+- Icons placed in nav items, breadcrumb separators, empty-state
+  illustrations, and primary CTA buttons. Always paired with a text
+  label — no icon-only buttons (Chunk 7 accessibility would fail
+  them).
+- Responsive audit pass on every page in Chunk 7's axe target set:
+  fix any horizontal overflow, clipped content, or touch target
+  smaller than 44×44 px.
+- `@media (prefers-reduced-motion: reduce)` branch: any animations
+  introduced by the nav drawer or flash slide-in skip when the
+  media query matches.
+
+**Audit events added.** None.
+
+**Tests.**
+
+| Level   | File                                      | What it proves                                                                                                                  |
+| ------- | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| HTTP    | `tests/http/icons.test.ts`                | At least one icon SVG is inlined on `/topics` and `/admin/classes`; all inlined icon SVGs carry `aria-hidden="true"`.           |
+| Browser | `scripts/phase2-browser.ts` viewport step | Each of the seven core pages renders at 360 / 768 / 1024 / 1440 widths with no element exceeding `documentElement.clientWidth`. |
+| Human   | HUMAN_TEST_GUIDE §2.F.g                   | Teacher and pupil both complete a full revision loop on a phone-sized viewport with no mis-hit taps or cut-off text.            |
+
+**Exit criteria.** Every nav item and every primary action has
+either an icon + label pair or a clear verb label alone; no page
+shows a horizontal scrollbar at 360 px; all interactive targets are
+≥ 44 × 44 px.
 
 ### Chunk 7 — Accessibility pass
 

@@ -35,7 +35,7 @@
              inputmode="numeric"
              value="<%= it.cls.timer_minutes === null ? '' : it.cls.timer_minutes %>" />
     </label>
-    <button type="submit">Save timer</button>
+    <button type="submit" class="btn btn--primary">Save timer</button>
   </form>
 
   <h2>Enrol a pupil</h2>
@@ -45,7 +45,7 @@
       <span>Pupil username</span>
       <input type="text" name="pupil_username" required maxlength="120" autocapitalize="none" autocomplete="off" />
     </label>
-    <button type="submit">Enrol</button>
+    <button type="submit" class="btn btn--primary">Enrol</button>
   </form>
 
   <h2>Assigned topics</h2>
@@ -72,7 +72,7 @@
             <td>
               <form method="post" action="/admin/classes/<%= it.cls.id %>/topics/<%= encodeURIComponent(t.topic_code) %>/remove" class="inline-form">
                 <input type="hidden" name="_csrf" value="<%= it.csrfToken %>" />
-                <button type="submit" class="button button--danger">Remove</button>
+                <button type="submit" class="btn btn--danger btn--sm">Remove</button>
               </form>
             </td>
           </tr>
@@ -93,7 +93,7 @@
           <% }); %>
         </select>
       </label>
-      <button type="submit">Assign</button>
+      <button type="submit" class="btn btn--primary">Assign</button>
     </form>
   <% } %>
 
@@ -121,7 +121,7 @@
             <td>
               <form method="post" action="/admin/classes/<%= it.cls.id %>/enrolments/<%= p.user_id %>/remove" class="inline-form">
                 <input type="hidden" name="_csrf" value="<%= it.csrfToken %>" />
-                <button type="submit" class="button button--danger">Remove</button>
+                <button type="submit" class="btn btn--danger btn--sm">Remove</button>
               </form>
             </td>
           </tr>

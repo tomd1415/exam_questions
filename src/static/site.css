@@ -1,14 +1,7 @@
-:root {
-  --bg: #f7f7fb;
-  --fg: #1a1a22;
-  --muted: #5b5b6a;
-  --accent: #1d4ed8;
-  --accent-fg: #ffffff;
-  --error-bg: #fde2e2;
-  --error-fg: #7a1010;
-  --border: #d6d6e0;
-  --card-bg: #ffffff;
-}
+/* Phase 2 — Site stylesheet. Design tokens live in design-tokens.css and
+   are loaded first from _chrome.eta. This file provides the reusable
+   component classes (.btn, .input, .card, .flash) plus page-scoped rules
+   that existed before Chunk 6a. */
 
 * {
   box-sizing: border-box;
@@ -18,63 +11,244 @@ html,
 body {
   margin: 0;
   padding: 0;
-  font-family:
-    ui-sans-serif,
-    system-ui,
-    -apple-system,
-    Segoe UI,
-    Roboto,
-    sans-serif;
-  background: var(--bg);
-  color: var(--fg);
+  font-family: var(--font-sans);
+  background: var(--color-surface-1);
+  color: var(--color-ink-1);
   line-height: 1.5;
 }
 
+a {
+  color: var(--color-brand-600);
+}
+a:hover {
+  color: var(--color-brand-700);
+}
+
+/* --- Site header / footer ------------------------------------------------- */
+
 .site-header {
-  background: #1a1a22;
-  color: #fff;
+  background: var(--color-ink-1);
+  color: var(--color-surface-0);
 }
 .site-header__inner {
   max-width: 960px;
   margin: 0 auto;
-  padding: 0.75rem 1rem;
+  padding: var(--space-3) var(--space-4);
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 .site-header__brand {
-  color: #fff;
+  color: var(--color-surface-0);
   font-weight: 600;
   text-decoration: none;
 }
 .site-header__logout {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--space-2);
 }
 .site-header__user {
-  color: #d8d8e8;
+  color: var(--color-surface-3);
 }
-.site-header__logout button {
-  background: transparent;
-  color: #fff;
-  border: 1px solid #555;
-  padding: 0.25rem 0.6rem;
-  border-radius: 0.25rem;
-  cursor: pointer;
+.site-header .btn--ghost {
+  color: var(--color-surface-0);
+  border: 1px solid var(--color-ink-3);
+}
+.site-header .btn--ghost:hover:not([disabled]) {
+  background: var(--color-ink-2);
+  color: var(--color-surface-0);
 }
 
 .site-main {
   max-width: 720px;
-  margin: 2rem auto;
-  padding: 0 1rem;
+  margin: var(--space-7) auto;
+  padding: 0 var(--space-4);
 }
 
+/* --- Buttons -------------------------------------------------------------- */
+
+.btn,
+button.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  font: inherit;
+  font-weight: 500;
+  line-height: 1.2;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  cursor: pointer;
+  text-decoration: none;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease,
+    border-color 120ms ease,
+    box-shadow 120ms ease;
+}
+.btn:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+.btn[disabled],
+.btn[aria-disabled='true'] {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.btn--primary {
+  background: var(--color-brand-500);
+  color: var(--color-brand-ink);
+}
+.btn--primary:hover:not([disabled]) {
+  background: var(--color-brand-600);
+  color: var(--color-brand-ink);
+}
+
+.btn--secondary {
+  background: var(--color-surface-0);
+  color: var(--color-ink-1);
+  border-color: var(--color-border-strong);
+}
+.btn--secondary:hover:not([disabled]) {
+  background: var(--color-surface-2);
+  color: var(--color-ink-0);
+}
+
+.btn--ghost {
+  background: transparent;
+  color: var(--color-ink-2);
+  border-color: transparent;
+}
+.btn--ghost:hover:not([disabled]) {
+  background: var(--color-surface-2);
+  color: var(--color-ink-0);
+}
+
+.btn--danger {
+  background: var(--color-danger-500);
+  color: var(--color-danger-ink);
+}
+.btn--danger:hover:not([disabled]) {
+  background: var(--color-danger-600);
+  color: var(--color-danger-ink);
+}
+
+.btn--sm {
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--type-small);
+}
+
+/* --- Form controls -------------------------------------------------------- */
+
+.input,
+.select,
+.textarea,
+input[type='text'].input,
+input[type='email'].input,
+input[type='password'].input,
+input[type='number'].input {
+  font: inherit;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-0);
+  color: var(--color-ink-1);
+  width: 100%;
+}
+.input:focus-visible,
+.select:focus-visible,
+.textarea:focus-visible {
+  outline: none;
+  border-color: var(--color-brand-500);
+  box-shadow: var(--focus-ring);
+}
+.textarea {
+  resize: vertical;
+}
+.input[aria-invalid='true'],
+.select[aria-invalid='true'],
+.textarea[aria-invalid='true'] {
+  border-color: var(--color-danger-500);
+}
+
+/* --- Cards ---------------------------------------------------------------- */
+
+.card {
+  background: var(--color-surface-0);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-6);
+}
+.card__header {
+  margin: 0 0 var(--space-4) 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: baseline;
+  justify-content: space-between;
+}
+.card__header h2 {
+  margin: 0;
+  font-size: var(--type-h2);
+}
+.card__sub {
+  margin: 0;
+  color: var(--color-ink-3);
+  font-size: var(--type-small);
+}
+.card__body {
+  margin: 0;
+}
+.card__footer {
+  margin-top: var(--space-4);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  gap: var(--space-2);
+  justify-content: flex-end;
+}
+
+/* --- Flash messages ------------------------------------------------------- */
+
+.flash {
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  margin-bottom: var(--space-3);
+}
+.flash--error,
+.flash--err {
+  background: var(--color-danger-50);
+  color: var(--color-danger-700);
+  border-color: var(--color-danger-100);
+}
+.flash--ok {
+  background: var(--color-success-50);
+  color: var(--color-success-700);
+  border-color: var(--color-success-100);
+}
+.flash--warn {
+  background: var(--color-warn-50);
+  color: var(--color-warn-700);
+  border-color: var(--color-warn-100);
+}
+.flash--info {
+  background: var(--color-info-50);
+  color: var(--color-info-700);
+  border-color: var(--color-brand-100);
+}
+
+/* --- Existing page-scoped rules (auth, question cards, etc.) -------------- */
+
 .auth-card {
-  background: var(--card-bg);
-  border: 1px solid var(--border);
-  border-radius: 0.5rem;
-  padding: 1.5rem;
+  background: var(--color-surface-0);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-6);
 }
 .auth-card h1 {
   margin-top: 0;
@@ -82,119 +256,93 @@ body {
 
 .auth-form {
   display: grid;
-  gap: 1rem;
+  gap: var(--space-4);
 }
 .auth-form label {
   display: grid;
-  gap: 0.25rem;
+  gap: var(--space-1);
 }
 .auth-form input {
   font: inherit;
-  padding: 0.5rem 0.6rem;
-  border: 1px solid var(--border);
-  border-radius: 0.25rem;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-0);
 }
-.auth-form button {
-  background: var(--accent);
-  color: var(--accent-fg);
-  border: 0;
-  padding: 0.6rem 1rem;
-  border-radius: 0.25rem;
-  font: inherit;
-  cursor: pointer;
-}
-.auth-form button:hover {
-  filter: brightness(1.05);
-}
-
-.flash {
-  padding: 0.5rem 0.75rem;
-  border-radius: 0.25rem;
-}
-.flash--error {
-  background: var(--error-bg);
-  color: var(--error-fg);
-}
-.flash--ok {
-  background: #e1f4e3;
-  color: #145a25;
+.auth-form input:focus-visible {
+  outline: none;
+  border-color: var(--color-brand-500);
+  box-shadow: var(--focus-ring);
 }
 
 .question-card {
-  background: var(--card-bg);
-  border: 1px solid var(--border);
-  border-radius: 0.5rem;
-  padding: 1.5rem;
+  background: var(--color-surface-0);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-6);
 }
 .question-card__meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4rem;
-  margin-bottom: 1rem;
+  gap: var(--space-1);
+  margin-bottom: var(--space-4);
 }
 .badge {
   display: inline-block;
-  font-size: 0.78rem;
-  padding: 0.15rem 0.55rem;
-  border-radius: 999px;
-  background: var(--accent);
-  color: var(--accent-fg);
+  font-size: var(--type-micro);
+  padding: 0.15rem var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--color-brand-500);
+  color: var(--color-brand-ink);
 }
 .badge--muted {
-  background: #e6e6f0;
-  color: var(--muted);
+  background: var(--color-surface-3);
+  color: var(--color-ink-3);
 }
 .question-card__stem {
   font-size: 1.05rem;
-  margin: 0 0 1.5rem 0;
+  margin: 0 0 var(--space-6) 0;
 }
 .question-form {
   display: grid;
-  gap: 1.25rem;
+  gap: var(--space-5);
 }
 .question-part {
-  border: 1px solid var(--border);
-  border-radius: 0.4rem;
-  padding: 0.75rem 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
   margin: 0;
 }
 .question-part legend {
   font-weight: 600;
-  padding: 0 0.4rem;
+  padding: 0 var(--space-1);
   display: flex;
-  gap: 0.5rem;
+  gap: var(--space-2);
   align-items: baseline;
 }
 .question-part__label {
-  color: var(--accent);
+  color: var(--color-brand-500);
 }
 .question-part__prompt {
   font-weight: 500;
 }
 .question-part__marks {
-  color: var(--muted);
+  color: var(--color-ink-3);
   font-weight: 400;
-  font-size: 0.9rem;
+  font-size: var(--type-small);
 }
 .question-part textarea {
   width: 100%;
   font: inherit;
-  padding: 0.5rem 0.6rem;
-  border: 1px solid var(--border);
-  border-radius: 0.25rem;
-  margin-top: 0.5rem;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  margin-top: var(--space-2);
   resize: vertical;
+  background: var(--color-surface-0);
 }
-.question-form button {
-  background: var(--accent);
-  color: var(--accent-fg);
-  border: 0;
-  padding: 0.6rem 1rem;
-  border-radius: 0.25rem;
-  font: inherit;
-  cursor: pointer;
-  justify-self: start;
-}
-.question-form button:hover {
-  filter: brightness(1.05);
+.question-part textarea:focus-visible {
+  outline: none;
+  border-color: var(--color-brand-500);
+  box-shadow: var(--focus-ring);
 }

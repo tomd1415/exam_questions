@@ -203,11 +203,11 @@ subtopicsByTopic.forEach(function(list, topic) {
                     <span>Accepted alternatives (one per line, optional)</span>
                     <textarea name="part_<%= i %>_mp_<%= j %>_alternatives" rows="2"><%= mp.alternatives %></textarea>
                   </label>
-                  <button type="button" class="button button--danger" data-action="remove-mark-point">Remove mark point</button>
+                  <button type="button" class="btn btn--danger btn--sm" data-action="remove-mark-point">Remove mark point</button>
                 </div>
               <% }); %>
             </div>
-            <button type="button" class="button button--muted" data-action="add-mark-point" data-part="<%= i %>">+ mark point</button>
+            <button type="button" class="btn btn--ghost btn--sm" data-action="add-mark-point" data-part="<%= i %>">+ mark point</button>
 
             <input type="hidden" name="part_<%= i %>_misc_count" value="<%= p.misconceptions.length %>" />
             <% p.misconceptions.forEach(function(m, j) { %>
@@ -223,16 +223,16 @@ subtopicsByTopic.forEach(function(list, topic) {
               </div>
             <% }); %>
 
-            <button type="button" class="button button--danger" data-action="remove-part">Remove part</button>
+            <button type="button" class="btn btn--danger btn--sm" data-action="remove-part">Remove part</button>
           </fieldset>
         <% }); %>
       </div>
-      <button type="button" class="button button--muted" id="add-part">+ part</button>
+      <button type="button" class="btn btn--ghost btn--sm" id="add-part">+ part</button>
     </fieldset>
 
     <div class="admin-form__actions">
-      <button type="submit" class="button button--primary"><%= it.mode === 'edit' ? 'Save changes' : 'Create draft' %></button>
-      <a href="/admin/questions" class="button button--muted">Cancel</a>
+      <button type="submit" class="btn btn--primary"><%= it.mode === 'edit' ? 'Save changes' : 'Create draft' %></button>
+      <a href="/admin/questions" class="btn btn--ghost btn--sm">Cancel</a>
     </div>
   </form>
 </section>
@@ -318,7 +318,7 @@ subtopicsByTopic.forEach(function(list, topic) {
         '<label><span>Accepted alternatives (one per line, optional)</span>' +
           '<textarea name="part_' + partIdx + '_mp_' + j + '_alternatives" rows="2"></textarea>' +
         '</label>' +
-        '<button type="button" class="button button--danger" data-action="remove-mark-point">Remove mark point</button>' +
+        '<button type="button" class="btn btn--danger btn--sm" data-action="remove-mark-point">Remove mark point</button>' +
       '</div>'
     );
   }
@@ -339,9 +339,9 @@ subtopicsByTopic.forEach(function(list, topic) {
         '<h4>Mark points</h4>' +
         '<input type="hidden" name="part_' + idx + '_mp_count" class="mp-count" value="1" />' +
         '<div class="mark-points-container" data-part="' + idx + '">' + makeMarkPointHtml(idx, 0) + '</div>' +
-        '<button type="button" class="button button--muted" data-action="add-mark-point" data-part="' + idx + '">+ mark point</button>' +
+        '<button type="button" class="btn btn--ghost btn--sm" data-action="add-mark-point" data-part="' + idx + '">+ mark point</button>' +
         '<input type="hidden" name="part_' + idx + '_misc_count" value="0" />' +
-        '<button type="button" class="button button--danger" data-action="remove-part">Remove part</button>' +
+        '<button type="button" class="btn btn--danger btn--sm" data-action="remove-part">Remove part</button>' +
       '</fieldset>'
     );
   }

@@ -18,6 +18,6 @@
       <span>Academic year</span>
       <input type="text" name="academic_year" value="<%= it.values.academic_year %>" required maxlength="20" placeholder="e.g. 2025-26" />
     </label>
-    <button type="submit">Create class</button>
+    <button type="submit" class="btn btn--primary">Create class</button>
   </form>
 </section>
