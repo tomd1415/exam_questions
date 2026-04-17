@@ -47,7 +47,8 @@ const qActions =
         <form method="post" action="/admin/questions/<%= it.detail.question.id %>/reject" class="inline-reject">
           <input type="hidden" name="_csrf" value="<%= it.csrfToken %>" />
           <input type="text" name="review_notes" placeholder="Reason for rejection" maxlength="2000" required />
-          <button type="submit" class="btn btn--danger">Reject</button>
+          <button type="submit" class="btn btn--danger"
+            data-confirm="Reject this question? The author will see your review notes.">Reject</button>
         </form>
       <% } %>
     </div>

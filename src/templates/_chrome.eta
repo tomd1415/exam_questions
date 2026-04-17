@@ -37,5 +37,6 @@
       <script src="/static/timer.js" defer></script>
     <% } %>
     <script src="/static/nav.js" defer></script>
+    <script src="/static/confirm.js" defer></script>
   </body>
 </html>

@@ -214,6 +214,20 @@ a:hover {
   align-items: center;
 }
 
+/* Empty states */
+.empty {
+  padding: var(--space-3) var(--space-4);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-1);
+  color: var(--color-ink-3);
+  font-style: italic;
+  margin: var(--space-2) 0;
+}
+.empty a {
+  font-style: normal;
+}
+
 /* Dashboard grid */
 .dashboard-grid {
   display: grid;

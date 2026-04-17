@@ -77,7 +77,8 @@ const actionsHtml =
             <td>
               <form method="post" action="/admin/classes/<%= it.cls.id %>/topics/<%= encodeURIComponent(t.topic_code) %>/remove" class="inline-form">
                 <input type="hidden" name="_csrf" value="<%= it.csrfToken %>" />
-                <button type="submit" class="btn btn--danger btn--sm">Remove</button>
+                <button type="submit" class="btn btn--danger btn--sm"
+                  data-confirm="Remove topic <%= t.topic_code %> from this class? Pupils will no longer see it.">Remove</button>
               </form>
             </td>
           </tr>
@@ -126,7 +127,8 @@ const actionsHtml =
             <td>
               <form method="post" action="/admin/classes/<%= it.cls.id %>/enrolments/<%= p.user_id %>/remove" class="inline-form">
                 <input type="hidden" name="_csrf" value="<%= it.csrfToken %>" />
-                <button type="submit" class="btn btn--danger btn--sm">Remove</button>
+                <button type="submit" class="btn btn--danger btn--sm"
+                  data-confirm="Remove <%= p.display_name %> from this class?">Remove</button>
               </form>
             </td>
           </tr>

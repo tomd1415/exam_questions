@@ -26,11 +26,14 @@ const reviewCrumbs = isPupil
       { label: 'Marking queue', href: '/admin/attempts' },
       { label: 'Attempt ' + it.bundle.attempt.id },
     ];
+const reviewActions =
+  `<a class="btn btn--secondary btn--sm" href="/attempts/${it.bundle.attempt.id}/print" target="_blank" rel="noopener">Print</a>`;
 %>
 <%~ include('_page_header', {
   crumbs: reviewCrumbs,
   heading: 'Attempt ' + it.bundle.attempt.id + ' · review',
   subtitle: 'Topic: ' + (it.bundle.attempt.target_topic_code || 'n/a') + ' · Submitted ' + submittedAt,
+  actionsHtml: reviewActions,
 }) %>
 
 <section class="admin-card">
