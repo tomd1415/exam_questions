@@ -66,7 +66,8 @@ In Phase 4+ a Redis instance is added for background jobs (calibration, embeddin
 These are the only place business logic lives. Routes call services; services call repos and the LLM client.
 
 - **AuthService** — login, lockout, session, password reset (teacher-initiated), role checks.
-- **AttemptService** — start, save part answer, submit attempt, resume, list past attempts.
+- **AttemptService** — starts a topic-set attempt, saves a part answer, submits a single question (per-question reveal mode) or the whole attempt (whole-attempt mode), resumes, lists past attempts for a pupil, records a pupil self-estimate, and stores the pupil's `reveal_mode` preference. Public surface today: `startTopicSet`, `loadAttemptBundleForActor`, `saveAnswer`, `submitAttempt`, `submitQuestion`, `recordPupilSelfMark`, `listAttemptsForPupil`, `setRevealModeForUser`. All calls are authz-gated via an `ActorForAttempt` (pupil owner, class teacher, or admin). Marking of objective parts is delegated to the deterministic marker; open parts stay as `teacher_pending` until a teacher posts an override.
+- **TeacherMarkingService** — records a teacher override for any attempt part (writes a new `awarded_marks` row plus a `teacher_overrides` row, transactionally) and emits a `marking.override` audit event.
 - **MarkingService** — orchestrates the marking pipeline (deterministic pre-checks → LLM call → safety gate → persistence).
 - **SelectionService** — chooses the next question for a pupil. Phase 1 returns "next in fixed order"; Phase 4 implements adaptive selection.
 - **MasteryService** — reads/writes mastery state per pupil × topic × command word × response type.
@@ -174,46 +175,54 @@ Jobs are idempotent. Each job records a start/end row in a `job_runs` table.
 - LLM marking call returns within 8 seconds p95 in Phase 3, with a hard timeout at 30 seconds.
 - Page weight under 200KB on the pupil's slowest target device.
 
-## Folder structure (target)
+## Folder structure
+
+Actual as of 2026-04-17. `llm/` and `jobs/` are still placeholders — LLM
+arrives in Phase 3, background jobs in Phase 4.
 
 ```text
 src/
-├── app.ts                 Fastify wiring
+├── app.ts                 Fastify wiring (plugins, decorators, route registration)
+├── index.ts               process entry point (binds to :3030)
 ├── config.ts              env loading and validation
+├── db/
+│   └── migrate.ts         migration runner invoked by `npm run db:migrate`
+├── lib/                   shared helpers (csrf, flash, auth preHandlers, template helpers)
 ├── routes/
-│   ├── auth.ts
-│   ├── attempt.ts
-│   ├── moderation.ts
-│   ├── admin.ts
-│   └── analytics.ts
+│   ├── auth.ts            login/logout, session bootstrap
+│   ├── questions.ts       legacy /q/1 smoke endpoint
+│   ├── attempts.ts        pupil topic-set flow (/topics, /attempts/:id, save, submit, self-mark)
+│   ├── admin-classes.ts   teacher class + enrolment + topic assignment CRUD
+│   ├── admin-questions.ts teacher question authoring read/write
+│   └── admin-attempts.ts  teacher review + mark override
 ├── services/
 │   ├── auth.ts
-│   ├── attempt.ts
-│   ├── marking.ts
-│   ├── selection.ts
-│   ├── mastery.ts
-│   ├── content.ts
-│   ├── generation.ts      (Phase 5)
-│   ├── analytics.ts       (Phase 6)
-│   └── audit.ts
-├── repos/
-│   ├── users.ts
 │   ├── classes.ts
 │   ├── questions.ts
 │   ├── attempts.ts
-│   ├── marks.ts
-│   ├── mastery.ts
-│   ├── embeddings.ts
+│   ├── audit.ts
+│   └── marking/
+│       ├── deterministic.ts   pure marker for objective parts
+│       └── teacher.ts         teacher override path (Chunk 7)
+├── repos/
+│   ├── users.ts
+│   ├── sessions.ts
+│   ├── classes.ts
+│   ├── curriculum.ts
+│   ├── questions.ts
+│   ├── attempts.ts
 │   └── audit.ts
-├── llm/
-│   ├── client.ts          single entry point
-│   ├── redactor.ts
-│   ├── kill-switch.ts
-│   └── prompts/           templates loaded at startup
-├── jobs/                  Phase 4+
-├── templates/             server-rendered HTML
-└── static/                CSS, minimal JS, fonts
+├── templates/             Eta templates (_chrome, _admin_*, attempt_edit, attempt_review, topics_list, …)
+├── static/                CSS + minimal JS
+└── scripts/               CLI entry points: create-user, seed-curated-content, setup-lesson
 ```
+
+Additional top-level folders on disk:
+
+- `tests/` — `unit/`, `integration/` (DB-backed), `http/` (Fastify `inject`), plus helpers.
+- `scripts/` — bash + Playwright for human-test walkers (`human-test-phase0.sh`, `human-test-phase1.sh`, `phase0-browser.ts`, `phase1-browser.ts`), DB helpers (`backup-db.sh`, `restore-drill.sh`, `db-init.sh`), and Debian production bootstrap (`debian-bootstrap.sh`, `server-setup.sh`, `deploy-test-server.sh`).
+- `migrations/` — numbered SQL migrations 0001 … 0010 (current).
+- `content/curated/` — curated question bank JSON (Phase 1 seed).
 
 ## What is deliberately not in the architecture
 

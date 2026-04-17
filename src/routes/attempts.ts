@@ -1,6 +1,7 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { z } from 'zod';
 import { AttemptAccessError } from '../services/attempts.js';
+import { REVEAL_MODES } from '../repos/users.js';
 
 const StartBody = z.object({ _csrf: z.string().min(1) });
 
@@ -8,11 +9,29 @@ const SaveBody = z.object({ _csrf: z.string().min(1) }).passthrough();
 
 const SubmitBody = z.object({ _csrf: z.string().min(1) });
 
+const SelfMarkBody = z.object({
+  _csrf: z.string().min(1),
+  marks: z.string().trim().optional(),
+});
+
+const RevealModeBody = z.object({
+  _csrf: z.string().min(1),
+  mode: z.enum(REVEAL_MODES as readonly ['per_question', 'whole_attempt']),
+});
+
 const TopicParams = z.object({
   code: z.string().trim().min(1).max(60),
 });
 const AttemptParams = z.object({
   id: z.coerce.number().int().positive(),
+});
+const AttemptQuestionParams = z.object({
+  id: z.coerce.number().int().positive(),
+  qid: z.coerce.number().int().positive(),
+});
+const AttemptPartParams = z.object({
+  id: z.coerce.number().int().positive(),
+  pid: z.coerce.number().int().positive(),
 });
 
 function requirePupil(
@@ -56,8 +75,35 @@ export function registerAttemptRoutes(app: FastifyInstance): void {
       currentUser: req.currentUser,
       csrfToken: reply.generateCsrf(),
       topics,
+      revealMode: req.currentUser?.reveal_mode ?? 'per_question',
       flash: readQueryFlash(req),
     });
+  });
+
+  app.get('/attempts', async (req, reply) => {
+    const actor = requirePupil(req, reply);
+    if (!actor) return reply;
+    const attempts = await app.services.attempts.listAttemptsForPupil(actor);
+    return reply.view('attempts_list.eta', {
+      title: 'My attempts',
+      currentUser: req.currentUser,
+      csrfToken: reply.generateCsrf(),
+      attempts,
+      flash: readQueryFlash(req),
+    });
+  });
+
+  app.post('/me/preferences/reveal-mode', { preValidation: csrfPreValidation }, async (req, reply) => {
+    const actor = requirePupil(req, reply);
+    if (!actor) return reply;
+    const parsed = RevealModeBody.safeParse(req.body);
+    if (!parsed.success) return reply.code(400).send('Bad request');
+    await app.services.attempts.setRevealModeForUser(actor, parsed.data.mode);
+    const label =
+      parsed.data.mode === 'per_question' ? 'one question at a time' : 'the whole attempt at once';
+    return reply.redirect(
+      `/topics?flash=${encodeURIComponent(`Preference saved: you will submit ${label}.`)}`,
+    );
   });
 
   app.post('/topics/:code/start', { preValidation: csrfPreValidation }, async (req, reply) => {
@@ -68,7 +114,13 @@ export function registerAttemptRoutes(app: FastifyInstance): void {
     const parsed = StartBody.safeParse(req.body);
     if (!parsed.success) return reply.code(400).send('Bad request');
     try {
-      const result = await app.services.attempts.startTopicSet(actor, params.data.code);
+      const mode = req.currentUser?.reveal_mode ?? 'per_question';
+      const result = await app.services.attempts.startTopicSet(actor, params.data.code, mode);
+      if (result.resumed) {
+        return reply.redirect(
+          `/attempts/${result.attemptId}?flash=${encodeURIComponent('Resuming your in-progress attempt. Submit it before starting a new one.')}`,
+        );
+      }
       return reply.redirect(`/attempts/${result.attemptId}`);
     } catch (err) {
       if (err instanceof AttemptAccessError) {
@@ -96,6 +148,21 @@ export function registerAttemptRoutes(app: FastifyInstance): void {
     try {
       const bundle = await app.services.attempts.getAttemptForActor(actor, String(params.data.id));
       const view = bundle.attempt.submitted_at === null ? 'attempt_edit.eta' : 'attempt_review.eta';
+
+      let currentQuestionIndex = 0;
+      if (bundle.attempt.reveal_mode === 'per_question' && bundle.attempt.submitted_at === null) {
+        const qParam = (req.query as { q?: unknown }).q;
+        const qId = typeof qParam === 'string' ? qParam : null;
+        if (qId) {
+          const idx = bundle.questions.findIndex((q) => q.id === qId);
+          if (idx >= 0) currentQuestionIndex = idx;
+        } else {
+          const firstUnsubmitted = bundle.questions.findIndex((q) => q.submitted_at === null);
+          currentQuestionIndex =
+            firstUnsubmitted >= 0 ? firstUnsubmitted : Math.max(0, bundle.questions.length - 1);
+        }
+      }
+
       return reply.view(view, {
         title:
           bundle.attempt.submitted_at === null
@@ -104,6 +171,7 @@ export function registerAttemptRoutes(app: FastifyInstance): void {
         currentUser: req.currentUser,
         csrfToken: reply.generateCsrf(),
         bundle,
+        currentQuestionIndex,
         flash: readQueryFlash(req),
       });
     } catch (err) {
@@ -169,6 +237,97 @@ export function registerAttemptRoutes(app: FastifyInstance): void {
       throw err;
     }
   });
+
+  app.post(
+    '/attempts/:id/questions/:qid/submit',
+    { preValidation: csrfPreValidation },
+    async (req, reply) => {
+      const actor = requirePupil(req, reply);
+      if (!actor) return reply;
+      const params = AttemptQuestionParams.safeParse(req.params);
+      if (!params.success) return reply.code(404).send('Not found');
+      const parsed = SubmitBody.safeParse(req.body);
+      if (!parsed.success) return reply.code(400).send('Bad request');
+
+      const fullBody = (req.body ?? {}) as Record<string, unknown>;
+      const answers = readAnswerFields(fullBody);
+      const attemptIdStr = String(params.data.id);
+      const qidStr = String(params.data.qid);
+      try {
+        if (answers.length > 0) {
+          await app.services.attempts.saveAnswer(actor, attemptIdStr, answers);
+        }
+        const result = await app.services.attempts.submitQuestion(actor, attemptIdStr, qidStr);
+        const msg = result.attemptFullySubmitted
+          ? 'All questions submitted.'
+          : `Question submitted. ${result.pendingParts > 0 ? 'Some parts are waiting for teacher marking.' : ''}`.trim();
+        if (result.attemptFullySubmitted) {
+          return reply.redirect(
+            `/attempts/${params.data.id}?flash=${encodeURIComponent(msg)}`,
+          );
+        }
+        return reply.redirect(
+          `/attempts/${params.data.id}?q=${params.data.qid}&flash=${encodeURIComponent(msg)}`,
+        );
+      } catch (err) {
+        if (err instanceof AttemptAccessError) {
+          if (err.reason === 'not_found') return reply.code(404).send('Not found');
+          if (err.reason === 'already_submitted' || err.reason === 'question_already_submitted') {
+            return reply.redirect(`/attempts/${params.data.id}`);
+          }
+          return reply.code(403).send('Forbidden');
+        }
+        throw err;
+      }
+    },
+  );
+
+  app.post(
+    '/attempts/:id/parts/:pid/self-mark',
+    { preValidation: csrfPreValidation },
+    async (req, reply) => {
+      const actor = requirePupil(req, reply);
+      if (!actor) return reply;
+      const params = AttemptPartParams.safeParse(req.params);
+      if (!params.success) return reply.code(404).send('Not found');
+      const parsed = SelfMarkBody.safeParse(req.body);
+      if (!parsed.success) return reply.code(400).send('Bad request');
+
+      const raw = parsed.data.marks?.trim() ?? '';
+      let marks: number | null = null;
+      if (raw.length > 0) {
+        if (!/^\d+$/.test(raw)) return reply.code(400).send('Bad request');
+        marks = Number(raw);
+      }
+      try {
+        await app.services.attempts.recordPupilSelfMark(
+          actor,
+          String(params.data.id),
+          String(params.data.pid),
+          marks,
+        );
+        return reply.redirect(
+          `/attempts/${params.data.id}?flash=${encodeURIComponent('Self-estimate saved.')}#p-${params.data.pid}`,
+        );
+      } catch (err) {
+        if (err instanceof AttemptAccessError) {
+          if (err.reason === 'not_found') return reply.code(404).send('Not found');
+          if (err.reason === 'invalid_self_marks') {
+            return reply.redirect(
+              `/attempts/${params.data.id}?flash=${encodeURIComponent('Self-estimate must be between 0 and the part max.')}#p-${params.data.pid}`,
+            );
+          }
+          if (err.reason === 'not_submitted_yet') {
+            return reply.redirect(
+              `/attempts/${params.data.id}?flash=${encodeURIComponent('Submit the question first, then record your self-estimate.')}`,
+            );
+          }
+          return reply.code(403).send('Forbidden');
+        }
+        throw err;
+      }
+    },
+  );
 }
 
 function readAnswerFields(

@@ -6,20 +6,21 @@
 
 ## TL;DR
 
-This is a planning-stage project to build a topic-based adaptive revision web app for **OCR GCSE Computer Science (J277)**, used initially in a single UK teacher's classroom and designed to grow into a department-wide tool. There is **no application code yet**. There are eight planning documents, an organised collection of OCR source materials, and a `.gitignore`.
+This is an active build of a topic-based adaptive revision web app for **OCR GCSE Computer Science (J277)**, used initially in a single UK teacher's classroom and designed to grow into a department-wide tool. Phase 0 is complete; Phase 1 is in progress on `main`.
 
 The platform serves OCR-style questions, marks pupil responses against rubric-style mark points with LLM assistance (kept on a tight leash), adapts difficulty per pupil, and gives the teacher actionable analytics. The LLM is added late and is never the source of truth.
 
-## Project status (as of 2026-04-16)
+## Project status (as of 2026-04-17)
 
-- **Phase:** Pre-Phase-0. Planning and dev-environment scaffolding complete; application code not yet written.
-- **Code:** None in `src/` yet. Tooling (TypeScript, ESLint, Prettier, Vitest, Docker Postgres+pgvector) is wired up.
-- **Git:** Initialised. Remote: `https://github.com/tomd1415/exam_questions.git`, branch `main`.
-- **Dev environment:** Configured. See [DEV_SETUP.md](DEV_SETUP.md). Dev machine runs Gentoo Linux; target production host is Debian.
+- **Phase:** Phase 0 complete. Phase 1 in progress — chunks 1–4 merged (classes/enrolments, question authoring read/write, deterministic marking service). Chunk 5 (pupil topic-set flow) is on `main` with a follow-up refinement already landed: per-question reveal mode with pupil self-estimate forms (migration `0010_per_question_mode.sql`).
+- **Code:** `src/` populated. Fastify app with `routes/`, `services/`, `repos/`, `templates/`, `static/`, `scripts/`, `db/`, `lib/`. Tests in `tests/` across unit, integration, and HTTP (Fastify `inject`) layers; `npm run check` gate is green on `main`.
+- **Migrations:** `0001_curriculum` → `0010_per_question_mode`. Migration runner is `npm run db:migrate` (script at `src/db/migrate.ts`).
+- **Git:** Remote `https://github.com/tomd1415/exam_questions.git`, branch `main`.
+- **Dev environment:** See [DEV_SETUP.md](DEV_SETUP.md). Gentoo Linux host, Dockerised Postgres 16 + pgvector on `:5433`.
 - **Hosting (production):** Debian VM on the school's existing Proxmox hypervisor, inside the school network. LAN-only for the MVP (no home access). The user is the sole admin. Backups are handled by the school's existing regime.
-- **Pupil data:** None. Do not solicit any until Phase 0's DPIA is signed off.
+- **Pupil data:** None live. Do not solicit any until the DPIA is signed off.
 
-The next concrete deliverable is **Phase 0** as defined in [PLAN.md](PLAN.md): hosting decision, DPIA sign-off, curriculum seed data, and a single end-to-end happy path from pupil login to a static "hello world" question.
+The next concrete deliverable is closing out Phase 1: Chunk 5 polish (the per-question reveal mode and pupil review) is in-flight; Chunks 6–10 (pupil review view, teacher review UI, curated seeding, human-test walker, real lesson) still to go. See [PHASE1_PLAN.md](PHASE1_PLAN.md).
 
 ## Who the user is
 
@@ -54,10 +55,14 @@ There is more in [memory/user_role.md](#memory-system-on-disk).
 | Doc                                            | Length | What it tells you                                                                                                                                                                                                     |
 | ---------------------------------------------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [DEV_SETUP.md](DEV_SETUP.md)                   | medium | How to run the dev loop: Node/Docker prerequisites, `.env`, Postgres+pgvector container on port 5433, npm scripts, VSCode tasks and debug configs, Gentoo→Debian differences, troubleshooting.                        |
+| [PHASE1_PLAN.md](PHASE1_PLAN.md)               | long   | The chunk-by-chunk implementation plan for Phase 1, ordering and dependencies, per-chunk tests + exit criteria, and the resolved decisions from the start-of-phase review.                                            |
 | [ARCHITECTURE.md](ARCHITECTURE.md)             | medium | Component diagram, services-vs-repos split, request lifecycles, the single LLM client wrapper, kill switch, target folder structure, things deliberately out of scope.                                                |
 | [DATA_MODEL.md](DATA_MODEL.md)                 | long   | Full Postgres schema with phase markers per table; conventions; indexes; retention policy.                                                                                                                            |
+| [HUMAN_TEST_GUIDE.md](HUMAN_TEST_GUIDE.md)     | long   | Per-phase (and per-chunk within Phase 1) human sign-off walkthroughs; automated walker entry points; pre-reqs and fixtures for manual verification.                                                                   |
+| [RUNBOOK.md](RUNBOOK.md)                       | medium | Operational runbook: prod provisioning, TLS, firewall, backups, restore drill, human-test sign-off log (§10).                                                                                                         |
 | [PROMPTS.md](PROMPTS.md)                       | long   | Four prompt families (generation, marking, clustering, summaries) with inputs, Zod-style output schemas, safety gates, evaluation fixtures, and version-control rules. Header points to the OpenAI Documentation MCP. |
 | [RESOURCES_REQUIRED.md](RESOURCES_REQUIRED.md) | medium | People, hardware, hosting, third-party APIs (incl. OpenAI MCP reference), software dependencies, content sources, recurring ops checklist, Phase-0 setup checklist.                                                   |
+| [DPIA.md](DPIA.md)                             | medium | Data protection impact assessment draft; gate on the Phase 1 "real lesson" sign-off until the DPO and safeguarding lead have countersigned.                                                                           |
 
 ### Tier 3 — source material
 
@@ -109,10 +114,11 @@ Persistent file-based memory lives at:
 
 `/home/duguid/.claude/projects/-home-duguid-projects-exam-questions/memory/`
 
-Index is `MEMORY.md`. Current entries:
+Index is `MEMORY.md`. Current entries include:
 
 - `user_role.md` — UK secondary CS teacher building tools for own class.
 - `reference_openai_mcp.md` — pointer to the OpenAI Documentation MCP.
+- `project_dev_prod_split.md` — Gentoo dev with Dockerised Postgres on :5433; production is a Debian VM on the school's Proxmox, LAN-only, user is sole admin.
 
 Add new memories there when you learn something durable about the user, the project, or external resources. Do not duplicate things that this `AI_STARTING_POINT.md` or another planning doc already says.
 
@@ -122,37 +128,45 @@ Add new memories there when you learn something durable about the user, the proj
 
 Node.js + TypeScript + Fastify on the server; server-rendered HTML + HTMX on the client; PostgreSQL with `pgvector`; Argon2id for passwords; OpenAI Responses API + Structured Outputs in Phase 3+; Redis only from Phase 4. Production runs on an on-premises Debian VM on the school's Proxmox hypervisor, LAN-only for the MVP. Full detail in [ARCHITECTURE.md](ARCHITECTURE.md) and [RESOURCES_REQUIRED.md](RESOURCES_REQUIRED.md).
 
-### Folder structure (target — most of this does not exist yet)
+### Folder structure (actual as of 2026-04-17)
 
 ```text
 exam_questions/
 ├── AI_STARTING_POINT.md        ← this file (read first)
 ├── README.md
 ├── DEV_SETUP.md                how to run the dev loop
-├── PLAN.md
-├── RISKS.md
+├── PLAN.md / PHASE1_PLAN.md    phased plan + current-phase chunk plan
+├── RISKS.md / DPIA.md
 ├── RESOURCES_REQUIRED.md
-├── ARCHITECTURE.md
-├── DATA_MODEL.md
+├── ARCHITECTURE.md / DATA_MODEL.md
 ├── SECURITY_AND_PRIVACY.md
 ├── PROMPTS.md
+├── HUMAN_TEST_GUIDE.md         per-phase manual sign-off walkthroughs
+├── RUNBOOK.md                  production ops, TLS, backups, sign-off log
 ├── package.json                deps + npm scripts
 ├── tsconfig.json / tsconfig.build.json
 ├── eslint.config.js            flat config, type-checked rules
-├── .prettierrc.json            + .prettierignore
-├── .editorconfig
-├── .nvmrc                      Node 22
+├── .prettierrc.json / .prettierignore / .editorconfig / .nvmrc
 ├── .env.example                → copy to .env (gitignored)
 ├── docker-compose.yml          dev Postgres 16 + pgvector on :5433
-├── .dockerignore
-├── .gitignore
+├── .dockerignore / .gitignore
 ├── .vscode/                    extensions.json, settings.json, launch.json, tasks.json (shared)
 ├── OCR_Docs/                   catalogued; gitignored except CONTENT_INDEX.md
-├── scripts/                    admin scripts (e.g. db-init.sh)
-├── src/                        (Phase 0+) application code
-├── content/                    (Phase 1+) curated questions, OCR mappings (source/ gitignored)
-├── prompts/                    (Phase 3+) versioned prompt templates
-└── migrations/                 (Phase 0+) SQL migrations
+├── scripts/                    db-init, backup, restore drill, Phase 0/1 human-test walkers
+├── migrations/                 0001_curriculum … 0010_per_question_mode
+├── src/
+│   ├── app.ts / index.ts / config.ts
+│   ├── db/                     migration runner
+│   ├── lib/                    shared helpers (csrf, flash, auth preHandlers, …)
+│   ├── repos/                  users, sessions, classes, curriculum, questions, attempts, audit
+│   ├── services/               auth, classes, questions, attempts, audit, marking/
+│   ├── routes/                 auth, questions (legacy /q/1), attempts, admin-classes, admin-questions, admin-attempts
+│   ├── templates/              Eta templates (_chrome, _admin_*_body, attempt_edit, attempt_review, …)
+│   ├── static/                 CSS, minimal JS
+│   └── scripts/                create-user, seed-curated-content, setup-lesson CLIs
+├── tests/                      unit/, integration/ (DB-backed), http/ (Fastify inject), helpers/
+├── content/                    curated question bank (Phase 1 seed)
+└── prompts/                    (Phase 3+) versioned prompt templates
 ```
 
 ### Naming and style

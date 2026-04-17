@@ -1,0 +1,58 @@
+<section class="admin-card">
+  <header class="admin-card__header">
+    <div>
+      <h1>My attempts</h1>
+      <p class="admin-card__sub">Your revision attempts, most recent first.</p>
+    </div>
+    <a href="/topics">Back to topics</a>
+  </header>
+
+  <% if (it.flash) { %>
+    <p class="flash flash--ok" role="status"><%= it.flash %></p>
+  <% } %>
+
+  <% if (!it.attempts || it.attempts.length === 0) { %>
+    <p class="empty">You have not started any attempts yet.</p>
+  <% } else { %>
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Started</th>
+          <th>Topic</th>
+          <th>Mode</th>
+          <th>Status</th>
+          <th>Score</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% it.attempts.forEach(function(a) { %>
+          <tr>
+            <td><%= a.started_at ? a.started_at.toISOString().slice(0, 16).replace('T', ' ') : '' %></td>
+            <td><%= a.topic_title || a.target_topic_code || '—' %></td>
+            <td><%= a.reveal_mode === 'per_question' ? 'per-question' : 'whole attempt' %></td>
+            <td>
+              <% if (a.submitted_at) { %>
+                Submitted<% if (a.pending_parts > 0) { %> · <%= a.pending_parts %> pending<% } %>
+              <% } else { %>
+                In progress
+              <% } %>
+            </td>
+            <td>
+              <% if (a.submitted_at) { %>
+                <%= a.marks_awarded %> / <%= a.marks_total %>
+              <% } else { %>
+                —
+              <% } %>
+            </td>
+            <td>
+              <a class="btn" href="/attempts/<%= a.id %>">
+                <%= a.submitted_at ? 'Review' : 'Resume' %>
+              </a>
+            </td>
+          </tr>
+        <% }); %>
+      </tbody>
+    </table>
+  <% } %>
+</section>

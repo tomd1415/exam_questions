@@ -2,6 +2,10 @@ import type { Pool } from 'pg';
 
 export type UserRole = 'pupil' | 'teacher' | 'admin';
 
+export type RevealMode = 'per_question' | 'whole_attempt';
+
+export const REVEAL_MODES: readonly RevealMode[] = ['per_question', 'whole_attempt'] as const;
+
 export interface UserRow {
   id: string;
   role: UserRole;
@@ -14,6 +18,7 @@ export interface UserRow {
   last_login_at: Date | null;
   active: boolean;
   pseudonym: string;
+  reveal_mode: RevealMode;
   created_at: Date;
   updated_at: Date;
 }
@@ -25,7 +30,8 @@ export class UserRepo {
     const { rows } = await this.db.query<UserRow>(
       `SELECT id::text, role, display_name, username, password_hash,
               must_change_password, failed_login_count, locked_until,
-              last_login_at, active, pseudonym, created_at, updated_at
+              last_login_at, active, pseudonym, reveal_mode,
+              created_at, updated_at
          FROM users
         WHERE username = $1`,
       [username],
@@ -37,7 +43,8 @@ export class UserRepo {
     const { rows } = await this.db.query<UserRow>(
       `SELECT id::text, role, display_name, username, password_hash,
               must_change_password, failed_login_count, locked_until,
-              last_login_at, active, pseudonym, created_at, updated_at
+              last_login_at, active, pseudonym, reveal_mode,
+              created_at, updated_at
          FROM users
         WHERE id = $1`,
       [id],
@@ -54,6 +61,13 @@ export class UserRepo {
               updated_at         = now()
         WHERE id = $1`,
       [id],
+    );
+  }
+
+  async setRevealMode(userId: string, mode: RevealMode): Promise<void> {
+    await this.db.query(
+      `UPDATE users SET reveal_mode = $2, updated_at = now() WHERE id = $1::bigint`,
+      [userId, mode],
     );
   }
 

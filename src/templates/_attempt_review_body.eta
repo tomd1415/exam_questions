@@ -1,5 +1,6 @@
 <%
 const OBJECTIVE_TYPES = new Set(['multiple_choice', 'tick_box', 'short_text']);
+const isPupil = it.currentUser && it.currentUser.role === 'pupil';
 let totalAwarded = 0;
 let totalPossible = 0;
 let pendingCount = 0;
@@ -21,8 +22,12 @@ it.bundle.questions.forEach(function(q) {
         Submitted <%= it.bundle.attempt.submitted_at ? it.bundle.attempt.submitted_at.toISOString().slice(0, 16).replace('T', ' ') : '' %>
       </p>
     </div>
-    <a href="/topics">Back to topics</a>
+    <a href="<%= isPupil ? '/attempts' : '/topics' %>">Back</a>
   </header>
+
+  <% if (it.flash) { %>
+    <p class="flash flash--ok" role="status"><%= it.flash %></p>
+  <% } %>
 
   <p class="attempt-summary">
     <strong>Score:</strong> <%= totalAwarded %> / <%= totalPossible %>
@@ -43,7 +48,7 @@ it.bundle.questions.forEach(function(q) {
       else questionPending += 1;
     });
     %>
-    <article class="question-card">
+    <article class="question-card" id="q-<%= q.id %>">
       <header class="question-card__meta">
         <span class="badge">Q<%= idx + 1 %></span>
         <span class="badge badge--muted"><%= q.topic_code %> · <%= q.subtopic_code %></span>
@@ -57,7 +62,8 @@ it.bundle.questions.forEach(function(q) {
       <% (it.bundle.partsByQuestion.get(q.id) || []).forEach(function(part) { %>
         <% const awarded = it.bundle.awardedByAttemptPart.get(part.id); %>
         <% const isObjective = OBJECTIVE_TYPES.has(part.expected_response_type); %>
-        <div class="question-part question-part--review">
+        <% const markPoints = it.bundle.markPointsByPart.get(part.question_part_id) || []; %>
+        <div class="question-part question-part--review" id="p-<%= part.id %>">
           <div class="question-part__head">
             <span class="question-part__label"><%= part.part_label %></span>
             <span class="question-part__prompt"><%= part.prompt %></span>
@@ -73,23 +79,51 @@ it.bundle.questions.forEach(function(q) {
             <strong>Your answer:</strong>
             <pre><%= part.raw_answer || '(blank)' %></pre>
           </div>
-          <% if (!awarded) { %>
-            <p class="pending-note">Your teacher will mark this — come back later.</p>
-          <% } else if (isObjective && awarded.marker === 'deterministic') { %>
-            <% const markPoints = it.bundle.markPointsByPart.get(part.question_part_id) || []; %>
+          <% if (awarded && isObjective && awarded.marker === 'deterministic' && markPoints.length > 0) { %>
+            <p class="markpoints__heading"><strong>Model answer:</strong></p>
+            <ul class="markpoints">
+              <% markPoints.forEach(function(mp) { %>
+                <% const hit = awarded.mark_points_hit.indexOf(mp.id) !== -1; %>
+                <li class="<%= hit ? 'mp--hit' : 'mp--miss' %>">
+                  <span class="mp__status"><%= hit ? '✓' : '✗' %></span>
+                  <span class="mp__text"><%= mp.text %></span>
+                  <% if (mp.is_required) { %><span class="badge badge--muted">required</span><% } %>
+                  <span class="mp__marks">[<%= mp.marks %>]</span>
+                </li>
+              <% }); %>
+            </ul>
+          <% } else if (!awarded) { %>
+            <p class="pending-note">Teacher to mark.</p>
             <% if (markPoints.length > 0) { %>
-              <p class="markpoints__heading"><strong>Model answer:</strong></p>
+              <p class="markpoints__heading"><strong>Marking criteria:</strong></p>
               <ul class="markpoints">
                 <% markPoints.forEach(function(mp) { %>
-                  <% const hit = awarded.mark_points_hit.indexOf(mp.id) !== -1; %>
-                  <li class="<%= hit ? 'mp--hit' : 'mp--miss' %>">
-                    <span class="mp__status"><%= hit ? '✓' : '✗' %></span>
+                  <li>
                     <span class="mp__text"><%= mp.text %></span>
                     <% if (mp.is_required) { %><span class="badge badge--muted">required</span><% } %>
                     <span class="mp__marks">[<%= mp.marks %>]</span>
                   </li>
                 <% }); %>
               </ul>
+            <% } %>
+            <% if (isPupil) { %>
+              <form method="post"
+                    action="/attempts/<%= it.bundle.attempt.id %>/parts/<%= part.id %>/self-mark"
+                    class="inline-form self-mark-form">
+                <input type="hidden" name="_csrf" value="<%= it.csrfToken %>" />
+                <label>
+                  Your self-estimate (0–<%= part.marks %>):
+                  <input type="number"
+                         name="marks"
+                         min="0"
+                         max="<%= part.marks %>"
+                         step="1"
+                         value="<%= part.pupil_self_marks === null ? '' : part.pupil_self_marks %>" />
+                </label>
+                <button type="submit">Save estimate</button>
+              </form>
+            <% } else if (part.pupil_self_marks !== null) { %>
+              <p><strong>Pupil self-estimate:</strong> <%= part.pupil_self_marks %> / <%= part.marks %></p>
             <% } %>
           <% } %>
         </div>

@@ -48,7 +48,7 @@ Never commit `.env`. The [.gitignore](.gitignore) already excludes it.
 npm install
 ```
 
-This installs TypeScript, the ESLint/Prettier toolchain, Vitest, `pg`, `zod`, and `dotenv`. Framework libraries (Fastify, templating, etc.) are **not** installed yet — they come in during Phase 0 so the dependency list reflects what has actually been wired up.
+This installs the runtime stack (Fastify 5 + `@fastify/cookie` + `@fastify/csrf-protection` + `@fastify/formbody` + `@fastify/static` + `@fastify/view` + Eta + `pg` + `@node-rs/argon2` + `zod` + `dotenv`) and the dev toolchain (TypeScript, ESLint flat config, Prettier, Vitest + v8 coverage, `tsx`, Playwright for the Phase 1 human-test walker).
 
 ### 4. Database
 
@@ -63,11 +63,19 @@ Extensions enabled on first init: `vector`, `pg_trgm`, `citext`. See [scripts/db
 
 Useful variations:
 
-| Command            | Purpose                                                               |
-| ------------------ | --------------------------------------------------------------------- |
-| `npm run db:down`  | stop the container (data persists)                                    |
-| `npm run db:reset` | stop and **wipe** the volume, then recreate (runs `db-init.sh` again) |
-| `npm run db:logs`  | tail the container logs                                               |
+| Command                     | Purpose                                                                                                              |
+| --------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `npm run db:down`           | stop the container (data persists)                                                                                   |
+| `npm run db:reset`          | stop and **wipe** the volume, then recreate (runs `db-init.sh` again)                                                |
+| `npm run db:logs`           | tail the container logs                                                                                              |
+| `npm run db:migrate`        | apply any unapplied migrations in `migrations/` via `src/db/migrate.ts` — idempotent, safe to re-run                 |
+| `npm run db:backup`         | pg_dump to `./tmp/backups/exam_dev-<ts>.dump` plus a `.sha256`                                                       |
+| `npm run db:restore-drill`  | restore the latest backup into a scratch DB, assert sensible row counts, then drop the scratch DB                    |
+| `npm run user:create`       | CLI to create a user (role/username/display-name/pseudonym/password). Idempotent. See `src/scripts/create-user.ts`   |
+| `npm run content:seed`      | CLI to upsert curated questions from `content/curated/*.json`. Supports `--dry-run`                                  |
+| `npm run setup:lesson`      | CLI that seeds a teacher, a class, pupils, and an assigned topic for a fresh demo. See `src/scripts/setup-lesson.ts` |
+| `npm run test:human:phase0` | Run the Phase 0 automated human-test walker                                                                          |
+| `npm run test:human:phase1` | Run the Phase 1 automated human-test walker (requires Playwright Chromium on first use)                              |
 
 ## Daily workflow
 
@@ -158,7 +166,7 @@ All in [.vscode/extensions.json](.vscode/extensions.json). The opinionated few:
 
 Production runs on a Debian VM on the school's existing Proxmox hypervisor, inside the school network, LAN-only for the MVP. The teacher is the sole admin. The VM does not run Docker for the database. Instead:
 
-- Install Postgres 16 natively (`apt install postgresql-16 postgresql-16-pgvector`).
+- Install Postgres natively with pgvector (`apt install postgresql-17 postgresql-17-pgvector` on current Debian, or the matching 16.x packages — see `scripts/debian-bootstrap.sh` for the exact, tested sequence).
 - Run the app under a systemd unit as a non-root user.
 - Reverse-proxy via nginx or Caddy. TLS approach captured in `RUNBOOK.md` (school internal CA, or Let's Encrypt via DNS-01 if a public DNS subdomain is delegated).
 - DB backups: a nightly `pg_dump` writes to a directory captured by the school's existing backup regime, which handles encryption and off-siting. The DB-level restore drill (`pg_dump` then `pg_restore` into a scratch DB) is owned by this project.

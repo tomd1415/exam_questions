@@ -3,10 +3,11 @@ import type {
   AttemptPartMarkPointRow,
   AttemptPartRow,
   AttemptRepo,
+  PupilAttemptSummary,
   SubmittedAttemptSummary,
 } from '../repos/attempts.js';
 import type { ClassRepo } from '../repos/classes.js';
-import type { UserRow } from '../repos/users.js';
+import type { RevealMode, UserRepo, UserRow } from '../repos/users.js';
 import {
   markAttemptPart,
   type MarkingInputMarkPoint,
@@ -26,7 +27,10 @@ export class AttemptAccessError extends Error {
       | 'no_questions'
       | 'not_enrolled'
       | 'already_submitted'
-      | 'not_yet_submitted',
+      | 'not_yet_submitted'
+      | 'question_already_submitted'
+      | 'not_submitted_yet'
+      | 'invalid_self_marks',
   ) {
     super(`attempt access denied: ${reason}`);
     this.name = 'AttemptAccessError';
@@ -36,6 +40,7 @@ export class AttemptAccessError extends Error {
 export interface StartTopicSetResult {
   attemptId: string;
   questionCount: number;
+  resumed?: boolean;
 }
 
 export class AttemptService {
@@ -43,29 +48,69 @@ export class AttemptService {
     private readonly repo: AttemptRepo,
     private readonly classRepo: ClassRepo,
     private readonly audit: AuditService,
+    private readonly userRepo?: UserRepo,
   ) {}
+
+  async listAttemptsForPupil(actor: ActorForAttempt): Promise<PupilAttemptSummary[]> {
+    if (actor.role !== 'pupil') throw new AttemptAccessError('not_pupil');
+    return this.repo.listAttemptsForUser(actor.id);
+  }
+
+  async setRevealModeForUser(actor: ActorForAttempt, mode: RevealMode): Promise<void> {
+    if (!this.userRepo) throw new Error('UserRepo not configured');
+    await this.userRepo.setRevealMode(actor.id, mode);
+    await this.audit.record(
+      { userId: actor.id, role: actor.role },
+      'user.reveal_mode.set',
+      { mode },
+      actor.id,
+    );
+  }
 
   async listTopicsForPupil(actor: ActorForAttempt): Promise<
     {
       topic_code: string;
       topic_title: string;
       component_code: string;
+      in_progress_attempt_id: string | null;
     }[]
   > {
     if (actor.role !== 'pupil') throw new AttemptAccessError('not_pupil');
-    return this.classRepo.listAssignedTopicsForPupil(actor.id);
+    const topics = await this.classRepo.listAssignedTopicsForPupil(actor.id);
+    const inProgress = await this.repo.listInProgressAttemptsForPupilTopics(
+      actor.id,
+      topics.map((t) => t.topic_code),
+    );
+    return topics.map((t) => ({
+      topic_code: t.topic_code,
+      topic_title: t.topic_title,
+      component_code: t.component_code,
+      in_progress_attempt_id: inProgress.get(t.topic_code) ?? null,
+    }));
   }
 
-  async startTopicSet(actor: ActorForAttempt, topicCode: string): Promise<StartTopicSetResult> {
+  async startTopicSet(
+    actor: ActorForAttempt,
+    topicCode: string,
+    revealMode: RevealMode = 'per_question',
+  ): Promise<StartTopicSetResult> {
     if (actor.role !== 'pupil') throw new AttemptAccessError('not_pupil');
     const cls = await this.classRepo.findClassForPupilAndTopic(actor.id, topicCode);
     if (!cls) throw new AttemptAccessError('not_enrolled');
+
+    // Enforce one in-progress attempt per (pupil, topic). If one exists, hand
+    // the caller back that id so it can redirect the pupil to resume it.
+    const existing = await this.repo.findInProgressAttemptForPupilTopic(actor.id, topicCode);
+    if (existing) {
+      return { attemptId: existing, questionCount: 0, resumed: true };
+    }
 
     const result = await this.repo.createTopicSetAttempt({
       userId: actor.id,
       classId: cls.class_id,
       topicCode,
       limit: cls.topic_set_size,
+      revealMode,
     });
     if ('error' in result) throw new AttemptAccessError('no_questions');
 
@@ -117,14 +162,16 @@ export class AttemptService {
     const bundle = await this.getAttemptForActor(actor, attemptId);
     if (bundle.attempt.submitted_at !== null) throw new AttemptAccessError('already_submitted');
 
-    const validIds = new Set<string>();
+    const editableIds = new Set<string>();
     for (const list of bundle.partsByQuestion.values()) {
-      for (const p of list) validIds.add(p.id);
+      for (const p of list) {
+        if (p.submitted_at === null) editableIds.add(p.id);
+      }
     }
 
     let saved = 0;
     for (const a of answers) {
-      if (!validIds.has(a.attemptPartId)) continue;
+      if (!editableIds.has(a.attemptPartId)) continue;
       const trimmed = a.rawAnswer.slice(0, 5000);
       const rc = await this.repo.saveAnswer(a.attemptPartId, trimmed);
       saved += rc;
@@ -154,6 +201,7 @@ export class AttemptService {
     let pendingParts = 0;
     for (const parts of bundle.partsByQuestion.values()) {
       for (const part of parts) {
+        if (bundle.awardedByAttemptPart.has(part.id)) continue;
         const mps = bundle.markPointsByPart.get(part.question_part_id) ?? [];
         const outcome = runDeterministicMarker(part, mps);
         if (outcome.kind === 'awarded') {
@@ -189,6 +237,102 @@ export class AttemptService {
       actor.id,
     );
     return { markedParts, pendingParts };
+  }
+
+  async submitQuestion(
+    actor: ActorForAttempt,
+    attemptId: string,
+    attemptQuestionId: string,
+  ): Promise<{ markedParts: number; pendingParts: number; attemptFullySubmitted: boolean }> {
+    const bundle = await this.getAttemptForActor(actor, attemptId);
+    if (bundle.attempt.submitted_at !== null) throw new AttemptAccessError('already_submitted');
+
+    const question = bundle.questions.find((q) => q.id === attemptQuestionId);
+    if (!question) throw new AttemptAccessError('not_found');
+    if (question.submitted_at !== null) {
+      throw new AttemptAccessError('question_already_submitted');
+    }
+
+    await this.repo.markQuestionSubmitted(attemptQuestionId);
+
+    let markedParts = 0;
+    let pendingParts = 0;
+    const parts = bundle.partsByQuestion.get(attemptQuestionId) ?? [];
+    for (const part of parts) {
+      if (bundle.awardedByAttemptPart.has(part.id)) continue;
+      const mps = bundle.markPointsByPart.get(part.question_part_id) ?? [];
+      const outcome = runDeterministicMarker(part, mps);
+      if (outcome.kind === 'awarded') {
+        await this.repo.writeDeterministicMark({
+          attemptPartId: part.id,
+          marksAwarded: outcome.marks_awarded,
+          marksTotal: outcome.marks_possible,
+          markPointsHit: outcome.hitMarkPointIds,
+          markPointsMissed: outcome.missedMarkPointIds,
+        });
+        markedParts++;
+      } else {
+        pendingParts++;
+      }
+    }
+
+    await this.audit.record(
+      { userId: actor.id, role: actor.role },
+      'attempt.question.submitted',
+      {
+        attempt_id: attemptId,
+        attempt_question_id: attemptQuestionId,
+        marked_parts: markedParts,
+        pending_parts: pendingParts,
+      },
+      actor.id,
+    );
+
+    let attemptFullySubmitted = false;
+    const remaining = await this.repo.countUnsubmittedQuestions(attemptId);
+    if (remaining === 0) {
+      await this.repo.markSubmitted(attemptId);
+      await this.audit.record(
+        { userId: actor.id, role: actor.role },
+        'attempt.submitted',
+        { attempt_id: attemptId, trigger: 'final_question' },
+        actor.id,
+      );
+      attemptFullySubmitted = true;
+    }
+
+    return { markedParts, pendingParts, attemptFullySubmitted };
+  }
+
+  async recordPupilSelfMark(
+    actor: ActorForAttempt,
+    attemptId: string,
+    attemptPartId: string,
+    marks: number | null,
+  ): Promise<void> {
+    const bundle = await this.getAttemptForActor(actor, attemptId);
+    let target: AttemptPartRow | undefined;
+    for (const list of bundle.partsByQuestion.values()) {
+      const p = list.find((x) => x.id === attemptPartId);
+      if (p) {
+        target = p;
+        break;
+      }
+    }
+    if (!target) throw new AttemptAccessError('not_found');
+    if (target.submitted_at === null && bundle.attempt.submitted_at === null) {
+      throw new AttemptAccessError('not_submitted_yet');
+    }
+    if (marks !== null && (marks < 0 || marks > target.marks || !Number.isInteger(marks))) {
+      throw new AttemptAccessError('invalid_self_marks');
+    }
+    await this.repo.setPupilSelfMark(attemptPartId, marks);
+    await this.audit.record(
+      { userId: actor.id, role: actor.role },
+      'attempt.part.self_mark',
+      { attempt_id: attemptId, attempt_part_id: attemptPartId, marks },
+      actor.id,
+    );
   }
 }
 

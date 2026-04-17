@@ -173,9 +173,11 @@ describe('Pupil review view (Chunk 6)', () => {
     expect(review.payload).toContain('Model answer:');
     expect(review.payload).toContain('CPU');
     // Open-response part shows the teacher-pending message.
-    expect(review.payload).toContain('Your teacher will mark this');
-    // Teacher-only rubric text attached to the open part is NOT surfaced.
-    expect(review.payload).not.toContain('Teacher-only rubric bullet');
+    expect(review.payload).toContain('Teacher to mark');
+    // Pupils can now see the marking criteria and record a self-estimate
+    // once the part has been submitted.
+    expect(review.payload).toContain('Marking criteria:');
+    expect(review.payload).toContain('self-estimate');
   });
 
   it('returns 403 when a different pupil requests the review', async () => {

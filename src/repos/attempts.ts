@@ -14,6 +14,7 @@ export interface AttemptRow {
   started_at: Date;
   submitted_at: Date | null;
   target_topic_code: string | null;
+  reveal_mode: 'per_question' | 'whole_attempt';
 }
 
 export interface AttemptQuestionRow {
@@ -26,6 +27,7 @@ export interface AttemptQuestionRow {
   subtopic_code: string;
   command_word_code: string;
   marks_total: number;
+  submitted_at: Date | null;
 }
 
 export interface AttemptPartRow {
@@ -40,6 +42,7 @@ export interface AttemptPartRow {
   raw_answer: string;
   last_saved_at: Date;
   submitted_at: Date | null;
+  pupil_self_marks: number | null;
 }
 
 export interface AttemptPartMarkPointRow {
@@ -140,6 +143,7 @@ export class AttemptRepo {
     classId: string;
     topicCode: string;
     limit: number;
+    revealMode: 'per_question' | 'whole_attempt';
   }): Promise<{ attemptId: string; questionCount: number } | { error: 'no_questions' }> {
     const client = await this.pool.connect();
     try {
@@ -161,10 +165,10 @@ export class AttemptRepo {
       }
 
       const attempt = await client.query<{ id: string }>(
-        `INSERT INTO attempts (user_id, class_id, mode, target_topic_code)
-           VALUES ($1::bigint, $2::bigint, 'topic_set', $3)
+        `INSERT INTO attempts (user_id, class_id, mode, target_topic_code, reveal_mode)
+           VALUES ($1::bigint, $2::bigint, 'topic_set', $3, $4)
          RETURNING id::text`,
-        [input.userId, input.classId, input.topicCode],
+        [input.userId, input.classId, input.topicCode, input.revealMode],
       );
       const attemptId = attempt.rows[0]!.id;
 
@@ -197,10 +201,48 @@ export class AttemptRepo {
     }
   }
 
+  async findInProgressAttemptForPupilTopic(
+    pupilId: string,
+    topicCode: string,
+  ): Promise<string | null> {
+    const { rows } = await this.pool.query<{ id: string }>(
+      `SELECT id::text
+         FROM attempts
+        WHERE user_id = $1::bigint
+          AND target_topic_code = $2
+          AND submitted_at IS NULL
+        ORDER BY started_at DESC
+        LIMIT 1`,
+      [pupilId, topicCode],
+    );
+    return rows[0]?.id ?? null;
+  }
+
+  async listInProgressAttemptsForPupilTopics(
+    pupilId: string,
+    topicCodes: string[],
+  ): Promise<Map<string, string>> {
+    if (topicCodes.length === 0) return new Map();
+    const { rows } = await this.pool.query<{ topic_code: string; attempt_id: string }>(
+      `SELECT DISTINCT ON (target_topic_code)
+              target_topic_code AS topic_code,
+              id::text          AS attempt_id
+         FROM attempts
+        WHERE user_id = $1::bigint
+          AND target_topic_code = ANY($2::text[])
+          AND submitted_at IS NULL
+        ORDER BY target_topic_code, started_at DESC`,
+      [pupilId, topicCodes],
+    );
+    const out = new Map<string, string>();
+    for (const r of rows) out.set(r.topic_code, r.attempt_id);
+    return out;
+  }
+
   async findAttemptHeader(attemptId: string): Promise<AttemptRow | null> {
     const { rows } = await this.pool.query<AttemptRow>(
       `SELECT id::text, user_id::text, class_id::text, mode,
-              started_at, submitted_at, target_topic_code
+              started_at, submitted_at, target_topic_code, reveal_mode
          FROM attempts
         WHERE id = $1::bigint`,
       [attemptId],
@@ -221,7 +263,8 @@ export class AttemptRepo {
               q.topic_code,
               q.subtopic_code,
               q.command_word_code,
-              q.marks_total
+              q.marks_total,
+              aq.submitted_at
          FROM attempt_questions aq
          JOIN questions q ON q.id = aq.question_id
         WHERE aq.attempt_id = $1::bigint
@@ -240,7 +283,8 @@ export class AttemptRepo {
               qp.display_order,
               ap.raw_answer,
               ap.last_saved_at,
-              ap.submitted_at
+              ap.submitted_at,
+              ap.pupil_self_marks
          FROM attempt_parts ap
          JOIN question_parts qp ON qp.id = ap.question_part_id
          JOIN attempt_questions aq ON aq.id = ap.attempt_question_id
@@ -317,6 +361,99 @@ export class AttemptRepo {
       [attemptPartId, rawAnswer],
     );
     return rowCount ?? 0;
+  }
+
+  async markQuestionSubmitted(attemptQuestionId: string): Promise<void> {
+    const client = await this.pool.connect();
+    try {
+      await client.query('BEGIN');
+      await client.query(
+        `UPDATE attempt_questions
+            SET submitted_at = now()
+          WHERE id = $1::bigint
+            AND submitted_at IS NULL`,
+        [attemptQuestionId],
+      );
+      await client.query(
+        `UPDATE attempt_parts
+            SET submitted_at = now()
+          WHERE attempt_question_id = $1::bigint
+            AND submitted_at IS NULL`,
+        [attemptQuestionId],
+      );
+      await client.query('COMMIT');
+    } catch (err) {
+      await safeRollback(client);
+      throw err;
+    } finally {
+      client.release();
+    }
+  }
+
+  async countUnsubmittedQuestions(attemptId: string): Promise<number> {
+    const { rows } = await this.pool.query<{ n: number }>(
+      `SELECT count(*)::int AS n
+         FROM attempt_questions
+        WHERE attempt_id = $1::bigint
+          AND submitted_at IS NULL`,
+      [attemptId],
+    );
+    return rows[0]?.n ?? 0;
+  }
+
+  async setPupilSelfMark(attemptPartId: string, marks: number | null): Promise<number> {
+    const { rowCount } = await this.pool.query(
+      `UPDATE attempt_parts
+          SET pupil_self_marks = $2
+        WHERE id = $1::bigint`,
+      [attemptPartId, marks],
+    );
+    return rowCount ?? 0;
+  }
+
+  async listAttemptsForUser(userId: string): Promise<PupilAttemptSummary[]> {
+    const { rows } = await this.pool.query<PupilAttemptSummary>(
+      `SELECT a.id::text,
+              a.target_topic_code,
+              t.title AS topic_title,
+              t.component_code,
+              a.started_at,
+              a.submitted_at,
+              a.reveal_mode,
+              (SELECT COUNT(*)::int
+                 FROM attempt_parts ap
+                 JOIN attempt_questions aq ON aq.id = ap.attempt_question_id
+                WHERE aq.attempt_id = a.id) AS total_parts,
+              (SELECT COALESCE(SUM(am.marks_awarded), 0)::int
+                 FROM awarded_marks am
+                 JOIN attempt_parts ap     ON ap.id = am.attempt_part_id
+                 JOIN attempt_questions aq ON aq.id = ap.attempt_question_id
+                WHERE aq.attempt_id = a.id
+                  AND am.id = (
+                    SELECT am2.id FROM awarded_marks am2
+                     WHERE am2.attempt_part_id = ap.id
+                     ORDER BY am2.created_at DESC, am2.id DESC
+                     LIMIT 1
+                  )) AS marks_awarded,
+              (SELECT COALESCE(SUM(qp.marks), 0)::int
+                 FROM attempt_parts ap
+                 JOIN question_parts qp    ON qp.id = ap.question_part_id
+                 JOIN attempt_questions aq ON aq.id = ap.attempt_question_id
+                WHERE aq.attempt_id = a.id) AS marks_total,
+              (SELECT COUNT(*)::int
+                 FROM attempt_parts ap
+                 JOIN attempt_questions aq ON aq.id = ap.attempt_question_id
+                WHERE aq.attempt_id = a.id
+                  AND NOT EXISTS (
+                    SELECT 1 FROM awarded_marks am WHERE am.attempt_part_id = ap.id
+                  )) AS pending_parts
+         FROM attempts a
+    LEFT JOIN topics t ON t.code = a.target_topic_code
+        WHERE a.user_id = $1::bigint
+        ORDER BY COALESCE(a.submitted_at, a.started_at) DESC`,
+      [userId],
+    );
+    return rows;
   }
 
   async markSubmitted(attemptId: string): Promise<void> {
@@ -494,6 +631,20 @@ export interface SubmittedAttemptSummary {
   started_at: Date;
   submitted_at: Date;
   total_parts: number;
+  pending_parts: number;
+}
+
+export interface PupilAttemptSummary {
+  id: string;
+  target_topic_code: string | null;
+  topic_title: string | null;
+  component_code: string | null;
+  started_at: Date;
+  submitted_at: Date | null;
+  reveal_mode: 'per_question' | 'whole_attempt';
+  total_parts: number;
+  marks_awarded: number;
+  marks_total: number;
   pending_parts: number;
 }
 

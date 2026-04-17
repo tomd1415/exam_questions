@@ -56,31 +56,35 @@ The relational schema for the OCR J277 revision platform. Phase markers indicate
 
 ### `users`
 
-| Column                 | Type                 | Notes                                                                        |
-| ---------------------- | -------------------- | ---------------------------------------------------------------------------- |
-| `id`                   | BIGSERIAL PK         |                                                                              |
-| `role`                 | TEXT                 | `pupil`, `teacher`, `admin`                                                  |
-| `display_name`         | TEXT                 | First name + initial for pupils, full name for teachers                      |
-| `username`             | TEXT UNIQUE          | Login identifier                                                             |
-| `password_hash`        | TEXT                 | Argon2id                                                                     |
-| `must_change_password` | BOOLEAN DEFAULT true |                                                                              |
-| `failed_login_count`   | INT DEFAULT 0        |                                                                              |
-| `locked_until`         | TIMESTAMPTZ NULL     |                                                                              |
-| `last_login_at`        | TIMESTAMPTZ NULL     |                                                                              |
-| `active`               | BOOLEAN DEFAULT true |                                                                              |
-| `pseudonym`            | TEXT UNIQUE          | Stable pseudonymous ID; used in any AI-bound payload instead of display_name |
+| Column                 | Type                          | Notes                                                                                                                                           |
+| ---------------------- | ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`                   | BIGSERIAL PK                  |                                                                                                                                                 |
+| `role`                 | TEXT                          | `pupil`, `teacher`, `admin`                                                                                                                     |
+| `display_name`         | TEXT                          | First name + initial for pupils, full name for teachers                                                                                         |
+| `username`             | TEXT UNIQUE                   | Login identifier                                                                                                                                |
+| `password_hash`        | TEXT                          | Argon2id                                                                                                                                        |
+| `must_change_password` | BOOLEAN DEFAULT true          |                                                                                                                                                 |
+| `failed_login_count`   | INT DEFAULT 0                 |                                                                                                                                                 |
+| `locked_until`         | TIMESTAMPTZ NULL              |                                                                                                                                                 |
+| `last_login_at`        | TIMESTAMPTZ NULL              |                                                                                                                                                 |
+| `active`               | BOOLEAN DEFAULT true          |                                                                                                                                                 |
+| `pseudonym`            | TEXT UNIQUE                   | Stable pseudonymous ID; used in any AI-bound payload instead of display_name                                                                    |
+| `reveal_mode`          | TEXT DEFAULT `'per_question'` | `per_question` \| `whole_attempt`. Per-user preference for attempt flow; snapshotted onto `attempts.reveal_mode` at start time (migration 0010) |
 
 No DOB, no contact details, no SEND flags. School-side mapping (pseudonym ↔ MIS record) lives outside the app.
 
 ### `classes`
 
-| Column          | Type                 | Notes            |
-| --------------- | -------------------- | ---------------- |
-| `id`            | BIGSERIAL PK         |                  |
-| `name`          | TEXT                 | e.g. "10C/Cp1"   |
-| `teacher_id`    | BIGINT FK → users    |                  |
-| `academic_year` | TEXT                 | e.g. "2025-2026" |
-| `active`        | BOOLEAN DEFAULT true |                  |
+| Column            | Type                 | Notes                                                                             |
+| ----------------- | -------------------- | --------------------------------------------------------------------------------- |
+| `id`              | BIGSERIAL PK         |                                                                                   |
+| `name`            | TEXT                 | e.g. "10C/Cp1"                                                                    |
+| `teacher_id`      | BIGINT FK → users    |                                                                                   |
+| `academic_year`   | TEXT                 | e.g. "2025-2026"                                                                  |
+| `active`          | BOOLEAN DEFAULT true |                                                                                   |
+| `topic_set_size`  | INT DEFAULT 8        | 1–30. Number of questions drawn into a pupil topic-set attempt (migration 0008)   |
+
+Uniqueness: `(teacher_id, name, academic_year)` — a teacher cannot have two classes sharing both name and year.
 
 ### `enrolments`
 
@@ -89,6 +93,20 @@ No DOB, no contact details, no SEND flags. School-side mapping (pseudonym ↔ MI
 | `class_id`                 | BIGINT FK → classes |            |
 | `user_id`                  | BIGINT FK → users   | pupil only |
 | PK (`class_id`, `user_id`) |                     |            |
+
+### `class_assigned_topics` (Phase 1, migration 0008)
+
+Many-to-many: which topics a teacher has assigned to a class. Pupils see these on `/topics` and can start an attempt against any of them.
+
+| Column                        | Type                                    | Notes               |
+| ----------------------------- | --------------------------------------- | ------------------- |
+| `class_id`                    | BIGINT FK → classes (ON DELETE CASCADE) |                     |
+| `topic_code`                  | TEXT FK → topics                        |                     |
+| `assigned_by`                 | BIGINT FK → users                       | teacher or admin id |
+| `created_at`                  | TIMESTAMPTZ                             |                     |
+| PK (`class_id`, `topic_code`) |                                         |                     |
+
+Index: `class_assigned_topics (topic_code)`.
 
 ### `sessions` (Phase 0)
 
@@ -190,37 +208,42 @@ Stored excerpts from OCR papers used only for similarity comparison; never serve
 
 ### `attempts`
 
-| Column                 | Type                | Notes                                                  |
-| ---------------------- | ------------------- | ------------------------------------------------------ |
-| `id`                   | BIGSERIAL PK        |                                                        |
-| `user_id`              | BIGINT FK → users   |                                                        |
-| `class_id`             | BIGINT FK → classes |                                                        |
-| `mode`                 | TEXT                | `topic_set`, `weakest_areas`, `mixed`, `paper`, `mock` |
-| `started_at`           | TIMESTAMPTZ         |                                                        |
-| `submitted_at`         | TIMESTAMPTZ NULL    |                                                        |
-| `target_topic_code`    | TEXT NULL           |                                                        |
-| `target_subtopic_code` | TEXT NULL           |                                                        |
+| Column                 | Type                          | Notes                                                                                                                                                                     |
+| ---------------------- | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`                   | BIGSERIAL PK                  |                                                                                                                                                                           |
+| `user_id`              | BIGINT FK → users             |                                                                                                                                                                           |
+| `class_id`             | BIGINT FK → classes           |                                                                                                                                                                           |
+| `mode`                 | TEXT                          | `topic_set`, `weakest_areas`, `mixed`, `paper`, `mock`                                                                                                                    |
+| `started_at`           | TIMESTAMPTZ                   |                                                                                                                                                                           |
+| `submitted_at`         | TIMESTAMPTZ NULL              | Non-null once every question has been submitted (per-question mode) or the whole attempt submitted (whole-attempt mode)                                                   |
+| `target_topic_code`    | TEXT NULL                     |                                                                                                                                                                           |
+| `target_subtopic_code` | TEXT NULL                     |                                                                                                                                                                           |
+| `reveal_mode`          | TEXT DEFAULT `'per_question'` | Snapshot of the pupil's `users.reveal_mode` at start time (migration 0010). See Reveal modes note below                                                                   |
 
 ### `attempt_questions`
 
-| Column          | Type                  | Notes |
-| --------------- | --------------------- | ----- |
-| `id`            | BIGSERIAL PK          |       |
-| `attempt_id`    | BIGINT FK → attempts  |       |
-| `question_id`   | BIGINT FK → questions |       |
-| `display_order` | INT                   |       |
+| Column          | Type                  | Notes                                                                                                               |
+| --------------- | --------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `id`            | BIGSERIAL PK          |                                                                                                                     |
+| `attempt_id`    | BIGINT FK → attempts  |                                                                                                                     |
+| `question_id`   | BIGINT FK → questions |                                                                                                                     |
+| `display_order` | INT                   |                                                                                                                     |
+| `submitted_at`  | TIMESTAMPTZ NULL      | Per-question lock (migration 0010); see note below                                                                  |
 
 ### `attempt_parts`
 
-| Column                | Type                          | Notes                                                |
-| --------------------- | ----------------------------- | ---------------------------------------------------- |
-| `id`                  | BIGSERIAL PK                  |                                                      |
-| `attempt_question_id` | BIGINT FK → attempt_questions |                                                      |
-| `question_part_id`    | BIGINT FK → question_parts    |                                                      |
-| `raw_answer`          | TEXT                          | exactly what the pupil typed                         |
-| `normalised_answer`   | TEXT NULL                     | trimmed/lowercased copy used by deterministic checks |
-| `last_saved_at`       | TIMESTAMPTZ                   |                                                      |
-| `submitted_at`        | TIMESTAMPTZ NULL              |                                                      |
+| Column                | Type                          | Notes                                                                                                                                                           |
+| --------------------- | ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`                  | BIGSERIAL PK                  |                                                                                                                                                                 |
+| `attempt_question_id` | BIGINT FK → attempt_questions |                                                                                                                                                                 |
+| `question_part_id`    | BIGINT FK → question_parts    |                                                                                                                                                                 |
+| `raw_answer`          | TEXT                          | exactly what the pupil typed                                                                                                                                    |
+| `normalised_answer`   | TEXT NULL                     | trimmed/lowercased copy used by deterministic checks                                                                                                            |
+| `last_saved_at`       | TIMESTAMPTZ                   |                                                                                                                                                                 |
+| `submitted_at`        | TIMESTAMPTZ NULL              |                                                                                                                                                                 |
+| `pupil_self_marks`    | INT NULL                      | Pupil's self-estimated mark after reading the mark scheme for a teacher-pending part (migration 0010)                                                           |
+
+**Reveal modes (migration 0010).** `attempts.reveal_mode = 'per_question'` lets a pupil submit and get feedback one question at a time; `attempt_questions.submitted_at` carries the per-question lock. In `'whole_attempt'` mode the lock is driven by `attempts.submitted_at` alone and the per-question column is ignored. The service layer validates `pupil_self_marks ≤ question_parts.marks` (DB only enforces `>= 0`).
 
 ### `awarded_marks` (Phase 1 deterministic, Phase 3 LLM)
 
@@ -364,6 +387,9 @@ Append-only.
 - `audit_events (at DESC)`
 - `audit_events (actor_user_id, at DESC)`
 - `mastery_state (user_id)`
+- `teacher_overrides (awarded_mark_id)` and `(teacher_id, created_at DESC)` (migration 0009)
+- `class_assigned_topics (topic_code)` (migration 0008)
+- `questions (topic_code) WHERE active = true AND approval_status = 'approved'` — the hot picker used by the pupil topic-set flow (migration 0008)
 - `question_embeddings USING ivfflat (embedding vector_cosine_ops)` once Phase 5 is live
 - `source_excerpts USING ivfflat (embedding vector_cosine_ops)` once Phase 5 is live
 

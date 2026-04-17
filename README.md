@@ -6,7 +6,7 @@ A topic-based adaptive revision web app for OCR GCSE Computer Science (J277), bu
 
 The app serves OCR-style questions, marks pupil responses against rubric-style mark points with LLM assistance, adapts difficulty to the individual pupil, and gives the teacher a clear view of what each pupil and class needs next.
 
-> **Status:** Planning / pre-Phase-0. No code yet. See [PLAN.md](PLAN.md).
+> **Status (2026-04-17):** Phase 0 complete; Phase 1 in progress — chunks 1–4 merged (classes/enrolments, question authoring read/write, deterministic marker). Chunk 5 (pupil topic-set flow) work-in-progress on `main`, with per-question reveal mode and pupil self-estimates already wired in as a follow-up refinement. See [PLAN.md](PLAN.md) and [PHASE1_PLAN.md](PHASE1_PLAN.md).
 
 ## Why this exists
 
@@ -81,11 +81,11 @@ exam_questions/
 ├── .dockerignore / .gitignore
 ├── .vscode/                   shared extensions, settings, launch, tasks
 ├── OCR_Docs/                  OCR source materials (spec, papers, mark schemes); see OCR_Docs/CONTENT_INDEX.md
-├── scripts/                   admin scripts (e.g. db-init.sh)
-├── src/                       (Phase 0+) application code
-├── content/                   (Phase 1+) curated question bank, OCR mappings
+├── scripts/                   admin scripts (db-init, backup, restore drill, Phase 0/1 human-test walkers, Debian bootstrap)
+├── src/                       application code (Fastify app, routes, services, repos, templates, CLI scripts)
+├── content/                   curated question bank + OCR mappings (Phase 1 seed lands in `content/curated/`)
 ├── prompts/                   (Phase 3+) versioned prompt templates
-└── migrations/                (Phase 0+) SQL migrations
+└── migrations/                numbered SQL migrations (0001–0010 currently)
 ```
 
 ## Getting started
@@ -98,7 +98,8 @@ cd exam_questions
 cp .env.example .env                 # then generate a SESSION_SECRET
 npm install
 npm run db:up                        # Postgres 16 + pgvector in Docker on :5433
-npm run dev                          # once src/index.ts exists (Phase 0)
+npm run db:migrate                   # apply 0001…latest migrations
+npm run dev                          # Fastify app on :3030 with hot reload
 ```
 
 Dev is tested on **Gentoo Linux**; production target is **Debian**. The database runs in Docker locally and natively on the Debian server — see [DEV_SETUP.md](DEV_SETUP.md) for the rationale and for what differs in production.

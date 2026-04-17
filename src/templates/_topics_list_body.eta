@@ -4,11 +4,30 @@
       <h1>Revision topics</h1>
       <p class="admin-card__sub">Pick a topic to start a new attempt.</p>
     </div>
+    <a href="/attempts">My attempts</a>
   </header>
 
   <% if (it.flash) { %>
     <p class="flash flash--ok" role="status"><%= it.flash %></p>
   <% } %>
+
+  <form method="post" action="/me/preferences/reveal-mode" class="inline-form reveal-mode-form">
+    <input type="hidden" name="_csrf" value="<%= it.csrfToken %>" />
+    <fieldset>
+      <legend>When I submit an attempt, I want to:</legend>
+      <label>
+        <input type="radio" name="mode" value="per_question"
+          <%= it.revealMode === 'per_question' ? 'checked' : '' %> />
+        Submit and see feedback one question at a time (default)
+      </label>
+      <label>
+        <input type="radio" name="mode" value="whole_attempt"
+          <%= it.revealMode === 'whole_attempt' ? 'checked' : '' %> />
+        Submit the whole attempt at once
+      </label>
+      <button type="submit">Save preference</button>
+    </fieldset>
+  </form>
 
   <% if (!it.topics || it.topics.length === 0) { %>
     <p class="empty">No topics have been assigned to your class yet.</p>
@@ -29,10 +48,14 @@
             <td><%= t.topic_code %></td>
             <td><%= t.topic_title %></td>
             <td>
-              <form method="post" action="/topics/<%= encodeURIComponent(t.topic_code) %>/start" class="inline-form">
-                <input type="hidden" name="_csrf" value="<%= it.csrfToken %>" />
-                <button type="submit">Start attempt</button>
-              </form>
+              <% if (t.in_progress_attempt_id) { %>
+                <a class="btn" href="/attempts/<%= t.in_progress_attempt_id %>">Resume attempt</a>
+              <% } else { %>
+                <form method="post" action="/topics/<%= encodeURIComponent(t.topic_code) %>/start" class="inline-form">
+                  <input type="hidden" name="_csrf" value="<%= it.csrfToken %>" />
+                  <button type="submit">Start attempt</button>
+                </form>
+              <% } %>
             </td>
           </tr>
         <% }); %>

@@ -3,9 +3,12 @@
 **Phase in [PLAN.md](PLAN.md):** Phase 1 — Curated content model and a
 real revision loop. Duration estimate: 3–4 weeks of evening work.
 
-> **Status:** planning draft (2026-04-16). Review before starting
-> Chunk 1. Update this document as scope changes, and record the
-> rationale in a dated note at the bottom.
+> **Status (2026-04-17):** Chunks 1–4 merged on `main`. Chunk 5 (pupil
+> topic-set flow) landed along with a follow-up refinement: per-question
+> reveal mode and pupil self-estimate forms, supported by migration
+> `0010_per_question_mode.sql`. Chunks 6–10 still outstanding. Update
+> this document as scope changes, and record the rationale in a dated
+> note at the bottom.
 
 ## 1. Phase goal in one paragraph
 
@@ -604,6 +607,7 @@ migration lands in the chunk that first needs it and is recorded in
 
 ## Appendix — Revision history
 
-| Date       | Author | Change                                                                           |
-| ---------- | ------ | -------------------------------------------------------------------------------- |
-| 2026-04-16 | TD     | First draft at end of Phase 0, before Chunk 1 work starts. Awaiting user review. |
+| Date       | Author | Change                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| ---------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-04-16 | TD     | First draft at end of Phase 0, before Chunk 1 work starts. Awaiting user review.                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| 2026-04-17 | TD     | Status note updated: Chunks 1–4 merged (classes/enrolments, question authoring read/write, deterministic marking). Chunk 5 (pupil topic-set flow) merged along with a post-plan refinement — per-question reveal mode and pupil self-estimate forms — backed by migration `0010_per_question_mode.sql` (adds `users.reveal_mode`, `attempts.reveal_mode`, `attempt_questions.submitted_at`, `attempt_parts.pupil_self_marks`). The `AttemptService` surface grew `listAttemptsForPupil`, `submitQuestion`, `recordPupilSelfMark`, and `setRevealModeForUser`. |

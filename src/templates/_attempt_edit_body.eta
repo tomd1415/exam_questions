@@ -1,10 +1,25 @@
+<%
+const OBJECTIVE_TYPES = new Set(['multiple_choice', 'tick_box', 'short_text']);
+const perQuestion = it.bundle.attempt.reveal_mode === 'per_question';
+const totalQuestions = it.bundle.questions.length;
+let submittedCount = 0;
+it.bundle.questions.forEach(function(q) { if (q.submitted_at) submittedCount += 1; });
+
+function renderPart(part, questionSubmitted, csrfToken, attemptId, markPoints) {
+  // rendered inline below via eta; helper kept as a no-op placeholder
+}
+%>
 <section class="admin-card">
   <header class="admin-card__header">
     <div>
       <h1>Attempt <%= it.bundle.attempt.id %></h1>
       <p class="admin-card__sub">
         Topic: <%= it.bundle.attempt.target_topic_code || 'n/a' %> ·
-        <%= it.bundle.questions.length %> question<%= it.bundle.questions.length === 1 ? '' : 's' %>
+        <%= totalQuestions %> question<%= totalQuestions === 1 ? '' : 's' %>
+        <% if (perQuestion) { %>
+          · <%= submittedCount %> / <%= totalQuestions %> submitted
+        <% } %>
+        · Mode: <%= perQuestion ? 'one question at a time' : 'whole attempt' %>
       </p>
     </div>
     <a href="/topics">Back to topics</a>
@@ -14,41 +29,190 @@
     <p class="flash flash--ok" role="status"><%= it.flash %></p>
   <% } %>
 
-  <form method="post" action="/attempts/<%= it.bundle.attempt.id %>/save" class="question-form">
-    <input type="hidden" name="_csrf" value="<%= it.csrfToken %>" />
-    <% it.bundle.questions.forEach(function(q, idx) { %>
-      <article class="question-card">
-        <header class="question-card__meta">
-          <span class="badge">Q<%= idx + 1 %></span>
-          <span class="badge badge--muted"><%= q.topic_code %> · <%= q.subtopic_code %></span>
-          <span class="badge badge--muted"><%= q.command_word_code %></span>
-          <span class="badge badge--muted"><%= q.marks_total %> marks</span>
-        </header>
-        <p class="question-card__stem"><%= q.stem %></p>
+  <% if (!perQuestion) { %>
+    <form method="post" action="/attempts/<%= it.bundle.attempt.id %>/save" class="question-form">
+      <input type="hidden" name="_csrf" value="<%= it.csrfToken %>" />
+      <% it.bundle.questions.forEach(function(q, idx) { %>
+        <article class="question-card" id="q-<%= q.id %>">
+          <header class="question-card__meta">
+            <span class="badge">Q<%= idx + 1 %></span>
+            <span class="badge badge--muted"><%= q.topic_code %> · <%= q.subtopic_code %></span>
+            <span class="badge badge--muted"><%= q.command_word_code %></span>
+            <span class="badge badge--muted"><%= q.marks_total %> marks</span>
+          </header>
+          <p class="question-card__stem"><%= q.stem %></p>
 
-        <% (it.bundle.partsByQuestion.get(q.id) || []).forEach(function(part) { %>
-          <fieldset class="question-part">
-            <legend>
+          <% (it.bundle.partsByQuestion.get(q.id) || []).forEach(function(part) { %>
+            <fieldset class="question-part" id="p-<%= part.id %>">
+              <legend>
+                <span class="question-part__label"><%= part.part_label %></span>
+                <span class="question-part__prompt"><%= part.prompt %></span>
+                <span class="question-part__marks">[<%= part.marks %> marks]</span>
+              </legend>
+              <textarea name="part_<%= part.id %>"
+                        rows="5"
+                        maxlength="5000"
+                        autocapitalize="sentences"
+                        spellcheck="true"
+              ><%= part.raw_answer %></textarea>
+            </fieldset>
+          <% }); %>
+        </article>
+      <% }); %>
+
+      <div class="attempt-actions">
+        <button type="submit">Save progress</button>
+        <button type="submit" formaction="/attempts/<%= it.bundle.attempt.id %>/submit" class="button button--primary">
+          Submit attempt
+        </button>
+      </div>
+    </form>
+  <% } else { %>
+    <%
+    const idx = Math.max(0, Math.min(it.currentQuestionIndex || 0, totalQuestions - 1));
+    const q = it.bundle.questions[idx];
+    const parts = it.bundle.partsByQuestion.get(q.id) || [];
+    const questionSubmitted = q.submitted_at !== null;
+    let questionAwarded = 0;
+    let questionPossible = 0;
+    let questionPending = 0;
+    parts.forEach(function(part) {
+      questionPossible += part.marks;
+      const aw = it.bundle.awardedByAttemptPart.get(part.id);
+      if (aw) questionAwarded += aw.marks_awarded;
+      else if (questionSubmitted) questionPending += 1;
+    });
+    const prevQ = idx > 0 ? it.bundle.questions[idx - 1] : null;
+    const nextQ = idx + 1 < totalQuestions ? it.bundle.questions[idx + 1] : null;
+    const nextUnsubmitted = it.bundle.questions.find(function(x) { return x.submitted_at === null; });
+    %>
+
+    <nav class="attempt-nav">
+      <span>Question <%= idx + 1 %> of <%= totalQuestions %></span>
+      <span class="attempt-nav__links">
+        <% if (prevQ) { %>
+          <a href="/attempts/<%= it.bundle.attempt.id %>?q=<%= prevQ.id %>">← Previous</a>
+        <% } %>
+        <% if (nextQ) { %>
+          <a href="/attempts/<%= it.bundle.attempt.id %>?q=<%= nextQ.id %>">Next →</a>
+        <% } %>
+      </span>
+    </nav>
+
+    <article class="question-card" id="q-<%= q.id %>">
+      <header class="question-card__meta">
+        <span class="badge">Q<%= idx + 1 %></span>
+        <span class="badge badge--muted"><%= q.topic_code %> · <%= q.subtopic_code %></span>
+        <span class="badge badge--muted"><%= q.command_word_code %></span>
+        <span class="badge badge--muted"><%= q.marks_total %> marks</span>
+        <% if (questionSubmitted) { %>
+          <span class="badge">
+            Question score: <%= questionAwarded %> / <%= questionPossible %><% if (questionPending > 0) { %> · <%= questionPending %> pending<% } %>
+          </span>
+        <% } %>
+      </header>
+      <p class="question-card__stem"><%= q.stem %></p>
+
+      <% if (!questionSubmitted) { %>
+        <form method="post"
+              action="/attempts/<%= it.bundle.attempt.id %>/questions/<%= q.id %>/submit"
+              class="question-form">
+          <input type="hidden" name="_csrf" value="<%= it.csrfToken %>" />
+          <% parts.forEach(function(part) { %>
+            <fieldset class="question-part" id="p-<%= part.id %>">
+              <legend>
+                <span class="question-part__label"><%= part.part_label %></span>
+                <span class="question-part__prompt"><%= part.prompt %></span>
+                <span class="question-part__marks">[<%= part.marks %> marks]</span>
+              </legend>
+              <textarea name="part_<%= part.id %>"
+                        rows="5"
+                        maxlength="5000"
+                        autocapitalize="sentences"
+                        spellcheck="true"
+              ><%= part.raw_answer %></textarea>
+            </fieldset>
+          <% }); %>
+          <div class="attempt-actions">
+            <button type="submit" formaction="/attempts/<%= it.bundle.attempt.id %>/save">Save progress</button>
+            <button type="submit" class="button button--primary">Submit question</button>
+          </div>
+        </form>
+      <% } else { %>
+        <% parts.forEach(function(part) { %>
+          <% const awarded = it.bundle.awardedByAttemptPart.get(part.id); %>
+          <% const isObjective = OBJECTIVE_TYPES.has(part.expected_response_type); %>
+          <% const markPoints = it.bundle.markPointsByPart.get(part.question_part_id) || []; %>
+          <div class="question-part question-part--review" id="p-<%= part.id %>">
+            <div class="question-part__head">
               <span class="question-part__label"><%= part.part_label %></span>
               <span class="question-part__prompt"><%= part.prompt %></span>
-              <span class="question-part__marks">[<%= part.marks %> marks]</span>
-            </legend>
-            <textarea name="part_<%= part.id %>"
-                      rows="5"
-                      maxlength="5000"
-                      autocapitalize="sentences"
-                      spellcheck="true"
-            ><%= part.raw_answer %></textarea>
-          </fieldset>
+              <span class="question-part__marks">
+                <% if (awarded) { %>
+                  <%= awarded.marks_awarded %> / <%= part.marks %>
+                <% } else { %>
+                  pending / <%= part.marks %>
+                <% } %>
+              </span>
+            </div>
+            <div class="question-part__answer">
+              <strong>Your answer:</strong>
+              <pre><%= part.raw_answer || '(blank)' %></pre>
+            </div>
+            <% if (awarded && isObjective && awarded.marker === 'deterministic' && markPoints.length > 0) { %>
+              <p class="markpoints__heading"><strong>Model answer:</strong></p>
+              <ul class="markpoints">
+                <% markPoints.forEach(function(mp) { %>
+                  <% const hit = awarded.mark_points_hit.indexOf(mp.id) !== -1; %>
+                  <li class="<%= hit ? 'mp--hit' : 'mp--miss' %>">
+                    <span class="mp__status"><%= hit ? '✓' : '✗' %></span>
+                    <span class="mp__text"><%= mp.text %></span>
+                    <% if (mp.is_required) { %><span class="badge badge--muted">required</span><% } %>
+                    <span class="mp__marks">[<%= mp.marks %>]</span>
+                  </li>
+                <% }); %>
+              </ul>
+            <% } else if (!awarded) { %>
+              <p class="pending-note">Teacher to mark.</p>
+              <% if (markPoints.length > 0) { %>
+                <p class="markpoints__heading"><strong>Marking criteria:</strong></p>
+                <ul class="markpoints">
+                  <% markPoints.forEach(function(mp) { %>
+                    <li>
+                      <span class="mp__text"><%= mp.text %></span>
+                      <% if (mp.is_required) { %><span class="badge badge--muted">required</span><% } %>
+                      <span class="mp__marks">[<%= mp.marks %>]</span>
+                    </li>
+                  <% }); %>
+                </ul>
+              <% } %>
+              <form method="post"
+                    action="/attempts/<%= it.bundle.attempt.id %>/parts/<%= part.id %>/self-mark"
+                    class="inline-form self-mark-form">
+                <input type="hidden" name="_csrf" value="<%= it.csrfToken %>" />
+                <label>
+                  Your self-estimate (0–<%= part.marks %>):
+                  <input type="number"
+                         name="marks"
+                         min="0"
+                         max="<%= part.marks %>"
+                         step="1"
+                         value="<%= part.pupil_self_marks === null ? '' : part.pupil_self_marks %>" />
+                </label>
+                <button type="submit">Save estimate</button>
+              </form>
+            <% } %>
+          </div>
         <% }); %>
-      </article>
-    <% }); %>
 
-    <div class="attempt-actions">
-      <button type="submit">Save progress</button>
-      <button type="submit" formaction="/attempts/<%= it.bundle.attempt.id %>/submit" class="button button--primary">
-        Submit attempt
-      </button>
-    </div>
-  </form>
+        <div class="attempt-actions">
+          <% if (nextUnsubmitted) { %>
+            <a class="btn button button--primary" href="/attempts/<%= it.bundle.attempt.id %>?q=<%= nextUnsubmitted.id %>">Next question →</a>
+          <% } else { %>
+            <a class="btn button button--primary" href="/attempts/<%= it.bundle.attempt.id %>">Finish &amp; review</a>
+          <% } %>
+        </div>
+      <% } %>
+    </article>
+  <% } %>
 </section>

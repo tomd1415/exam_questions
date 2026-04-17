@@ -112,7 +112,9 @@ fi
 echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt ${CODENAME}-pgdg main" \
   > /etc/apt/sources.list.d/pgdg.list
 apt-get update -qq
-apt-get install -y --no-install-recommends "postgresql-${POSTGRES_MAJOR}"
+apt-get install -y --no-install-recommends \
+  "postgresql-${POSTGRES_MAJOR}" \
+  "postgresql-${POSTGRES_MAJOR}-pgvector"
 
 systemctl enable postgresql >/dev/null 2>&1 || true
 systemctl start postgresql
@@ -158,6 +160,15 @@ SQL
   else
     echo "  ✓ database '${DB_NAME}' already exists"
   fi
+
+  # Extensions the app expects (matches scripts/db-init.sh used in dev).
+  # Must run as superuser; app role doesn't have CREATE EXTENSION rights.
+  sudo -u postgres psql -v ON_ERROR_STOP=1 -d "${DB_NAME}" <<'SQL'
+CREATE EXTENSION IF NOT EXISTS vector;
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+CREATE EXTENSION IF NOT EXISTS citext;
+SQL
+  echo "  ✓ extensions enabled: vector, pg_trgm, citext"
 
   # Sanity: app connects to localhost via password; confirm it works.
   if PGPASSWORD="${DB_PASSWORD}" psql -h 127.0.0.1 -U "${DB_USER}" -d "${DB_NAME}" -tAc 'SELECT 1' \

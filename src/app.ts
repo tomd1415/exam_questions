@@ -45,6 +45,7 @@ declare module 'fastify' {
       teacherMarking: TeacherMarkingService;
     };
     repos: {
+      users: UserRepo;
       questions: QuestionRepo;
       attempts: AttemptRepo;
       classes: ClassRepo;
@@ -110,7 +111,7 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
   const authService = new AuthService(userRepo, sessionRepo, auditService);
   const classService = new ClassService(classRepo, auditService);
   const questionService = new QuestionService(questionRepo, curriculumRepo, auditService);
-  const attemptService = new AttemptService(attemptRepo, classRepo, auditService);
+  const attemptService = new AttemptService(attemptRepo, classRepo, auditService, userRepo);
   const teacherMarkingService = new TeacherMarkingService(attemptRepo, auditService);
 
   app.decorate('services', {
@@ -122,6 +123,7 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
     teacherMarking: teacherMarkingService,
   });
   app.decorate('repos', {
+    users: userRepo,
     questions: questionRepo,
     attempts: attemptRepo,
     classes: classRepo,
