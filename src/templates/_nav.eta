@@ -5,24 +5,24 @@ const currentPath = it.currentPath || '/';
 function navLinksFor(role) {
   if (role === 'pupil') {
     return [
-      { href: '/', label: 'Home', match: ['/', '/topics'], key: 'home' },
-      { href: '/topics', label: 'Topics', match: ['/topics'], key: 'topics' },
-      { href: '/me/attempts', label: 'My attempts', match: ['/me/attempts', '/attempts'], key: 'attempts' },
-      { href: '/me/preferences', label: 'Preferences', match: ['/me/preferences'], key: 'prefs' },
+      { href: '/', label: 'Home', match: ['/', '/topics'], key: 'home', icon: 'home' },
+      { href: '/topics', label: 'Topics', match: ['/topics'], key: 'topics', icon: 'book' },
+      { href: '/me/attempts', label: 'My attempts', match: ['/me/attempts', '/attempts'], key: 'attempts', icon: 'file-text' },
+      { href: '/me/preferences', label: 'Preferences', match: ['/me/preferences'], key: 'prefs', icon: 'settings' },
     ];
   }
   if (role === 'teacher' || role === 'admin') {
     const base = [
-      { href: '/', label: 'Home', match: ['/'], key: 'home' },
-      { href: '/admin/classes', label: 'Classes', match: ['/admin/classes'], key: 'classes' },
-      { href: '/admin/questions', label: 'Questions', match: ['/admin/questions'], key: 'questions' },
-      { href: '/admin/topics', label: 'Topics', match: ['/admin/topics'], key: 'topics' },
-      { href: '/admin/attempts', label: 'Marking queue', match: ['/admin/attempts'], key: 'queue' },
-      { href: '/me/preferences', label: 'Preferences', match: ['/me/preferences'], key: 'prefs' },
+      { href: '/', label: 'Home', match: ['/'], key: 'home', icon: 'home' },
+      { href: '/admin/classes', label: 'Classes', match: ['/admin/classes'], key: 'classes', icon: 'users' },
+      { href: '/admin/questions', label: 'Questions', match: ['/admin/questions'], key: 'questions', icon: 'clipboard-check' },
+      { href: '/admin/topics', label: 'Topics', match: ['/admin/topics'], key: 'topics', icon: 'book' },
+      { href: '/admin/attempts', label: 'Marking queue', match: ['/admin/attempts'], key: 'queue', icon: 'list-checks' },
+      { href: '/me/preferences', label: 'Preferences', match: ['/me/preferences'], key: 'prefs', icon: 'settings' },
     ];
     if (role === 'admin') {
-      base.push({ href: '/admin/users', label: 'Users', match: ['/admin/users'], key: 'users' });
-      base.push({ href: '/admin/audit', label: 'Audit log', match: ['/admin/audit'], key: 'audit' });
+      base.push({ href: '/admin/users', label: 'Users', match: ['/admin/users'], key: 'users', icon: 'user-check' });
+      base.push({ href: '/admin/audit', label: 'Audit log', match: ['/admin/audit'], key: 'audit', icon: 'file-text' });
     }
     return base;
   }
@@ -55,7 +55,17 @@ const links = user ? navLinksFor(user.role) : [];
       <% links.forEach(function(link) { %>
         <% const active = isActive(link); %>
         <li class="site-nav__item<%= active ? ' site-nav__item--active' : '' %>">
-          <a href="<%= link.href %>"<%= active ? ' aria-current="page"' : '' %>><%= link.label %></a>
+          <% if (active) { %>
+            <a href="<%= link.href %>" aria-current="page">
+              <% if (link.icon) { %><%~ include('_icon', { name: link.icon }) %><% } %>
+              <span class="site-nav__label"><%= link.label %></span>
+            </a>
+          <% } else { %>
+            <a href="<%= link.href %>">
+              <% if (link.icon) { %><%~ include('_icon', { name: link.icon }) %><% } %>
+              <span class="site-nav__label"><%= link.label %></span>
+            </a>
+          <% } %>
         </li>
       <% }); %>
     </ul>

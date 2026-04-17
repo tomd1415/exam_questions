@@ -642,3 +642,56 @@ input[type='number'].input {
   border-color: var(--color-brand-500);
   box-shadow: var(--focus-ring);
 }
+
+/* Icons (inline SVG via _icon.eta) */
+.icon {
+  width: 1em;
+  height: 1em;
+  vertical-align: -0.125em;
+  flex-shrink: 0;
+}
+.site-nav__item a {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.site-nav__item a .icon {
+  color: var(--color-ink-3);
+}
+.site-nav__item--active a .icon,
+.site-nav__item a:hover .icon {
+  color: inherit;
+}
+
+/* Responsive polish: dashboards, tables, page-header actions */
+@media (max-width: 640px) {
+  .page-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .page-header__actions {
+    justify-content: flex-start;
+  }
+  .dashboard-list__item {
+    flex-wrap: wrap;
+  }
+  .dashboard-list__item > .btn {
+    margin-left: auto;
+  }
+  .admin-table {
+    display: block;
+    overflow-x: auto;
+  }
+}
+
+/* Reduced motion: disable all non-essential animations/transitions */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

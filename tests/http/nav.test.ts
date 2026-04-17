@@ -46,7 +46,9 @@ function extractNavLinks(payload: string): { href: string; label: string; active
   if (!navMatch) return [];
   const nav = navMatch[0];
   const items = Array.from(
-    nav.matchAll(/<li class="site-nav__item([^"]*)">\s*<a href="([^"]+)"([^>]*)>([^<]+)<\/a>/g),
+    nav.matchAll(
+      /<li class="site-nav__item([^"]*)">\s*<a href="([^"]+)"([^>]*)>[\s\S]*?<span class="site-nav__label">([^<]+)<\/span>[\s\S]*?<\/a>/g,
+    ),
   );
   return items.map((m) => ({
     href: m[2]!,
