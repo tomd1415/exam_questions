@@ -145,6 +145,31 @@ Sections fill in chunk by chunk as Phase 1 ships
 (see [PHASE1_PLAN.md](PHASE1_PLAN.md)). Chunk 1 (classes and
 enrolments) is below; the rest land as the chunks ship.
 
+> **Prefer the automated walker.** `npm run test:human:phase1` runs the
+> Phase 1 sign-off end-to-end:
+>
+> - HTTP-only checks (steps 1-3) → curl + assert, no prompt
+> - browser flows (steps 4-19) → headless Chromium via Playwright,
+>   driving teacher login → class create → enrol pupil → assign topic →
+>   author + approve a new question; then pupil login → start a topic
+>   set → partial save → logout/re-login → submit → see review page;
+>   then teacher override and the pupil re-render that reflects it
+> - DB cross-check (step 20) → audit_events counts since the run
+>   started, plus an `awarded_marks` row check for the overridden part
+> - RUNBOOK.md entry (step 21) → reminder + human PASS/FAIL only
+>
+> A timestamped markdown report is written to
+> `tmp/human-tests/phase1-<utc-ts>.md` containing every captured
+> stdout/stderr, the per-step verdicts, and links to any Playwright
+> failure screenshots in `tmp/human-tests/phase1-<utc-ts>-screenshots/`.
+> That report is what you attach to RUNBOOK.md §10 for sign-off. The
+> walker is idempotent: re-running on the same day reuses the existing
+> `Phase1 Walker <date>` class and pupil enrolment rather than failing
+> on the unique constraint.
+>
+> First run only: `npx playwright install chromium` (≈170 MB into
+> `~/.cache/ms-playwright/`).
+
 ### 1.A Classes and enrolments (Chunk 1)
 
 **Prereqs:** dev DB up + migrated, app running, `npm run check` green.

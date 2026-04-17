@@ -31,6 +31,7 @@
     "user:create": "tsx src/scripts/create-user.ts",
     "content:seed": "tsx src/scripts/seed-curated-content.ts",
     "test:human:phase0": "bash scripts/human-test-phase0.sh",
+    "test:human:phase1": "bash scripts/human-test-phase1.sh",
     "check": "npm run typecheck && npm run lint && npm run format:check && npm run test:coverage"
   },
   "dependencies": {
