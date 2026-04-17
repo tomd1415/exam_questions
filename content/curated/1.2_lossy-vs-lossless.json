@@ -1,0 +1,47 @@
+{
+  "external_key": "j277-1-2-lossy-vs-lossless",
+  "component_code": "J277/01",
+  "topic_code": "1.2",
+  "subtopic_code": "1.2.5",
+  "command_word_code": "compare",
+  "archetype_code": "compare",
+  "expected_response_type": "medium_text",
+  "stem": "A designer is choosing between lossy and lossless compression for files sent to clients.",
+  "model_answer": "Lossy compression removes some data from the original file (typically data the human eye or ear will barely notice) to make files much smaller; the original data cannot be recovered. Lossless compression reduces file size by encoding data more efficiently (e.g. by removing repetition) so the original can be reconstructed exactly, but compression ratios are smaller. Lossy is good for photos, music and streaming video where quality loss is acceptable; lossless is needed for text, program code and archival masters.",
+  "difficulty_band": 5,
+  "difficulty_step": 2,
+  "source_type": "imported_pattern",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Compare lossy and lossless compression. You should refer to what happens to the data and give typical uses of each.",
+      "marks": 4,
+      "expected_response_type": "medium_text",
+      "mark_points": [
+        {
+          "text": "lossy compression permanently removes some data from the file",
+          "marks": 1,
+          "accepted_alternatives": ["lossy discards some data"]
+        },
+        {
+          "text": "lossless compression reduces file size without losing any data (the original can be reconstructed exactly)",
+          "marks": 1,
+          "accepted_alternatives": ["lossless keeps all the data"]
+        },
+        {
+          "text": "lossy usually gives much smaller files than lossless",
+          "marks": 1,
+          "accepted_alternatives": ["lossy compresses more"]
+        },
+        {
+          "text": "a sensible use case is named: lossy for photos/music/streaming video; lossless for text, code or archival copies",
+          "marks": 1,
+          "accepted_alternatives": [
+            "lossy for MP3/JPEG, lossless for ZIP or PNG",
+            "lossy for media, lossless where quality must not change"
+          ]
+        }
+      ]
+    }
+  ]
+}

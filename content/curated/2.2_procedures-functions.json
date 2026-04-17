@@ -1,0 +1,43 @@
+{
+  "external_key": "j277-2-2-procedures-functions",
+  "component_code": "J277/02",
+  "topic_code": "2.2",
+  "subtopic_code": "2.2.3",
+  "command_word_code": "compare",
+  "archetype_code": "compare",
+  "expected_response_type": "short_text",
+  "stem": "A programmer breaks code into procedures and functions (subroutines).",
+  "model_answer": "Both are named blocks of code that can be called from elsewhere in the program. A function returns a value to the code that called it and is usually used within an expression (e.g. x = square(3)). A procedure performs a task but does not return a value. Using subroutines reduces duplication, makes code easier to read and lets the same logic be tested and reused.",
+  "difficulty_band": 5,
+  "difficulty_step": 2,
+  "source_type": "imported_pattern",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Compare a function and a procedure, and give one benefit of using subroutines.",
+      "marks": 3,
+      "expected_response_type": "short_text",
+      "mark_points": [
+        {
+          "text": "a function returns a value to the caller",
+          "marks": 1,
+          "accepted_alternatives": ["functions return a result"]
+        },
+        {
+          "text": "a procedure performs a task/actions but does not return a value",
+          "marks": 1,
+          "accepted_alternatives": ["procedures do something without returning"]
+        },
+        {
+          "text": "benefit of subroutines: reduces duplication / easier to read / reusable / easier to test",
+          "marks": 1,
+          "accepted_alternatives": [
+            "avoids repeating code",
+            "makes program modular",
+            "easier to maintain"
+          ]
+        }
+      ]
+    }
+  ]
+}

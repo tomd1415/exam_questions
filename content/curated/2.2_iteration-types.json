@@ -1,0 +1,47 @@
+{
+  "external_key": "j277-2-2-iteration-types",
+  "component_code": "J277/02",
+  "topic_code": "2.2",
+  "subtopic_code": "2.2.1",
+  "command_word_code": "compare",
+  "archetype_code": "compare",
+  "expected_response_type": "short_text",
+  "stem": "Programming languages provide both count-controlled (for) loops and condition-controlled (while) loops.",
+  "model_answer": "A count-controlled loop repeats a fixed number of times that is known before the loop starts, using a counter variable (e.g. for i = 1 to 10). A condition-controlled loop repeats while (or until) a condition is true, and the number of iterations may not be known in advance (e.g. keep asking for a password until it is correct). Use a count loop when the number of repeats is fixed; use a condition loop when the end depends on data or user input.",
+  "difficulty_band": 5,
+  "difficulty_step": 2,
+  "source_type": "imported_pattern",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Compare count-controlled and condition-controlled iteration, and give an example situation for each.",
+      "marks": 4,
+      "expected_response_type": "short_text",
+      "mark_points": [
+        {
+          "text": "count-controlled: repeats a fixed/known number of times (uses a counter)",
+          "marks": 1,
+          "accepted_alternatives": ["for loop repeats a set number of times"]
+        },
+        {
+          "text": "condition-controlled: repeats while/until a condition is met; iterations may not be known in advance",
+          "marks": 1,
+          "accepted_alternatives": ["while loop runs until condition is false"]
+        },
+        {
+          "text": "example of count-controlled: any situation with a known repeat count (e.g. print 1..10)",
+          "marks": 1,
+          "accepted_alternatives": ["printing 10 items / looping through array of fixed size"]
+        },
+        {
+          "text": "example of condition-controlled: any input-validation or until-success situation",
+          "marks": 1,
+          "accepted_alternatives": [
+            "repeatedly ask for password until correct",
+            "keep reading file lines until end of file"
+          ]
+        }
+      ]
+    }
+  ]
+}

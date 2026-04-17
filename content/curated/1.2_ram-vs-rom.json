@@ -1,0 +1,47 @@
+{
+  "external_key": "j277-1-2-ram-vs-rom",
+  "component_code": "J277/01",
+  "topic_code": "1.2",
+  "subtopic_code": "1.2.1",
+  "command_word_code": "compare",
+  "archetype_code": "compare",
+  "expected_response_type": "medium_text",
+  "stem": "RAM and ROM are both types of primary storage inside a computer.",
+  "model_answer": "RAM is volatile: its contents are lost when power is removed. It is read/write and holds the programs and data currently being used by the CPU, so it must be fast. ROM is non-volatile: its contents persist when power is off. It is read-only (from the computer's point of view) and typically stores the boot firmware (BIOS/UEFI) needed to start the system.",
+  "difficulty_band": 4,
+  "difficulty_step": 2,
+  "source_type": "imported_pattern",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Compare RAM and ROM. Refer to volatility, read/write access, and typical purpose.",
+      "marks": 4,
+      "expected_response_type": "medium_text",
+      "mark_points": [
+        {
+          "text": "RAM is volatile; ROM is non-volatile",
+          "marks": 1,
+          "accepted_alternatives": [
+            "RAM loses data when powered off, ROM keeps data",
+            "ROM persists without power"
+          ]
+        },
+        {
+          "text": "RAM can be read from and written to; ROM is (effectively) read-only",
+          "marks": 1,
+          "accepted_alternatives": ["RAM is read/write, ROM is read-only"]
+        },
+        {
+          "text": "RAM holds programs and data currently in use by the CPU",
+          "marks": 1,
+          "accepted_alternatives": ["RAM stores running programs and working data"]
+        },
+        {
+          "text": "ROM stores firmware such as the BIOS/UEFI used to start the computer",
+          "marks": 1,
+          "accepted_alternatives": ["ROM holds boot/start-up instructions"]
+        }
+      ]
+    }
+  ]
+}

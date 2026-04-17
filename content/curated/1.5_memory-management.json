@@ -1,0 +1,42 @@
+{
+  "external_key": "j277-1-5-memory-management",
+  "component_code": "J277/01",
+  "topic_code": "1.5",
+  "subtopic_code": "1.5.1",
+  "command_word_code": "describe",
+  "archetype_code": "explain",
+  "expected_response_type": "short_text",
+  "stem": "One responsibility of an operating system is memory management.",
+  "model_answer": "Memory management decides where each running program lives in RAM. When a program is started the OS allocates it a region of RAM; when it stops the memory is released for other programs. The OS keeps track of which areas of RAM are in use, stops programs from reading or writing each other's memory, and moves pages between RAM and virtual memory when RAM is full.",
+  "difficulty_band": 5,
+  "difficulty_step": 2,
+  "source_type": "imported_pattern",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Describe how the operating system carries out memory management.",
+      "marks": 3,
+      "expected_response_type": "short_text",
+      "mark_points": [
+        {
+          "text": "allocates memory (RAM) to programs when they start",
+          "marks": 1,
+          "accepted_alternatives": ["gives each process space in RAM"]
+        },
+        {
+          "text": "frees/reuses memory when programs close",
+          "marks": 1,
+          "accepted_alternatives": ["deallocates memory when a process ends"]
+        },
+        {
+          "text": "keeps programs separated so they cannot access each other's memory (or uses virtual memory when RAM is full)",
+          "marks": 1,
+          "accepted_alternatives": [
+            "protects memory between processes",
+            "swaps pages to virtual memory when RAM is full"
+          ]
+        }
+      ]
+    }
+  ]
+}

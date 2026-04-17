@@ -1,0 +1,43 @@
+{
+  "external_key": "j277-1-5-os-purpose",
+  "component_code": "J277/01",
+  "topic_code": "1.5",
+  "subtopic_code": "1.5.1",
+  "command_word_code": "state",
+  "archetype_code": "recall",
+  "expected_response_type": "short_text",
+  "stem": "An operating system (OS) is essential system software on a modern computer.",
+  "model_answer": "The operating system manages the hardware and resources of the computer, provides a user interface and runs/controls application programs. Typical responsibilities include memory management, processor/process management, file management, peripheral (device) management, and managing user accounts and security.",
+  "difficulty_band": 4,
+  "difficulty_step": 2,
+  "source_type": "imported_pattern",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "State three roles of an operating system.",
+      "marks": 3,
+      "expected_response_type": "short_text",
+      "mark_points": [
+        {
+          "text": "manages memory / processes / the processor",
+          "marks": 1,
+          "accepted_alternatives": ["memory management", "scheduling/CPU management"]
+        },
+        {
+          "text": "manages files and storage",
+          "marks": 1,
+          "accepted_alternatives": ["file management"]
+        },
+        {
+          "text": "manages peripherals/devices OR manages users and security OR provides a user interface",
+          "marks": 1,
+          "accepted_alternatives": [
+            "peripheral/device management",
+            "user/account management",
+            "provides a UI for the user"
+          ]
+        }
+      ]
+    }
+  ]
+}

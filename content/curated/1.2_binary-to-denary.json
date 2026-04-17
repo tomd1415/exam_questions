@@ -1,0 +1,34 @@
+{
+  "external_key": "j277-1-2-binary-to-denary",
+  "component_code": "J277/01",
+  "topic_code": "1.2",
+  "subtopic_code": "1.2.4",
+  "command_word_code": "convert",
+  "archetype_code": "recall",
+  "expected_response_type": "short_text",
+  "stem": "Convert the 8-bit binary number 10110011 to its denary (decimal) equivalent.",
+  "model_answer": "Place values: 128, 64, 32, 16, 8, 4, 2, 1. The bits are 1,0,1,1,0,0,1,1 so the value is 128 + 32 + 16 + 2 + 1 = 179.",
+  "difficulty_band": 4,
+  "difficulty_step": 2,
+  "source_type": "imported_pattern",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Convert 10110011 to denary.",
+      "marks": 2,
+      "expected_response_type": "short_text",
+      "mark_points": [
+        {
+          "text": "correct answer: 179",
+          "marks": 1,
+          "accepted_alternatives": ["179"]
+        },
+        {
+          "text": "working shows correct place values or correct sum (128 + 32 + 16 + 2 + 1)",
+          "marks": 1,
+          "accepted_alternatives": ["shows 128+32+16+2+1", "shows column method"]
+        }
+      ]
+    }
+  ]
+}

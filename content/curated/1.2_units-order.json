@@ -1,0 +1,32 @@
+{
+  "external_key": "j277-1-2-units-order",
+  "component_code": "J277/01",
+  "topic_code": "1.2",
+  "subtopic_code": "1.2.3",
+  "command_word_code": "order",
+  "archetype_code": "recall",
+  "expected_response_type": "short_text",
+  "stem": "The following units are used to measure data size: gigabyte, bit, kilobyte, byte, megabyte, terabyte.",
+  "model_answer": "From smallest to largest: bit, byte, kilobyte, megabyte, gigabyte, terabyte. A byte is 8 bits; thereafter each unit is 1000 times the previous one (using the J277 convention).",
+  "difficulty_band": 3,
+  "difficulty_step": 2,
+  "source_type": "imported_pattern",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Place the units in order of size, starting with the smallest.",
+      "marks": 2,
+      "expected_response_type": "short_text",
+      "mark_points": [
+        {
+          "text": "bit, byte, kilobyte, megabyte, gigabyte, terabyte (in that order)",
+          "marks": 2,
+          "accepted_alternatives": [
+            "bit byte kilobyte megabyte gigabyte terabyte",
+            "bit byte kB MB GB TB"
+          ]
+        }
+      ]
+    }
+  ]
+}

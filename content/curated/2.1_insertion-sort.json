@@ -1,0 +1,39 @@
+{
+  "external_key": "j277-2-1-insertion-sort",
+  "component_code": "J277/02",
+  "topic_code": "2.1",
+  "subtopic_code": "2.1.3",
+  "command_word_code": "describe",
+  "archetype_code": "explain",
+  "expected_response_type": "short_text",
+  "stem": "A programmer uses an insertion sort to sort a short list of scores into ascending order.",
+  "model_answer": "Insertion sort works by building up a sorted section at the start of the list. Starting with the second item, the algorithm compares each new item with the items already sorted and shifts larger items one place to the right until the new item can be inserted in the correct position. It repeats for each item until the whole list is sorted. Insertion sort is simple and quick on small or nearly-sorted lists.",
+  "difficulty_band": 5,
+  "difficulty_step": 2,
+  "source_type": "imported_pattern",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Describe how an insertion sort works.",
+      "marks": 3,
+      "expected_response_type": "short_text",
+      "mark_points": [
+        {
+          "text": "a sorted section is built up at the start of the list; start from the second item",
+          "marks": 1,
+          "accepted_alternatives": ["treat the first item as already sorted"]
+        },
+        {
+          "text": "each new item is compared with the items in the sorted section and larger items are shifted right",
+          "marks": 1,
+          "accepted_alternatives": ["shift larger sorted items to make space"]
+        },
+        {
+          "text": "insert the new item into its correct position and repeat until all items are sorted",
+          "marks": 1,
+          "accepted_alternatives": ["place each item in the right spot and move on"]
+        }
+      ]
+    }
+  ]
+}

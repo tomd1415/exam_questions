@@ -1,0 +1,34 @@
+{
+  "external_key": "j277-1-2-character-storage",
+  "component_code": "J277/01",
+  "topic_code": "1.2",
+  "subtopic_code": "1.2.4",
+  "command_word_code": "describe",
+  "archetype_code": "explain",
+  "expected_response_type": "short_text",
+  "stem": "Computers store text using character sets such as ASCII or Unicode.",
+  "model_answer": "Each character is assigned a unique binary code in the character set. When text is saved or transmitted, the computer stores the binary code for each character rather than the character itself. ASCII uses 7 bits (up to 128 characters); Unicode uses more bits per character and can represent characters from most of the world's writing systems.",
+  "difficulty_band": 5,
+  "difficulty_step": 2,
+  "source_type": "imported_pattern",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Describe how characters are stored in a computer.",
+      "marks": 2,
+      "expected_response_type": "short_text",
+      "mark_points": [
+        {
+          "text": "each character is mapped to a unique binary code using a character set (e.g. ASCII, Unicode)",
+          "marks": 1,
+          "accepted_alternatives": ["characters have binary codes in ASCII/Unicode"]
+        },
+        {
+          "text": "Unicode uses more bits per character than ASCII so it can represent many more characters (including non-English scripts)",
+          "marks": 1,
+          "accepted_alternatives": ["Unicode supports more characters than ASCII"]
+        }
+      ]
+    }
+  ]
+}

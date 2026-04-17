@@ -1,0 +1,39 @@
+{
+  "external_key": "j277-2-3-testing-types",
+  "component_code": "J277/02",
+  "topic_code": "2.3",
+  "subtopic_code": "2.3.2",
+  "command_word_code": "compare",
+  "archetype_code": "compare",
+  "expected_response_type": "short_text",
+  "stem": "During development a programmer carries out both iterative testing and final testing.",
+  "model_answer": "Iterative testing happens as each module or feature is written: the programmer tests that part, finds bugs and fixes them before moving on. Final testing happens once the whole program is complete: the full system is tested against the original requirements to check that all parts work together and the program is ready to release. Together they reduce bugs in delivered software.",
+  "difficulty_band": 5,
+  "difficulty_step": 2,
+  "source_type": "imported_pattern",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Compare iterative testing and final testing.",
+      "marks": 3,
+      "expected_response_type": "short_text",
+      "mark_points": [
+        {
+          "text": "iterative testing happens as each part/module is being developed",
+          "marks": 1,
+          "accepted_alternatives": ["testing done during development"]
+        },
+        {
+          "text": "final testing happens once the whole program is complete",
+          "marks": 1,
+          "accepted_alternatives": ["end-of-project/whole-system testing"]
+        },
+        {
+          "text": "final testing checks the system against the original requirements / that modules work together",
+          "marks": 1,
+          "accepted_alternatives": ["checks the finished program meets the spec"]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "external_key": "j277-1-2-virtual-memory",
+  "component_code": "J277/01",
+  "topic_code": "1.2",
+  "subtopic_code": "1.2.1",
+  "command_word_code": "explain",
+  "archetype_code": "explain",
+  "expected_response_type": "medium_text",
+  "stem": "A computer with 8 GB of RAM is running many applications at once.",
+  "model_answer": "If RAM becomes full, the operating system uses an area of secondary storage (the swap file / page file) as virtual memory. Parts of RAM that are not currently being used are moved to this area, freeing space for active processes. When those parts are needed again they are swapped back into RAM. This allows the computer to keep running even when physical RAM is full, but access is much slower than real RAM.",
+  "difficulty_band": 6,
+  "difficulty_step": 2,
+  "source_type": "imported_pattern",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Explain the purpose of virtual memory and how it is used when RAM is full.",
+      "marks": 3,
+      "expected_response_type": "medium_text",
+      "mark_points": [
+        {
+          "text": "an area of secondary storage is used as if it were extra RAM (the page file / swap file)",
+          "marks": 1,
+          "accepted_alternatives": ["uses hard disk space as extra RAM"]
+        },
+        {
+          "text": "data not currently in use is moved from RAM to virtual memory to free physical RAM",
+          "marks": 1,
+          "accepted_alternatives": ["inactive pages swapped out to disk"]
+        },
+        {
+          "text": "allows more programs to run at once, but access is slower than real RAM",
+          "marks": 1,
+          "accepted_alternatives": ["prevents crashes when RAM fills up, at the cost of speed"]
+        }
+      ]
+    }
+  ]
+}

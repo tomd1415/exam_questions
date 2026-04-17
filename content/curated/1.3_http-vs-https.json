@@ -1,0 +1,39 @@
+{
+  "external_key": "j277-1-3-http-vs-https",
+  "component_code": "J277/01",
+  "topic_code": "1.3",
+  "subtopic_code": "1.3.2",
+  "command_word_code": "compare",
+  "archetype_code": "compare",
+  "expected_response_type": "short_text",
+  "stem": "Online shops use HTTPS rather than HTTP when customers enter payment details.",
+  "model_answer": "HTTP and HTTPS are both application-layer protocols used to request and send web pages. HTTP sends data in plain text, so anyone intercepting traffic between the browser and server can read it. HTTPS wraps HTTP traffic inside TLS (SSL), which encrypts the data and verifies the server's identity with a digital certificate. This means usernames, passwords and card details cannot easily be read if intercepted.",
+  "difficulty_band": 5,
+  "difficulty_step": 2,
+  "source_type": "imported_pattern",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Compare HTTP and HTTPS and explain why HTTPS is used for payment pages.",
+      "marks": 3,
+      "expected_response_type": "short_text",
+      "mark_points": [
+        {
+          "text": "HTTP sends data in plain text / unencrypted",
+          "marks": 1,
+          "accepted_alternatives": ["HTTP is not secure"]
+        },
+        {
+          "text": "HTTPS encrypts the data using TLS/SSL (and authenticates the server with a certificate)",
+          "marks": 1,
+          "accepted_alternatives": ["HTTPS uses encryption/TLS"]
+        },
+        {
+          "text": "so payment/card details cannot be read by someone intercepting the traffic",
+          "marks": 1,
+          "accepted_alternatives": ["protects sensitive data from eavesdroppers"]
+        }
+      ]
+    }
+  ]
+}

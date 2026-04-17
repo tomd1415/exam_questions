@@ -1,0 +1,50 @@
+{
+  "external_key": "j277-1-6-environmental",
+  "component_code": "J277/01",
+  "topic_code": "1.6",
+  "subtopic_code": "1.6.1",
+  "command_word_code": "explain",
+  "archetype_code": "evaluate",
+  "expected_response_type": "medium_text",
+  "stem": "A company upgrades its employees' computers to new models every two years.",
+  "model_answer": "The frequent upgrade cycle has significant environmental costs. Manufacturing new computers consumes raw materials (metals, rare earth elements, plastics) and uses large amounts of energy and water. Old machines that are discarded become electronic waste; if they are not recycled properly they release toxic substances (lead, mercury) into landfill. Running more, newer machines also uses electricity, contributing to carbon emissions. The company could reduce impact by keeping computers longer, donating or reselling old ones, buying energy-efficient hardware and recycling through approved WEEE routes.",
+  "difficulty_band": 5,
+  "difficulty_step": 2,
+  "source_type": "imported_pattern",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Explain two environmental issues caused by upgrading computers this often.",
+      "marks": 4,
+      "expected_response_type": "medium_text",
+      "mark_points": [
+        {
+          "text": "manufacturing new computers uses raw materials (metals, rare earths) / energy / water",
+          "marks": 1,
+          "accepted_alternatives": ["building new machines consumes natural resources"]
+        },
+        {
+          "text": "developed: extracting these resources is damaging and cannot be sustained long-term",
+          "marks": 1,
+          "accepted_alternatives": [
+            "mining/refining causes pollution",
+            "non-renewable resources are depleted"
+          ]
+        },
+        {
+          "text": "old machines become electronic waste (e-waste) that needs disposal",
+          "marks": 1,
+          "accepted_alternatives": ["discarded computers go to landfill"]
+        },
+        {
+          "text": "developed: e-waste can release toxic substances if not recycled properly (so should be recycled through WEEE)",
+          "marks": 1,
+          "accepted_alternatives": [
+            "lead/mercury pollute soil and water",
+            "must use approved recycling routes"
+          ]
+        }
+      ]
+    }
+  ]
+}

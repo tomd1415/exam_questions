@@ -1,0 +1,47 @@
+{
+  "external_key": "j277-1-3-mesh-topology",
+  "component_code": "J277/01",
+  "topic_code": "1.3",
+  "subtopic_code": "1.3.1",
+  "command_word_code": "explain",
+  "archetype_code": "evaluate",
+  "expected_response_type": "medium_text",
+  "stem": "A hospital is considering a mesh topology for a critical monitoring network.",
+  "model_answer": "In a mesh topology each node is connected to many other nodes, usually with multiple paths between any two devices. Data can take a different route if a link or node fails, which makes the network very fault tolerant and reliable - important for a hospital where downtime could harm patients. The main drawbacks are cost and complexity: a full mesh needs many more cables and network interfaces than a star, and configuring/managing the routing is harder.",
+  "difficulty_band": 6,
+  "difficulty_step": 3,
+  "source_type": "imported_pattern",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Explain one advantage and one disadvantage of using a mesh topology in this hospital network.",
+      "marks": 4,
+      "expected_response_type": "medium_text",
+      "mark_points": [
+        {
+          "text": "advantage: multiple paths exist between devices",
+          "marks": 1,
+          "accepted_alternatives": ["each node connects to several others"]
+        },
+        {
+          "text": "advantage developed: so if one link or device fails, data can be re-routed and the network keeps working (high reliability)",
+          "marks": 1,
+          "accepted_alternatives": [
+            "fault tolerant - no single point of failure",
+            "critical monitoring stays online if a cable breaks"
+          ]
+        },
+        {
+          "text": "disadvantage: expensive / requires lots of cabling and network interfaces",
+          "marks": 1,
+          "accepted_alternatives": ["high hardware cost to install"]
+        },
+        {
+          "text": "disadvantage developed: complex to set up and maintain / routing is harder to configure",
+          "marks": 1,
+          "accepted_alternatives": ["difficult to manage as network grows"]
+        }
+      ]
+    }
+  ]
+}

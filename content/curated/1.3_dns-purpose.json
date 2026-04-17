@@ -1,0 +1,39 @@
+{
+  "external_key": "j277-1-3-dns-purpose",
+  "component_code": "J277/01",
+  "topic_code": "1.3",
+  "subtopic_code": "1.3.2",
+  "command_word_code": "explain",
+  "archetype_code": "explain",
+  "expected_response_type": "short_text",
+  "stem": "A user types www.example.org into a browser and a page loads from a server on the internet.",
+  "model_answer": "The Domain Name System (DNS) translates human-readable domain names into the IP addresses that computers need to locate a server. The browser asks a DNS resolver for the IP address of www.example.org; the resolver queries DNS servers until it finds the matching IP, then returns it to the browser. The browser then opens a TCP connection to that IP to request the web page.",
+  "difficulty_band": 5,
+  "difficulty_step": 2,
+  "source_type": "imported_pattern",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Explain the role of DNS when the user requests this web page.",
+      "marks": 3,
+      "expected_response_type": "short_text",
+      "mark_points": [
+        {
+          "text": "DNS translates domain names into IP addresses",
+          "marks": 1,
+          "accepted_alternatives": ["DNS maps URLs to IPs"]
+        },
+        {
+          "text": "the browser sends the domain name to a DNS server/resolver",
+          "marks": 1,
+          "accepted_alternatives": ["computer queries DNS for the address"]
+        },
+        {
+          "text": "the IP address is returned so the browser can connect to the correct web server",
+          "marks": 1,
+          "accepted_alternatives": ["browser uses the returned IP to request the page"]
+        }
+      ]
+    }
+  ]
+}

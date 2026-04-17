@@ -1,0 +1,50 @@
+{
+  "external_key": "j277-2-5-compiler-vs-interpreter",
+  "component_code": "J277/02",
+  "topic_code": "2.5",
+  "subtopic_code": "2.5.1",
+  "command_word_code": "compare",
+  "archetype_code": "compare",
+  "expected_response_type": "medium_text",
+  "stem": "High-level code can be translated into machine code using a compiler or an interpreter.",
+  "model_answer": "A compiler translates the whole program into machine code in one go and produces an executable file that can be run again without re-translation. This makes compiled programs fast to run but slower to develop because small changes require a rebuild, and the executable only runs on the type of processor it was compiled for. An interpreter reads and executes the source code one line (or statement) at a time; nothing is saved, so it must retranslate every run, which is slower at run-time but makes it easy to test changes immediately during development.",
+  "difficulty_band": 6,
+  "difficulty_step": 3,
+  "source_type": "imported_pattern",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Compare a compiler and an interpreter.",
+      "marks": 4,
+      "expected_response_type": "medium_text",
+      "mark_points": [
+        {
+          "text": "compiler translates the whole program in one go, producing an executable",
+          "marks": 1,
+          "accepted_alternatives": ["compiler produces an exe/.out"]
+        },
+        {
+          "text": "interpreter translates and executes one line/statement at a time",
+          "marks": 1,
+          "accepted_alternatives": ["interpreter runs code line by line"]
+        },
+        {
+          "text": "compiled programs run faster than interpreted programs / interpreter must translate on every run",
+          "marks": 1,
+          "accepted_alternatives": [
+            "compiled exe runs without retranslation",
+            "interpreted programs are slower at runtime"
+          ]
+        },
+        {
+          "text": "interpreter makes development/debugging easier (can run changes immediately); compiled executable is platform-specific",
+          "marks": 1,
+          "accepted_alternatives": [
+            "interpreter reports errors quickly / no rebuild needed",
+            "compiled code only runs on target CPU/OS"
+          ]
+        }
+      ]
+    }
+  ]
+}

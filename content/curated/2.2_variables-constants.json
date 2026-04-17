@@ -1,0 +1,34 @@
+{
+  "external_key": "j277-2-2-variables-constants",
+  "component_code": "J277/02",
+  "topic_code": "2.2",
+  "subtopic_code": "2.2.1",
+  "command_word_code": "compare",
+  "archetype_code": "compare",
+  "expected_response_type": "short_text",
+  "stem": "A program uses both variables and constants to store values.",
+  "model_answer": "A variable is a named location in memory whose value can change while the program is running (e.g. a score that updates during a game). A constant is a named location whose value is fixed when it is declared and cannot be changed while the program runs (e.g. VAT_RATE). Using constants makes code easier to read and maintain because the name explains the purpose and the value only has to be changed in one place.",
+  "difficulty_band": 4,
+  "difficulty_step": 2,
+  "source_type": "imported_pattern",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Compare a variable and a constant.",
+      "marks": 2,
+      "expected_response_type": "short_text",
+      "mark_points": [
+        {
+          "text": "a variable's value can change while the program is running",
+          "marks": 1,
+          "accepted_alternatives": ["variables can be reassigned at run time"]
+        },
+        {
+          "text": "a constant's value is fixed at declaration and cannot be changed while running",
+          "marks": 1,
+          "accepted_alternatives": ["constants keep the same value throughout the program"]
+        }
+      ]
+    }
+  ]
+}

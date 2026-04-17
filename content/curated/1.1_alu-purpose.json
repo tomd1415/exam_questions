@@ -1,0 +1,34 @@
+{
+  "external_key": "j277-1-1-alu-purpose",
+  "component_code": "J277/01",
+  "topic_code": "1.1",
+  "subtopic_code": "1.1.1",
+  "command_word_code": "describe",
+  "archetype_code": "explain",
+  "expected_response_type": "short_text",
+  "stem": "Inside the CPU is the Arithmetic Logic Unit (ALU).",
+  "model_answer": "The ALU carries out arithmetic operations (such as addition and subtraction) and logical operations (such as AND, OR, NOT and comparisons between values).",
+  "difficulty_band": 4,
+  "difficulty_step": 2,
+  "source_type": "imported_pattern",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Describe the purpose of the ALU.",
+      "marks": 2,
+      "expected_response_type": "short_text",
+      "mark_points": [
+        {
+          "text": "performs arithmetic operations (e.g. addition, subtraction)",
+          "marks": 1,
+          "accepted_alternatives": ["does calculations", "adds and subtracts"]
+        },
+        {
+          "text": "performs logical operations (e.g. AND, OR, NOT, comparisons)",
+          "marks": 1,
+          "accepted_alternatives": ["carries out comparisons", "handles Boolean logic"]
+        }
+      ]
+    }
+  ]
+}

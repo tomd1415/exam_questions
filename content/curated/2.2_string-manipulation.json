@@ -1,0 +1,39 @@
+{
+  "external_key": "j277-2-2-string-manipulation",
+  "component_code": "J277/02",
+  "topic_code": "2.2",
+  "subtopic_code": "2.2.3",
+  "command_word_code": "write_rewrite",
+  "archetype_code": "code_writing",
+  "expected_response_type": "code",
+  "stem": "A program should take a username entered by the user and print the first three characters, followed by the length of the whole username.",
+  "model_answer": "OCR pseudocode:\n  username = input(\"Enter username: \")\n  first_three = username.substring(0, 3)\n  print(first_three)\n  print(username.length)",
+  "difficulty_band": 5,
+  "difficulty_step": 2,
+  "source_type": "imported_pattern",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Write code (pseudocode or a high-level language) to achieve this.",
+      "marks": 3,
+      "expected_response_type": "code",
+      "mark_points": [
+        {
+          "text": "reads the username from input and stores it in a variable",
+          "marks": 1,
+          "accepted_alternatives": ["uses input() to get the username"]
+        },
+        {
+          "text": "extracts the first three characters using substring/slice (e.g. username.substring(0,3) or username[0:3])",
+          "marks": 1,
+          "accepted_alternatives": ["username[:3] / Left(username, 3) / equivalent"]
+        },
+        {
+          "text": "prints the first three characters and the length of the username (e.g. username.length or len(username))",
+          "marks": 1,
+          "accepted_alternatives": ["outputs first 3 chars and length of full string"]
+        }
+      ]
+    }
+  ]
+}

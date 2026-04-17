@@ -1,0 +1,39 @@
+{
+  "external_key": "j277-1-6-computer-misuse-act",
+  "component_code": "J277/01",
+  "topic_code": "1.6",
+  "subtopic_code": "1.6.1",
+  "command_word_code": "describe",
+  "archetype_code": "explain",
+  "expected_response_type": "short_text",
+  "stem": "A student logs into a classmate's school account without permission and changes their coursework files.",
+  "model_answer": "This is an offence under the Computer Misuse Act 1990. The Act makes it illegal to gain unauthorised access to computer material (section 1), to gain unauthorised access with intent to commit a further offence (section 2), and to carry out unauthorised acts that impair the operation of a computer or modify data (section 3). The student has broken at least sections 1 and 3: accessing the account without permission and changing data belonging to another user.",
+  "difficulty_band": 5,
+  "difficulty_step": 2,
+  "source_type": "imported_pattern",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Describe which law applies here and the offences the student has committed.",
+      "marks": 3,
+      "expected_response_type": "short_text",
+      "mark_points": [
+        {
+          "text": "names the Computer Misuse Act 1990",
+          "marks": 1,
+          "accepted_alternatives": ["Computer Misuse Act"]
+        },
+        {
+          "text": "offence: unauthorised access to computer material (logging in without permission)",
+          "marks": 1,
+          "accepted_alternatives": ["gained access to another user's account without consent"]
+        },
+        {
+          "text": "offence: unauthorised modification of data / impairing operation (changing the classmate's files)",
+          "marks": 1,
+          "accepted_alternatives": ["altered another user's data without permission"]
+        }
+      ]
+    }
+  ]
+}

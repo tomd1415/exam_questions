@@ -1,0 +1,44 @@
+{
+  "external_key": "j277-2-2-data-types",
+  "component_code": "J277/02",
+  "topic_code": "2.2",
+  "subtopic_code": "2.2.2",
+  "command_word_code": "identify",
+  "archetype_code": "recall",
+  "expected_response_type": "short_text",
+  "stem": "A program stores four pieces of data about a pupil: their name, age in whole years, average test score (to one decimal place) and whether they have paid for a school trip (yes/no).",
+  "model_answer": "Name: string (a sequence of characters). Age: integer (a whole number). Average test score: real (a number that may contain a decimal point). Has paid: boolean (can only be true or false).",
+  "difficulty_band": 3,
+  "difficulty_step": 2,
+  "source_type": "imported_pattern",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Identify the most appropriate data type for each of the four values.",
+      "marks": 4,
+      "expected_response_type": "short_text",
+      "mark_points": [
+        {
+          "text": "name: string",
+          "marks": 1,
+          "accepted_alternatives": ["string"]
+        },
+        {
+          "text": "age: integer",
+          "marks": 1,
+          "accepted_alternatives": ["integer", "int"]
+        },
+        {
+          "text": "average score: real (or float)",
+          "marks": 1,
+          "accepted_alternatives": ["real", "float", "decimal"]
+        },
+        {
+          "text": "has paid: boolean",
+          "marks": 1,
+          "accepted_alternatives": ["boolean", "bool"]
+        }
+      ]
+    }
+  ]
+}

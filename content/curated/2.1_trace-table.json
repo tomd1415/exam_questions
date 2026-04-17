@@ -1,0 +1,39 @@
+{
+  "external_key": "j277-2-1-trace-table",
+  "component_code": "J277/02",
+  "topic_code": "2.1",
+  "subtopic_code": "2.1.2",
+  "command_word_code": "complete",
+  "archetype_code": "trace_table",
+  "expected_response_type": "trace_table",
+  "stem": "Consider this pseudocode:\n\n  total = 0\n  for i = 1 to 4\n    total = total + i * 2\n  next i\n  print(total)\n",
+  "model_answer": "Iteration 1: i=1, total = 0 + 1*2 = 2. Iteration 2: i=2, total = 2 + 2*2 = 6. Iteration 3: i=3, total = 6 + 3*2 = 12. Iteration 4: i=4, total = 12 + 4*2 = 20. The program prints 20.",
+  "difficulty_band": 4,
+  "difficulty_step": 2,
+  "source_type": "imported_pattern",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Complete a trace table showing the value of total after each iteration, and state the final output.",
+      "marks": 3,
+      "expected_response_type": "trace_table",
+      "mark_points": [
+        {
+          "text": "correct intermediate values: total = 2, 6, 12, 20",
+          "marks": 1,
+          "accepted_alternatives": ["trace shows 2, 6, 12, 20"]
+        },
+        {
+          "text": "shows working with i values 1, 2, 3, 4",
+          "marks": 1,
+          "accepted_alternatives": ["records i going 1..4"]
+        },
+        {
+          "text": "final printed output is 20",
+          "marks": 1,
+          "accepted_alternatives": ["output: 20"]
+        }
+      ]
+    }
+  ]
+}

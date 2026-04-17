@@ -1,0 +1,39 @@
+{
+  "external_key": "j277-2-3-input-validation",
+  "component_code": "J277/02",
+  "topic_code": "2.3",
+  "subtopic_code": "2.3.1",
+  "command_word_code": "describe",
+  "archetype_code": "explain",
+  "expected_response_type": "short_text",
+  "stem": "A sign-up form asks the user to enter their age (0-120).",
+  "model_answer": "Input validation checks that data entered by the user is sensible before it is processed. For an age 0-120 the program could use a range check (age is a number between 0 and 120 inclusive) and a type check (it must be a whole number). If validation fails the program should show an error message and ask the user to re-enter the value, so bad data never reaches the rest of the program.",
+  "difficulty_band": 4,
+  "difficulty_step": 2,
+  "source_type": "imported_pattern",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Describe two validation checks that could be used for the age field and what happens if a check fails.",
+      "marks": 3,
+      "expected_response_type": "short_text",
+      "mark_points": [
+        {
+          "text": "range check - age is between 0 and 120 inclusive",
+          "marks": 1,
+          "accepted_alternatives": ["check age falls in allowed range"]
+        },
+        {
+          "text": "type/format check - age is a whole number (integer), not text",
+          "marks": 1,
+          "accepted_alternatives": ["check input is numeric / presence check for a value"]
+        },
+        {
+          "text": "if invalid: program rejects the value and prompts the user to re-enter",
+          "marks": 1,
+          "accepted_alternatives": ["error message shown and input requested again"]
+        }
+      ]
+    }
+  ]
+}

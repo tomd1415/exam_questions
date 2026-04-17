@@ -1,0 +1,42 @@
+{
+  "external_key": "j277-2-3-authentication",
+  "component_code": "J277/02",
+  "topic_code": "2.3",
+  "subtopic_code": "2.3.1",
+  "command_word_code": "describe",
+  "archetype_code": "explain",
+  "expected_response_type": "short_text",
+  "stem": "A website uses authentication to check the identity of its users before they can access their account.",
+  "model_answer": "Authentication confirms that a user is who they claim to be. The most common method is a username and password: the user provides a username, the system hashes the password they type and compares it with the hash stored for that account. Only if they match is the user allowed in. Stronger authentication adds a second factor (e.g. a code sent to the user's phone) so that a stolen password on its own is not enough.",
+  "difficulty_band": 5,
+  "difficulty_step": 2,
+  "source_type": "imported_pattern",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Describe what authentication is and how a username/password system typically works.",
+      "marks": 3,
+      "expected_response_type": "short_text",
+      "mark_points": [
+        {
+          "text": "authentication checks/confirms that the user is who they claim to be",
+          "marks": 1,
+          "accepted_alternatives": ["verifies the user's identity"]
+        },
+        {
+          "text": "user supplies a username and password",
+          "marks": 1,
+          "accepted_alternatives": ["user enters credentials"]
+        },
+        {
+          "text": "password is checked (e.g. hashed and compared) against the stored value; match = access granted, mismatch = denied",
+          "marks": 1,
+          "accepted_alternatives": [
+            "system compares hash of typed password with stored hash",
+            "if passwords match user is allowed in"
+          ]
+        }
+      ]
+    }
+  ]
+}

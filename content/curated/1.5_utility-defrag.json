@@ -1,0 +1,39 @@
+{
+  "external_key": "j277-1-5-utility-defrag",
+  "component_code": "J277/01",
+  "topic_code": "1.5",
+  "subtopic_code": "1.5.2",
+  "command_word_code": "explain",
+  "archetype_code": "explain",
+  "expected_response_type": "short_text",
+  "stem": "A user's hard disk drive (HDD) has become heavily fragmented. They run a defragmentation utility.",
+  "model_answer": "Over time, files on an HDD are saved in non-contiguous clusters as other files are added and removed; this is called fragmentation and it slows reads because the drive's read-write heads have to jump around. A defragmentation utility reorganises files so each file's clusters are stored next to each other on the disk, reducing seek time and making the drive feel faster. (Defragmentation is not needed on SSDs and can shorten their lifespan.)",
+  "difficulty_band": 5,
+  "difficulty_step": 2,
+  "source_type": "imported_pattern",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Explain what fragmentation is and how defragmentation improves performance.",
+      "marks": 3,
+      "expected_response_type": "short_text",
+      "mark_points": [
+        {
+          "text": "fragmentation = parts of a file are stored in non-contiguous clusters/blocks on disk",
+          "marks": 1,
+          "accepted_alternatives": ["files are split across scattered areas of the disk"]
+        },
+        {
+          "text": "this slows reads because the read-write heads have to move between many locations",
+          "marks": 1,
+          "accepted_alternatives": ["seek time increases when files are scattered"]
+        },
+        {
+          "text": "defragmentation moves file clusters so each file is stored contiguously, reducing seek time",
+          "marks": 1,
+          "accepted_alternatives": ["defrag rearranges files so they are in one continuous block"]
+        }
+      ]
+    }
+  ]
+}

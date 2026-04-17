@@ -1,0 +1,39 @@
+{
+  "external_key": "j277-1-4-phishing",
+  "component_code": "J277/01",
+  "topic_code": "1.4",
+  "subtopic_code": "1.4.1",
+  "command_word_code": "explain",
+  "archetype_code": "explain",
+  "expected_response_type": "short_text",
+  "stem": "An employee receives an email that looks as if it is from their bank, asking them to click a link and confirm their password.",
+  "model_answer": "This is a phishing attack: the attacker sends a fake email (or text) pretending to be from a trusted organisation so the victim will click a link to a counterfeit site and enter their login details. The credentials are then captured by the attacker and can be used to steal money or further data. Phishing is a form of social engineering because it manipulates the person, not the technology.",
+  "difficulty_band": 5,
+  "difficulty_step": 2,
+  "source_type": "imported_pattern",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Explain how this phishing attack works.",
+      "marks": 3,
+      "expected_response_type": "short_text",
+      "mark_points": [
+        {
+          "text": "the attacker sends an email/message that pretends to be from a trusted organisation (e.g. the bank)",
+          "marks": 1,
+          "accepted_alternatives": ["fake email impersonates a real company"]
+        },
+        {
+          "text": "the link leads to a fake website that looks genuine",
+          "marks": 1,
+          "accepted_alternatives": ["user is tricked into visiting a counterfeit site"]
+        },
+        {
+          "text": "the victim enters credentials/personal data which the attacker captures",
+          "marks": 1,
+          "accepted_alternatives": ["attacker collects the password/details entered"]
+        }
+      ]
+    }
+  ]
+}

@@ -356,6 +356,21 @@ export class QuestionRepo {
     }
   }
 
+  async findIdBySimilarityHash(hash: string): Promise<string | null> {
+    const { rows } = await this.pool.query<{ id: string }>(
+      `SELECT id::text FROM questions WHERE similarity_hash = $1 LIMIT 1`,
+      [hash],
+    );
+    return rows[0]?.id ?? null;
+  }
+
+  async setSimilarityHash(id: string, hash: string): Promise<void> {
+    await this.pool.query(
+      `UPDATE questions SET similarity_hash = $2, updated_at = now() WHERE id = $1::bigint`,
+      [id, hash],
+    );
+  }
+
   async setApprovalStatus(
     id: string,
     input: {

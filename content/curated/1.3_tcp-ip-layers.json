@@ -1,0 +1,44 @@
+{
+  "external_key": "j277-1-3-tcp-ip-layers",
+  "component_code": "J277/01",
+  "topic_code": "1.3",
+  "subtopic_code": "1.3.2",
+  "command_word_code": "describe",
+  "archetype_code": "explain",
+  "expected_response_type": "medium_text",
+  "stem": "The TCP/IP protocol stack is organised into four layers: application, transport, internet and link.",
+  "model_answer": "The application layer is where high-level protocols such as HTTP, FTP and SMTP operate; it provides services to user programs. The transport layer (TCP/UDP) splits data into packets, handles delivery and, for TCP, reliability and ordering. The internet layer (IP) is responsible for addressing packets and routing them across networks between sender and receiver. The link layer handles the physical transmission of data over the local network hardware (e.g. Ethernet, Wi-Fi), including MAC addressing.",
+  "difficulty_band": 6,
+  "difficulty_step": 3,
+  "source_type": "imported_pattern",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Describe the role of each of the four layers in the TCP/IP stack.",
+      "marks": 4,
+      "expected_response_type": "medium_text",
+      "mark_points": [
+        {
+          "text": "application layer hosts high-level protocols (e.g. HTTP/SMTP/FTP) that provide services to user programs",
+          "marks": 1,
+          "accepted_alternatives": ["application layer - where HTTP/SMTP etc. run"]
+        },
+        {
+          "text": "transport layer splits data into packets and manages delivery (TCP for reliable/ordered, UDP for fast/unreliable)",
+          "marks": 1,
+          "accepted_alternatives": ["transport layer handles TCP/UDP and packets"]
+        },
+        {
+          "text": "internet layer addresses packets with IP and routes them between networks",
+          "marks": 1,
+          "accepted_alternatives": ["internet layer - routing/IP addressing"]
+        },
+        {
+          "text": "link layer handles transmission over the physical network hardware (Ethernet/Wi-Fi, MAC addresses)",
+          "marks": 1,
+          "accepted_alternatives": ["link/network access layer - physical hardware and MAC"]
+        }
+      ]
+    }
+  ]
+}

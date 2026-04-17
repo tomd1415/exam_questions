@@ -1,0 +1,39 @@
+{
+  "external_key": "j277-2-1-bubble-sort",
+  "component_code": "J277/02",
+  "topic_code": "2.1",
+  "subtopic_code": "2.1.3",
+  "command_word_code": "describe",
+  "archetype_code": "explain",
+  "expected_response_type": "medium_text",
+  "stem": "A programmer uses a bubble sort to put a list of integers into ascending order.",
+  "model_answer": "A bubble sort works by comparing adjacent pairs of items and swapping them if they are in the wrong order. After a full pass through the list, the largest remaining item has \"bubbled\" to the end. The algorithm then repeats from the start, ignoring the sorted items at the end, until a pass is made with no swaps (the list is sorted). Bubble sort is easy to implement but slow on large lists because it may do many passes.",
+  "difficulty_band": 5,
+  "difficulty_step": 2,
+  "source_type": "imported_pattern",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Describe how a bubble sort sorts a list into ascending order.",
+      "marks": 3,
+      "expected_response_type": "medium_text",
+      "mark_points": [
+        {
+          "text": "compare each adjacent pair of items in the list",
+          "marks": 1,
+          "accepted_alternatives": ["look at two items next to each other"]
+        },
+        {
+          "text": "swap them if they are in the wrong order (larger before smaller)",
+          "marks": 1,
+          "accepted_alternatives": ["if first > second, swap"]
+        },
+        {
+          "text": "repeat passes through the list until a pass completes with no swaps (list is sorted)",
+          "marks": 1,
+          "accepted_alternatives": ["keep repeating passes until no more swaps are needed"]
+        }
+      ]
+    }
+  ]
+}

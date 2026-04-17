@@ -1,0 +1,37 @@
+{
+  "external_key": "j277-1-1-cores",
+  "component_code": "J277/01",
+  "topic_code": "1.1",
+  "subtopic_code": "1.1.2",
+  "command_word_code": "explain",
+  "archetype_code": "explain",
+  "expected_response_type": "short_text",
+  "stem": "A laptop is advertised as having a quad-core processor.",
+  "model_answer": "Each core is effectively a separate processor inside the CPU. With four cores the computer can execute up to four instructions at the same time (true parallel processing), which improves performance when software is written to take advantage of multiple cores.",
+  "difficulty_band": 5,
+  "difficulty_step": 2,
+  "source_type": "imported_pattern",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Explain how having more cores can improve the performance of a computer.",
+      "marks": 2,
+      "expected_response_type": "short_text",
+      "mark_points": [
+        {
+          "text": "each core can fetch, decode and execute instructions independently",
+          "marks": 1,
+          "accepted_alternatives": ["each core acts like its own CPU"]
+        },
+        {
+          "text": "so multiple instructions can be processed in parallel, improving performance where software supports multi-core",
+          "marks": 1,
+          "accepted_alternatives": [
+            "more than one instruction runs at once",
+            "true parallel processing"
+          ]
+        }
+      ]
+    }
+  ]
+}

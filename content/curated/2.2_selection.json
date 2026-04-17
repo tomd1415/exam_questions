@@ -1,0 +1,39 @@
+{
+  "external_key": "j277-2-2-selection",
+  "component_code": "J277/02",
+  "topic_code": "2.2",
+  "subtopic_code": "2.2.1",
+  "command_word_code": "write_rewrite",
+  "archetype_code": "code_writing",
+  "expected_response_type": "code",
+  "stem": "A program should take a student's score out of 100 and print \"Pass\" if the score is at least 40, otherwise print \"Fail\".",
+  "model_answer": "OCR pseudocode:\n  score = input(\"Enter score: \")\n  if score >= 40 then\n    print(\"Pass\")\n  else\n    print(\"Fail\")\n  endif",
+  "difficulty_band": 3,
+  "difficulty_step": 2,
+  "source_type": "imported_pattern",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Write the program in OCR pseudocode or a high-level language.",
+      "marks": 3,
+      "expected_response_type": "code",
+      "mark_points": [
+        {
+          "text": "reads/stores the score from input",
+          "marks": 1,
+          "accepted_alternatives": ["uses input() to get the score"]
+        },
+        {
+          "text": "uses if/else with the condition score >= 40 (or equivalent)",
+          "marks": 1,
+          "accepted_alternatives": ["correct comparison for Pass boundary"]
+        },
+        {
+          "text": "prints \"Pass\" when condition true and \"Fail\" otherwise",
+          "marks": 1,
+          "accepted_alternatives": ["outputs Pass or Fail based on score"]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "external_key": "j277-1-1-registers",
+  "component_code": "J277/01",
+  "topic_code": "1.1",
+  "subtopic_code": "1.1.1",
+  "command_word_code": "state",
+  "archetype_code": "recall",
+  "expected_response_type": "short_text",
+  "stem": "A CPU uses several special-purpose registers during the fetch–decode–execute cycle, including the Program Counter (PC), the Memory Address Register (MAR), the Memory Data Register (MDR) and the Accumulator (ACC).",
+  "model_answer": "PC: holds the address of the next instruction to be fetched. MAR: holds the memory address currently being read from or written to. MDR: holds the data that is being transferred between the CPU and memory. Accumulator: holds the results of calculations performed by the ALU.",
+  "difficulty_band": 5,
+  "difficulty_step": 2,
+  "source_type": "imported_pattern",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "State the purpose of each of the following registers: PC, MAR, MDR, Accumulator.",
+      "marks": 4,
+      "expected_response_type": "short_text",
+      "mark_points": [
+        {
+          "text": "PC: holds the address of the next instruction to be fetched",
+          "marks": 1,
+          "accepted_alternatives": ["PC: next instruction address"]
+        },
+        {
+          "text": "MAR: holds the memory address currently being accessed",
+          "marks": 1,
+          "accepted_alternatives": ["MAR: address to be read/written"]
+        },
+        {
+          "text": "MDR: holds data being transferred between the CPU and memory",
+          "marks": 1,
+          "accepted_alternatives": ["MDR: data read from or written to memory"]
+        },
+        {
+          "text": "Accumulator: holds the result of a calculation performed by the ALU",
+          "marks": 1,
+          "accepted_alternatives": ["ACC: stores the result of ALU operations"]
+        }
+      ]
+    }
+  ]
+}

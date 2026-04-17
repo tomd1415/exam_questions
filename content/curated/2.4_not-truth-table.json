@@ -1,0 +1,29 @@
+{
+  "external_key": "j277-2-4-not-truth-table",
+  "component_code": "J277/02",
+  "topic_code": "2.4",
+  "subtopic_code": "2.4.1",
+  "command_word_code": "complete",
+  "archetype_code": "recall",
+  "expected_response_type": "short_text",
+  "stem": "Q = NOT A is a Boolean expression with a single input A.",
+  "model_answer": "NOT inverts the input. Truth table: A=0 => Q=1; A=1 => Q=0.",
+  "difficulty_band": 2,
+  "difficulty_step": 2,
+  "source_type": "imported_pattern",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Complete the truth table for Q = NOT A.",
+      "marks": 1,
+      "expected_response_type": "short_text",
+      "mark_points": [
+        {
+          "text": "Q = 1 when A = 0 and Q = 0 when A = 1 (NOT inverts the input)",
+          "marks": 1,
+          "accepted_alternatives": ["output is the opposite of input", "A=0 -> Q=1, A=1 -> Q=0"]
+        }
+      ]
+    }
+  ]
+}

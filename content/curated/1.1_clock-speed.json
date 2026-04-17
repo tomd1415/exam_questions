@@ -1,0 +1,34 @@
+{
+  "external_key": "j277-1-1-clock-speed",
+  "component_code": "J277/01",
+  "topic_code": "1.1",
+  "subtopic_code": "1.1.2",
+  "command_word_code": "explain",
+  "archetype_code": "explain",
+  "expected_response_type": "short_text",
+  "stem": "A CPU advertised at 3.6 GHz has a higher clock speed than a CPU advertised at 2.0 GHz.",
+  "model_answer": "Clock speed is the number of fetch–decode–execute cycles a CPU can perform per second (measured in Hz). A higher clock speed means more instructions can be completed per second, so (assuming other factors are equal) the computer will run faster.",
+  "difficulty_band": 4,
+  "difficulty_step": 2,
+  "source_type": "imported_pattern",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Explain how a higher clock speed affects CPU performance.",
+      "marks": 2,
+      "expected_response_type": "short_text",
+      "mark_points": [
+        {
+          "text": "clock speed is the number of fetch–decode–execute cycles per second",
+          "marks": 1,
+          "accepted_alternatives": ["cycles per second", "how many instructions per second"]
+        },
+        {
+          "text": "a higher clock speed means more instructions can be processed each second, so the CPU runs faster",
+          "marks": 1,
+          "accepted_alternatives": ["more work done per second", "faster overall performance"]
+        }
+      ]
+    }
+  ]
+}

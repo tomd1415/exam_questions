@@ -1,0 +1,39 @@
+{
+  "external_key": "j277-1-1-cache",
+  "component_code": "J277/01",
+  "topic_code": "1.1",
+  "subtopic_code": "1.1.2",
+  "command_word_code": "explain",
+  "archetype_code": "explain",
+  "expected_response_type": "short_text",
+  "stem": "Modern CPUs include several levels of cache memory.",
+  "model_answer": "Cache is very fast memory inside (or very close to) the CPU that stores copies of instructions and data that are likely to be reused soon. Because the CPU can access cache much more quickly than main memory, fewer slow memory reads are needed and overall performance improves.",
+  "difficulty_band": 5,
+  "difficulty_step": 2,
+  "source_type": "imported_pattern",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Explain how cache memory improves CPU performance.",
+      "marks": 3,
+      "expected_response_type": "short_text",
+      "mark_points": [
+        {
+          "text": "cache stores copies of frequently or recently used instructions and data",
+          "marks": 1,
+          "accepted_alternatives": ["it keeps data likely to be needed again"]
+        },
+        {
+          "text": "the CPU can access cache much faster than main memory (RAM)",
+          "marks": 1,
+          "accepted_alternatives": ["cache is faster than RAM"]
+        },
+        {
+          "text": "so fewer slow fetches from main memory are needed, and the CPU spends less time waiting",
+          "marks": 1,
+          "accepted_alternatives": ["this speeds up the fetch–decode–execute cycle"]
+        }
+      ]
+    }
+  ]
+}

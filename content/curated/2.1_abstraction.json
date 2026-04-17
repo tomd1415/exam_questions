@@ -1,0 +1,34 @@
+{
+  "external_key": "j277-2-1-abstraction",
+  "component_code": "J277/02",
+  "topic_code": "2.1",
+  "subtopic_code": "2.1.1",
+  "command_word_code": "describe",
+  "archetype_code": "explain",
+  "expected_response_type": "short_text",
+  "stem": "A student designing a bus timetable app uses abstraction.",
+  "model_answer": "Abstraction means hiding or ignoring unnecessary detail so the problem becomes easier to solve. For the timetable app, the student keeps details that matter (stop names, route numbers, arrival times) and ignores details that do not (the colour of the buses, individual drivers, weather). The result is a simpler model of the real system that is easier to turn into a program.",
+  "difficulty_band": 5,
+  "difficulty_step": 2,
+  "source_type": "imported_pattern",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Describe what abstraction means and give an example from this app.",
+      "marks": 2,
+      "expected_response_type": "short_text",
+      "mark_points": [
+        {
+          "text": "abstraction = removing/hiding unnecessary detail from a problem",
+          "marks": 1,
+          "accepted_alternatives": ["ignoring details that do not matter"]
+        },
+        {
+          "text": "example: keeps stop/route/time data; ignores bus colour / driver / weather",
+          "marks": 1,
+          "accepted_alternatives": ["app stores stops & times but not who is driving"]
+        }
+      ]
+    }
+  ]
+}

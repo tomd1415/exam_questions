@@ -1,0 +1,34 @@
+{
+  "external_key": "j277-1-2-optical",
+  "component_code": "J277/01",
+  "topic_code": "1.2",
+  "subtopic_code": "1.2.2",
+  "command_word_code": "describe",
+  "archetype_code": "explain",
+  "expected_response_type": "short_text",
+  "stem": "A photographer keeps an archive copy of their best work on a Blu-ray disc.",
+  "model_answer": "Optical storage (such as CDs, DVDs and Blu-ray discs) represents data as microscopic pits and lands on the surface of a reflective disc. A laser beam is shone at the surface and reflections are read back to detect 1s and 0s. Optical discs are cheap, portable and non-volatile, but are slower than SSDs and can be scratched easily.",
+  "difficulty_band": 4,
+  "difficulty_step": 2,
+  "source_type": "imported_pattern",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Describe how optical storage works.",
+      "marks": 2,
+      "expected_response_type": "short_text",
+      "mark_points": [
+        {
+          "text": "data is represented by pits and lands on the surface of a disc",
+          "marks": 1,
+          "accepted_alternatives": ["bumps and flats on the disc"]
+        },
+        {
+          "text": "a laser is shone at the disc and reflections are detected to read 1s and 0s",
+          "marks": 1,
+          "accepted_alternatives": ["laser light reads the pattern back"]
+        }
+      ]
+    }
+  ]
+}

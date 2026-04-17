@@ -1,0 +1,39 @@
+{
+  "external_key": "j277-1-4-sql-injection",
+  "component_code": "J277/01",
+  "topic_code": "1.4",
+  "subtopic_code": "1.4.1",
+  "command_word_code": "describe",
+  "archetype_code": "explain",
+  "expected_response_type": "short_text",
+  "stem": "A web form lets customers look up their order by typing an order number. A malicious user types SQL code into the box instead of a number.",
+  "model_answer": "This is SQL injection. The web page concatenates the user input directly into a database query, so the attacker's SQL is executed by the database. This can be used to read, change or delete data in the database (for example, dump the list of all customers, or bypass login checks). It can be prevented by validating input and using parameterised queries so user text is treated as data, not code.",
+  "difficulty_band": 6,
+  "difficulty_step": 3,
+  "source_type": "imported_pattern",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Describe what an SQL injection attack is and one way to prevent it.",
+      "marks": 3,
+      "expected_response_type": "short_text",
+      "mark_points": [
+        {
+          "text": "user input containing SQL is inserted into/concatenated with a database query and executed",
+          "marks": 1,
+          "accepted_alternatives": ["attacker enters SQL into a form that goes into a query"]
+        },
+        {
+          "text": "this lets the attacker read/change/delete data in the database (or bypass authentication)",
+          "marks": 1,
+          "accepted_alternatives": ["database records can be stolen or altered"]
+        },
+        {
+          "text": "prevention: validate input and/or use parameterised queries (prepared statements)",
+          "marks": 1,
+          "accepted_alternatives": ["use prepared statements", "sanitise/validate user input"]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "external_key": "j277-2-2-casting",
+  "component_code": "J277/02",
+  "topic_code": "2.2",
+  "subtopic_code": "2.2.2",
+  "command_word_code": "explain",
+  "archetype_code": "explain",
+  "expected_response_type": "short_text",
+  "stem": "A program reads a number from the keyboard using input() and tries to add it to another number, but the program crashes.",
+  "model_answer": "Input from the keyboard is read as a string, so trying to add it to an integer causes an error or unexpected results (string concatenation instead of addition). The fix is to cast (convert) the input to the correct numeric type, for example int(input(...)) or float(input(...)). The program can then perform arithmetic correctly.",
+  "difficulty_band": 4,
+  "difficulty_step": 2,
+  "source_type": "imported_pattern",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Explain why the program crashes and how casting can fix it.",
+      "marks": 3,
+      "expected_response_type": "short_text",
+      "mark_points": [
+        {
+          "text": "input returns a string, not a number",
+          "marks": 1,
+          "accepted_alternatives": ["keyboard input is always a string"]
+        },
+        {
+          "text": "adding a string to a number causes a type error or wrong result",
+          "marks": 1,
+          "accepted_alternatives": ["type mismatch stops arithmetic working"]
+        },
+        {
+          "text": "casting/converting the string to int or float (e.g. int(input())) lets arithmetic work",
+          "marks": 1,
+          "accepted_alternatives": ["convert the string to a number first using int() or float()"]
+        }
+      ]
+    }
+  ]
+}

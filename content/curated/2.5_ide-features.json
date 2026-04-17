@@ -1,0 +1,45 @@
+{
+  "external_key": "j277-2-5-ide-features",
+  "component_code": "J277/02",
+  "topic_code": "2.5",
+  "subtopic_code": "2.5.2",
+  "command_word_code": "describe",
+  "archetype_code": "explain",
+  "expected_response_type": "short_text",
+  "stem": "A pupil uses an Integrated Development Environment (IDE) to write and test a program.",
+  "model_answer": "An IDE brings several programming tools together in one application. Typical features include: a code editor with syntax highlighting and auto-indent; a run/interpret button or build-and-run tool that translates the code; a debugger with breakpoints, step-through and variable watches to find logic errors; and error messages/explanations when code will not compile. These features make it quicker to write, test and fix programs.",
+  "difficulty_band": 4,
+  "difficulty_step": 2,
+  "source_type": "imported_pattern",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Describe three features of an IDE and how each helps when writing a program.",
+      "marks": 3,
+      "expected_response_type": "short_text",
+      "mark_points": [
+        {
+          "text": "editor with syntax highlighting / auto-indent / auto-complete - makes code easier to read and type correctly",
+          "marks": 1,
+          "accepted_alternatives": [
+            "colour-coded editor helps spot mistakes",
+            "auto-complete suggests keywords/methods"
+          ]
+        },
+        {
+          "text": "built-in translator / run button - compiles or interprets the code so the program can be tested",
+          "marks": 1,
+          "accepted_alternatives": ["run/build command lets you execute the program from the IDE"]
+        },
+        {
+          "text": "debugger with breakpoints/step-through/variable watches - helps find and fix logic errors",
+          "marks": 1,
+          "accepted_alternatives": [
+            "debugger lets you pause and inspect variables",
+            "error reporting pinpoints bugs"
+          ]
+        }
+      ]
+    }
+  ]
+}

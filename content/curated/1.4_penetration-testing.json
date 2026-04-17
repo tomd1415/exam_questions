@@ -1,0 +1,39 @@
+{
+  "external_key": "j277-1-4-penetration-testing",
+  "component_code": "J277/01",
+  "topic_code": "1.4",
+  "subtopic_code": "1.4.2",
+  "command_word_code": "explain",
+  "archetype_code": "explain",
+  "expected_response_type": "short_text",
+  "stem": "A bank hires a security company to carry out penetration testing on its online banking system.",
+  "model_answer": "Penetration testing is an authorised, controlled attempt to attack a system in the same way a real attacker would. The aim is to find vulnerabilities (weak passwords, unpatched software, misconfigured servers, flawed input validation, etc.) before a criminal does, so they can be fixed. The results are reported back to the organisation and used to improve security; it does not aim to damage the live system.",
+  "difficulty_band": 5,
+  "difficulty_step": 2,
+  "source_type": "imported_pattern",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Explain what penetration testing is and why the bank has chosen to do it.",
+      "marks": 3,
+      "expected_response_type": "short_text",
+      "mark_points": [
+        {
+          "text": "an authorised/controlled simulated attack on the system",
+          "marks": 1,
+          "accepted_alternatives": ["testers act like an attacker with permission"]
+        },
+        {
+          "text": "aims to identify vulnerabilities/weaknesses in the system",
+          "marks": 1,
+          "accepted_alternatives": ["finds security holes"]
+        },
+        {
+          "text": "so the organisation can fix them before a real attacker exploits them",
+          "marks": 1,
+          "accepted_alternatives": ["weaknesses can be patched before criminals find them"]
+        }
+      ]
+    }
+  ]
+}

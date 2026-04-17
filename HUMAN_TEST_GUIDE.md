@@ -423,6 +423,45 @@ Note the baseline count before step 1.
 - [ ] Teacher-only rubric text (`RUBRIC-LEAK-CHECK`) never appeared on
       the pupil review page (step 15).
 
+### 1.G Curated content seeding (Chunk 8)
+
+**Goal:** verify the seeder loads every curated JSON file under
+`content/curated/`, upserts on re-run, and leaves a realistic bank of
+questions for pupils to practise against.
+
+**Prerequisites:**
+
+1. `npm run check` is green on the current commit.
+2. Dockerised dev DB is up (`npm run db:up`).
+3. Migrations applied (`npm run db:migrate`).
+
+**Steps:**
+
+| #   | Action                                                                                                                   | Expected                                                                                                                                            |
+| --- | ------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | `npm run content:seed -- --dry-run`                                                                                      | Prints `Seed summary: scanned=N created=N updated=0 failed=0` where N = number of files in `content/curated/`.                                      |
+| 2   | `ls content/curated/*.json \| wc -l` and compare                                                                         | Matches N from step 1.                                                                                                                              |
+| 3   | `npm run content:seed` (first real run)                                                                                  | `created=N updated=0 failed=0`.                                                                                                                     |
+| 4   | `npm run content:seed` again (second run, same files)                                                                    | `created=0 updated=N failed=0` — idempotent.                                                                                                        |
+| 5   | In psql: `SELECT count(*) FROM questions WHERE similarity_hash LIKE 'curated:%';`                                        | Returns N.                                                                                                                                          |
+| 6   | In psql: `SELECT approval_status, active, count(*) FROM questions WHERE similarity_hash LIKE 'curated:%' GROUP BY 1, 2;` | Single row: `approved, true, N`.                                                                                                                    |
+| 7   | Log in as teacher. Visit `/admin/questions`.                                                                             | Curated questions listed, all approved + active; covering topics 1.1-1.6 and 2.1-2.5.                                                               |
+| 8   | Open one curated question (e.g. "Compare lossy and lossless compression"). Click **Edit**.                               | All parts and mark points populated; `accepted_alternatives` visible where supplied; no missing fields.                                             |
+| 9   | Edit one curated JSON file locally (change the stem slightly). Re-run `npm run content:seed`.                            | Only that question reports as updated; summary shows `updated=1` plus (N-1) untouched (still counted as updated, but stem in DB reflects new text). |
+| 10  | As a pupil, start a revision attempt with topic filter `1.2`.                                                            | Pupil sees a sample drawn from curated 1.2 questions (memory & storage).                                                                            |
+| 11  | Submit answers; reach the review screen.                                                                                 | Mark points from the curated JSON appear in the "model answer" / feedback section.                                                                  |
+| 12  | Seeder user check: `SELECT pseudonym, role FROM users WHERE username = 'curated_seed';`                                  | One row, role=`teacher`, pseudonym `CUR-SEED-00`.                                                                                                   |
+| 13  | `SELECT count(*) FROM questions WHERE author_id = (SELECT id FROM users WHERE username='curated_seed');`                 | Equals N (all curated questions attributed to the seed user).                                                                                       |
+
+### Sign-off checklist (Chunk 8)
+
+- [ ] Dry-run and wet run report the same scanned count; no failures.
+- [ ] Second run is idempotent (`created=0`).
+- [ ] All curated rows in DB are `approval_status='approved' AND active=true`.
+- [ ] Pupil revision flow surfaces curated questions without errors.
+- [ ] Seeder-owned user exists and owns every curated row.
+- [ ] `npm run check` still green on the same commit.
+
 ### Phase 1 sign-off checklist
 
 - [ ] (Filled in once all chunks ship.)

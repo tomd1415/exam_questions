@@ -1,0 +1,44 @@
+{
+  "external_key": "j277-1-5-utility-backup",
+  "component_code": "J277/01",
+  "topic_code": "1.5",
+  "subtopic_code": "1.5.2",
+  "command_word_code": "compare",
+  "archetype_code": "compare",
+  "expected_response_type": "short_text",
+  "stem": "A backup utility offers both full backups and incremental backups.",
+  "model_answer": "A full backup copies every file that has been selected, every time it runs; it takes longer and uses more storage but restoring from it is simple because everything is in one place. An incremental backup copies only the files that have changed since the last backup (full or incremental); each run is much faster and uses less storage, but restoring requires the most recent full backup plus every incremental since, which is more complex.",
+  "difficulty_band": 5,
+  "difficulty_step": 2,
+  "source_type": "imported_pattern",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Compare full and incremental backups in terms of time to run and restoring data.",
+      "marks": 4,
+      "expected_response_type": "short_text",
+      "mark_points": [
+        {
+          "text": "full backup copies every selected file every time",
+          "marks": 1,
+          "accepted_alternatives": ["full backup always copies everything"]
+        },
+        {
+          "text": "incremental backup only copies files changed since the last backup",
+          "marks": 1,
+          "accepted_alternatives": ["incremental copies only changed files"]
+        },
+        {
+          "text": "incremental is quicker to run and uses less storage than a full backup",
+          "marks": 1,
+          "accepted_alternatives": ["incremental backups are faster / smaller"]
+        },
+        {
+          "text": "restoring from full is simpler (one backup); incremental needs the last full plus every incremental",
+          "marks": 1,
+          "accepted_alternatives": ["restore from incrementals is slower/more complex"]
+        }
+      ]
+    }
+  ]
+}

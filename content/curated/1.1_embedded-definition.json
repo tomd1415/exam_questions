@@ -1,0 +1,37 @@
+{
+  "external_key": "j277-1-1-embedded-definition",
+  "component_code": "J277/01",
+  "topic_code": "1.1",
+  "subtopic_code": "1.1.3",
+  "command_word_code": "describe",
+  "archetype_code": "explain",
+  "expected_response_type": "short_text",
+  "stem": "A dishwasher, a smart thermostat and a digital camera all contain embedded systems.",
+  "model_answer": "An embedded system is a computer system built into a larger device to perform a dedicated set of functions. It usually has limited memory and processing power and runs fixed software stored in ROM, rather than being user-reprogrammable like a general-purpose computer.",
+  "difficulty_band": 4,
+  "difficulty_step": 2,
+  "source_type": "imported_pattern",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Describe what is meant by an embedded system.",
+      "marks": 2,
+      "expected_response_type": "short_text",
+      "mark_points": [
+        {
+          "text": "a computer system built into a larger device to carry out a specific dedicated task",
+          "marks": 1,
+          "accepted_alternatives": [
+            "a computer inside another product",
+            "a system dedicated to one function"
+          ]
+        },
+        {
+          "text": "typically has limited memory/processing power and runs fixed software (often stored in ROM)",
+          "marks": 1,
+          "accepted_alternatives": ["not general purpose", "runs a single fixed program"]
+        }
+      ]
+    }
+  ]
+}

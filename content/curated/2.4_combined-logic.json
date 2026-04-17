@@ -1,0 +1,44 @@
+{
+  "external_key": "j277-2-4-combined-logic",
+  "component_code": "J277/02",
+  "topic_code": "2.4",
+  "subtopic_code": "2.4.1",
+  "command_word_code": "complete",
+  "archetype_code": "explain",
+  "expected_response_type": "short_text",
+  "stem": "Consider the Boolean expression Q = (A AND B) OR (NOT C) with three inputs A, B and C.",
+  "model_answer": "Work out (A AND B) and (NOT C) first, then OR the two. Q is 1 if (both A and B are 1) OR (C is 0). This means Q is only 0 when A AND B is 0 AND C = 1. All eight rows: ABC 000 => Q=1 (NOT C=1); 001 => 0; 010 => 1; 011 => 0; 100 => 1; 101 => 0; 110 => 1; 111 => 1.",
+  "difficulty_band": 6,
+  "difficulty_step": 3,
+  "source_type": "imported_pattern",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Complete a truth table with columns A, B, C, A AND B, NOT C and Q for every combination of inputs.",
+      "marks": 4,
+      "expected_response_type": "short_text",
+      "mark_points": [
+        {
+          "text": "correct column for A AND B (only 1 when A = 1 and B = 1)",
+          "marks": 1,
+          "accepted_alternatives": ["A AND B column correct"]
+        },
+        {
+          "text": "correct column for NOT C (inverse of C)",
+          "marks": 1,
+          "accepted_alternatives": ["NOT C column correct"]
+        },
+        {
+          "text": "Q = 1 whenever (A AND B) = 1 OR (NOT C) = 1",
+          "marks": 1,
+          "accepted_alternatives": ["applies OR of the two intermediate columns"]
+        },
+        {
+          "text": "Q column values in order (A,B,C going 000..111): 1,0,1,0,1,0,1,1",
+          "marks": 1,
+          "accepted_alternatives": ["final Q column: 1,0,1,0,1,0,1,1 for 000..111"]
+        }
+      ]
+    }
+  ]
+}

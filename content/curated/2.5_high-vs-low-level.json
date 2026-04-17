@@ -1,0 +1,47 @@
+{
+  "external_key": "j277-2-5-high-vs-low-level",
+  "component_code": "J277/02",
+  "topic_code": "2.5",
+  "subtopic_code": "2.5.1",
+  "command_word_code": "compare",
+  "archetype_code": "compare",
+  "expected_response_type": "short_text",
+  "stem": "A developer writes most of a project in a high-level language, but uses assembly language (a low-level language) for a tiny, performance-critical section.",
+  "model_answer": "High-level languages use English-like keywords and work with variables, loops and functions; they are easier to read, write and maintain and are portable between different processors because they are translated for each machine. Low-level languages (machine code / assembly) are close to the processor's instruction set, so they run very fast and give the programmer fine control over hardware, but are hard to read and specific to one processor family.",
+  "difficulty_band": 5,
+  "difficulty_step": 2,
+  "source_type": "imported_pattern",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Compare high-level and low-level languages.",
+      "marks": 4,
+      "expected_response_type": "short_text",
+      "mark_points": [
+        {
+          "text": "high-level languages are closer to English / easier to read and write",
+          "marks": 1,
+          "accepted_alternatives": ["HLLs are human-readable"]
+        },
+        {
+          "text": "high-level languages are portable between different processors",
+          "marks": 1,
+          "accepted_alternatives": ["HLLs can run on different hardware with re-translation"]
+        },
+        {
+          "text": "low-level languages are close to machine code / run very quickly",
+          "marks": 1,
+          "accepted_alternatives": ["assembly/machine code executes with minimal overhead"]
+        },
+        {
+          "text": "low-level languages give fine control over hardware but are processor-specific and hard to read",
+          "marks": 1,
+          "accepted_alternatives": [
+            "low-level code tied to one CPU architecture",
+            "LLL provides direct hardware control"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "external_key": "j277-2-1-binary-search",
+  "component_code": "J277/02",
+  "topic_code": "2.1",
+  "subtopic_code": "2.1.3",
+  "command_word_code": "describe",
+  "archetype_code": "explain",
+  "expected_response_type": "medium_text",
+  "stem": "A program searches a large sorted array for a target value using a binary search.",
+  "model_answer": "Binary search requires the data to be sorted. It looks at the middle item of the list and compares it with the target. If they match, the search ends. If the target is smaller than the middle item, the algorithm repeats on the left half; if it is larger, it repeats on the right half. Each step halves the search space, so it is much faster than linear search on large lists - but the data must be in order first.",
+  "difficulty_band": 5,
+  "difficulty_step": 2,
+  "source_type": "imported_pattern",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Describe how a binary search works. State one requirement of the data.",
+      "marks": 4,
+      "expected_response_type": "medium_text",
+      "mark_points": [
+        {
+          "text": "requirement: the list/array must be sorted (in order)",
+          "marks": 1,
+          "accepted_alternatives": ["data has to be ordered first"]
+        },
+        {
+          "text": "find the middle element and compare it with the target",
+          "marks": 1,
+          "accepted_alternatives": ["check the middle item against the value"]
+        },
+        {
+          "text": "if the target is smaller, search the lower/left half; if larger, search the upper/right half",
+          "marks": 1,
+          "accepted_alternatives": ["discard the half that cannot contain the target"]
+        },
+        {
+          "text": "repeat the process on the remaining half until the target is found or the section is empty",
+          "marks": 1,
+          "accepted_alternatives": ["repeat until match found or list is empty"]
+        }
+      ]
+    }
+  ]
+}

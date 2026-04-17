@@ -1,0 +1,44 @@
+{
+  "external_key": "j277-1-3-lan-vs-wan",
+  "component_code": "J277/01",
+  "topic_code": "1.3",
+  "subtopic_code": "1.3.1",
+  "command_word_code": "compare",
+  "archetype_code": "compare",
+  "expected_response_type": "short_text",
+  "stem": "A secondary school has a network in its building and also connects to other schools in the same academy trust across the country.",
+  "model_answer": "A LAN (Local Area Network) covers a small geographic area such as a single site; the hardware is usually owned by the organisation and the network is joined by cables or Wi-Fi on the premises. A WAN (Wide Area Network) connects sites over a large geographic area (often between cities or countries) using infrastructure that is typically leased from telecoms providers rather than owned outright. The school network is a LAN; the connection between schools across the trust forms a WAN.",
+  "difficulty_band": 4,
+  "difficulty_step": 2,
+  "source_type": "imported_pattern",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Compare a LAN with a WAN. You should refer to geographic coverage and ownership of the infrastructure.",
+      "marks": 4,
+      "expected_response_type": "short_text",
+      "mark_points": [
+        {
+          "text": "a LAN covers a small geographic area (one building/site)",
+          "marks": 1,
+          "accepted_alternatives": ["LAN is local/small area"]
+        },
+        {
+          "text": "a WAN covers a large geographic area (between cities/countries)",
+          "marks": 1,
+          "accepted_alternatives": ["WAN spans wide/large area"]
+        },
+        {
+          "text": "LAN infrastructure is usually owned by the organisation",
+          "marks": 1,
+          "accepted_alternatives": ["organisation owns the LAN hardware/cabling"]
+        },
+        {
+          "text": "WAN infrastructure is typically leased/rented from telecoms providers",
+          "marks": 1,
+          "accepted_alternatives": ["WAN uses third-party/ISP infrastructure"]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,54 @@
+{
+  "external_key": "j277-1-2-hdd-vs-ssd",
+  "component_code": "J277/01",
+  "topic_code": "1.2",
+  "subtopic_code": "1.2.2",
+  "command_word_code": "compare",
+  "archetype_code": "compare",
+  "expected_response_type": "medium_text",
+  "stem": "A school is choosing between hard disk drives (HDDs) and solid state drives (SSDs) for a new set of laptops.",
+  "model_answer": "HDDs store data magnetically on spinning metal platters read by a moving head. They are cheaper per GB and available in very large capacities but are slower, noisier and more fragile because of their moving parts. SSDs store data on flash memory chips with no moving parts, making them faster, silent, more robust and using less power, but they are more expensive per GB and have a limited number of write cycles.",
+  "difficulty_band": 5,
+  "difficulty_step": 2,
+  "source_type": "imported_pattern",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Compare HDDs and SSDs as secondary storage for the laptops. You should refer to how they store data, speed, durability and cost.",
+      "marks": 6,
+      "expected_response_type": "medium_text",
+      "mark_points": [
+        {
+          "text": "HDD stores data magnetically on spinning platters read by a moving read/write head",
+          "marks": 1,
+          "accepted_alternatives": ["HDD uses magnetic platters and a moving head"]
+        },
+        {
+          "text": "SSD stores data on flash memory chips with no moving parts",
+          "marks": 1,
+          "accepted_alternatives": ["SSD uses flash memory (solid state)"]
+        },
+        {
+          "text": "SSDs are faster to read/write than HDDs",
+          "marks": 1,
+          "accepted_alternatives": ["SSDs have quicker access times"]
+        },
+        {
+          "text": "SSDs are more robust/portable (no moving parts) so better for laptops",
+          "marks": 1,
+          "accepted_alternatives": ["SSDs less easily damaged when dropped"]
+        },
+        {
+          "text": "HDDs are usually cheaper per GB and available in higher capacities",
+          "marks": 1,
+          "accepted_alternatives": ["HDD gives more storage for the money"]
+        },
+        {
+          "text": "SSDs use less power, run more quietly, and typically produce less heat",
+          "marks": 1,
+          "accepted_alternatives": ["SSDs are quieter and use less battery"]
+        }
+      ]
+    }
+  ]
+}

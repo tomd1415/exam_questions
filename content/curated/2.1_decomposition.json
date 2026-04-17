@@ -1,0 +1,39 @@
+{
+  "external_key": "j277-2-1-decomposition",
+  "component_code": "J277/02",
+  "topic_code": "2.1",
+  "subtopic_code": "2.1.1",
+  "command_word_code": "explain",
+  "archetype_code": "explain",
+  "expected_response_type": "short_text",
+  "stem": "A team is building an online shop and uses decomposition.",
+  "model_answer": "Decomposition is breaking a large problem into smaller sub-problems that can be solved (and tested) independently. For the online shop, the team can split the project into modules such as user accounts, product catalogue, shopping basket, checkout/payments, and order tracking. Each smaller problem is easier to design, code and test, and different developers can work on different parts at the same time.",
+  "difficulty_band": 5,
+  "difficulty_step": 2,
+  "source_type": "imported_pattern",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Explain what decomposition is and one benefit of using it here.",
+      "marks": 2,
+      "expected_response_type": "short_text",
+      "mark_points": [
+        {
+          "text": "decomposition = breaking a large problem into smaller sub-problems/modules",
+          "marks": 1,
+          "accepted_alternatives": [
+            "split a big problem into smaller parts that are easier to solve"
+          ]
+        },
+        {
+          "text": "benefit: each sub-problem is easier to code/test OR different developers can work in parallel",
+          "marks": 1,
+          "accepted_alternatives": [
+            "smaller parts are simpler to program and test",
+            "team members can work on different modules at the same time"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "external_key": "j277-1-1-fetch-decode-execute",
+  "component_code": "J277/01",
+  "topic_code": "1.1",
+  "subtopic_code": "1.1.1",
+  "command_word_code": "describe",
+  "archetype_code": "explain",
+  "expected_response_type": "medium_text",
+  "stem": "The CPU processes instructions using the fetch–decode–execute cycle.",
+  "model_answer": "Fetch: the CPU copies the next instruction from main memory into the CPU using the address held in the program counter, then increments the program counter. Decode: the Control Unit interprets the instruction and identifies what operation is required and which data is needed. Execute: the CPU (using the ALU where appropriate) carries out the instruction, reading or writing memory or registers as required.",
+  "difficulty_band": 5,
+  "difficulty_step": 2,
+  "source_type": "imported_pattern",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Describe the three stages of the fetch–decode–execute cycle.",
+      "marks": 3,
+      "expected_response_type": "medium_text",
+      "mark_points": [
+        {
+          "text": "fetch: the next instruction is copied from main memory into the CPU (using the program counter, which is then incremented)",
+          "marks": 1,
+          "accepted_alternatives": [
+            "fetch: instruction is read from RAM",
+            "fetch: CPU retrieves the instruction at the address in the PC"
+          ]
+        },
+        {
+          "text": "decode: the Control Unit interprets the instruction and works out what is required",
+          "marks": 1,
+          "accepted_alternatives": [
+            "decode: the instruction is translated",
+            "decode: CU decodes it"
+          ]
+        },
+        {
+          "text": "execute: the CPU carries out the instruction (using the ALU for arithmetic or logic)",
+          "marks": 1,
+          "accepted_alternatives": [
+            "execute: the instruction is performed",
+            "execute: ALU carries out the operation"
+          ]
+        }
+      ]
+    }
+  ]
+}

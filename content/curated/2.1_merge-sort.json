@@ -1,0 +1,46 @@
+{
+  "external_key": "j277-2-1-merge-sort",
+  "component_code": "J277/02",
+  "topic_code": "2.1",
+  "subtopic_code": "2.1.3",
+  "command_word_code": "describe",
+  "archetype_code": "explain",
+  "expected_response_type": "medium_text",
+  "stem": "A very large list of names has to be sorted alphabetically. A merge sort is used.",
+  "model_answer": "A merge sort is a divide-and-conquer algorithm. The list is repeatedly split in half until each sub-list contains only one item (a list of one is already sorted). Pairs of sub-lists are then merged back together: items from each are compared and placed into a new list in order. The merges continue until there is a single sorted list. Merge sort is much faster than bubble sort on large data, but uses extra memory for the temporary sub-lists.",
+  "difficulty_band": 6,
+  "difficulty_step": 3,
+  "source_type": "imported_pattern",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Describe the two main stages of a merge sort.",
+      "marks": 4,
+      "expected_response_type": "medium_text",
+      "mark_points": [
+        {
+          "text": "split stage: the list is divided in half repeatedly",
+          "marks": 1,
+          "accepted_alternatives": ["keep halving the list"]
+        },
+        {
+          "text": "continue splitting until each sub-list has one item (lists of one are already sorted)",
+          "marks": 1,
+          "accepted_alternatives": ["until each list has a single element"]
+        },
+        {
+          "text": "merge stage: pairs of sub-lists are combined by comparing items and placing the smaller first",
+          "marks": 1,
+          "accepted_alternatives": [
+            "merge by comparing front of each sub-list and picking the smaller"
+          ]
+        },
+        {
+          "text": "merges continue until one fully sorted list remains",
+          "marks": 1,
+          "accepted_alternatives": ["keep merging until there is only one list left"]
+        }
+      ]
+    }
+  ]
+}

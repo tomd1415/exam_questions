@@ -1,0 +1,34 @@
+{
+  "external_key": "j277-1-2-volatile",
+  "component_code": "J277/01",
+  "topic_code": "1.2",
+  "subtopic_code": "1.2.1",
+  "command_word_code": "define",
+  "archetype_code": "recall",
+  "expected_response_type": "short_text",
+  "stem": "RAM is described as volatile memory.",
+  "model_answer": "Volatile means the memory's contents are lost when electrical power is removed. This is why any unsaved work held only in RAM disappears when the computer is switched off.",
+  "difficulty_band": 3,
+  "difficulty_step": 2,
+  "source_type": "imported_pattern",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Define the term volatile as it applies to computer memory.",
+      "marks": 2,
+      "expected_response_type": "short_text",
+      "mark_points": [
+        {
+          "text": "the memory's contents are lost when power is removed",
+          "marks": 1,
+          "accepted_alternatives": ["data disappears when power is off"]
+        },
+        {
+          "text": "the memory requires a continuous power supply to retain its data",
+          "marks": 1,
+          "accepted_alternatives": ["needs power to keep data"]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "external_key": "j277-1-1-von-neumann",
+  "component_code": "J277/01",
+  "topic_code": "1.1",
+  "subtopic_code": "1.1.1",
+  "command_word_code": "describe",
+  "archetype_code": "explain",
+  "expected_response_type": "short_text",
+  "stem": "Most modern CPUs are based on the von Neumann architecture.",
+  "model_answer": "In a von Neumann architecture both program instructions and data are stored in the same main memory and are accessed via the same bus, one at a time. A single CPU with a control unit and ALU fetches, decodes and executes these instructions sequentially.",
+  "difficulty_band": 5,
+  "difficulty_step": 2,
+  "source_type": "imported_pattern",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Describe two features of the von Neumann architecture.",
+      "marks": 2,
+      "expected_response_type": "short_text",
+      "mark_points": [
+        {
+          "text": "instructions and data are stored together in the same main memory",
+          "marks": 1,
+          "accepted_alternatives": ["data and program share one memory", "single memory holds both"]
+        },
+        {
+          "text": "a single processor fetches, decodes and executes instructions sequentially using one bus at a time",
+          "marks": 1,
+          "accepted_alternatives": [
+            "instructions are processed one at a time",
+            "uses a single bus between CPU and memory"
+          ]
+        }
+      ]
+    }
+  ]
+}

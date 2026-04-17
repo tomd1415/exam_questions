@@ -1,0 +1,61 @@
+{
+  "external_key": "j277-1-6-ethical-impact",
+  "component_code": "J277/01",
+  "topic_code": "1.6",
+  "subtopic_code": "1.6.1",
+  "command_word_code": "discuss",
+  "archetype_code": "evaluate",
+  "expected_response_type": "extended_response",
+  "stem": "A large retailer is introducing self-service checkouts in all its stores, replacing many cashier jobs.",
+  "model_answer": "The change raises both ethical and legal issues. Ethically, long-serving cashiers may lose their jobs, which harms their income and wellbeing; this has to be weighed against faster service and lower prices for customers, and new (but fewer) jobs maintaining the machines. Culturally, some customers may feel isolated by the loss of human contact. Legally, the retailer must follow employment law (fair notice, redundancy payments, consultation with trade unions), data protection law (any customer data captured at the checkout is stored lawfully under the Data Protection Act/GDPR), and accessibility standards (the Equality Act) so the new checkouts can be used by disabled customers. A balanced view is that the change is likely to cut costs and improve throughput, but the retailer has a responsibility to support affected staff and ensure the new system is fair and accessible.",
+  "difficulty_band": 6,
+  "difficulty_step": 3,
+  "source_type": "imported_pattern",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Discuss the ethical and legal issues raised by replacing cashiers with self-service checkouts.",
+      "marks": 6,
+      "expected_response_type": "extended_response",
+      "mark_points": [
+        {
+          "text": "ethical issue raised: potential job losses / impact on employees' livelihoods",
+          "marks": 1,
+          "accepted_alternatives": ["cashiers lose their jobs"]
+        },
+        {
+          "text": "counter-benefit mentioned: faster service / lower prices / new maintenance roles",
+          "marks": 1,
+          "accepted_alternatives": [
+            "machines speed up checkouts",
+            "customers may get lower prices",
+            "creates tech support jobs"
+          ]
+        },
+        {
+          "text": "social/cultural concern: loss of human contact, impact on vulnerable customers",
+          "marks": 1,
+          "accepted_alternatives": ["older/isolated customers value human staff"]
+        },
+        {
+          "text": "legal issue: employment law must be followed (fair notice, redundancy, consultation)",
+          "marks": 1,
+          "accepted_alternatives": ["retailer must meet employment/redundancy law"]
+        },
+        {
+          "text": "legal issue: data protection / GDPR applies to any customer data the machines capture",
+          "marks": 1,
+          "accepted_alternatives": ["Data Protection Act covers loyalty/card data"]
+        },
+        {
+          "text": "legal issue: accessibility (Equality Act) - machines must be usable by disabled customers; balanced evaluative conclusion given",
+          "marks": 1,
+          "accepted_alternatives": [
+            "machines must be accessible to disabled users",
+            "balanced judgement drawn"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -29,6 +29,7 @@
     "db:backup": "BACKUP_DIR=${BACKUP_DIR:-./tmp/backups} PG_DUMP='docker compose exec -T postgres pg_dump -U exam' PGDATABASE=exam_dev bash scripts/backup-db.sh",
     "db:restore-drill": "BACKUP_DIR=${BACKUP_DIR:-./tmp/backups} PG_RESTORE='docker compose exec -T postgres pg_restore -U exam' PSQL='docker compose exec -T postgres psql -U exam' PGDATABASE=exam_dev bash scripts/restore-drill.sh",
     "user:create": "tsx src/scripts/create-user.ts",
+    "content:seed": "tsx src/scripts/seed-curated-content.ts",
     "test:human:phase0": "bash scripts/human-test-phase0.sh",
     "check": "npm run typecheck && npm run lint && npm run format:check && npm run test:coverage"
   },

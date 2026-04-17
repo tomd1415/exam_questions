@@ -1,0 +1,37 @@
+{
+  "external_key": "j277-1-2-why-secondary",
+  "component_code": "J277/01",
+  "topic_code": "1.2",
+  "subtopic_code": "1.2.2",
+  "command_word_code": "explain",
+  "archetype_code": "explain",
+  "expected_response_type": "short_text",
+  "stem": "Computers have both primary storage (RAM) and secondary storage (for example an SSD).",
+  "model_answer": "Secondary storage is needed because RAM is volatile and loses its contents when the power is turned off. Files and programs need to persist between sessions, so they are stored on non-volatile secondary storage, which is also typically much larger and cheaper per gigabyte than RAM.",
+  "difficulty_band": 4,
+  "difficulty_step": 2,
+  "source_type": "imported_pattern",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Explain why a computer needs secondary storage as well as RAM.",
+      "marks": 2,
+      "expected_response_type": "short_text",
+      "mark_points": [
+        {
+          "text": "RAM is volatile so data/programs would be lost when the power is turned off",
+          "marks": 1,
+          "accepted_alternatives": ["RAM loses contents without power"]
+        },
+        {
+          "text": "secondary storage is non-volatile and provides long-term, larger-capacity storage for files/programs",
+          "marks": 1,
+          "accepted_alternatives": [
+            "secondary storage keeps files permanently",
+            "more space for files"
+          ]
+        }
+      ]
+    }
+  ]
+}

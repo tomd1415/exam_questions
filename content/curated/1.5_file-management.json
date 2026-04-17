@@ -1,0 +1,37 @@
+{
+  "external_key": "j277-1-5-file-management",
+  "component_code": "J277/01",
+  "topic_code": "1.5",
+  "subtopic_code": "1.5.1",
+  "command_word_code": "describe",
+  "archetype_code": "explain",
+  "expected_response_type": "short_text",
+  "stem": "The operating system is responsible for file management on a computer.",
+  "model_answer": "File management lets users and programs create, open, move, rename, copy and delete files. The OS organises files into directories/folders, keeps track of where each file is stored on disk and enforces permissions so that only authorised users can read or change a file.",
+  "difficulty_band": 4,
+  "difficulty_step": 2,
+  "source_type": "imported_pattern",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Describe two things the operating system does as part of file management.",
+      "marks": 2,
+      "expected_response_type": "short_text",
+      "mark_points": [
+        {
+          "text": "provides operations to create, open, move, rename, copy or delete files",
+          "marks": 1,
+          "accepted_alternatives": ["lets users create/edit/delete files"]
+        },
+        {
+          "text": "organises files into a directory/folder structure and/or tracks where each file is stored on disk (or enforces file access permissions)",
+          "marks": 1,
+          "accepted_alternatives": [
+            "maintains directory structure / knows where each file is on disk",
+            "controls which users can read or write a file"
+          ]
+        }
+      ]
+    }
+  ]
+}

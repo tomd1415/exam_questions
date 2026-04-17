@@ -1,0 +1,42 @@
+{
+  "external_key": "j277-1-4-brute-force",
+  "component_code": "J277/01",
+  "topic_code": "1.4",
+  "subtopic_code": "1.4.1",
+  "command_word_code": "explain",
+  "archetype_code": "explain",
+  "expected_response_type": "short_text",
+  "stem": "A company wants to make user accounts harder to compromise by brute-force attacks.",
+  "model_answer": "A brute-force attack tries many passwords (often from a list) against an account until one works. It can be slowed or stopped by: enforcing long, complex passwords that greatly increase the number of possibilities; limiting the number of failed login attempts before the account is locked; adding delays between attempts; using two-factor authentication so the password alone is not enough.",
+  "difficulty_band": 5,
+  "difficulty_step": 2,
+  "source_type": "imported_pattern",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Explain how a brute-force attack works and give two ways to defend against it.",
+      "marks": 3,
+      "expected_response_type": "short_text",
+      "mark_points": [
+        {
+          "text": "the attacker tries many passwords until one succeeds",
+          "marks": 1,
+          "accepted_alternatives": ["guesses passwords by trying all combinations"]
+        },
+        {
+          "text": "defence: enforce strong/long passwords to increase the search space",
+          "marks": 1,
+          "accepted_alternatives": ["require complex passwords"]
+        },
+        {
+          "text": "defence: limit the number of login attempts / lock the account after too many failures (or use two-factor authentication)",
+          "marks": 1,
+          "accepted_alternatives": [
+            "account lock-out after failed attempts",
+            "use 2FA so the password alone is not enough"
+          ]
+        }
+      ]
+    }
+  ]
+}

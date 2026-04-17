@@ -1,0 +1,39 @@
+{
+  "external_key": "j277-2-2-arrays",
+  "component_code": "J277/02",
+  "topic_code": "2.2",
+  "subtopic_code": "2.2.3",
+  "command_word_code": "describe",
+  "archetype_code": "explain",
+  "expected_response_type": "short_text",
+  "stem": "A program stores the test scores of a class of 30 pupils using a one-dimensional array called scores.",
+  "model_answer": "A one-dimensional array is a fixed-size collection of elements of the same data type stored under one identifier. Each element is accessed using an index (position), starting at 0 in most languages. In this case scores[0] would be the first pupil's score and scores[29] the last. Arrays make it easy to process many related values with a loop, for example to find the highest score.",
+  "difficulty_band": 4,
+  "difficulty_step": 2,
+  "source_type": "imported_pattern",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Describe how a one-dimensional array stores the pupils' scores and how an individual value is accessed.",
+      "marks": 3,
+      "expected_response_type": "short_text",
+      "mark_points": [
+        {
+          "text": "array holds multiple values of the same data type under one identifier",
+          "marks": 1,
+          "accepted_alternatives": ["one name stores many items of the same type"]
+        },
+        {
+          "text": "each element has a unique index/position (often starting at 0)",
+          "marks": 1,
+          "accepted_alternatives": ["items identified by index"]
+        },
+        {
+          "text": "an individual score is accessed by its index, e.g. scores[3] for the 4th pupil",
+          "marks": 1,
+          "accepted_alternatives": ["use array[index] to read/write one value"]
+        }
+      ]
+    }
+  ]
+}
