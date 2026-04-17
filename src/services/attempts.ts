@@ -5,6 +5,7 @@ import type {
   AttemptRepo,
   PupilAttemptSummary,
   SubmittedAttemptSummary,
+  TeacherQueueRow,
   TopicPreviewBundle,
 } from '../repos/attempts.js';
 import type { ClassRepo } from '../repos/classes.js';
@@ -172,6 +173,13 @@ export class AttemptService {
       if (cls?.teacher_id !== actor.id) throw new AttemptAccessError('not_owner');
     }
     return this.repo.listSubmittedAttemptsForClass(classId);
+  }
+
+  async listMarkingQueueForTeacher(actor: ActorForAttempt): Promise<TeacherQueueRow[]> {
+    if (actor.role !== 'teacher' && actor.role !== 'admin') {
+      throw new AttemptAccessError('not_teacher');
+    }
+    return this.repo.listAwaitingMarkingForTeacher(actor.id);
   }
 
   async saveAnswer(

@@ -1,5 +1,6 @@
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
+import { readFileSync } from 'node:fs';
 import Fastify, { type FastifyInstance } from 'fastify';
 import fastifyCookie from '@fastify/cookie';
 import fastifyCsrf from '@fastify/csrf-protection';
@@ -35,6 +36,19 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const TEMPLATES_DIR = resolve(__dirname, 'templates');
 const STATIC_DIR = resolve(__dirname, 'static');
 
+function readAppVersion(): string {
+  try {
+    const pkgPath = resolve(__dirname, '..', 'package.json');
+    const raw = readFileSync(pkgPath, 'utf8');
+    const parsed = JSON.parse(raw) as { version?: unknown };
+    return typeof parsed.version === 'string' ? parsed.version : '0.0.0';
+  } catch {
+    return '0.0.0';
+  }
+}
+
+const APP_VERSION = readAppVersion();
+
 declare module 'fastify' {
   interface FastifyInstance {
     services: {
@@ -56,6 +70,9 @@ declare module 'fastify' {
   interface FastifyRequest {
     currentUser: UserRow | null;
     sessionId: string | null;
+  }
+  interface FastifyReply {
+    locals?: Record<string, unknown>;
   }
 }
 
@@ -143,6 +160,16 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
       req.currentUser = user;
       req.sessionId = unsigned.value;
     }
+  });
+
+  app.addHook('preHandler', async (req, reply) => {
+    const path = (req.url ?? '/').split('?')[0] ?? '/';
+    reply.locals = {
+      ...(reply.locals ?? {}),
+      currentUser: req.currentUser,
+      currentPath: path,
+      appVersion: APP_VERSION,
+    };
   });
 
   app.get('/', (req, reply) => {

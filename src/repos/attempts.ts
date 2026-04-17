@@ -680,6 +680,47 @@ export class AttemptRepo {
     return rows[0] ?? null;
   }
 
+  async listAwaitingMarkingForTeacher(teacherId: string): Promise<TeacherQueueRow[]> {
+    const { rows } = await this.pool.query<TeacherQueueRow>(
+      `SELECT a.id::text,
+              a.user_id::text,
+              u.display_name AS pupil_display_name,
+              u.pseudonym AS pupil_pseudonym,
+              a.class_id::text,
+              c.name AS class_name,
+              a.target_topic_code,
+              a.submitted_at,
+              (SELECT COUNT(*)::int
+                 FROM attempt_parts ap
+                 JOIN attempt_questions aq ON aq.id = ap.attempt_question_id
+                WHERE aq.attempt_id = a.id) AS total_parts,
+              (SELECT COUNT(*)::int
+                 FROM attempt_parts ap
+                 JOIN attempt_questions aq ON aq.id = ap.attempt_question_id
+                WHERE aq.attempt_id = a.id
+                  AND NOT EXISTS (
+                    SELECT 1 FROM awarded_marks am WHERE am.attempt_part_id = ap.id
+                  )) AS pending_parts
+         FROM attempts a
+         JOIN users u   ON u.id = a.user_id
+         JOIN classes c ON c.id = a.class_id
+        WHERE c.teacher_id = $1::bigint
+          AND a.submitted_at IS NOT NULL
+          AND EXISTS (
+            SELECT 1
+              FROM attempt_parts ap
+              JOIN attempt_questions aq ON aq.id = ap.attempt_question_id
+             WHERE aq.attempt_id = a.id
+               AND NOT EXISTS (
+                 SELECT 1 FROM awarded_marks am WHERE am.attempt_part_id = ap.id
+               )
+          )
+        ORDER BY a.submitted_at ASC`,
+      [teacherId],
+    );
+    return rows;
+  }
+
   async listSubmittedAttemptsForClass(classId: string): Promise<SubmittedAttemptSummary[]> {
     const { rows } = await this.pool.query<SubmittedAttemptSummary>(
       `SELECT a.id::text,
@@ -780,6 +821,19 @@ export class AttemptRepo {
     );
     return Number(rows[0]?.c ?? '0');
   }
+}
+
+export interface TeacherQueueRow {
+  id: string;
+  user_id: string;
+  pupil_display_name: string;
+  pupil_pseudonym: string;
+  class_id: string;
+  class_name: string;
+  target_topic_code: string | null;
+  submitted_at: Date;
+  total_parts: number;
+  pending_parts: number;
 }
 
 export interface SubmittedAttemptSummary {

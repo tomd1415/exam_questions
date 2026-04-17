@@ -1,0 +1,34 @@
+<section class="admin-card">
+  <header class="admin-card__header">
+    <div>
+      <h1>Preferences</h1>
+      <p class="admin-card__sub">Tweak how the revision tool behaves for you.</p>
+    </div>
+  </header>
+
+  <% if (it.flash) { %>
+    <p class="flash flash--ok" role="status"><%= it.flash %></p>
+  <% } %>
+
+  <% if (it.currentUser && it.currentUser.role === 'pupil') { %>
+    <form method="post" action="/me/preferences/reveal-mode" class="inline-form">
+      <input type="hidden" name="_csrf" value="<%= it.csrfToken %>" />
+      <fieldset>
+        <legend>When I submit an attempt, I want to:</legend>
+        <label>
+          <input type="radio" name="mode" value="per_question"
+            <%= it.revealMode === 'per_question' ? 'checked' : '' %> />
+          Submit and see feedback one question at a time (default)
+        </label>
+        <label>
+          <input type="radio" name="mode" value="whole_attempt"
+            <%= it.revealMode === 'whole_attempt' ? 'checked' : '' %> />
+          Submit the whole attempt at once
+        </label>
+        <button type="submit" class="btn btn--primary btn--sm">Save preference</button>
+      </fieldset>
+    </form>
+  <% } else { %>
+    <p class="empty">There are no teacher-facing preferences yet.</p>
+  <% } %>
+</section>

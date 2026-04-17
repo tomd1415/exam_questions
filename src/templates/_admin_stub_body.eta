@@ -1,0 +1,9 @@
+<section class="admin-card">
+  <header class="admin-card__header">
+    <div>
+      <h1><%= it.heading %></h1>
+      <p class="admin-card__sub">Coming soon.</p>
+    </div>
+  </header>
+  <p class="empty"><%= it.message %></p>
+</section>

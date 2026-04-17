@@ -1,0 +1,63 @@
+<%
+const user = it.currentUser;
+const currentPath = it.currentPath || '/';
+
+function navLinksFor(role) {
+  if (role === 'pupil') {
+    return [
+      { href: '/', label: 'Home', match: ['/', '/topics'], key: 'home' },
+      { href: '/topics', label: 'Topics', match: ['/topics'], key: 'topics' },
+      { href: '/me/attempts', label: 'My attempts', match: ['/me/attempts', '/attempts'], key: 'attempts' },
+      { href: '/me/preferences', label: 'Preferences', match: ['/me/preferences'], key: 'prefs' },
+    ];
+  }
+  if (role === 'teacher' || role === 'admin') {
+    const base = [
+      { href: '/', label: 'Home', match: ['/'], key: 'home' },
+      { href: '/admin/classes', label: 'Classes', match: ['/admin/classes'], key: 'classes' },
+      { href: '/admin/questions', label: 'Questions', match: ['/admin/questions'], key: 'questions' },
+      { href: '/admin/topics', label: 'Topics', match: ['/admin/topics'], key: 'topics' },
+      { href: '/admin/attempts', label: 'Marking queue', match: ['/admin/attempts'], key: 'queue' },
+      { href: '/me/preferences', label: 'Preferences', match: ['/me/preferences'], key: 'prefs' },
+    ];
+    if (role === 'admin') {
+      base.push({ href: '/admin/users', label: 'Users', match: ['/admin/users'], key: 'users' });
+      base.push({ href: '/admin/audit', label: 'Audit log', match: ['/admin/audit'], key: 'audit' });
+    }
+    return base;
+  }
+  return [];
+}
+
+function isActive(link) {
+  for (const prefix of link.match) {
+    if (prefix === '/') {
+      if (currentPath === '/') return true;
+    } else if (currentPath === prefix || currentPath.startsWith(prefix + '/')) {
+      return true;
+    }
+  }
+  return false;
+}
+
+const links = user ? navLinksFor(user.role) : [];
+%>
+<% if (user) { %>
+  <nav class="site-nav" aria-label="Primary">
+    <button type="button"
+            class="btn btn--ghost btn--sm site-nav__toggle"
+            aria-expanded="false"
+            aria-controls="primary-nav-drawer"
+            data-nav-toggle>
+      <span class="site-nav__toggle-label">Menu</span>
+    </button>
+    <ul class="site-nav__list" id="primary-nav-drawer" role="list">
+      <% links.forEach(function(link) { %>
+        <% const active = isActive(link); %>
+        <li class="site-nav__item<%= active ? ' site-nav__item--active' : '' %>">
+          <a href="<%= link.href %>"<%= active ? ' aria-current="page"' : '' %>><%= link.label %></a>
+        </li>
+      <% }); %>
+    </ul>
+  </nav>
+<% } %>

@@ -35,6 +35,46 @@ function requireTeacherOrAdmin(
 export function registerAdminAttemptRoutes(app: FastifyInstance): void {
   const csrfPreValidation = [app.csrfProtection.bind(app)];
 
+  app.get('/admin/attempts', async (req, reply) => {
+    const actor = requireTeacherOrAdmin(req, reply);
+    if (!actor) return reply;
+    const queue = await app.services.attempts.listMarkingQueueForTeacher(actor);
+    return reply.view('admin_attempts_queue.eta', {
+      title: 'Marking queue',
+      currentUser: req.currentUser,
+      csrfToken: reply.generateCsrf(),
+      queue,
+      flash: readQueryFlash(req),
+    });
+  });
+
+  app.get('/admin/users', async (req, reply) => {
+    const actor = requireTeacherOrAdmin(req, reply);
+    if (!actor) return reply;
+    if (actor.role !== 'admin') return reply.code(403).send('Forbidden');
+    return reply.view('admin_stub.eta', {
+      title: 'Users',
+      heading: 'Users',
+      message: 'User administration arrives in Chunk 8. This page is a placeholder.',
+      currentUser: req.currentUser,
+      csrfToken: reply.generateCsrf(),
+    });
+  });
+
+  app.get('/admin/audit', async (req, reply) => {
+    const actor = requireTeacherOrAdmin(req, reply);
+    if (!actor) return reply;
+    if (actor.role !== 'admin') return reply.code(403).send('Forbidden');
+    return reply.view('admin_stub.eta', {
+      title: 'Audit log',
+      heading: 'Audit log',
+      message:
+        'A searchable audit log lands in Chunk 8. For now, events are written to the database.',
+      currentUser: req.currentUser,
+      csrfToken: reply.generateCsrf(),
+    });
+  });
+
   app.get('/admin/classes/:id/attempts', async (req, reply) => {
     const actor = requireTeacherOrAdmin(req, reply);
     if (!actor) return reply;

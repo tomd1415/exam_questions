@@ -85,7 +85,10 @@ export function registerAttemptRoutes(app: FastifyInstance): void {
     });
   });
 
-  app.get('/attempts', async (req, reply) => {
+  const pupilAttemptsListHandler = async (
+    req: FastifyRequest,
+    reply: FastifyReply,
+  ): Promise<FastifyReply> => {
     const actor = requirePupil(req, reply);
     if (!actor) return reply;
     const attempts = await app.services.attempts.listAttemptsForPupil(actor);
@@ -94,6 +97,20 @@ export function registerAttemptRoutes(app: FastifyInstance): void {
       currentUser: req.currentUser,
       csrfToken: reply.generateCsrf(),
       attempts,
+      flash: readQueryFlash(req),
+    });
+  };
+
+  app.get('/attempts', pupilAttemptsListHandler);
+  app.get('/me/attempts', pupilAttemptsListHandler);
+
+  app.get('/me/preferences', async (req, reply) => {
+    if (!req.currentUser) return reply.redirect('/login');
+    return reply.view('me_preferences.eta', {
+      title: 'Preferences',
+      currentUser: req.currentUser,
+      csrfToken: reply.generateCsrf(),
+      revealMode: req.currentUser.reveal_mode ?? 'per_question',
       flash: readQueryFlash(req),
     });
   });
@@ -111,8 +128,13 @@ export function registerAttemptRoutes(app: FastifyInstance): void {
         parsed.data.mode === 'per_question'
           ? 'one question at a time'
           : 'the whole attempt at once';
+      const referer = req.headers.referer;
+      const target =
+        typeof referer === 'string' && referer.includes('/me/preferences')
+          ? '/me/preferences'
+          : '/topics';
       return reply.redirect(
-        `/topics?flash=${encodeURIComponent(`Preference saved: you will submit ${label}.`)}`,
+        `${target}?flash=${encodeURIComponent(`Preference saved: you will submit ${label}.`)}`,
       );
     },
   );

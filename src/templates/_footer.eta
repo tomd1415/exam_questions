@@ -1,0 +1,9 @@
+<footer class="site-footer" role="contentinfo">
+  <div class="site-footer__inner">
+    <span class="site-footer__brand">J277 revision</span>
+    <span class="site-footer__version">v<%= it.appVersion || '0.0.0' %></span>
+    <% if (it.currentUser && it.currentUser.role === 'admin') { %>
+      <a class="site-footer__healthz" href="/healthz">/healthz</a>
+    <% } %>
+  </div>
+</footer>

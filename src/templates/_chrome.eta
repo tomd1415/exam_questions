@@ -10,26 +10,32 @@
     <link rel="stylesheet" href="/static/paper.css" />
   </head>
   <body>
+    <a class="skip-link" href="#main">Skip to content</a>
     <header class="site-header">
       <div class="site-header__inner">
         <a class="site-header__brand" href="/">J277 revision</a>
         <% if (it.currentUser) { %>
-          <form method="post" action="/logout" class="site-header__logout">
-            <input type="hidden" name="_csrf" value="<%= it.csrfToken %>" />
+          <div class="site-header__account">
             <span class="site-header__user"><%= it.currentUser.display_name %></span>
-            <button type="submit" class="btn btn--ghost btn--sm">Sign out</button>
-          </form>
+            <form method="post" action="/logout" class="site-header__logout">
+              <input type="hidden" name="_csrf" value="<%= it.csrfToken %>" />
+              <button type="submit" class="btn btn--ghost btn--sm">Sign out</button>
+            </form>
+          </div>
         <% } %>
       </div>
+      <%~ include('_nav', it) %>
     </header>
-    <main class="site-main">
+    <main class="site-main" id="main">
       <%~ it.body %>
     </main>
+    <%~ include('_footer', it) %>
     <% if (it.autosaveEnabled) { %>
       <script src="/static/autosave.js" defer></script>
     <% } %>
     <% if (it.timerEnabled) { %>
       <script src="/static/timer.js" defer></script>
     <% } %>
+    <script src="/static/nav.js" defer></script>
   </body>
 </html>
