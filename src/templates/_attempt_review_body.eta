@@ -1,4 +1,5 @@
 <%
+const OBJECTIVE_TYPES = new Set(['multiple_choice', 'tick_box', 'short_text']);
 let totalAwarded = 0;
 let totalPossible = 0;
 let pendingCount = 0;
@@ -31,17 +32,31 @@ it.bundle.questions.forEach(function(q) {
   </p>
 
   <% it.bundle.questions.forEach(function(q, idx) { %>
+    <%
+    let questionAwarded = 0;
+    let questionPossible = 0;
+    let questionPending = 0;
+    (it.bundle.partsByQuestion.get(q.id) || []).forEach(function(part) {
+      questionPossible += part.marks;
+      const aw = it.bundle.awardedByAttemptPart.get(part.id);
+      if (aw) questionAwarded += aw.marks_awarded;
+      else questionPending += 1;
+    });
+    %>
     <article class="question-card">
       <header class="question-card__meta">
         <span class="badge">Q<%= idx + 1 %></span>
         <span class="badge badge--muted"><%= q.topic_code %> · <%= q.subtopic_code %></span>
         <span class="badge badge--muted"><%= q.command_word_code %></span>
-        <span class="badge badge--muted"><%= q.marks_total %> marks</span>
+        <span class="badge">
+          Question score: <%= questionAwarded %> / <%= questionPossible %><% if (questionPending > 0) { %> · <%= questionPending %> pending<% } %>
+        </span>
       </header>
       <p class="question-card__stem"><%= q.stem %></p>
 
       <% (it.bundle.partsByQuestion.get(q.id) || []).forEach(function(part) { %>
         <% const awarded = it.bundle.awardedByAttemptPart.get(part.id); %>
+        <% const isObjective = OBJECTIVE_TYPES.has(part.expected_response_type); %>
         <div class="question-part question-part--review">
           <div class="question-part__head">
             <span class="question-part__label"><%= part.part_label %></span>
@@ -58,19 +73,24 @@ it.bundle.questions.forEach(function(q) {
             <strong>Your answer:</strong>
             <pre><%= part.raw_answer || '(blank)' %></pre>
           </div>
-          <% const markPoints = it.bundle.markPointsByPart.get(part.question_part_id) || []; %>
-          <% if (awarded && markPoints.length > 0) { %>
-            <ul class="markpoints">
-              <% markPoints.forEach(function(mp) { %>
-                <% const hit = awarded.mark_points_hit.indexOf(mp.id) !== -1; %>
-                <li class="<%= hit ? 'mp--hit' : 'mp--miss' %>">
-                  <span class="mp__status"><%= hit ? '✓' : '✗' %></span>
-                  <span class="mp__text"><%= mp.text %></span>
-                  <% if (mp.is_required) { %><span class="badge badge--muted">required</span><% } %>
-                  <span class="mp__marks">[<%= mp.marks %>]</span>
-                </li>
-              <% }); %>
-            </ul>
+          <% if (!awarded) { %>
+            <p class="pending-note">Your teacher will mark this — come back later.</p>
+          <% } else if (isObjective && awarded.marker === 'deterministic') { %>
+            <% const markPoints = it.bundle.markPointsByPart.get(part.question_part_id) || []; %>
+            <% if (markPoints.length > 0) { %>
+              <p class="markpoints__heading"><strong>Model answer:</strong></p>
+              <ul class="markpoints">
+                <% markPoints.forEach(function(mp) { %>
+                  <% const hit = awarded.mark_points_hit.indexOf(mp.id) !== -1; %>
+                  <li class="<%= hit ? 'mp--hit' : 'mp--miss' %>">
+                    <span class="mp__status"><%= hit ? '✓' : '✗' %></span>
+                    <span class="mp__text"><%= mp.text %></span>
+                    <% if (mp.is_required) { %><span class="badge badge--muted">required</span><% } %>
+                    <span class="mp__marks">[<%= mp.marks %>]</span>
+                  </li>
+                <% }); %>
+              </ul>
+            <% } %>
           <% } %>
         </div>
       <% }); %>

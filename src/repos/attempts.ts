@@ -266,7 +266,8 @@ export class AttemptRepo {
     );
 
     const { rows: awarded } = await this.pool.query<AwardedMarkRow>(
-      `SELECT am.id::text,
+      `SELECT DISTINCT ON (am.attempt_part_id)
+              am.id::text,
               am.attempt_part_id::text,
               am.marks_awarded,
               am.marks_total,
@@ -277,7 +278,8 @@ export class AttemptRepo {
          FROM awarded_marks am
          JOIN attempt_parts ap     ON ap.id = am.attempt_part_id
          JOIN attempt_questions aq ON aq.id = ap.attempt_question_id
-        WHERE aq.attempt_id = $1::bigint`,
+        WHERE aq.attempt_id = $1::bigint
+        ORDER BY am.attempt_part_id, am.created_at DESC, am.id DESC`,
       [attemptId],
     );
 
@@ -382,6 +384,129 @@ export class AttemptRepo {
     );
     return rows[0] ?? null;
   }
+
+  async listSubmittedAttemptsForClass(classId: string): Promise<SubmittedAttemptSummary[]> {
+    const { rows } = await this.pool.query<SubmittedAttemptSummary>(
+      `SELECT a.id::text,
+              a.user_id::text,
+              u.display_name AS pupil_display_name,
+              u.pseudonym AS pupil_pseudonym,
+              a.target_topic_code,
+              a.started_at,
+              a.submitted_at,
+              (SELECT COUNT(*)::int
+                 FROM attempt_parts ap
+                 JOIN attempt_questions aq ON aq.id = ap.attempt_question_id
+                WHERE aq.attempt_id = a.id) AS total_parts,
+              (SELECT COUNT(*)::int
+                 FROM attempt_parts ap
+                 JOIN attempt_questions aq ON aq.id = ap.attempt_question_id
+                WHERE aq.attempt_id = a.id
+                  AND NOT EXISTS (
+                    SELECT 1 FROM awarded_marks am WHERE am.attempt_part_id = ap.id
+                  )) AS pending_parts
+         FROM attempts a
+         JOIN users u ON u.id = a.user_id
+        WHERE a.class_id = $1::bigint
+          AND a.submitted_at IS NOT NULL
+        ORDER BY a.submitted_at DESC`,
+      [classId],
+    );
+    return rows;
+  }
+
+  async findAttemptPartContext(attemptPartId: string): Promise<AttemptPartContext | null> {
+    const { rows } = await this.pool.query<AttemptPartContext>(
+      `SELECT ap.id::text AS attempt_part_id,
+              ap.submitted_at,
+              qp.marks AS part_marks,
+              qp.expected_response_type,
+              a.id::text AS attempt_id,
+              a.user_id::text AS pupil_id,
+              a.submitted_at AS attempt_submitted_at,
+              c.id::text AS class_id,
+              c.teacher_id::text
+         FROM attempt_parts ap
+         JOIN attempt_questions aq ON aq.id = ap.attempt_question_id
+         JOIN attempts a           ON a.id  = aq.attempt_id
+         JOIN classes c            ON c.id  = a.class_id
+         JOIN question_parts qp    ON qp.id = ap.question_part_id
+        WHERE ap.id = $1::bigint`,
+      [attemptPartId],
+    );
+    return rows[0] ?? null;
+  }
+
+  async insertTeacherOverride(input: {
+    attemptPartId: string;
+    teacherId: string;
+    marksAwarded: number;
+    marksTotal: number;
+    reason: string;
+  }): Promise<{ awardedMarkId: string }> {
+    const client = await this.pool.connect();
+    try {
+      await client.query('BEGIN');
+      const awarded = await client.query<{ id: string }>(
+        `INSERT INTO awarded_marks
+           (attempt_part_id, marks_awarded, marks_total,
+            mark_points_hit, mark_points_missed, marker, moderation_status)
+         VALUES ($1::bigint, $2, $3, '{}'::bigint[], '{}'::bigint[],
+                 'teacher_override', 'not_required')
+         RETURNING id::text`,
+        [input.attemptPartId, input.marksAwarded, input.marksTotal],
+      );
+      const awardedMarkId = awarded.rows[0]!.id;
+      await client.query(
+        `INSERT INTO teacher_overrides
+           (awarded_mark_id, teacher_id, new_marks_awarded, reason)
+         VALUES ($1::bigint, $2::bigint, $3, $4)`,
+        [awardedMarkId, input.teacherId, input.marksAwarded, input.reason],
+      );
+      await client.query('COMMIT');
+      return { awardedMarkId };
+    } catch (err) {
+      await safeRollback(client);
+      throw err;
+    } finally {
+      client.release();
+    }
+  }
+
+  async countOverridesForPart(attemptPartId: string): Promise<number> {
+    const { rows } = await this.pool.query<{ c: string }>(
+      `SELECT COUNT(*)::text AS c
+         FROM teacher_overrides tov
+         JOIN awarded_marks am ON am.id = tov.awarded_mark_id
+        WHERE am.attempt_part_id = $1::bigint`,
+      [attemptPartId],
+    );
+    return Number(rows[0]?.c ?? '0');
+  }
+}
+
+export interface SubmittedAttemptSummary {
+  id: string;
+  user_id: string;
+  pupil_display_name: string;
+  pupil_pseudonym: string;
+  target_topic_code: string | null;
+  started_at: Date;
+  submitted_at: Date;
+  total_parts: number;
+  pending_parts: number;
+}
+
+export interface AttemptPartContext {
+  attempt_part_id: string;
+  submitted_at: Date | null;
+  part_marks: number;
+  expected_response_type: string;
+  attempt_id: string;
+  pupil_id: string;
+  attempt_submitted_at: Date | null;
+  class_id: string;
+  teacher_id: string;
 }
 
 async function safeRollback(client: PoolClient): Promise<void> {
