@@ -214,6 +214,110 @@ a:hover {
   align-items: center;
 }
 
+/* Dashboard grid */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--space-4);
+}
+.dashboard-card {
+  background: var(--color-surface-0);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.dashboard-card--wide {
+  grid-column: 1 / -1;
+}
+.dashboard-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+.dashboard-card__header h2 {
+  margin: 0;
+  font-size: var(--type-h3);
+}
+.dashboard-card__count {
+  background: var(--color-surface-1);
+  color: var(--color-ink-2);
+  border-radius: 999px;
+  padding: 0 var(--space-2);
+  font-size: var(--type-small);
+  min-width: 1.5rem;
+  text-align: center;
+}
+.dashboard-card__footer {
+  margin-top: auto;
+  font-size: var(--type-small);
+}
+.dashboard-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.dashboard-list__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--color-border);
+}
+.dashboard-list__item:last-child {
+  border-bottom: 0;
+}
+.dashboard-list__primary {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.dashboard-list__meta {
+  color: var(--color-ink-3);
+  font-size: var(--type-small);
+}
+.dashboard-topics {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--space-2);
+}
+.dashboard-topics__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+.dashboard-topics__label {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.dashboard-topics__code {
+  color: var(--color-ink-3);
+  font-family: var(--font-mono);
+  font-size: var(--type-small);
+}
+.dashboard-topics__title {
+  color: var(--color-ink-1);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* Footer */
 .site-footer {
   border-top: 1px solid var(--color-border);

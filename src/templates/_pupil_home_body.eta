@@ -1,0 +1,118 @@
+<%
+function fmt(d) {
+  return d ? d.toISOString().slice(0, 16).replace('T', ' ') : '';
+}
+%>
+<%~ include('_page_header', {
+  heading: 'Welcome back, ' + (it.currentUser.display_name || it.currentUser.pseudonym || 'pupil'),
+  subtitle: 'Pick up where you left off, or start a fresh topic.',
+}) %>
+
+<section class="dashboard-grid">
+  <article class="dashboard-card" aria-labelledby="dash-in-progress">
+    <header class="dashboard-card__header">
+      <h2 id="dash-in-progress">In progress</h2>
+      <span class="dashboard-card__count"><%= it.inProgress.length %></span>
+    </header>
+    <% if (it.inProgress.length === 0) { %>
+      <p class="empty">No attempts in progress. Start one below.</p>
+    <% } else { %>
+      <ul class="dashboard-list">
+        <% it.inProgress.forEach(function(a) { %>
+          <li class="dashboard-list__item">
+            <div class="dashboard-list__primary">
+              <strong><%= a.topic_title || a.target_topic_code || 'Mixed revision' %></strong>
+              <span class="dashboard-list__meta">started <%= fmt(a.started_at) %></span>
+            </div>
+            <a class="btn btn--primary btn--sm" href="/attempts/<%= a.id %>">Resume</a>
+          </li>
+        <% }); %>
+      </ul>
+    <% } %>
+  </article>
+
+  <article class="dashboard-card" aria-labelledby="dash-awaiting">
+    <header class="dashboard-card__header">
+      <h2 id="dash-awaiting">Awaiting marking</h2>
+      <span class="dashboard-card__count"><%= it.awaitingMarking.length %></span>
+    </header>
+    <% if (it.awaitingMarking.length === 0) { %>
+      <p class="empty">Nothing awaiting marking.</p>
+    <% } else { %>
+      <ul class="dashboard-list">
+        <% it.awaitingMarking.forEach(function(a) { %>
+          <li class="dashboard-list__item">
+            <div class="dashboard-list__primary">
+              <strong><%= a.topic_title || a.target_topic_code || 'Mixed revision' %></strong>
+              <span class="dashboard-list__meta">
+                submitted <%= fmt(a.submitted_at) %> · <%= a.pending_parts %> part<%= a.pending_parts === 1 ? '' : 's' %> pending
+              </span>
+            </div>
+            <a class="btn btn--secondary btn--sm" href="/attempts/<%= a.id %>">View</a>
+          </li>
+        <% }); %>
+      </ul>
+    <% } %>
+  </article>
+
+  <article class="dashboard-card" aria-labelledby="dash-recent">
+    <header class="dashboard-card__header">
+      <h2 id="dash-recent">Recently reviewed</h2>
+      <span class="dashboard-card__count"><%= it.recentlyReviewed.length %></span>
+    </header>
+    <% if (it.recentlyReviewed.length === 0) { %>
+      <p class="empty">Finished attempts will appear here.</p>
+    <% } else { %>
+      <ul class="dashboard-list">
+        <% it.recentlyReviewed.forEach(function(a) { %>
+          <li class="dashboard-list__item">
+            <div class="dashboard-list__primary">
+              <strong><%= a.topic_title || a.target_topic_code || 'Mixed revision' %></strong>
+              <span class="dashboard-list__meta">
+                <%= a.marks_awarded %> / <%= a.marks_total %> · <%= fmt(a.submitted_at) %>
+              </span>
+            </div>
+            <a class="btn btn--secondary btn--sm" href="/attempts/<%= a.id %>">Review</a>
+          </li>
+        <% }); %>
+      </ul>
+    <% } %>
+    <% if (it.recentlyReviewed.length > 0) { %>
+      <footer class="dashboard-card__footer">
+        <a href="/me/attempts">See all attempts →</a>
+      </footer>
+    <% } %>
+  </article>
+
+  <article class="dashboard-card dashboard-card--wide" aria-labelledby="dash-topics">
+    <header class="dashboard-card__header">
+      <h2 id="dash-topics">Your topics</h2>
+      <span class="dashboard-card__count"><%= it.topics.length %></span>
+    </header>
+    <% if (it.topics.length === 0) { %>
+      <p class="empty">No topics have been assigned to your class yet.</p>
+    <% } else { %>
+      <ul class="dashboard-topics">
+        <% it.topics.forEach(function(t) { %>
+          <li class="dashboard-topics__item">
+            <div class="dashboard-topics__label">
+              <span class="dashboard-topics__code"><%= t.topic_code %></span>
+              <span class="dashboard-topics__title"><%= t.topic_title %></span>
+            </div>
+            <% if (t.in_progress_attempt_id) { %>
+              <a class="btn btn--secondary btn--sm" href="/attempts/<%= t.in_progress_attempt_id %>">Resume</a>
+            <% } else { %>
+              <form method="post" action="/topics/<%= encodeURIComponent(t.topic_code) %>/start" class="inline-form">
+                <input type="hidden" name="_csrf" value="<%= it.csrfToken %>" />
+                <button type="submit" class="btn btn--primary btn--sm">Start</button>
+              </form>
+            <% } %>
+          </li>
+        <% }); %>
+      </ul>
+    <% } %>
+    <footer class="dashboard-card__footer">
+      <a href="/topics">Browse all topics →</a>
+    </footer>
+  </article>
+</section>

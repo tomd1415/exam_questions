@@ -172,10 +172,32 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
     };
   });
 
-  app.get('/', (req, reply) => {
+  app.get('/', async (req, reply) => {
     const user = req.currentUser;
     if (!user) return reply.redirect('/login');
-    if (user.role === 'pupil') return reply.redirect('/topics');
+    if (user.role === 'pupil') {
+      const actor = { id: user.id, role: 'pupil' as const };
+      const [attempts, topics] = await Promise.all([
+        app.services.attempts.listAttemptsForPupil(actor),
+        app.services.attempts.listTopicsForPupil(actor),
+      ]);
+      const inProgress = attempts.filter((a) => a.submitted_at === null);
+      const awaitingMarking = attempts.filter(
+        (a) => a.submitted_at !== null && a.pending_parts > 0,
+      );
+      const recentlyReviewed = attempts
+        .filter((a) => a.submitted_at !== null && a.pending_parts === 0)
+        .slice(0, 5);
+      return reply.view('pupil_home.eta', {
+        title: 'Home',
+        currentUser: user,
+        csrfToken: reply.generateCsrf(),
+        inProgress,
+        awaitingMarking,
+        recentlyReviewed,
+        topics,
+      });
+    }
     return reply.redirect('/admin/classes');
   });
 
