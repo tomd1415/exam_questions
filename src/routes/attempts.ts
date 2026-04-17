@@ -340,10 +340,17 @@ function readAnswerFields(
   const out: { attemptPartId: string; rawAnswer: string }[] = [];
   for (const [key, value] of Object.entries(body)) {
     if (!key.startsWith('part_')) continue;
-    if (typeof value !== 'string') continue;
     const id = key.slice('part_'.length);
     if (!/^\d+$/.test(id)) continue;
-    out.push({ attemptPartId: id, rawAnswer: value });
+    let raw: string;
+    if (typeof value === 'string') {
+      raw = value;
+    } else if (Array.isArray(value) && value.every((v) => typeof v === 'string')) {
+      raw = value.join('\n');
+    } else {
+      continue;
+    }
+    out.push({ attemptPartId: id, rawAnswer: raw });
   }
   return out;
 }

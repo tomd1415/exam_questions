@@ -196,7 +196,7 @@ describe('Full topic-set flow: start → save → reopen → submit → review',
       headers: { cookie: cookieHeader(jar) },
     });
     expect(reopen.statusCode).toBe(200);
-    expect(reopen.payload).toContain('>CPU</textarea>');
+    expect(reopen.payload).toMatch(/type="radio"[\s\S]*?value="CPU"[\s\S]*?checked/);
     updateJar(jar, reopen);
 
     // Submit

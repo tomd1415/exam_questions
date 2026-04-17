@@ -1,0 +1,116 @@
+<%
+// Dispatcher for pupil-facing input widgets on the paper edit view.
+// `it.part` is an AttemptPartRow, `it.markPoints` is the list of
+// AttemptPartMarkPointRow rows for the owning question_part (already
+// loaded on the bundle — see AttemptBundle.markPointsByPart).
+// Every widget writes to a single form field named `part_<id>` and is
+// responsible for serialising whatever the user does into one
+// `raw_answer` string.
+const part = it.part;
+const markPoints = it.markPoints || [];
+const fieldName = 'part_' + part.id;
+const prior = part.raw_answer || '';
+const priorLines = prior.length > 0 ? prior.split('\n') : [];
+const tickedSet = new Set(priorLines.map(function(s) { return s.trim(); }));
+const t = part.expected_response_type;
+%>
+<% if (t === 'multiple_choice') { %>
+  <fieldset class="widget widget--mc" aria-describedby="marks-<%= part.id %>">
+    <legend class="sr-only">Choose one</legend>
+    <% markPoints.forEach(function(mp, i) { %>
+      <label class="widget-choice">
+        <input type="radio"
+               name="<%= fieldName %>"
+               value="<%= mp.text %>"
+               <%= prior === mp.text ? 'checked' : '' %>
+               <%= i === 0 && prior === '' ? '' : '' %> />
+        <span class="widget-choice__label"><%= mp.text %></span>
+      </label>
+    <% }); %>
+  </fieldset>
+<% } else if (t === 'tick_box') { %>
+  <fieldset class="widget widget--tick" aria-describedby="marks-<%= part.id %>">
+    <legend class="sr-only">Tick all that apply</legend>
+    <% markPoints.forEach(function(mp) { %>
+      <label class="widget-choice">
+        <input type="checkbox"
+               name="<%= fieldName %>"
+               value="<%= mp.text %>"
+               <%= tickedSet.has(mp.text) ? 'checked' : '' %> />
+        <span class="widget-choice__label"><%= mp.text %></span>
+      </label>
+    <% }); %>
+  </fieldset>
+<% } else if (t === 'short_text') { %>
+  <input class="widget widget--short"
+         type="text"
+         name="<%= fieldName %>"
+         value="<%= prior %>"
+         maxlength="200"
+         autocomplete="off"
+         spellcheck="true"
+         aria-describedby="marks-<%= part.id %>" />
+<% } else if (t === 'medium_text') { %>
+  <textarea class="widget widget--medium"
+            name="<%= fieldName %>"
+            rows="4"
+            maxlength="2000"
+            spellcheck="true"
+            autocapitalize="sentences"
+            aria-describedby="marks-<%= part.id %>"
+  ><%= prior %></textarea>
+<% } else if (t === 'extended_response') { %>
+  <% const lines = Math.min(18, Math.max(4, part.marks * 3)); %>
+  <textarea class="widget widget--extended"
+            name="<%= fieldName %>"
+            rows="<%= lines %>"
+            maxlength="5000"
+            spellcheck="true"
+            autocapitalize="sentences"
+            data-lines="<%= lines %>"
+            aria-describedby="marks-<%= part.id %>"
+  ><%= prior %></textarea>
+<% } else if (t === 'code') { %>
+  <textarea class="widget widget--code"
+            name="<%= fieldName %>"
+            rows="<%= Math.min(16, Math.max(6, part.marks * 2)) %>"
+            maxlength="5000"
+            spellcheck="false"
+            autocapitalize="none"
+            autocorrect="off"
+            aria-describedby="marks-<%= part.id %>"
+  ><%= prior %></textarea>
+<% } else if (t === 'algorithm') { %>
+  <textarea class="widget widget--algorithm"
+            name="<%= fieldName %>"
+            rows="<%= Math.min(16, Math.max(6, part.marks * 2)) %>"
+            maxlength="5000"
+            spellcheck="false"
+            autocapitalize="none"
+            autocorrect="off"
+            aria-describedby="marks-<%= part.id %>"
+  ><%= prior %></textarea>
+<% } else if (t === 'trace_table') { %>
+  <p class="widget-hint">
+    One row per line; separate columns with <code>|</code>.
+    The header row should name each variable or output column.
+  </p>
+  <textarea class="widget widget--trace-table"
+            name="<%= fieldName %>"
+            rows="<%= Math.min(14, Math.max(5, part.marks * 2)) %>"
+            maxlength="5000"
+            spellcheck="false"
+            autocapitalize="none"
+            autocorrect="off"
+            aria-describedby="marks-<%= part.id %>"
+  ><%= prior %></textarea>
+<% } else { %>
+  <textarea class="widget widget--fallback"
+            name="<%= fieldName %>"
+            rows="5"
+            maxlength="5000"
+            spellcheck="true"
+            autocapitalize="sentences"
+            aria-describedby="marks-<%= part.id %>"
+  ><%= prior %></textarea>
+<% } %>

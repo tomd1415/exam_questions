@@ -548,6 +548,42 @@ systems`), the topic code + title (e.g. `1.2: Memory and storage`),
 5. Resize the window down to a phone width; the marks gutter should
    stay legible (no overflow, no crushed textareas).
 
+### 2.B Chunk 2 — per-type input widgets
+
+> **Shipped:** pupil edit view now dispatches on
+> `question_parts.expected_response_type` to a widget-specific input.
+> `multiple_choice` → radio group, `tick_box` → checkboxes,
+> `short_text` → single-line input, `medium_text` / `extended_response`
+> → textareas (extended is lined like paper and sized from the mark
+> tariff), `code` / `algorithm` / `trace_table` → monospace
+> textarea with `spellcheck=false`. Server `readAnswerFields` now
+> accepts `string[]` so tick-box selections survive round-trip.
+
+1. Seed a question with one part of every type (or load an approved
+   set that covers them). The `tests/http/pupil-widgets.test.ts`
+   fixture is a good template.
+2. As a pupil, open the attempt and walk each part:
+   - **multiple_choice:** radio buttons labelled with the mark-point
+     text; only one is selectable; the chosen one survives a save +
+     reload.
+   - **tick_box:** checkboxes labelled with the mark-point text;
+     multiple selections survive a save + reload, and show the same
+     boxes ticked on return.
+   - **short_text:** single line `<input>`, bounded to ~32rem width.
+   - **medium_text:** 4-row textarea; spellcheck on.
+   - **extended_response:** lined textarea; row count grows with the
+     mark tariff (1-mark → 4 lines, 6-mark → 18 lines capped).
+   - **code / algorithm:** monospace, spellcheck off, no
+     auto-capitalisation. (Tab-to-indent is Chunk 7.)
+   - **trace_table:** monospace textarea with a one-line hint about
+     using `|` between columns.
+3. Submit and confirm:
+   - Objective parts (mc / tick / short) are auto-marked.
+   - Open parts (medium / extended / code / algorithm / trace_table)
+     show "Teacher to mark" on the review panel.
+4. Keyboard-only sanity pass: Tab moves through every input; no
+   widget is reachable only by mouse.
+
 ### Stub — remaining Phase 2 chunks
 
 **To be filled in when the remaining chunks ship.**

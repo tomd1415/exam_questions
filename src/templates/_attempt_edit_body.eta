@@ -55,19 +55,15 @@ const candidate = it.currentUser ? it.currentUser.pseudonym : null;
           </header>
 
           <% (it.bundle.partsByQuestion.get(q.id) || []).forEach(function(part) { %>
+            <% const mps = it.bundle.markPointsByPart.get(part.question_part_id) || []; %>
             <div class="paper-part" id="p-<%= part.id %>">
               <div class="paper-part__prompt">
                 <span class="paper-part__label"><%= part.part_label %></span>
                 <span class="paper-part__text"><%= part.prompt %></span>
               </div>
-              <span class="paper-marks-gutter">[<%= part.marks %> marks]</span>
+              <span class="paper-marks-gutter" id="marks-<%= part.id %>">[<%= part.marks %> marks]</span>
               <div class="paper-answer">
-                <textarea name="part_<%= part.id %>"
-                          rows="5"
-                          maxlength="5000"
-                          autocapitalize="sentences"
-                          spellcheck="true"
-                ><%= part.raw_answer %></textarea>
+                <%~ include('_paper_part_widget', { part: part, markPoints: mps }) %>
               </div>
             </div>
           <% }); %>
@@ -133,19 +129,15 @@ const candidate = it.currentUser ? it.currentUser.pseudonym : null;
               class="question-form">
           <input type="hidden" name="_csrf" value="<%= it.csrfToken %>" />
           <% parts.forEach(function(part) { %>
+            <% const mps = it.bundle.markPointsByPart.get(part.question_part_id) || []; %>
             <div class="paper-part" id="p-<%= part.id %>">
               <div class="paper-part__prompt">
                 <span class="paper-part__label"><%= part.part_label %></span>
                 <span class="paper-part__text"><%= part.prompt %></span>
               </div>
-              <span class="paper-marks-gutter">[<%= part.marks %> marks]</span>
+              <span class="paper-marks-gutter" id="marks-<%= part.id %>">[<%= part.marks %> marks]</span>
               <div class="paper-answer">
-                <textarea name="part_<%= part.id %>"
-                          rows="5"
-                          maxlength="5000"
-                          autocapitalize="sentences"
-                          spellcheck="true"
-                ><%= part.raw_answer %></textarea>
+                <%~ include('_paper_part_widget', { part: part, markPoints: mps }) %>
               </div>
             </div>
           <% }); %>
