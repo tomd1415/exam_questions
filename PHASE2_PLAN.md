@@ -588,30 +588,35 @@ markup arrives.
 
 See [RISKS.md](RISKS.md) §1 and §2.1 for the enduring register.
 
-## 9. Decisions to take before starting (currently open)
+## 9. Decisions taken before starting
 
-Record the resolution here (dated) before the relevant chunk starts.
+Resolved on 2026-04-17. Binding for Phase 2 unless a later chunk
+commit explicitly revisits one.
 
-1. **Paper metadata in the header.** Component code + topic name +
-   total marks are always shown. Candidate pseudonym shown too? (Leans
-   yes — it mirrors a real paper and pseudonym is already
-   pupil-visible from the nav; confirm with the teacher at Chunk 1.)
-2. **Timer default.** If a class has no timer set, the attempt has
-   no countdown. If a class has `timer_minutes = N`, all sets in
-   that class count down from N. Open question: should the pupil see
-   a "no timer" attempt differently (e.g. explicit "untimed" label)?
-   Default stance: no — a silent absence is calmer.
-3. **Autosave debounce values.** Default 20 s poll + 5 s post-typing
-   debounce. Open question: configurable per class or global?
-   Default stance: global; revisit only if the lesson test surfaces
-   a reason.
-4. **Tab-to-indent in the code widget.** Makes code entry ergonomic
-   but traps keyboard-only navigation. Mitigation: `Tab` indents
-   only when the widget has focus _and_ the user has typed; `Esc`
-   then `Tab` always leaves. Confirm in Chunk 2.
-5. **Print preview of timed sets.** Does the printed paper include
-   the timer value in the header? Default stance: yes, under "Time
-   allowed: NN minutes", mirroring OCR papers.
+1. **Paper metadata in the header.** Component code, topic name,
+   total marks, and the candidate pseudonym are all shown on the
+   paper header. Mirrors a real OCR paper; the pseudonym is already
+   pupil-visible in the nav so nothing new leaks. Implemented in
+   Chunk 1.
+2. **Untimed attempts.** When a class has no `timer_minutes`, the
+   pupil's attempt renders with no countdown widget and no "untimed"
+   label. Silent absence — calmer than an explicit badge.
+3. **Autosave debounce values.** Global, not per-class: 20 s poll +
+   5 s post-typing debounce. A per-class override is a future
+   decision only if the lesson test surfaces a reason.
+4. **Tab-to-indent in the code widget.** Approved. `Tab` indents
+   when the code widget has focus _and_ the user has already typed;
+   `Esc` then `Tab` always moves focus out. Both behaviours are
+   covered by the keyboard-navigation test in Chunk 7.
+5. **Timer on the printed paper.** The printed paper header
+   includes "Time allowed: NN minutes" when the set is timed,
+   mirroring OCR papers. Omitted entirely for untimed sets.
+
+Where these decisions affect the schema (item 2 → no schema change;
+item 1 → no schema change; the timer column itself comes in from
+Chunk 4's migration `0011_class_timer.sql`), the migration lands in
+the chunk that first needs it and is recorded in
+[DATA_MODEL.md](DATA_MODEL.md) at merge time.
 
 ## 10. Deliverables checklist (sign off before starting Phase 3)
 
@@ -631,6 +636,7 @@ Record the resolution here (dated) before the relevant chunk starts.
 
 ## Appendix — Revision history
 
-| Date       | Author | Change                                                                                                       |
-| ---------- | ------ | ------------------------------------------------------------------------------------------------------------ |
-| 2026-04-17 | TD     | First draft at the close of Phase 1. Sequencing + risks + open questions captured; chunks not yet scheduled. |
+| Date       | Author | Change                                                                                                                                                       |
+| ---------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 2026-04-17 | TD     | First draft at the close of Phase 1. Sequencing + risks + open questions captured; chunks not yet scheduled.                                                 |
+| 2026-04-17 | TD     | §9 resolved: paper header includes pseudonym; untimed attempts are silent; autosave is global; tab-to-indent with Esc escape; timer printed on timed papers. |
