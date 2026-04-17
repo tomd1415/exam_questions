@@ -198,7 +198,23 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
         topics,
       });
     }
-    return reply.redirect('/admin/classes');
+    // teacher or admin: teacher home dashboard
+    const actor = { id: user.id, role: user.role };
+    const [markingQueue, classes, pendingQuestions] = await Promise.all([
+      app.services.attempts.listMarkingQueueForTeacher(actor),
+      app.services.classes.listClassesFor(actor),
+      app.repos.questions.listQuestions({ approvalStatus: 'pending_review' }),
+    ]);
+    return reply.view('teacher_home.eta', {
+      title: 'Home',
+      currentUser: user,
+      csrfToken: reply.generateCsrf(),
+      markingQueue: markingQueue.slice(0, 5),
+      markingQueueTotal: markingQueue.length,
+      classes,
+      pendingQuestions: pendingQuestions.slice(0, 5),
+      pendingQuestionsTotal: pendingQuestions.length,
+    });
   });
 
   registerAuthRoutes(app);

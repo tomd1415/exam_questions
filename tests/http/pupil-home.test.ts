@@ -72,7 +72,7 @@ describe('pupil home dashboard (Chunk 6d)', () => {
     expect(res.headers.location).toBe('/login');
   });
 
-  it('teacher / still redirects to /admin/classes', async () => {
+  it('teacher / renders the teacher dashboard, not a redirect', async () => {
     const teacher = await createUser(getSharedPool(), { role: 'teacher' });
     const jar = await loginAs(teacher);
     const res = await app.inject({
@@ -80,8 +80,8 @@ describe('pupil home dashboard (Chunk 6d)', () => {
       url: '/',
       headers: { cookie: cookieHeader(jar) },
     });
-    expect(res.statusCode).toBe(302);
-    expect(res.headers.location).toBe('/admin/classes');
+    expect(res.statusCode).toBe(200);
+    expect(res.payload).toContain('Teacher dashboard');
   });
 
   it('pupil with no attempts and no topics sees empty-state dashboard', async () => {

@@ -1,0 +1,98 @@
+<%
+function fmt(d) {
+  return d ? d.toISOString().slice(0, 16).replace('T', ' ') : '';
+}
+const role = it.currentUser.role;
+const greeting = role === 'admin' ? 'Admin dashboard' : 'Teacher dashboard';
+%>
+<%~ include('_page_header', {
+  heading: greeting,
+  subtitle: 'Marking queue, pending approvals, and your classes at a glance.',
+}) %>
+
+<section class="dashboard-grid">
+  <article class="dashboard-card" aria-labelledby="dash-queue">
+    <header class="dashboard-card__header">
+      <h2 id="dash-queue">Marking queue</h2>
+      <span class="dashboard-card__count"><%= it.markingQueueTotal %></span>
+    </header>
+    <% if (it.markingQueue.length === 0) { %>
+      <p class="empty">Nothing awaiting marking.</p>
+    <% } else { %>
+      <ul class="dashboard-list">
+        <% it.markingQueue.forEach(function(a) { %>
+          <li class="dashboard-list__item">
+            <div class="dashboard-list__primary">
+              <strong><%= a.pupil_display_name %></strong>
+              <span class="dashboard-list__meta">
+                <%= a.class_name %> · <%= a.target_topic_code || 'mixed' %> · <%= a.pending_parts %> pending · submitted <%= fmt(a.submitted_at) %>
+              </span>
+            </div>
+            <a class="btn btn--primary btn--sm" href="/admin/attempts/<%= a.id %>">Mark</a>
+          </li>
+        <% }); %>
+      </ul>
+    <% } %>
+    <% if (it.markingQueueTotal > it.markingQueue.length) { %>
+      <footer class="dashboard-card__footer">
+        <a href="/admin/attempts">See all <%= it.markingQueueTotal %> →</a>
+      </footer>
+    <% } %>
+  </article>
+
+  <article class="dashboard-card" aria-labelledby="dash-approvals">
+    <header class="dashboard-card__header">
+      <h2 id="dash-approvals">Pending approvals</h2>
+      <span class="dashboard-card__count"><%= it.pendingQuestionsTotal %></span>
+    </header>
+    <% if (it.pendingQuestions.length === 0) { %>
+      <p class="empty">No questions awaiting review.</p>
+    <% } else { %>
+      <ul class="dashboard-list">
+        <% it.pendingQuestions.forEach(function(q) { %>
+          <li class="dashboard-list__item">
+            <div class="dashboard-list__primary">
+              <strong>#<%= q.id %> · <%= q.topic_code %></strong>
+              <span class="dashboard-list__meta">
+                <%= q.marks_total %> marks · by <%= q.created_by_display_name %>
+              </span>
+            </div>
+            <a class="btn btn--secondary btn--sm" href="/admin/questions/<%= q.id %>">Review</a>
+          </li>
+        <% }); %>
+      </ul>
+    <% } %>
+    <% if (it.pendingQuestionsTotal > it.pendingQuestions.length) { %>
+      <footer class="dashboard-card__footer">
+        <a href="/admin/questions?approval_status=pending_review">See all <%= it.pendingQuestionsTotal %> →</a>
+      </footer>
+    <% } %>
+  </article>
+
+  <article class="dashboard-card dashboard-card--wide" aria-labelledby="dash-classes">
+    <header class="dashboard-card__header">
+      <h2 id="dash-classes">Your classes</h2>
+      <span class="dashboard-card__count"><%= it.classes.length %></span>
+    </header>
+    <% if (it.classes.length === 0) { %>
+      <p class="empty">No classes yet. <a href="/admin/classes/new">Create one →</a></p>
+    <% } else { %>
+      <ul class="dashboard-topics">
+        <% it.classes.forEach(function(c) { %>
+          <li class="dashboard-topics__item">
+            <div class="dashboard-topics__label">
+              <span class="dashboard-topics__title"><%= c.name %></span>
+              <span class="dashboard-topics__code">
+                <%= c.academic_year %><% if (!c.active) { %> · inactive<% } %><% if (c.teacher_display_name) { %> · <%= c.teacher_display_name %><% } %>
+              </span>
+            </div>
+            <a class="btn btn--secondary btn--sm" href="/admin/classes/<%= c.id %>">Open</a>
+          </li>
+        <% }); %>
+      </ul>
+    <% } %>
+    <footer class="dashboard-card__footer">
+      <a href="/admin/classes">All classes →</a>
+    </footer>
+  </article>
+</section>
