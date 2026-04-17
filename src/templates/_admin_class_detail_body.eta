@@ -14,6 +14,30 @@
     <p class="flash flash--ok" role="status"><%= it.flash %></p>
   <% } %>
 
+  <h2>Countdown timer</h2>
+  <p class="admin-card__sub">
+    <% if (it.cls.timer_minutes) { %>
+      Pupils starting a new attempt in this class will see a
+      <strong><%= it.cls.timer_minutes %>-minute</strong> countdown.
+    <% } else { %>
+      No timer is set. Pupils can take as long as they like.
+    <% } %>
+  </p>
+  <form method="post" action="/admin/classes/<%= it.cls.id %>/timer" class="admin-form admin-form--inline">
+    <input type="hidden" name="_csrf" value="<%= it.csrfToken %>" />
+    <label>
+      <span>Minutes (1–180, leave blank to turn off)</span>
+      <input type="number"
+             name="timer_minutes"
+             min="1"
+             max="180"
+             step="1"
+             inputmode="numeric"
+             value="<%= it.cls.timer_minutes === null ? '' : it.cls.timer_minutes %>" />
+    </label>
+    <button type="submit">Save timer</button>
+  </form>
+
   <h2>Enrol a pupil</h2>
   <form method="post" action="/admin/classes/<%= it.cls.id %>/enrol" class="admin-form admin-form--inline">
     <input type="hidden" name="_csrf" value="<%= it.csrfToken %>" />

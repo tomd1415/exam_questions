@@ -183,10 +183,45 @@
 .paper-actions {
   display: flex;
   gap: 0.75rem;
+  align-items: center;
   justify-content: flex-end;
   margin-top: 1.25rem;
   padding-top: 1rem;
   border-top: 2px solid var(--paper-sep);
+}
+
+.autosave-status {
+  font-size: 0.85rem;
+  color: var(--paper-muted, #666);
+  min-width: 10ch;
+  text-align: right;
+}
+.autosave-status[data-state='error'] {
+  color: #a33;
+}
+
+.paper-timer {
+  display: inline-block;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  padding: 0.1rem 0.4rem;
+  border: 1px solid var(--paper-rule, #bbb);
+  border-radius: 0.25rem;
+  background: #fff;
+}
+.paper-timer--warn {
+  background: #fff4d6;
+  border-color: #e0a800;
+}
+.paper-timer--critical {
+  background: #ffe4e4;
+  border-color: #c33;
+  color: #a00;
+}
+.paper-timer--over {
+  background: #c33;
+  border-color: #a00;
+  color: #fff;
 }
 
 /* --- Per-type widgets --------------------------------------------------- */

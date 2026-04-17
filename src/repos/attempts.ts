@@ -15,6 +15,8 @@ export interface AttemptRow {
   submitted_at: Date | null;
   target_topic_code: string | null;
   reveal_mode: 'per_question' | 'whole_attempt';
+  timer_minutes: number | null;
+  elapsed_seconds: number | null;
 }
 
 export interface AttemptQuestionRow {
@@ -153,6 +155,7 @@ export class AttemptRepo {
     topicCode: string;
     limit: number;
     revealMode: 'per_question' | 'whole_attempt';
+    timerMinutes: number | null;
   }): Promise<{ attemptId: string; questionCount: number } | { error: 'no_questions' }> {
     const client = await this.pool.connect();
     try {
@@ -174,10 +177,10 @@ export class AttemptRepo {
       }
 
       const attempt = await client.query<{ id: string }>(
-        `INSERT INTO attempts (user_id, class_id, mode, target_topic_code, reveal_mode)
-           VALUES ($1::bigint, $2::bigint, 'topic_set', $3, $4)
+        `INSERT INTO attempts (user_id, class_id, mode, target_topic_code, reveal_mode, timer_minutes)
+           VALUES ($1::bigint, $2::bigint, 'topic_set', $3, $4, $5)
          RETURNING id::text`,
-        [input.userId, input.classId, input.topicCode, input.revealMode],
+        [input.userId, input.classId, input.topicCode, input.revealMode, input.timerMinutes],
       );
       const attemptId = attempt.rows[0]!.id;
 
@@ -251,7 +254,8 @@ export class AttemptRepo {
   async findAttemptHeader(attemptId: string): Promise<AttemptRow | null> {
     const { rows } = await this.pool.query<AttemptRow>(
       `SELECT id::text, user_id::text, class_id::text, mode,
-              started_at, submitted_at, target_topic_code, reveal_mode
+              started_at, submitted_at, target_topic_code, reveal_mode,
+              timer_minutes, elapsed_seconds
          FROM attempts
         WHERE id = $1::bigint`,
       [attemptId],
@@ -503,16 +507,17 @@ export class AttemptRepo {
     return rows;
   }
 
-  async markSubmitted(attemptId: string): Promise<void> {
+  async markSubmitted(attemptId: string, elapsedSeconds: number | null = null): Promise<void> {
     const client = await this.pool.connect();
     try {
       await client.query('BEGIN');
       await client.query(
         `UPDATE attempts
-            SET submitted_at = now()
+            SET submitted_at = now(),
+                elapsed_seconds = COALESCE($2::int, elapsed_seconds)
           WHERE id = $1::bigint
             AND submitted_at IS NULL`,
-        [attemptId],
+        [attemptId, elapsedSeconds],
       );
       await client.query(
         `UPDATE attempt_parts
@@ -578,6 +583,8 @@ export class AttemptRepo {
               a.target_topic_code,
               a.started_at,
               a.submitted_at,
+              a.timer_minutes,
+              a.elapsed_seconds,
               (SELECT COUNT(*)::int
                  FROM attempt_parts ap
                  JOIN attempt_questions aq ON aq.id = ap.attempt_question_id
@@ -679,6 +686,8 @@ export interface SubmittedAttemptSummary {
   submitted_at: Date;
   total_parts: number;
   pending_parts: number;
+  timer_minutes: number | null;
+  elapsed_seconds: number | null;
 }
 
 export interface PupilAttemptSummary {

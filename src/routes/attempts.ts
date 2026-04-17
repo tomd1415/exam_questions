@@ -7,7 +7,12 @@ const StartBody = z.object({ _csrf: z.string().min(1) });
 
 const SaveBody = z.object({ _csrf: z.string().min(1) }).passthrough();
 
-const SubmitBody = z.object({ _csrf: z.string().min(1) });
+const AutosaveBody = z.object({ raw_answer: z.string().max(5000) });
+
+const SubmitBody = z.object({
+  _csrf: z.string().min(1),
+  elapsed_seconds: z.string().trim().optional(),
+});
 
 const SelfMarkBody = z.object({
   _csrf: z.string().min(1),
@@ -226,11 +231,12 @@ export function registerAttemptRoutes(app: FastifyInstance): void {
 
     const fullBody = (req.body ?? {}) as Record<string, unknown>;
     const answers = readAnswerFields(fullBody);
+    const elapsed = parseElapsedSeconds(parsed.data.elapsed_seconds);
     try {
       if (answers.length > 0) {
         await app.services.attempts.saveAnswer(actor, String(params.data.id), answers);
       }
-      await app.services.attempts.submitAttempt(actor, String(params.data.id));
+      await app.services.attempts.submitAttempt(actor, String(params.data.id), elapsed);
       return reply.redirect(`/attempts/${params.data.id}`);
     } catch (err) {
       if (err instanceof AttemptAccessError) {
@@ -257,13 +263,19 @@ export function registerAttemptRoutes(app: FastifyInstance): void {
 
       const fullBody = (req.body ?? {}) as Record<string, unknown>;
       const answers = readAnswerFields(fullBody);
+      const elapsed = parseElapsedSeconds(parsed.data.elapsed_seconds);
       const attemptIdStr = String(params.data.id);
       const qidStr = String(params.data.qid);
       try {
         if (answers.length > 0) {
           await app.services.attempts.saveAnswer(actor, attemptIdStr, answers);
         }
-        const result = await app.services.attempts.submitQuestion(actor, attemptIdStr, qidStr);
+        const result = await app.services.attempts.submitQuestion(
+          actor,
+          attemptIdStr,
+          qidStr,
+          elapsed,
+        );
         const msg = result.attemptFullySubmitted
           ? 'All questions submitted.'
           : `Question submitted. ${result.pendingParts > 0 ? 'Some parts are waiting for teacher marking.' : ''}`.trim();
@@ -280,6 +292,38 @@ export function registerAttemptRoutes(app: FastifyInstance): void {
             return reply.redirect(`/attempts/${params.data.id}`);
           }
           return reply.code(403).send('Forbidden');
+        }
+        throw err;
+      }
+    },
+  );
+
+  app.post(
+    '/attempts/:id/parts/:pid/autosave',
+    { preValidation: csrfPreValidation },
+    async (req, reply) => {
+      const actor = requirePupil(req, reply);
+      if (!actor) return reply;
+      const params = AttemptPartParams.safeParse(req.params);
+      if (!params.success) return reply.code(404).send({ ok: false, error: 'not_found' });
+      const parsed = AutosaveBody.safeParse(req.body);
+      if (!parsed.success) return reply.code(400).send({ ok: false, error: 'bad_request' });
+      try {
+        const { savedAt } = await app.services.attempts.savePartOne(
+          actor,
+          String(params.data.pid),
+          parsed.data.raw_answer,
+        );
+        return reply.send({ ok: true, saved_at: savedAt.toISOString() });
+      } catch (err) {
+        if (err instanceof AttemptAccessError) {
+          if (err.reason === 'not_found') {
+            return reply.code(404).send({ ok: false, error: 'not_found' });
+          }
+          if (err.reason === 'already_submitted') {
+            return reply.code(409).send({ ok: false, error: 'already_submitted' });
+          }
+          return reply.code(403).send({ ok: false, error: err.reason });
         }
         throw err;
       }
@@ -353,6 +397,16 @@ function readAnswerFields(
     out.push({ attemptPartId: id, rawAnswer: raw });
   }
   return out;
+}
+
+function parseElapsedSeconds(raw: string | undefined): number | null {
+  if (!raw) return null;
+  const trimmed = raw.trim();
+  if (trimmed.length === 0) return null;
+  if (!/^\d+$/.test(trimmed)) return null;
+  const n = Number(trimmed);
+  if (!Number.isFinite(n) || n < 0) return null;
+  return n;
 }
 
 function readQueryFlash(req: FastifyRequest): string | null {

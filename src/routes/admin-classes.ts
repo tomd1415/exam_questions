@@ -26,6 +26,11 @@ const RemoveTopicBody = z.object({
   _csrf: z.string().min(1),
 });
 
+const TimerBody = z.object({
+  _csrf: z.string().min(1),
+  timer_minutes: z.string().trim().optional(),
+});
+
 const IdParams = z.object({ id: z.coerce.number().int().positive() });
 const EnrolmentParams = z.object({
   id: z.coerce.number().int().positive(),
@@ -240,6 +245,48 @@ export function registerAdminClassRoutes(app: FastifyInstance): void {
       }
     },
   );
+
+  app.post('/admin/classes/:id/timer', { preValidation: csrfPreValidation }, async (req, reply) => {
+    const actor = requireTeacherOrAdmin(req, reply);
+    if (!actor) return reply;
+    const params = IdParams.safeParse(req.params);
+    if (!params.success) return reply.code(404).send('Not found');
+    const parsed = TimerBody.safeParse(req.body);
+    if (!parsed.success) return reply.code(400).send('Bad request');
+
+    const raw = parsed.data.timer_minutes?.trim() ?? '';
+    let minutes: number | null = null;
+    if (raw.length > 0) {
+      if (!/^\d+$/.test(raw)) {
+        return reply.redirect(
+          `/admin/classes/${params.data.id}?flash=${encodeURIComponent(
+            'Timer must be a whole number of minutes between 1 and 180.',
+          )}`,
+        );
+      }
+      minutes = Number(raw);
+    }
+    try {
+      await app.services.classes.setClassTimer(actor, String(params.data.id), minutes);
+      const msg =
+        minutes === null
+          ? 'Countdown timer removed.'
+          : `Countdown timer set to ${minutes} minutes.`;
+      return reply.redirect(`/admin/classes/${params.data.id}?flash=${encodeURIComponent(msg)}`);
+    } catch (err) {
+      if (err instanceof ClassAccessError) {
+        if (err.reason === 'invalid_timer') {
+          return reply.redirect(
+            `/admin/classes/${params.data.id}?flash=${encodeURIComponent(
+              'Timer must be between 1 and 180 minutes.',
+            )}`,
+          );
+        }
+        return reply.code(403).send('Forbidden');
+      }
+      throw err;
+    }
+  });
 
   app.post(
     '/admin/classes/:id/topics/:topicCode/remove',

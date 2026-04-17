@@ -7,6 +7,7 @@ export interface ClassRow {
   academic_year: string;
   active: boolean;
   topic_set_size: number;
+  timer_minutes: number | null;
   created_at: Date;
   updated_at: Date;
 }
@@ -40,6 +41,7 @@ const CLASS_COLUMNS = `
   academic_year,
   active,
   topic_set_size,
+  timer_minutes,
   created_at,
   updated_at
 `;
@@ -201,9 +203,13 @@ export class ClassRepo {
   async findClassForPupilAndTopic(
     pupilId: string,
     topicCode: string,
-  ): Promise<{ class_id: string; topic_set_size: number } | null> {
-    const { rows } = await this.pool.query<{ class_id: string; topic_set_size: number }>(
-      `SELECT c.id::text AS class_id, c.topic_set_size
+  ): Promise<{ class_id: string; topic_set_size: number; timer_minutes: number | null } | null> {
+    const { rows } = await this.pool.query<{
+      class_id: string;
+      topic_set_size: number;
+      timer_minutes: number | null;
+    }>(
+      `SELECT c.id::text AS class_id, c.topic_set_size, c.timer_minutes
          FROM classes c
          JOIN enrolments e            ON e.class_id = c.id
          JOIN class_assigned_topics t ON t.class_id = c.id
@@ -211,6 +217,18 @@ export class ClassRepo {
         ORDER BY c.id
         LIMIT 1`,
       [pupilId, topicCode],
+    );
+    return rows[0] ?? null;
+  }
+
+  async updateClassTimer(classId: string, minutes: number | null): Promise<ClassRow | null> {
+    const { rows } = await this.pool.query<ClassRow>(
+      `UPDATE classes
+          SET timer_minutes = $2,
+              updated_at    = now()
+        WHERE id = $1::bigint
+        RETURNING ${CLASS_COLUMNS}`,
+      [classId, minutes],
     );
     return rows[0] ?? null;
   }

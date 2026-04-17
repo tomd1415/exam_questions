@@ -1,3 +1,4 @@
 <%
 const body = include('_attempt_edit_body', it);
-%><%~ include('_chrome', { ...it, body, currentUser: it.currentUser }) %>
+const timerEnabled = it.bundle && it.bundle.attempt && it.bundle.attempt.timer_minutes;
+%><%~ include('_chrome', { ...it, body, currentUser: it.currentUser, autosaveEnabled: true, timerEnabled: !!timerEnabled }) %>

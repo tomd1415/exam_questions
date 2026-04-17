@@ -24,5 +24,11 @@
     <main class="site-main">
       <%~ it.body %>
     </main>
+    <% if (it.autosaveEnabled) { %>
+      <script src="/static/autosave.js" defer></script>
+    <% } %>
+    <% if (it.timerEnabled) { %>
+      <script src="/static/timer.js" defer></script>
+    <% } %>
   </body>
 </html>

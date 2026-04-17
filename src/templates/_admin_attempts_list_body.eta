@@ -20,6 +20,7 @@
           <th>Pupil</th>
           <th>Topic</th>
           <th>Submitted</th>
+          <th>Elapsed</th>
           <th>Parts marked</th>
           <th></th>
         </tr>
@@ -27,10 +28,20 @@
       <tbody>
         <% it.attempts.forEach(function(a) { %>
           <% const marked = a.total_parts - a.pending_parts; %>
+          <%
+            let elapsedCell = '—';
+            if (a.elapsed_seconds !== null && a.elapsed_seconds !== undefined) {
+              const mm = Math.floor(a.elapsed_seconds / 60);
+              const ss = a.elapsed_seconds % 60;
+              elapsedCell = String(mm).padStart(2, '0') + ':' + String(ss).padStart(2, '0');
+              if (a.timer_minutes) elapsedCell += ' / ' + a.timer_minutes + ':00';
+            }
+          %>
           <tr<% if (a.pending_parts > 0) { %> class="row--pending"<% } %>>
             <td><%= a.pupil_display_name %> <span class="muted">(<%= a.pupil_pseudonym %>)</span></td>
             <td><%= a.target_topic_code || '—' %></td>
             <td><%= a.submitted_at.toISOString().slice(0, 16).replace('T', ' ') %></td>
+            <td><%= elapsedCell %></td>
             <td>
               <%= marked %> / <%= a.total_parts %>
               <% if (a.pending_parts > 0) { %>

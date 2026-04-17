@@ -6,6 +6,10 @@ let submittedCount = 0;
 it.bundle.questions.forEach(function(q) { if (q.submitted_at) submittedCount += 1; });
 const paper = it.bundle.paper;
 const candidate = it.currentUser ? it.currentUser.pseudonym : null;
+const timerMinutes = it.bundle.attempt.timer_minutes;
+const timerStartedAt = it.bundle.attempt.started_at instanceof Date
+  ? it.bundle.attempt.started_at.toISOString()
+  : it.bundle.attempt.started_at;
 %>
 <section class="paper-root" aria-label="Question paper">
   <header class="paper-header">
@@ -34,6 +38,19 @@ const candidate = it.currentUser ? it.currentUser.pseudonym : null;
         <dt>Mode</dt>
         <dd><%= perQuestion ? 'one question at a time' : 'whole attempt' %></dd>
       </div>
+      <% if (timerMinutes) { %>
+        <div>
+          <dt>Timer</dt>
+          <dd>
+            <span class="paper-timer"
+                  id="paper-timer"
+                  data-timer-minutes="<%= timerMinutes %>"
+                  data-timer-started-at="<%= timerStartedAt %>">
+              <%= timerMinutes %>:00
+            </span>
+          </dd>
+        </div>
+      <% } %>
     </dl>
   </header>
 
@@ -44,6 +61,7 @@ const candidate = it.currentUser ? it.currentUser.pseudonym : null;
   <% if (!perQuestion) { %>
     <form method="post" action="/attempts/<%= it.bundle.attempt.id %>/save" class="question-form">
       <input type="hidden" name="_csrf" value="<%= it.csrfToken %>" />
+      <input type="hidden" name="elapsed_seconds" value="" data-elapsed-input />
       <% it.bundle.questions.forEach(function(q, idx) { %>
         <article class="paper-question" id="q-<%= q.id %>">
           <header class="paper-question__header">
@@ -72,6 +90,7 @@ const candidate = it.currentUser ? it.currentUser.pseudonym : null;
 
       <div class="paper-actions">
         <button type="submit">Save progress</button>
+        <span id="autosave-status" class="autosave-status" role="status" aria-live="polite"></span>
         <button type="submit" formaction="/attempts/<%= it.bundle.attempt.id %>/submit" class="button button--primary">
           Submit attempt
         </button>
@@ -128,6 +147,7 @@ const candidate = it.currentUser ? it.currentUser.pseudonym : null;
               action="/attempts/<%= it.bundle.attempt.id %>/questions/<%= q.id %>/submit"
               class="question-form">
           <input type="hidden" name="_csrf" value="<%= it.csrfToken %>" />
+          <input type="hidden" name="elapsed_seconds" value="" data-elapsed-input />
           <% parts.forEach(function(part) { %>
             <% const mps = it.bundle.markPointsByPart.get(part.question_part_id) || []; %>
             <div class="paper-part" id="p-<%= part.id %>">
@@ -143,6 +163,7 @@ const candidate = it.currentUser ? it.currentUser.pseudonym : null;
           <% }); %>
           <div class="paper-actions">
             <button type="submit" formaction="/attempts/<%= it.bundle.attempt.id %>/save">Save progress</button>
+            <span id="autosave-status" class="autosave-status" role="status" aria-live="polite"></span>
             <button type="submit" class="button button--primary">Submit question</button>
           </div>
         </form>

@@ -6,7 +6,7 @@ A topic-based adaptive revision web app for OCR GCSE Computer Science (J277), bu
 
 The app serves OCR-style questions, marks pupil responses against rubric-style mark points with LLM assistance, adapts difficulty to the individual pupil, and gives the teacher a clear view of what each pupil and class needs next.
 
-> **Status (2026-04-17):** Phase 0 complete; Phase 1 in progress — chunks 1–4 merged (classes/enrolments, question authoring read/write, deterministic marker). Chunk 5 (pupil topic-set flow) work-in-progress on `main`, with per-question reveal mode and pupil self-estimates already wired in as a follow-up refinement. See [PLAN.md](PLAN.md) and [PHASE1_PLAN.md](PHASE1_PLAN.md).
+> **Status (2026-04-17):** Phase 0 complete. Phase 1 signed off (see [RUNBOOK.md](RUNBOOK.md) §10). Phase 2 in progress — chunks 1 (paper chrome), 2 (per-type widgets), 3 (autosave), and 4 (optional countdown timer) merged on `main`; chunks 5–9 (review page, print-to-PDF, accessibility pass, teacher quality-of-life, lesson test) remain. See [PLAN.md](PLAN.md) and [PHASE2_PLAN.md](PHASE2_PLAN.md).
 
 ## Why this exists
 

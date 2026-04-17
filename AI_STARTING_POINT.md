@@ -12,15 +12,15 @@ The platform serves OCR-style questions, marks pupil responses against rubric-st
 
 ## Project status (as of 2026-04-17)
 
-- **Phase:** Phase 0 complete. Phase 1 in progress — chunks 1–4 merged (classes/enrolments, question authoring read/write, deterministic marking service). Chunk 5 (pupil topic-set flow) is on `main` with a follow-up refinement already landed: per-question reveal mode with pupil self-estimate forms (migration `0010_per_question_mode.sql`).
-- **Code:** `src/` populated. Fastify app with `routes/`, `services/`, `repos/`, `templates/`, `static/`, `scripts/`, `db/`, `lib/`. Tests in `tests/` across unit, integration, and HTTP (Fastify `inject`) layers; `npm run check` gate is green on `main`.
-- **Migrations:** `0001_curriculum` → `0010_per_question_mode`. Migration runner is `npm run db:migrate` (script at `src/db/migrate.ts`).
+- **Phase:** Phase 0 complete. Phase 1 signed off (see [RUNBOOK.md](RUNBOOK.md) §10). Phase 2 in progress — chunks 1 (paper chrome), 2 (per-type widgets), 3 (autosave), and 4 (optional countdown timer) all merged to `main`; chunks 5–9 (review page, print-to-PDF, accessibility pass, teacher quality-of-life, lesson test) outstanding.
+- **Code:** `src/` populated. Fastify app with `routes/`, `services/`, `repos/`, `templates/`, `static/`, `scripts/`, `db/`, `lib/`. Tests in `tests/` across unit, integration, and HTTP (Fastify `inject`) layers; `npm run check` gate is green on `main` (290+ tests).
+- **Migrations:** `0001_curriculum` → `0011_class_timer`. Migration runner is `npm run db:migrate` (script at `src/db/migrate.ts`).
 - **Git:** Remote `https://github.com/tomd1415/exam_questions.git`, branch `main`.
 - **Dev environment:** See [DEV_SETUP.md](DEV_SETUP.md). Gentoo Linux host, Dockerised Postgres 16 + pgvector on `:5433`.
 - **Hosting (production):** Debian VM on the school's existing Proxmox hypervisor, inside the school network. LAN-only for the MVP (no home access). The user is the sole admin. Backups are handled by the school's existing regime.
 - **Pupil data:** None live. Do not solicit any until the DPIA is signed off.
 
-The next concrete deliverable is closing out Phase 1: Chunk 5 polish (the per-question reveal mode and pupil review) is in-flight; Chunks 6–10 (pupil review view, teacher review UI, curated seeding, human-test walker, real lesson) still to go. See [PHASE1_PLAN.md](PHASE1_PLAN.md).
+The next concrete deliverable is closing out Phase 2: Chunk 5 (review page with model answer side-by-side) is next up; Chunks 6–9 (print-to-PDF, accessibility pass, teacher quality-of-life, real lesson test) follow. See [PHASE2_PLAN.md](PHASE2_PLAN.md).
 
 ## Who the user is
 

@@ -15,7 +15,7 @@ const tickedSet = new Set(priorLines.map(function(s) { return s.trim(); }));
 const t = part.expected_response_type;
 %>
 <% if (t === 'multiple_choice') { %>
-  <fieldset class="widget widget--mc" aria-describedby="marks-<%= part.id %>">
+  <fieldset class="widget widget--mc" data-autosave-part-id="<%= part.id %>" aria-describedby="marks-<%= part.id %>">
     <legend class="sr-only">Choose one</legend>
     <% markPoints.forEach(function(mp, i) { %>
       <label class="widget-choice">
@@ -29,7 +29,7 @@ const t = part.expected_response_type;
     <% }); %>
   </fieldset>
 <% } else if (t === 'tick_box') { %>
-  <fieldset class="widget widget--tick" aria-describedby="marks-<%= part.id %>">
+  <fieldset class="widget widget--tick" data-autosave-part-id="<%= part.id %>" aria-describedby="marks-<%= part.id %>">
     <legend class="sr-only">Tick all that apply</legend>
     <% markPoints.forEach(function(mp) { %>
       <label class="widget-choice">
@@ -49,6 +49,7 @@ const t = part.expected_response_type;
          maxlength="200"
          autocomplete="off"
          spellcheck="true"
+         data-autosave-part-id="<%= part.id %>"
          aria-describedby="marks-<%= part.id %>" />
 <% } else if (t === 'medium_text') { %>
   <textarea class="widget widget--medium"
@@ -57,6 +58,7 @@ const t = part.expected_response_type;
             maxlength="2000"
             spellcheck="true"
             autocapitalize="sentences"
+            data-autosave-part-id="<%= part.id %>"
             aria-describedby="marks-<%= part.id %>"
   ><%= prior %></textarea>
 <% } else if (t === 'extended_response') { %>
@@ -68,6 +70,7 @@ const t = part.expected_response_type;
             spellcheck="true"
             autocapitalize="sentences"
             data-lines="<%= lines %>"
+            data-autosave-part-id="<%= part.id %>"
             aria-describedby="marks-<%= part.id %>"
   ><%= prior %></textarea>
 <% } else if (t === 'code') { %>
@@ -78,6 +81,7 @@ const t = part.expected_response_type;
             spellcheck="false"
             autocapitalize="none"
             autocorrect="off"
+            data-autosave-part-id="<%= part.id %>"
             aria-describedby="marks-<%= part.id %>"
   ><%= prior %></textarea>
 <% } else if (t === 'algorithm') { %>
@@ -88,6 +92,7 @@ const t = part.expected_response_type;
             spellcheck="false"
             autocapitalize="none"
             autocorrect="off"
+            data-autosave-part-id="<%= part.id %>"
             aria-describedby="marks-<%= part.id %>"
   ><%= prior %></textarea>
 <% } else if (t === 'trace_table') { %>
@@ -102,6 +107,7 @@ const t = part.expected_response_type;
             spellcheck="false"
             autocapitalize="none"
             autocorrect="off"
+            data-autosave-part-id="<%= part.id %>"
             aria-describedby="marks-<%= part.id %>"
   ><%= prior %></textarea>
 <% } else { %>
@@ -111,6 +117,7 @@ const t = part.expected_response_type;
             maxlength="5000"
             spellcheck="true"
             autocapitalize="sentences"
+            data-autosave-part-id="<%= part.id %>"
             aria-describedby="marks-<%= part.id %>"
   ><%= prior %></textarea>
 <% } %>

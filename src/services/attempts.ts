@@ -43,7 +43,11 @@ export interface StartTopicSetResult {
   resumed?: boolean;
 }
 
+const AUTOSAVE_AUDIT_DEBOUNCE_MS = 60_000;
+
 export class AttemptService {
+  private readonly autosaveAuditLastAt = new Map<string, number>();
+
   constructor(
     private readonly repo: AttemptRepo,
     private readonly classRepo: ClassRepo,
@@ -111,6 +115,7 @@ export class AttemptService {
       topicCode,
       limit: cls.topic_set_size,
       revealMode,
+      timerMinutes: cls.timer_minutes,
     });
     if ('error' in result) throw new AttemptAccessError('no_questions');
 
@@ -122,6 +127,7 @@ export class AttemptService {
         topic_code: topicCode,
         class_id: cls.class_id,
         question_count: result.questionCount,
+        timer_minutes: cls.timer_minutes,
       },
       actor.id,
     );
@@ -188,14 +194,52 @@ export class AttemptService {
     return { saved };
   }
 
+  async savePartOne(
+    actor: ActorForAttempt,
+    attemptPartId: string,
+    rawAnswer: string,
+  ): Promise<{ savedAt: Date }> {
+    if (actor.role !== 'pupil') throw new AttemptAccessError('not_pupil');
+    const ctx = await this.repo.findAttemptPartContext(attemptPartId);
+    if (!ctx) throw new AttemptAccessError('not_found');
+    if (ctx.pupil_id !== actor.id) throw new AttemptAccessError('not_owner');
+    if (ctx.attempt_submitted_at !== null || ctx.submitted_at !== null) {
+      throw new AttemptAccessError('already_submitted');
+    }
+
+    const trimmed = rawAnswer.slice(0, 5000);
+    await this.repo.saveAnswer(attemptPartId, trimmed);
+    const savedAt = new Date();
+
+    const now = savedAt.getTime();
+    const last = this.autosaveAuditLastAt.get(attemptPartId) ?? 0;
+    if (now - last >= AUTOSAVE_AUDIT_DEBOUNCE_MS) {
+      this.autosaveAuditLastAt.set(attemptPartId, now);
+      await this.audit.record(
+        { userId: actor.id, role: actor.role },
+        'attempt.part.saved',
+        {
+          attempt_id: ctx.attempt_id,
+          attempt_part_id: attemptPartId,
+          source: 'autosave',
+        },
+        actor.id,
+      );
+    }
+
+    return { savedAt };
+  }
+
   async submitAttempt(
     actor: ActorForAttempt,
     attemptId: string,
-  ): Promise<{ markedParts: number; pendingParts: number }> {
+    elapsedSecondsFromClient: number | null = null,
+  ): Promise<{ markedParts: number; pendingParts: number; elapsedSeconds: number | null }> {
     const bundle = await this.getAttemptForActor(actor, attemptId);
     if (bundle.attempt.submitted_at !== null) throw new AttemptAccessError('already_submitted');
 
-    await this.repo.markSubmitted(attemptId);
+    const elapsed = clampElapsedSeconds(elapsedSecondsFromClient, bundle.attempt.timer_minutes);
+    await this.repo.markSubmitted(attemptId, elapsed);
 
     let markedParts = 0;
     let pendingParts = 0;
@@ -222,7 +266,7 @@ export class AttemptService {
     await this.audit.record(
       { userId: actor.id, role: actor.role },
       'attempt.submitted',
-      { attempt_id: attemptId },
+      { attempt_id: attemptId, elapsed_seconds: elapsed },
       actor.id,
     );
     await this.audit.record(
@@ -236,13 +280,14 @@ export class AttemptService {
       },
       actor.id,
     );
-    return { markedParts, pendingParts };
+    return { markedParts, pendingParts, elapsedSeconds: elapsed };
   }
 
   async submitQuestion(
     actor: ActorForAttempt,
     attemptId: string,
     attemptQuestionId: string,
+    elapsedSecondsFromClient: number | null = null,
   ): Promise<{ markedParts: number; pendingParts: number; attemptFullySubmitted: boolean }> {
     const bundle = await this.getAttemptForActor(actor, attemptId);
     if (bundle.attempt.submitted_at !== null) throw new AttemptAccessError('already_submitted');
@@ -291,11 +336,12 @@ export class AttemptService {
     let attemptFullySubmitted = false;
     const remaining = await this.repo.countUnsubmittedQuestions(attemptId);
     if (remaining === 0) {
-      await this.repo.markSubmitted(attemptId);
+      const elapsed = clampElapsedSeconds(elapsedSecondsFromClient, bundle.attempt.timer_minutes);
+      await this.repo.markSubmitted(attemptId, elapsed);
       await this.audit.record(
         { userId: actor.id, role: actor.role },
         'attempt.submitted',
-        { attempt_id: attemptId, trigger: 'final_question' },
+        { attempt_id: attemptId, trigger: 'final_question', elapsed_seconds: elapsed },
         actor.id,
       );
       attemptFullySubmitted = true;
@@ -344,6 +390,14 @@ interface DeterministicAwarded {
   missedMarkPointIds: string[];
 }
 type DeterministicOutcome = DeterministicAwarded | { kind: 'pending' };
+
+function clampElapsedSeconds(raw: number | null, timerMinutes: number | null): number | null {
+  if (timerMinutes === null) return null;
+  if (raw === null || !Number.isFinite(raw)) return null;
+  const ceiling = timerMinutes * 60 + 30;
+  const floored = Math.max(0, Math.floor(raw));
+  return Math.min(floored, ceiling);
+}
 
 function runDeterministicMarker(
   part: AttemptPartRow,

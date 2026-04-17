@@ -75,14 +75,15 @@ No DOB, no contact details, no SEND flags. School-side mapping (pseudonym ↔ MI
 
 ### `classes`
 
-| Column           | Type                 | Notes                                                                           |
-| ---------------- | -------------------- | ------------------------------------------------------------------------------- |
-| `id`             | BIGSERIAL PK         |                                                                                 |
-| `name`           | TEXT                 | e.g. "10C/Cp1"                                                                  |
-| `teacher_id`     | BIGINT FK → users    |                                                                                 |
-| `academic_year`  | TEXT                 | e.g. "2025-2026"                                                                |
-| `active`         | BOOLEAN DEFAULT true |                                                                                 |
-| `topic_set_size` | INT DEFAULT 8        | 1–30. Number of questions drawn into a pupil topic-set attempt (migration 0008) |
+| Column           | Type                 | Notes                                                                                                                                           |
+| ---------------- | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`             | BIGSERIAL PK         |                                                                                                                                                 |
+| `name`           | TEXT                 | e.g. "10C/Cp1"                                                                                                                                  |
+| `teacher_id`     | BIGINT FK → users    |                                                                                                                                                 |
+| `academic_year`  | TEXT                 | e.g. "2025-2026"                                                                                                                                |
+| `active`         | BOOLEAN DEFAULT true |                                                                                                                                                 |
+| `topic_set_size` | INT DEFAULT 8        | 1–30. Number of questions drawn into a pupil topic-set attempt (migration 0008)                                                                 |
+| `timer_minutes`  | INT NULL             | NULL = no timer. 1–180 when set. Pupils starting a new attempt in this class snapshot this value onto `attempts.timer_minutes` (migration 0011) |
 
 Uniqueness: `(teacher_id, name, academic_year)` — a teacher cannot have two classes sharing both name and year.
 
@@ -208,17 +209,19 @@ Stored excerpts from OCR papers used only for similarity comparison; never serve
 
 ### `attempts`
 
-| Column                 | Type                          | Notes                                                                                                                   |
-| ---------------------- | ----------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `id`                   | BIGSERIAL PK                  |                                                                                                                         |
-| `user_id`              | BIGINT FK → users             |                                                                                                                         |
-| `class_id`             | BIGINT FK → classes           |                                                                                                                         |
-| `mode`                 | TEXT                          | `topic_set`, `weakest_areas`, `mixed`, `paper`, `mock`                                                                  |
-| `started_at`           | TIMESTAMPTZ                   |                                                                                                                         |
-| `submitted_at`         | TIMESTAMPTZ NULL              | Non-null once every question has been submitted (per-question mode) or the whole attempt submitted (whole-attempt mode) |
-| `target_topic_code`    | TEXT NULL                     |                                                                                                                         |
-| `target_subtopic_code` | TEXT NULL                     |                                                                                                                         |
-| `reveal_mode`          | TEXT DEFAULT `'per_question'` | Snapshot of the pupil's `users.reveal_mode` at start time (migration 0010). See Reveal modes note below                 |
+| Column                 | Type                          | Notes                                                                                                                                 |
+| ---------------------- | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`                   | BIGSERIAL PK                  |                                                                                                                                       |
+| `user_id`              | BIGINT FK → users             |                                                                                                                                       |
+| `class_id`             | BIGINT FK → classes           |                                                                                                                                       |
+| `mode`                 | TEXT                          | `topic_set`, `weakest_areas`, `mixed`, `paper`, `mock`                                                                                |
+| `started_at`           | TIMESTAMPTZ                   |                                                                                                                                       |
+| `submitted_at`         | TIMESTAMPTZ NULL              | Non-null once every question has been submitted (per-question mode) or the whole attempt submitted (whole-attempt mode)               |
+| `target_topic_code`    | TEXT NULL                     |                                                                                                                                       |
+| `target_subtopic_code` | TEXT NULL                     |                                                                                                                                       |
+| `reveal_mode`          | TEXT DEFAULT `'per_question'` | Snapshot of the pupil's `users.reveal_mode` at start time (migration 0010). See Reveal modes note below                               |
+| `timer_minutes`        | INT NULL                      | Snapshot of `classes.timer_minutes` at start time (migration 0011). Mid-attempt changes on the class do not mutate in-flight attempts |
+| `elapsed_seconds`      | INT NULL                      | Client-reported elapsed time written on submit, clamped server-side to `[0, timer_minutes * 60 + 30]`. NULL for untimed attempts      |
 
 ### `attempt_questions`
 
@@ -244,6 +247,8 @@ Stored excerpts from OCR papers used only for similarity comparison; never serve
 | `pupil_self_marks`    | INT NULL                      | Pupil's self-estimated mark after reading the mark scheme for a teacher-pending part (migration 0010) |
 
 **Reveal modes (migration 0010).** `attempts.reveal_mode = 'per_question'` lets a pupil submit and get feedback one question at a time; `attempt_questions.submitted_at` carries the per-question lock. In `'whole_attempt'` mode the lock is driven by `attempts.submitted_at` alone and the per-question column is ignored. The service layer validates `pupil_self_marks ≤ question_parts.marks` (DB only enforces `>= 0`).
+
+**Optional countdown timer (migration 0011).** `classes.timer_minutes` is the teacher-owned setting; a new attempt copies it onto `attempts.timer_minutes` at start time so the value is a per-attempt snapshot (a teacher changing the class timer mid-set does not mutate in-flight attempts). The pupil's browser computes elapsed time from `attempts.started_at` (wall-clock anchored) and posts `elapsed_seconds` as a hidden field on submit. The service clamps to `[0, timer_minutes * 60 + 30]` before writing; untimed attempts leave `elapsed_seconds` NULL. There is **no** server-side auto-submit on timer expiry — the countdown is informational.
 
 ### `awarded_marks` (Phase 1 deterministic, Phase 3 LLM)
 

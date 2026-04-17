@@ -11,7 +11,9 @@ import type { AuditService } from './audit.js';
 export type ActorForClass = Pick<UserRow, 'id' | 'role'>;
 
 export class ClassAccessError extends Error {
-  constructor(public readonly reason: 'not_teacher' | 'not_owner' | 'pupil_not_found') {
+  constructor(
+    public readonly reason: 'not_teacher' | 'not_owner' | 'pupil_not_found' | 'invalid_timer',
+  ) {
     super(`class access denied: ${reason}`);
     this.name = 'ClassAccessError';
   }
@@ -134,6 +136,25 @@ export class ClassService {
       });
     }
     return status;
+  }
+
+  async setClassTimer(
+    actor: ActorForClass,
+    classId: string,
+    minutes: number | null,
+  ): Promise<ClassRow> {
+    const cls = await this.getClassFor(actor, classId);
+    if (!cls) throw new ClassAccessError('not_owner');
+    if (minutes !== null && (!Number.isInteger(minutes) || minutes < 1 || minutes > 180)) {
+      throw new ClassAccessError('invalid_timer');
+    }
+    const updated = await this.repo.updateClassTimer(classId, minutes);
+    if (!updated) throw new ClassAccessError('not_owner');
+    await this.audit.record({ userId: actor.id, role: actor.role }, 'class.timer_set', {
+      class_id: classId,
+      timer_minutes: minutes,
+    });
+    return updated;
   }
 
   async unassignTopic(

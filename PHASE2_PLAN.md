@@ -4,13 +4,17 @@
 objective marking polish. Duration estimate: 2–3 weeks of evening
 work.
 
-> **Status (2026-04-17):** Not started. Phase 1 signed off in
-> [RUNBOOK.md](RUNBOOK.md) §10 on this date (walker report
-> `tmp/human-tests/phase1-20260417T182602Z.md`, 20/20 auto steps PASS,
-> seeder FK-restrict idempotency fixed in
-> `src/repos/questions.ts::upsertPartsAndMarkPoints`). This document
-> is the initial sequencing; expect edits as chunks land and update
-> the Appendix revision log.
+> **Status (2026-04-17):** Chunks 1–4 shipped on `main`. Chunks 1
+> (paper chrome), 2 (per-type widgets), 3 (autosave), and 4 (optional
+> countdown timer) are all covered by `npm run check` green and have
+> filled-in HUMAN_TEST_GUIDE walkthroughs (§2.A–§2.D). Chunks 5–9
+> (review page, print-to-PDF, accessibility pass, teacher
+> quality-of-life, lesson test) remain. Phase 1 signed off in
+> [RUNBOOK.md](RUNBOOK.md) §10 earlier on this date (walker report
+> `tmp/human-tests/phase1-20260417T182602Z.md`, 20/20 auto steps
+> PASS, seeder FK-restrict idempotency fixed in
+> `src/repos/questions.ts::upsertPartsAndMarkPoints`). Expect edits
+> as the remaining chunks land.
 
 ## 1. Phase goal in one paragraph
 
@@ -164,7 +168,7 @@ Two extra Phase 2 rules:
 - **Every template change ships with a screenshot in the chunk PR.**
   Phase 2 is visual; diffs are easy to miss.
 
-### Chunk 1 — OCR paper skeleton
+### Chunk 1 — OCR paper skeleton ✅ shipped 2026-04-17
 
 **Goal.** Reshape the pupil-facing layout of `_attempt_edit_body.eta`
 so it reads as a paper: header block (component code, topic,
@@ -198,7 +202,7 @@ changes; no behaviour change yet.
 pupil both tick "looks like a paper" on a side-by-side screenshot
 review.
 
-### Chunk 2 — Per-type input widgets
+### Chunk 2 — Per-type input widgets ✅ shipped 2026-04-17
 
 **Goal.** Branch the pupil renderer on
 `question_parts.expected_response_type` and use the right input for
@@ -240,7 +244,7 @@ values we render.
 type-appropriate widget; the existing deterministic marker is
 unchanged and still 100% covered.
 
-### Chunk 3 — Autosave
+### Chunk 3 — Autosave ✅ shipped 2026-04-17
 
 **Goal.** While a pupil is filling in a set, their answers persist
 every ~20 seconds and on blur/visibility change. Network blips do not
@@ -285,7 +289,7 @@ debounce keeps the table size sane.
 clicking Save and lose at most the last 5 s of typing on a network
 fail.
 
-### Chunk 4 — Optional countdown timer
+### Chunk 4 — Optional countdown timer ✅ shipped 2026-04-17
 
 **Goal.** A teacher can mark a class as "timed" with a minutes value;
 pupils in that class see a countdown on the set; elapsed time is
@@ -294,39 +298,75 @@ recorded on submit.
 **Schema.** Migration `0011_class_timer.sql`:
 
 - `ALTER TABLE classes ADD COLUMN timer_minutes INT NULL CHECK
-(timer_minutes BETWEEN 1 AND 180);`
-- `ALTER TABLE attempts ADD COLUMN elapsed_seconds INT NULL;`
-  (nullable — only populated on timed attempts).
+(timer_minutes IS NULL OR (timer_minutes BETWEEN 1 AND 180));`
+- `ALTER TABLE attempts ADD COLUMN timer_minutes INT NULL CHECK
+(timer_minutes IS NULL OR (timer_minutes BETWEEN 1 AND 180));`
+  (snapshot onto the attempt at start, so a mid-set change on the
+  class does not mutate in-flight attempts).
+- `ALTER TABLE attempts ADD COLUMN elapsed_seconds INT NULL CHECK
+(elapsed_seconds IS NULL OR elapsed_seconds >= 0);` (only populated
+  on timed attempts).
 
 **App code.**
 
-- `src/repos/classes.ts`: extend `createClass` and add
-  `updateClassTimer(classId, teacherId, minutes | null)`.
-- `src/routes/admin-classes.ts`: `POST /admin/classes/:id/timer`.
-- Pupil attempt bundle carries `attempt.timer_minutes` (from the
-  class at start time — captured onto the attempt, not re-read on
-  every request, so a mid-set change does not mutate an in-flight
-  attempt).
-- `src/static/timer.js` (~80 lines): reads `data-timer-minutes` and
-  `data-timer-started-at` from the paper header, counts down,
-  colour-shifts at 10 minutes and 1 minute remaining. No auto-submit.
-- On submit, the client posts `elapsed_seconds` as a hidden field;
-  the server clamps to `[0, timer_minutes * 60 + 30]` and stores it.
+- `src/repos/classes.ts`: adds `updateClassTimer(classId, minutes |
+null)` and exposes `timer_minutes` on `ClassRow` /
+  `findClassForPupilAndTopic` (no change to `createClass` — new
+  classes default to NULL).
+- `src/repos/attempts.ts`: `createTopicSetAttempt` now takes
+  `timerMinutes: number | null` and copies it onto the attempt row;
+  `markSubmitted(attemptId, elapsedSeconds)` records the clamped
+  elapsed time via `COALESCE($2::int, elapsed_seconds)`.
+- `src/services/classes.ts`: `setClassTimer(actor, classId, minutes
+| null)`; authz via `getClassFor`; range-validates 1–180 and
+  throws `ClassAccessError('invalid_timer')` otherwise; emits
+  `class.timer_set`.
+- `src/services/attempts.ts`: `startTopicSet` passes the class
+  snapshot through to the repo and includes `timer_minutes` in the
+  `attempt.started` audit. `submitAttempt` /`submitQuestion` accept
+  an `elapsedSecondsFromClient` arg; a shared `clampElapsedSeconds`
+  helper enforces `[0, timer_minutes * 60 + 30]` and returns null
+  when the attempt has no timer.
+- `src/routes/admin-classes.ts`: `POST /admin/classes/:id/timer`
+  (CSRF-protected; digit-only body; blank clears the timer; flashes
+  a friendly message; invalid value flashes without changing state).
+- `src/routes/attempts.ts`: submit and per-question submit now read
+  a hidden `elapsed_seconds` input and forward it to the service.
+- `src/static/timer.js` (~70 lines): reads `data-timer-minutes` and
+  `data-timer-started-at` from `#paper-timer`, renders MM:SS,
+  applies `.paper-timer--warn` (≤ 10 min), `--critical` (≤ 1 min),
+  and `--over` (0 remaining). Re-renders on `visibilitychange`
+  (wall-clock anchored to `attempts.started_at`). Writes
+  `currentElapsed()` into the hidden field on every submit. No
+  auto-submit.
+- `src/templates/_chrome.eta` loads `timer.js` only when a new
+  `timerEnabled` flag is truthy (mirrors the autosave pattern).
+- `src/templates/_admin_class_detail_body.eta`: "Countdown timer"
+  form (1–180, blank = off) above the enrol-a-pupil block.
+- `src/templates/_admin_attempts_list_body.eta`: new **Elapsed**
+  column renders `MM:SS / MM:00` when the attempt was timed.
+- `src/static/paper.css`: adds `.paper-timer` and the warn /
+  critical / over state styles (yellow / red / solid red, tabular
+  numerals).
 
 **Audit events added.** `class.timer_set` (teacher-facing only — the
-pupil doesn't need an audit event per countdown tick).
+pupil doesn't need an audit event per countdown tick). The existing
+`attempt.started` and `attempt.submitted` events also now include
+`timer_minutes` and `elapsed_seconds` respectively in their
+`details` JSON.
 
 **Tests.**
 
-| Level       | File                                    | What it proves                                                                                                                                         |
-| ----------- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Integration | `tests/integration/class-timer.test.ts` | `updateClassTimer` writes the value; `createTopicSetAttempt` for a timed class copies the minutes onto the attempt; submitting stores clamped elapsed. |
-| HTTP        | `tests/http/admin-class-timer.test.ts`  | Teacher B cannot set teacher A's class timer (403); teacher A setting a timer is reflected on the pupil's attempt.                                     |
-| Browser     | `scripts/phase2-browser.ts` timer step  | Pupil starts a timed attempt → countdown is visible → pupil submits → elapsed_seconds is within 2 s of the wall clock.                                 |
-| Human       | HUMAN_TEST_GUIDE §2.D                   | Teacher sets timer, pupil takes the set, both confirm the countdown is calm, not anxiety-inducing (no red flashing, no pop-ups).                       |
+| Level       | File                                    | What it proves                                                                                                                                                                                                                                                                                                        |
+| ----------- | --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Integration | `tests/integration/class-timer.test.ts` | `setClassTimer` writes the value and audits; null clears it; out-of-range throws `invalid_timer`; non-owner throws `not_owner`; `startTopicSet` copies class timer onto the attempt; mid-attempt class change does not mutate in-flight attempts; `submitAttempt` stores clamped elapsed; untimed attempts stay null. |
+| HTTP        | `tests/http/admin-class-timer.test.ts`  | Teacher can set + clear the timer on their own class; 500 out-of-range flashes "between 1 and 180"; teacher B cannot touch teacher A's class (403); teacher setting a timer is reflected on the pupil's subsequent attempt including the `#paper-timer` pill and the `/static/timer.js` script tag.                   |
+| Browser     | `scripts/phase2-browser.ts` timer step  | Pupil starts a timed attempt → countdown is visible → pupil submits → elapsed_seconds is within 2 s of the wall clock.                                                                                                                                                                                                |
+| Human       | HUMAN_TEST_GUIDE §2.D                   | Teacher sets timer, pupil takes the set, both confirm the countdown is calm, not anxiety-inducing (no red flashing, no pop-ups).                                                                                                                                                                                      |
 
 **Exit criteria.** A class can be timed; elapsed time appears on the
-teacher submissions list next to the raw score.
+teacher submissions list next to the raw score. ✅ met (see Elapsed
+column on `_admin_attempts_list_body.eta`).
 
 ### Chunk 5 — Review page with model answer side-by-side
 
@@ -636,7 +676,8 @@ the chunk that first needs it and is recorded in
 
 ## Appendix — Revision history
 
-| Date       | Author | Change                                                                                                                                                       |
-| ---------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 2026-04-17 | TD     | First draft at the close of Phase 1. Sequencing + risks + open questions captured; chunks not yet scheduled.                                                 |
-| 2026-04-17 | TD     | §9 resolved: paper header includes pseudonym; untimed attempts are silent; autosave is global; tab-to-indent with Esc escape; timer printed on timed papers. |
+| Date       | Author | Change                                                                                                                                                                                                                                |
+| ---------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-04-17 | TD     | First draft at the close of Phase 1. Sequencing + risks + open questions captured; chunks not yet scheduled.                                                                                                                          |
+| 2026-04-17 | TD     | §9 resolved: paper header includes pseudonym; untimed attempts are silent; autosave is global; tab-to-indent with Esc escape; timer printed on timed papers.                                                                          |
+| 2026-04-17 | TD     | Chunks 1–4 shipped. Chunk 4 (optional countdown timer) rewritten with the as-shipped schema (`0011_class_timer.sql`), service surface (`setClassTimer` + `class.timer_set` audit), file list, and test matrix. Status banner updated. |

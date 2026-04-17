@@ -584,6 +584,107 @@ systems`), the topic code + title (e.g. `1.2: Memory and storage`),
 4. Keyboard-only sanity pass: Tab moves through every input; no
    widget is reachable only by mouse.
 
+### 2.C Chunk 3 — background autosave
+
+> **Shipped:** attempt edit pages now load `/static/autosave.js`, which
+> watches every widget that carries `data-autosave-part-id` and POSTs
+> its current `raw_answer` to `/attempts/:id/parts/:pid/autosave`.
+> Triggers: 5s after the last keystroke, on blur, and when the tab
+> becomes hidden. CSRF is passed via the `x-csrf-token` header.
+> Audit events (`attempt.part.saved`) are debounced to one per
+> attempt-part per 60 seconds so the log stays readable.
+
+1. As a pupil, open an in-progress attempt on a desktop browser with
+   DevTools → Network open.
+2. Type a sentence into a `medium_text` part. Within ~5 seconds you
+   should see a single `POST /attempts/:id/parts/:pid/autosave` with
+   status 200 and response `{ok: true, saved_at: "..."}`. The status
+   chip next to the Save button should flash "Saving…" then show
+   "Saved HH:MM".
+3. Keep typing without pausing — autosave should _not_ fire a new
+   request for every keystroke. Stop typing and wait ~5s; a single new
+   POST should land.
+4. Click away (blur) immediately after typing — you should see the
+   autosave request fire straight away rather than wait for the 5s
+   timer.
+5. Switch to another browser tab. In the Network panel, confirm one
+   final autosave POST is dispatched as the tab goes hidden.
+6. Reload the page. The textarea should still contain the last draft
+   (proving the answer hit the DB), and the status chip starts blank
+   until you type again.
+7. Tick-box and multiple-choice parts: click a radio / check a box and
+   confirm an autosave POST goes out; the body JSON `raw_answer`
+   should contain the newline-joined list of selected values for
+   tick-box.
+8. Open a submitted attempt (or manually submit one in another tab
+   first) and try to POST to the autosave endpoint with curl — expect
+   409 `already_submitted`.
+9. Audit log sanity: run 5+ rapid saves on one part, then query
+   `SELECT COUNT(*) FROM audit_events WHERE event_type =
+'attempt.part.saved' AND (details->>'attempt_part_id') = '<pid>'`
+   — the count should not exceed `ceil(elapsed_seconds / 60)`.
+
+### 2.D Chunk 4 — optional countdown timer
+
+> **Shipped:** a teacher can set a `timer_minutes` (1–180) on each
+> class. Pupils who start a new attempt in that class get the class's
+> current timer value snapshotted onto the attempt row, and the edit
+> view renders a live MM:SS countdown pill (`/static/timer.js`). The
+> timer is informational only — there is no auto-submit — but the
+> elapsed time at the moment of submit is written to
+> `attempts.elapsed_seconds` (clamped to `[0, timer_minutes * 60 +
+30]`). Changing the class timer after an attempt has started does
+> NOT mutate the in-flight attempt.
+
+1. As a teacher, open a class detail page and use the new "Countdown
+   timer" form to set a timer of e.g. 3 minutes. A flash should
+   confirm "Countdown timer set to 3 minutes." and the page should
+   state that pupils starting a new attempt will see a 3-minute
+   countdown.
+2. Check `SELECT event_type, details FROM audit_events WHERE
+event_type = 'class.timer_set'` — there should be one row for this
+   action with `timer_minutes: 3`.
+3. Try to submit 0, 181, or a non-integer — each should flash
+   "Timer must be between 1 and 180 minutes." and leave the stored
+   value unchanged.
+4. Clear the timer by submitting a blank value — flash reads
+   "Countdown timer removed." and `classes.timer_minutes` becomes
+   NULL.
+5. Set the timer back to 3 minutes. As an enrolled pupil in that
+   class, start a new attempt on one of the class's topics. The paper
+   header should show a "Timer" pill counting down from 03:00. Open
+   DevTools and confirm `/static/timer.js` loaded, and the pill has
+   `id="paper-timer"` with `data-timer-minutes="3"` and
+   `data-timer-started-at="<ISO date>"`.
+6. Leave the tab idle past the 10-minute warn threshold (not relevant
+   at 3 min, but re-run at 15 min to see it): at ≤10 min remaining
+   the pill turns yellow (`.paper-timer--warn`); at ≤1 min it turns
+   red (`.paper-timer--critical`); at 0 remaining it goes solid red
+   (`.paper-timer--over`). The countdown keeps running into negatives
+   visually by staying at `00:00` — no auto-submit.
+7. Switch to another tab for 30 seconds, then switch back. The pill
+   should re-render immediately with the current elapsed (i.e., it
+   does NOT pause while hidden — it is wall-clock anchored to
+   `attempts.started_at`).
+8. Sleep the laptop for a minute and wake it. On resume the pill
+   should again reflect real elapsed wall-clock time, not the time
+   the device was awake for.
+9. Submit the attempt (per-question or whole-attempt). Check
+   `SELECT elapsed_seconds, timer_minutes FROM attempts WHERE id =
+<aid>` — `elapsed_seconds` should be roughly the real elapsed time
+   in seconds, clamped to `timer_minutes * 60 + 30` at most.
+10. As the teacher, open the class submissions list and confirm the
+    new **Elapsed** column shows e.g. `02:14 / 03:00` for the
+    submission you just made.
+11. Start a fresh attempt, then — mid-attempt — have the teacher
+    change the class timer to 60 minutes. Reload the pupil's attempt
+    page: the pill should still read the original timer (snapshot on
+    the attempt row), not the new class value.
+12. Remove the class timer entirely (blank the form). Start yet
+    another attempt as the pupil: no pill should render, and
+    `/static/timer.js` should NOT be referenced in the page source
+    (chrome only loads it when `timerEnabled` is truthy).
+
 ### Stub — remaining Phase 2 chunks
 
 **To be filled in when the remaining chunks ship.**
@@ -592,10 +693,6 @@ Will need to cover:
 
 - Visual fidelity to OCR paper layout (header, marks-in-margin,
   line-ruled answer space sized to mark tariff).
-- Each question type renders correctly (tick-box, short text, medium
-  text, extended response, code/algorithm input).
-- Optional countdown timer behaves on tab switch / device sleep.
-- Autosave on blur and at the configured interval.
 - "Submit and review" page, including model answer for objective items.
 - Print-to-PDF round-trip.
 - Accessibility pass: keyboard-only, screen reader, contrast, dyslexia
