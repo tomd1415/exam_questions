@@ -293,8 +293,20 @@ if (( DO_PREFLIGHT )); then
   if run_capture "npm run content:seed" npm run --silent content:seed; then
     ok "content:seed completed"
   else
-    err "content:seed failed — stop here."
-    exit 2
+    # The seeder does DELETE+INSERT on question_parts, which FK-violates if a
+    # prior walker run created attempt_parts against those rows. That is
+    # benign: the curated content is already present for the topic under
+    # test. Verify directly from the DB and only bail if the topic lacks
+    # enough approved questions for a topic set.
+    warn "content:seed reported failures — verifying curated content for topic ${PHASE1_TOPIC_CODE} is present in the DB."
+    curated_count="$(psql_scalar "SELECT count(*) FROM questions WHERE topic_code = '${PHASE1_TOPIC_CODE}' AND approval_status = 'approved' AND active = true")"
+    if [[ -n "$curated_count" && "$curated_count" -ge 5 ]]; then
+      ok "topic ${PHASE1_TOPIC_CODE} already has ${curated_count} approved+active questions — continuing."
+      report "- content:seed: tolerated FK errors (topic ${PHASE1_TOPIC_CODE} already has ${curated_count} approved+active questions)"
+    else
+      err "content:seed failed and topic ${PHASE1_TOPIC_CODE} has only ${curated_count:-0} approved questions — stop here."
+      exit 2
+    fi
   fi
 
   inst "Running the automated suite (npm run check). This takes ~30s."
@@ -529,7 +541,7 @@ step20() {
   # awarded_marks row for the overridden part.
   if [[ -n "$part_id" ]]; then
     psql_capture "awarded_marks for attempt_part_id=${part_id}" \
-      "SELECT id, marker, marks_awarded, marks_possible, created_at
+      "SELECT id, marker, marks_awarded, marks_total, created_at
          FROM awarded_marks
         WHERE attempt_part_id = ${part_id}
         ORDER BY created_at DESC;"

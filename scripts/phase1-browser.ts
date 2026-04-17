@@ -172,12 +172,19 @@ async function runTeacherSetup(browser: Browser): Promise<BrowserContext | null>
     }
     let onDetail = /\/admin\/classes\/\d+$/.test(page.url());
     if (!onDetail) {
-      // Duplicate (409) — hop back and pick the existing class.
+      // Duplicate (409) — hop back and pick the existing class. The list
+      // row's only link is the "Open" anchor; find the row by its name cell
+      // first, then click that row's "Open" link.
       await page.goto(`${APP_URL}/admin/classes`, { waitUntil: 'domcontentloaded' });
-      const rowLink = page.locator('a', { hasText: CLASS_NAME }).first();
-      if (await rowLink.count()) {
-        await rowLink.click();
-        await page.waitForLoadState('domcontentloaded');
+      const row = page.locator('table.admin-table tbody tr').filter({ hasText: CLASS_NAME });
+      if (await row.count()) {
+        await Promise.all([
+          page.waitForURL(/\/admin\/classes\/\d+$/, {
+            waitUntil: 'domcontentloaded',
+            timeout: 15000,
+          }),
+          row.first().locator('a', { hasText: 'Open' }).click(),
+        ]);
         onDetail = /\/admin\/classes\/\d+$/.test(page.url());
       }
     }
@@ -429,10 +436,7 @@ async function runPupilFlow(browser: Browser): Promise<void> {
     if (/^\d+$/.test(firstPartId)) result.firstPartId = firstPartId;
     await firstTa.fill(PARTIAL_ANSWER);
     // "Save progress" is the form's default submit (no formaction attribute).
-    await submitAndWait(
-      page,
-      'form.question-form button[type="submit"]:not([formaction])',
-    );
+    await submitAndWait(page, 'form.question-form button[type="submit"]:not([formaction])');
     const flash = (await page.locator('.flash--ok').first().textContent()) ?? '';
     if (!/Saved \d+ answer/.test(flash)) {
       await fail('14', `unexpected save flash: "${flash.trim()}"`, page);
