@@ -226,7 +226,10 @@ describe('Pupil per-question reveal-mode happy path', () => {
         'content-type': 'application/x-www-form-urlencoded',
         cookie: cookieHeader(jar),
       },
-      payload: form({ _csrf: q2.csrf, [`part_${q2PartId}`]: 'Every node connected to every other.' }),
+      payload: form({
+        _csrf: q2.csrf,
+        [`part_${q2PartId}`]: 'Every node connected to every other.',
+      }),
     });
     expect(submitQ2.statusCode).toBe(302);
     expect(decodeURIComponent(submitQ2.headers.location!)).toContain('All questions submitted');

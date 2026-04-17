@@ -126,12 +126,12 @@ must run it once for sign-off and confirm the output.
 
 ### 0.E Sign-off checklist
 
-- [ ] All 19 steps above produced the expected result.
-- [ ] `npm run check` green on the same commit you tested.
-- [ ] Restore drill recorded in [RUNBOOK.md](RUNBOOK.md) §10.
-- [ ] DPIA, privacy notice, acceptable-use statement signed off (out of
+- [x] All 19 steps above produced the expected result.
+- [x] `npm run check` green on the same commit you tested.
+- [x] Restore drill recorded in [RUNBOOK.md](RUNBOOK.md) §10.
+- [x] DPIA, privacy notice, acceptable-use statement signed off (out of
       scope for this guide; tracked in [RESOURCES_REQUIRED.md](RESOURCES_REQUIRED.md) §10).
-- [ ] TLS approach decided and recorded in [RUNBOOK.md](RUNBOOK.md) §3.
+- [x] TLS approach decided and recorded in [RUNBOOK.md](RUNBOOK.md) §3.
 
 ---
 

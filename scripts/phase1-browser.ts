@@ -393,21 +393,34 @@ async function runPupilFlow(browser: Browser): Promise<void> {
   // Step 13 — start the topic set. Pupils default to per_question reveal
   // mode, so the edit page shows ONE question at a time; the form action
   // should be /attempts/:id/questions/:qid/submit (not /submit).
+  //
+  // /topics hides the start form when an in-progress attempt already
+  // exists for the topic and shows a "Resume attempt" link instead. The
+  // walker treats either as a valid path onto /attempts/<id> so the
+  // script is idempotent across re-runs.
   // -----------------------------------------------------------------------
   try {
-    const startForm = page
-      .locator(`form[action="/topics/${encodeURIComponent(TOPIC_CODE)}/start"]`)
+    const startFormSel = `form[action="/topics/${encodeURIComponent(TOPIC_CODE)}/start"] button[type="submit"]`;
+    const topicRow = page
+      .locator('table.admin-table tbody tr')
+      .filter({ hasText: TOPIC_CODE })
       .first();
-    if (!(await startForm.count())) {
-      await fail('13', `no start form for topic ${TOPIC_CODE}`, page);
+    const resumeLink = topicRow.locator('a', { hasText: 'Resume attempt' });
+    const hasStart = (await page.locator(startFormSel).count()) > 0;
+    const hasResume = (await resumeLink.count()) > 0;
+    if (!hasStart && !hasResume) {
+      await fail('13', `no start form and no resume link for topic ${TOPIC_CODE}`, page);
       await ctx.close();
       return;
     }
-    await submitAndWait(
-      page,
-      `form[action="/topics/${encodeURIComponent(TOPIC_CODE)}/start"] button[type="submit"]`,
-      { urlPattern: /\/attempts\/\d+/ },
-    );
+    if (hasStart) {
+      await submitAndWait(page, startFormSel, { urlPattern: /\/attempts\/\d+/ });
+    } else {
+      await Promise.all([
+        page.waitForURL(/\/attempts\/\d+/, { waitUntil: 'domcontentloaded', timeout: 15000 }),
+        resumeLink.click(),
+      ]);
+    }
     const m = /\/attempts\/(\d+)(?:\?|$)/.exec(page.url());
     if (!m) {
       await fail('13', `did not land on /attempts/<id>; url=${page.url()}`, page);
@@ -529,7 +542,7 @@ async function runPupilFlow(browser: Browser): Promise<void> {
       await submitAndWait(page2, 'form.question-form button[type="submit"]:not([formaction])');
       submittedQuestions += 1;
       const flash = (await page2.locator('.flash--ok').first().textContent()) ?? '';
-      if (/All questions submitted/.test(flash)) break;
+      if (flash.includes('All questions submitted')) break;
     }
     if (!onReview) {
       await page2.goto(`${APP_URL}/attempts/${result.attemptId}`, {

@@ -53,9 +53,7 @@ async function loginAs(user: CreatedUser): Promise<ReturnType<typeof newJar>> {
  * for the pupil and submit the single question so the part is eligible
  * for a self-estimate. Returns the attempt id and the part id.
  */
-async function seedSubmittedOpenAttempt(
-  pupil: CreatedUser,
-): Promise<{
+async function seedSubmittedOpenAttempt(pupil: CreatedUser): Promise<{
   attemptId: string;
   partId: string;
   partMarks: number;
@@ -123,7 +121,9 @@ async function seedSubmittedOpenAttempt(
   const partMatch = /name="part_(\d+)"/.exec(edit.payload);
   expect(partMatch).not.toBeNull();
   const partId = partMatch![1]!;
-  const questionAction = /action="(\/attempts\/\d+\/questions\/\d+\/submit)"/.exec(edit.payload)![1]!;
+  const questionAction = /action="(\/attempts\/\d+\/questions\/\d+\/submit)"/.exec(
+    edit.payload,
+  )![1]!;
 
   const submit = await app.inject({
     method: 'POST',
@@ -143,10 +143,7 @@ async function seedSubmittedOpenAttempt(
   return { attemptId, partId, partMarks: 4, jar };
 }
 
-async function csrfFromAttempt(
-  jar: ReturnType<typeof newJar>,
-  attemptId: string,
-): Promise<string> {
+async function csrfFromAttempt(jar: ReturnType<typeof newJar>, attemptId: string): Promise<string> {
   const page = await app.inject({
     method: 'GET',
     url: `/attempts/${attemptId}`,
