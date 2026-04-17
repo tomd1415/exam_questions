@@ -93,18 +93,24 @@ export function registerAttemptRoutes(app: FastifyInstance): void {
     });
   });
 
-  app.post('/me/preferences/reveal-mode', { preValidation: csrfPreValidation }, async (req, reply) => {
-    const actor = requirePupil(req, reply);
-    if (!actor) return reply;
-    const parsed = RevealModeBody.safeParse(req.body);
-    if (!parsed.success) return reply.code(400).send('Bad request');
-    await app.services.attempts.setRevealModeForUser(actor, parsed.data.mode);
-    const label =
-      parsed.data.mode === 'per_question' ? 'one question at a time' : 'the whole attempt at once';
-    return reply.redirect(
-      `/topics?flash=${encodeURIComponent(`Preference saved: you will submit ${label}.`)}`,
-    );
-  });
+  app.post(
+    '/me/preferences/reveal-mode',
+    { preValidation: csrfPreValidation },
+    async (req, reply) => {
+      const actor = requirePupil(req, reply);
+      if (!actor) return reply;
+      const parsed = RevealModeBody.safeParse(req.body);
+      if (!parsed.success) return reply.code(400).send('Bad request');
+      await app.services.attempts.setRevealModeForUser(actor, parsed.data.mode);
+      const label =
+        parsed.data.mode === 'per_question'
+          ? 'one question at a time'
+          : 'the whole attempt at once';
+      return reply.redirect(
+        `/topics?flash=${encodeURIComponent(`Preference saved: you will submit ${label}.`)}`,
+      );
+    },
+  );
 
   app.post('/topics/:code/start', { preValidation: csrfPreValidation }, async (req, reply) => {
     const actor = requirePupil(req, reply);
@@ -262,9 +268,7 @@ export function registerAttemptRoutes(app: FastifyInstance): void {
           ? 'All questions submitted.'
           : `Question submitted. ${result.pendingParts > 0 ? 'Some parts are waiting for teacher marking.' : ''}`.trim();
         if (result.attemptFullySubmitted) {
-          return reply.redirect(
-            `/attempts/${params.data.id}?flash=${encodeURIComponent(msg)}`,
-          );
+          return reply.redirect(`/attempts/${params.data.id}?flash=${encodeURIComponent(msg)}`);
         }
         return reply.redirect(
           `/attempts/${params.data.id}?q=${params.data.qid}&flash=${encodeURIComponent(msg)}`,

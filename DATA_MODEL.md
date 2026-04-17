@@ -75,14 +75,14 @@ No DOB, no contact details, no SEND flags. School-side mapping (pseudonym ↔ MI
 
 ### `classes`
 
-| Column            | Type                 | Notes                                                                             |
-| ----------------- | -------------------- | --------------------------------------------------------------------------------- |
-| `id`              | BIGSERIAL PK         |                                                                                   |
-| `name`            | TEXT                 | e.g. "10C/Cp1"                                                                    |
-| `teacher_id`      | BIGINT FK → users    |                                                                                   |
-| `academic_year`   | TEXT                 | e.g. "2025-2026"                                                                  |
-| `active`          | BOOLEAN DEFAULT true |                                                                                   |
-| `topic_set_size`  | INT DEFAULT 8        | 1–30. Number of questions drawn into a pupil topic-set attempt (migration 0008)   |
+| Column           | Type                 | Notes                                                                           |
+| ---------------- | -------------------- | ------------------------------------------------------------------------------- |
+| `id`             | BIGSERIAL PK         |                                                                                 |
+| `name`           | TEXT                 | e.g. "10C/Cp1"                                                                  |
+| `teacher_id`     | BIGINT FK → users    |                                                                                 |
+| `academic_year`  | TEXT                 | e.g. "2025-2026"                                                                |
+| `active`         | BOOLEAN DEFAULT true |                                                                                 |
+| `topic_set_size` | INT DEFAULT 8        | 1–30. Number of questions drawn into a pupil topic-set attempt (migration 0008) |
 
 Uniqueness: `(teacher_id, name, academic_year)` — a teacher cannot have two classes sharing both name and year.
 
@@ -208,40 +208,40 @@ Stored excerpts from OCR papers used only for similarity comparison; never serve
 
 ### `attempts`
 
-| Column                 | Type                          | Notes                                                                                                                                                                     |
-| ---------------------- | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`                   | BIGSERIAL PK                  |                                                                                                                                                                           |
-| `user_id`              | BIGINT FK → users             |                                                                                                                                                                           |
-| `class_id`             | BIGINT FK → classes           |                                                                                                                                                                           |
-| `mode`                 | TEXT                          | `topic_set`, `weakest_areas`, `mixed`, `paper`, `mock`                                                                                                                    |
-| `started_at`           | TIMESTAMPTZ                   |                                                                                                                                                                           |
-| `submitted_at`         | TIMESTAMPTZ NULL              | Non-null once every question has been submitted (per-question mode) or the whole attempt submitted (whole-attempt mode)                                                   |
-| `target_topic_code`    | TEXT NULL                     |                                                                                                                                                                           |
-| `target_subtopic_code` | TEXT NULL                     |                                                                                                                                                                           |
-| `reveal_mode`          | TEXT DEFAULT `'per_question'` | Snapshot of the pupil's `users.reveal_mode` at start time (migration 0010). See Reveal modes note below                                                                   |
+| Column                 | Type                          | Notes                                                                                                                   |
+| ---------------------- | ----------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `id`                   | BIGSERIAL PK                  |                                                                                                                         |
+| `user_id`              | BIGINT FK → users             |                                                                                                                         |
+| `class_id`             | BIGINT FK → classes           |                                                                                                                         |
+| `mode`                 | TEXT                          | `topic_set`, `weakest_areas`, `mixed`, `paper`, `mock`                                                                  |
+| `started_at`           | TIMESTAMPTZ                   |                                                                                                                         |
+| `submitted_at`         | TIMESTAMPTZ NULL              | Non-null once every question has been submitted (per-question mode) or the whole attempt submitted (whole-attempt mode) |
+| `target_topic_code`    | TEXT NULL                     |                                                                                                                         |
+| `target_subtopic_code` | TEXT NULL                     |                                                                                                                         |
+| `reveal_mode`          | TEXT DEFAULT `'per_question'` | Snapshot of the pupil's `users.reveal_mode` at start time (migration 0010). See Reveal modes note below                 |
 
 ### `attempt_questions`
 
-| Column          | Type                  | Notes                                                                                                               |
-| --------------- | --------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| `id`            | BIGSERIAL PK          |                                                                                                                     |
-| `attempt_id`    | BIGINT FK → attempts  |                                                                                                                     |
-| `question_id`   | BIGINT FK → questions |                                                                                                                     |
-| `display_order` | INT                   |                                                                                                                     |
-| `submitted_at`  | TIMESTAMPTZ NULL      | Per-question lock (migration 0010); see note below                                                                  |
+| Column          | Type                  | Notes                                              |
+| --------------- | --------------------- | -------------------------------------------------- |
+| `id`            | BIGSERIAL PK          |                                                    |
+| `attempt_id`    | BIGINT FK → attempts  |                                                    |
+| `question_id`   | BIGINT FK → questions |                                                    |
+| `display_order` | INT                   |                                                    |
+| `submitted_at`  | TIMESTAMPTZ NULL      | Per-question lock (migration 0010); see note below |
 
 ### `attempt_parts`
 
-| Column                | Type                          | Notes                                                                                                                                                           |
-| --------------------- | ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`                  | BIGSERIAL PK                  |                                                                                                                                                                 |
-| `attempt_question_id` | BIGINT FK → attempt_questions |                                                                                                                                                                 |
-| `question_part_id`    | BIGINT FK → question_parts    |                                                                                                                                                                 |
-| `raw_answer`          | TEXT                          | exactly what the pupil typed                                                                                                                                    |
-| `normalised_answer`   | TEXT NULL                     | trimmed/lowercased copy used by deterministic checks                                                                                                            |
-| `last_saved_at`       | TIMESTAMPTZ                   |                                                                                                                                                                 |
-| `submitted_at`        | TIMESTAMPTZ NULL              |                                                                                                                                                                 |
-| `pupil_self_marks`    | INT NULL                      | Pupil's self-estimated mark after reading the mark scheme for a teacher-pending part (migration 0010)                                                           |
+| Column                | Type                          | Notes                                                                                                 |
+| --------------------- | ----------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `id`                  | BIGSERIAL PK                  |                                                                                                       |
+| `attempt_question_id` | BIGINT FK → attempt_questions |                                                                                                       |
+| `question_part_id`    | BIGINT FK → question_parts    |                                                                                                       |
+| `raw_answer`          | TEXT                          | exactly what the pupil typed                                                                          |
+| `normalised_answer`   | TEXT NULL                     | trimmed/lowercased copy used by deterministic checks                                                  |
+| `last_saved_at`       | TIMESTAMPTZ                   |                                                                                                       |
+| `submitted_at`        | TIMESTAMPTZ NULL              |                                                                                                       |
+| `pupil_self_marks`    | INT NULL                      | Pupil's self-estimated mark after reading the mark scheme for a teacher-pending part (migration 0010) |
 
 **Reveal modes (migration 0010).** `attempts.reveal_mode = 'per_question'` lets a pupil submit and get feedback one question at a time; `attempt_questions.submitted_at` carries the per-question lock. In `'whole_attempt'` mode the lock is driven by `attempts.submitted_at` alone and the per-question column is ignored. The service layer validates `pupil_self_marks ≤ question_parts.marks` (DB only enforces `>= 0`).
 

@@ -390,7 +390,9 @@ async function runPupilFlow(browser: Browser): Promise<void> {
   }
 
   // -----------------------------------------------------------------------
-  // Step 13 — start the topic set
+  // Step 13 — start the topic set. Pupils default to per_question reveal
+  // mode, so the edit page shows ONE question at a time; the form action
+  // should be /attempts/:id/questions/:qid/submit (not /submit).
   // -----------------------------------------------------------------------
   try {
     const startForm = page
@@ -413,11 +415,23 @@ async function runPupilFlow(browser: Browser): Promise<void> {
       return;
     }
     if (m[1]) result.attemptId = m[1];
+    const formAction =
+      (await page.locator('form.question-form').first().getAttribute('action')) ?? '';
+    const perQuestion = /\/questions\/\d+\/submit$/.test(formAction);
     const parts = await page.locator('form.question-form textarea').count();
     if (parts === 0) {
       await fail('13', `attempt ${result.attemptId} has no textareas`, page);
+    } else if (!perQuestion) {
+      await fail(
+        '13',
+        `attempt form action "${formAction}" not per_question (expected .../questions/:qid/submit)`,
+        page,
+      );
     } else {
-      pass('13', `attempt ${result.attemptId} with ${parts} part textarea(s)`);
+      pass(
+        '13',
+        `attempt ${result.attemptId}, per_question mode, ${parts} part textarea(s) visible`,
+      );
     }
   } catch (e) {
     await fail('13', `exception: ${String(e)}`, page);
@@ -426,8 +440,9 @@ async function runPupilFlow(browser: Browser): Promise<void> {
   }
 
   // -----------------------------------------------------------------------
-  // Step 14 — save partial progress (first part only), capturing the
-  // part-id so a later cross-check can find it.
+  // Step 14 — save partial progress on the currently-visible question via
+  // the "Save progress" button (formaction="/attempts/:id/save"). Capture
+  // the first part's id so the teacher-override step can target it.
   // -----------------------------------------------------------------------
   try {
     const firstTa = page.locator('form.question-form textarea').first();
@@ -435,8 +450,10 @@ async function runPupilFlow(browser: Browser): Promise<void> {
     const firstPartId = firstName.replace(/^part_/, '');
     if (/^\d+$/.test(firstPartId)) result.firstPartId = firstPartId;
     await firstTa.fill(PARTIAL_ANSWER);
-    // "Save progress" is the form's default submit (no formaction attribute).
-    await submitAndWait(page, 'form.question-form button[type="submit"]:not([formaction])');
+    await submitAndWait(
+      page,
+      `form.question-form button[formaction="/attempts/${result.attemptId}/save"]`,
+    );
     const flash = (await page.locator('.flash--ok').first().textContent()) ?? '';
     if (!/Saved \d+ answer/.test(flash)) {
       await fail('14', `unexpected save flash: "${flash.trim()}"`, page);
@@ -448,7 +465,8 @@ async function runPupilFlow(browser: Browser): Promise<void> {
   }
 
   // -----------------------------------------------------------------------
-  // Step 15 — close context, log back in, verify partial answer persisted
+  // Step 15 — close context, log back in, verify the partial answer is
+  // restored on the same (still-unsubmitted) question.
   // -----------------------------------------------------------------------
   await ctx.close();
   const ctx2 = await browser.newContext();
@@ -478,26 +496,58 @@ async function runPupilFlow(browser: Browser): Promise<void> {
   }
 
   // -----------------------------------------------------------------------
-  // Step 16 — fill remaining parts, submit, verify review page
+  // Step 16 — per_question submission loop. On each iteration, fill the
+  // visible question's parts and submit it. The final submit flashes "All
+  // questions submitted" and redirects to the review page.
   // -----------------------------------------------------------------------
   try {
-    const tas = page2.locator('form.question-form textarea');
-    const n = await tas.count();
-    for (let i = 1; i < n; i++) {
-      await tas.nth(i).fill(`${FINAL_ANSWER_FILLER} (#${i + 1})`);
+    const MAX_QUESTIONS = 30;
+    let submittedQuestions = 0;
+    let onReview = false;
+    for (let i = 0; i < MAX_QUESTIONS; i++) {
+      // Navigate to the attempt page; on non-first iterations this picks up
+      // the next unsubmitted question.
+      if (i > 0) {
+        await page2.goto(`${APP_URL}/attempts/${result.attemptId}`, {
+          waitUntil: 'domcontentloaded',
+        });
+      }
+      const formCount = await page2.locator('form.question-form').count();
+      if (formCount === 0) {
+        // No edit form → attempt is in review mode.
+        onReview = (await page2.locator('h1', { hasText: '· review' }).count()) > 0;
+        break;
+      }
+      const tas = page2.locator('form.question-form textarea');
+      const n = await tas.count();
+      for (let j = 0; j < n; j++) {
+        const existing = await tas.nth(j).inputValue();
+        if (existing.length === 0) {
+          await tas.nth(j).fill(`${FINAL_ANSWER_FILLER} (#Q${i + 1}-P${j + 1})`);
+        }
+      }
+      await submitAndWait(page2, 'form.question-form button[type="submit"]:not([formaction])');
+      submittedQuestions += 1;
+      const flash = (await page2.locator('.flash--ok').first().textContent()) ?? '';
+      if (/All questions submitted/.test(flash)) break;
     }
-    await submitAndWait(
-      page2,
-      `form.question-form button[formaction="/attempts/${result.attemptId}/submit"]`,
-    );
-    const hasReviewHeader = await page2.locator('h1', { hasText: '· review' }).count();
+    if (!onReview) {
+      await page2.goto(`${APP_URL}/attempts/${result.attemptId}`, {
+        waitUntil: 'domcontentloaded',
+      });
+      onReview = (await page2.locator('h1', { hasText: '· review' }).count()) > 0;
+    }
     const summary = (await page2.locator('.attempt-summary').first().textContent()) ?? '';
-    if (!hasReviewHeader) {
-      await fail('16', `no "· review" header on /attempts/${result.attemptId}`, page2);
+    if (!onReview) {
+      await fail(
+        '16',
+        `no "· review" header on /attempts/${result.attemptId} after ${submittedQuestions} question submits`,
+        page2,
+      );
     } else if (!/Score:\s*\d+\s*\/\s*\d+/.test(summary)) {
       await fail('16', `attempt-summary missing Score: "${summary.trim()}"`, page2);
     } else {
-      pass('16', `submit ok; ${summary.trim()}`);
+      pass('16', `submitted ${submittedQuestions} question(s); ${summary.trim()}`);
     }
   } catch (e) {
     await fail('16', `exception: ${String(e)}`, page2);

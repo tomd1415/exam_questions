@@ -171,4 +171,133 @@ describe('Pupil attempt authorization', () => {
     });
     expect(res.statusCode).toBe(200);
   });
+
+  it('pupil B cannot submit a question on pupil A\u2019s attempt (403)', async () => {
+    const pupilA = await createUser(pool(), { role: 'pupil' });
+    const pupilB = await createUser(pool(), { role: 'pupil' });
+    const attemptId = await seedAttempt(pupilA);
+
+    // Find A's (attempt_question_id, attempt_part_id) so B can aim at them.
+    const q = await pool().query<{ id: string }>(
+      `SELECT id::text FROM attempt_questions WHERE attempt_id = $1::bigint ORDER BY display_order LIMIT 1`,
+      [attemptId],
+    );
+    const attemptQuestionId = q.rows[0]!.id;
+
+    const jarB = await loginAs(pupilB);
+    const topics = await app.inject({
+      method: 'GET',
+      url: '/topics',
+      headers: { cookie: cookieHeader(jarB) },
+    });
+    updateJar(jarB, topics);
+    const csrf = extractCsrfToken(topics.payload);
+
+    const res = await app.inject({
+      method: 'POST',
+      url: `/attempts/${attemptId}/questions/${attemptQuestionId}/submit`,
+      headers: {
+        'content-type': 'application/x-www-form-urlencoded',
+        cookie: cookieHeader(jarB),
+      },
+      payload: form({ _csrf: csrf }),
+    });
+    expect(res.statusCode).toBe(403);
+
+    // A's attempt_question remains unsubmitted.
+    const after = await pool().query<{ submitted_at: Date | null }>(
+      `SELECT submitted_at FROM attempt_questions WHERE id = $1::bigint`,
+      [attemptQuestionId],
+    );
+    expect(after.rows[0]!.submitted_at).toBeNull();
+  });
+
+  it('teacher cannot submit a question on a pupil\u2019s attempt via the pupil endpoint (403)', async () => {
+    const pupil = await createUser(pool(), { role: 'pupil' });
+    const teacher = await createUser(pool(), { role: 'teacher' });
+    const attemptId = await seedAttempt(pupil);
+    const q = await pool().query<{ id: string }>(
+      `SELECT id::text FROM attempt_questions WHERE attempt_id = $1::bigint ORDER BY display_order LIMIT 1`,
+      [attemptId],
+    );
+    const attemptQuestionId = q.rows[0]!.id;
+
+    const jar = await loginAs(teacher);
+    const page = await app.inject({
+      method: 'GET',
+      url: '/admin/classes/new',
+      headers: { cookie: cookieHeader(jar) },
+    });
+    updateJar(jar, page);
+    const csrf = extractCsrfToken(page.payload);
+
+    const res = await app.inject({
+      method: 'POST',
+      url: `/attempts/${attemptId}/questions/${attemptQuestionId}/submit`,
+      headers: {
+        'content-type': 'application/x-www-form-urlencoded',
+        cookie: cookieHeader(jar),
+      },
+      payload: form({ _csrf: csrf }),
+    });
+    expect(res.statusCode).toBe(403);
+  });
+
+  it('teacher cannot call /me/preferences/reveal-mode (pupil-only route, 403)', async () => {
+    const teacher = await createUser(pool(), { role: 'teacher' });
+    const jar = await loginAs(teacher);
+    const page = await app.inject({
+      method: 'GET',
+      url: '/admin/classes/new',
+      headers: { cookie: cookieHeader(jar) },
+    });
+    updateJar(jar, page);
+    const csrf = extractCsrfToken(page.payload);
+
+    const res = await app.inject({
+      method: 'POST',
+      url: '/me/preferences/reveal-mode',
+      headers: {
+        'content-type': 'application/x-www-form-urlencoded',
+        cookie: cookieHeader(jar),
+      },
+      payload: form({ _csrf: csrf, mode: 'whole_attempt' }),
+    });
+    expect(res.statusCode).toBe(403);
+  });
+
+  it('pupil B cannot self-mark a part on pupil A\u2019s attempt (403)', async () => {
+    const pupilA = await createUser(pool(), { role: 'pupil' });
+    const pupilB = await createUser(pool(), { role: 'pupil' });
+    const attemptId = await seedAttempt(pupilA);
+    const partRow = await pool().query<{ id: string }>(
+      `SELECT ap.id::text
+         FROM attempt_parts ap
+         JOIN attempt_questions aq ON aq.id = ap.attempt_question_id
+        WHERE aq.attempt_id = $1::bigint
+        ORDER BY aq.display_order LIMIT 1`,
+      [attemptId],
+    );
+    const partId = partRow.rows[0]!.id;
+
+    const jarB = await loginAs(pupilB);
+    const topics = await app.inject({
+      method: 'GET',
+      url: '/topics',
+      headers: { cookie: cookieHeader(jarB) },
+    });
+    updateJar(jarB, topics);
+    const csrf = extractCsrfToken(topics.payload);
+
+    const res = await app.inject({
+      method: 'POST',
+      url: `/attempts/${attemptId}/parts/${partId}/self-mark`,
+      headers: {
+        'content-type': 'application/x-www-form-urlencoded',
+        cookie: cookieHeader(jarB),
+      },
+      payload: form({ _csrf: csrf, marks: '1' }),
+    });
+    expect(res.statusCode).toBe(403);
+  });
 });

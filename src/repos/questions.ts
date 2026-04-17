@@ -344,9 +344,7 @@ export class QuestionRepo {
           input.review_notes,
         ],
       );
-      // Part cascade deletes mark_points + part-level misconceptions.
-      await client.query(`DELETE FROM question_parts WHERE question_id = $1::bigint`, [id]);
-      await insertPartsAndMarkPoints(client, id, input.parts);
+      await upsertPartsAndMarkPoints(client, id, input.parts);
       await client.query('COMMIT');
     } catch (err) {
       await client.query('ROLLBACK').catch(() => undefined);
@@ -459,5 +457,122 @@ async function insertPartsAndMarkPoints(
         [partId, misc.label, misc.description],
       );
     }
+  }
+}
+
+// Preserves question_part.id / mark_point.id where possible by matching on
+// display_order. Keeps FK-referencing rows (attempt_parts, awarded_marks) valid
+// when curated content is re-seeded.
+async function upsertPartsAndMarkPoints(
+  client: PoolClient,
+  questionId: string,
+  parts: CreateQuestionInput['parts'],
+): Promise<void> {
+  const existing = await client.query<{ id: string; display_order: number }>(
+    `SELECT id::text, display_order FROM question_parts WHERE question_id = $1::bigint`,
+    [questionId],
+  );
+  const existingByOrder = new Map<number, string>();
+  for (const r of existing.rows) existingByOrder.set(r.display_order, r.id);
+
+  // Park existing labels under unique sentinel values so label-swaps across
+  // parts don't trip the UNIQUE (question_id, part_label) constraint during
+  // the update pass.
+  if (existing.rows.length > 0) {
+    await client.query(
+      `UPDATE question_parts
+          SET part_label = '__pending__' || id::text
+        WHERE question_id = $1::bigint`,
+      [questionId],
+    );
+  }
+
+  const keepPartIds = new Set<string>();
+
+  for (let i = 0; i < parts.length; i++) {
+    const p = parts[i]!;
+    const displayOrder = i + 1;
+    const existingId = existingByOrder.get(displayOrder);
+
+    let partId: string;
+    if (existingId) {
+      await client.query(
+        `UPDATE question_parts
+            SET part_label = $2,
+                prompt = $3,
+                marks = $4,
+                expected_response_type = $5
+          WHERE id = $1::bigint`,
+        [existingId, p.part_label, p.prompt, p.marks, p.expected_response_type],
+      );
+      partId = existingId;
+    } else {
+      const partRes = await client.query<{ id: string }>(
+        `INSERT INTO question_parts
+           (question_id, part_label, prompt, marks, expected_response_type, display_order)
+         VALUES ($1::bigint, $2, $3, $4, $5, $6)
+         RETURNING id::text`,
+        [questionId, p.part_label, p.prompt, p.marks, p.expected_response_type, displayOrder],
+      );
+      partId = partRes.rows[0]!.id;
+    }
+    keepPartIds.add(partId);
+
+    const existingMps = await client.query<{ id: string; display_order: number }>(
+      `SELECT id::text, display_order FROM mark_points WHERE question_part_id = $1::bigint`,
+      [partId],
+    );
+    const existingMpByOrder = new Map<number, string>();
+    for (const r of existingMps.rows) existingMpByOrder.set(r.display_order, r.id);
+    const keepMpIds = new Set<string>();
+
+    for (let j = 0; j < p.mark_points.length; j++) {
+      const mp = p.mark_points[j]!;
+      const mpOrder = j + 1;
+      const existingMpId = existingMpByOrder.get(mpOrder);
+      if (existingMpId) {
+        await client.query(
+          `UPDATE mark_points
+              SET text = $2,
+                  accepted_alternatives = $3,
+                  marks = $4,
+                  is_required = $5
+            WHERE id = $1::bigint`,
+          [existingMpId, mp.text, mp.accepted_alternatives, mp.marks, mp.is_required],
+        );
+        keepMpIds.add(existingMpId);
+      } else {
+        const mpRes = await client.query<{ id: string }>(
+          `INSERT INTO mark_points
+             (question_part_id, text, accepted_alternatives, marks, is_required, display_order)
+           VALUES ($1::bigint, $2, $3, $4, $5, $6)
+           RETURNING id::text`,
+          [partId, mp.text, mp.accepted_alternatives, mp.marks, mp.is_required, mpOrder],
+        );
+        keepMpIds.add(mpRes.rows[0]!.id);
+      }
+    }
+
+    const mpsToDelete = [...existingMpByOrder.values()].filter((mpid) => !keepMpIds.has(mpid));
+    if (mpsToDelete.length > 0) {
+      await client.query(`DELETE FROM mark_points WHERE id = ANY($1::bigint[])`, [mpsToDelete]);
+    }
+
+    // Misconceptions are not referenced by attempts — safe to wipe and re-insert.
+    await client.query(`DELETE FROM common_misconceptions WHERE question_part_id = $1::bigint`, [
+      partId,
+    ]);
+    for (const misc of p.misconceptions) {
+      await client.query(
+        `INSERT INTO common_misconceptions (question_part_id, label, description)
+         VALUES ($1::bigint, $2, $3)`,
+        [partId, misc.label, misc.description],
+      );
+    }
+  }
+
+  const partsToDelete = [...existingByOrder.values()].filter((pid) => !keepPartIds.has(pid));
+  if (partsToDelete.length > 0) {
+    await client.query(`DELETE FROM question_parts WHERE id = ANY($1::bigint[])`, [partsToDelete]);
   }
 }
