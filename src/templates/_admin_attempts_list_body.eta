@@ -1,0 +1,46 @@
+<section class="admin-card">
+  <header class="admin-card__header">
+    <div>
+      <h1>Submissions · <%= it.cls.name %></h1>
+      <p class="admin-card__sub"><%= it.cls.academic_year %></p>
+    </div>
+    <a href="/admin/classes/<%= it.cls.id %>">Back to class</a>
+  </header>
+
+  <% if (it.flash) { %>
+    <p class="flash flash--ok" role="status"><%= it.flash %></p>
+  <% } %>
+
+  <% if (!it.attempts || it.attempts.length === 0) { %>
+    <p class="empty">No pupil has submitted an attempt in this class yet.</p>
+  <% } else { %>
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Pupil</th>
+          <th>Topic</th>
+          <th>Submitted</th>
+          <th>Parts marked</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% it.attempts.forEach(function(a) { %>
+          <% const marked = a.total_parts - a.pending_parts; %>
+          <tr<% if (a.pending_parts > 0) { %> class="row--pending"<% } %>>
+            <td><%= a.pupil_display_name %> <span class="muted">(<%= a.pupil_pseudonym %>)</span></td>
+            <td><%= a.target_topic_code || '—' %></td>
+            <td><%= a.submitted_at.toISOString().slice(0, 16).replace('T', ' ') %></td>
+            <td>
+              <%= marked %> / <%= a.total_parts %>
+              <% if (a.pending_parts > 0) { %>
+                <span class="badge badge--warn"><%= a.pending_parts %> pending</span>
+              <% } %>
+            </td>
+            <td><a href="/admin/attempts/<%= a.id %>">Mark</a></td>
+          </tr>
+        <% }); %>
+      </tbody>
+    </table>
+  <% } %>
+</section>

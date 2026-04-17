@@ -4,7 +4,10 @@
       <h1><%= it.cls.name %></h1>
       <p class="admin-card__sub"><%= it.cls.academic_year %><% if (!it.cls.active) { %> · inactive<% } %></p>
     </div>
-    <a href="/admin/classes">Back to classes</a>
+    <div class="admin-card__actions">
+      <a href="/admin/classes/<%= it.cls.id %>/attempts">Submissions</a>
+      <a href="/admin/classes">Back to classes</a>
+    </div>
   </header>
 
   <% if (it.flash) { %>

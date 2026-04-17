@@ -22,10 +22,12 @@ import { AuthService } from './services/auth.js';
 import { ClassService } from './services/classes.js';
 import { QuestionService } from './services/questions.js';
 import { AttemptService } from './services/attempts.js';
+import { TeacherMarkingService } from './services/marking/teacher.js';
 import { registerAuthRoutes } from './routes/auth.js';
 import { registerQuestionRoutes } from './routes/questions.js';
 import { registerAdminClassRoutes } from './routes/admin-classes.js';
 import { registerAdminQuestionRoutes } from './routes/admin-questions.js';
+import { registerAdminAttemptRoutes } from './routes/admin-attempts.js';
 import { registerAttemptRoutes } from './routes/attempts.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -40,6 +42,7 @@ declare module 'fastify' {
       classes: ClassService;
       questions: QuestionService;
       attempts: AttemptService;
+      teacherMarking: TeacherMarkingService;
     };
     repos: {
       questions: QuestionRepo;
@@ -108,6 +111,7 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
   const classService = new ClassService(classRepo, auditService);
   const questionService = new QuestionService(questionRepo, curriculumRepo, auditService);
   const attemptService = new AttemptService(attemptRepo, classRepo, auditService);
+  const teacherMarkingService = new TeacherMarkingService(attemptRepo, auditService);
 
   app.decorate('services', {
     auth: authService,
@@ -115,6 +119,7 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
     classes: classService,
     questions: questionService,
     attempts: attemptService,
+    teacherMarking: teacherMarkingService,
   });
   app.decorate('repos', {
     questions: questionRepo,
@@ -148,6 +153,7 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
   registerQuestionRoutes(app);
   registerAttemptRoutes(app);
   registerAdminClassRoutes(app);
+  registerAdminAttemptRoutes(app);
   registerAdminQuestionRoutes(app);
 
   app.get('/healthz', () => ({ ok: true }));

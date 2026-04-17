@@ -3,6 +3,7 @@ import type {
   AttemptPartMarkPointRow,
   AttemptPartRow,
   AttemptRepo,
+  SubmittedAttemptSummary,
 } from '../repos/attempts.js';
 import type { ClassRepo } from '../repos/classes.js';
 import type { UserRow } from '../repos/users.js';
@@ -19,6 +20,7 @@ export class AttemptAccessError extends Error {
   constructor(
     public readonly reason:
       | 'not_pupil'
+      | 'not_teacher'
       | 'not_owner'
       | 'not_found'
       | 'no_questions'
@@ -84,9 +86,27 @@ export class AttemptService {
   async getAttemptForActor(actor: ActorForAttempt, attemptId: string): Promise<AttemptBundle> {
     const bundle = await this.repo.loadAttemptBundle(attemptId);
     if (!bundle) throw new AttemptAccessError('not_found');
-    if (bundle.attempt.user_id !== actor.id && actor.role !== 'admin')
-      throw new AttemptAccessError('not_owner');
-    return bundle;
+    if (actor.role === 'admin') return bundle;
+    if (bundle.attempt.user_id === actor.id) return bundle;
+    if (actor.role === 'teacher') {
+      const cls = await this.classRepo.findById(bundle.attempt.class_id);
+      if (cls?.teacher_id === actor.id) return bundle;
+    }
+    throw new AttemptAccessError('not_owner');
+  }
+
+  async listSubmittedAttemptsForClass(
+    actor: ActorForAttempt,
+    classId: string,
+  ): Promise<SubmittedAttemptSummary[]> {
+    if (actor.role !== 'teacher' && actor.role !== 'admin') {
+      throw new AttemptAccessError('not_teacher');
+    }
+    if (actor.role === 'teacher') {
+      const cls = await this.classRepo.findById(classId);
+      if (cls?.teacher_id !== actor.id) throw new AttemptAccessError('not_owner');
+    }
+    return this.repo.listSubmittedAttemptsForClass(classId);
   }
 
   async saveAnswer(

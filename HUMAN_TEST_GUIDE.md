@@ -363,6 +363,66 @@ rubric mark point whose text contains the marker string
 - [ ] Source-view grep for `RUBRIC-LEAK-CHECK` returned zero matches.
 - [ ] `npm run check` green on the same commit.
 
+### 1.F Teacher review UI and mark override (Chunk 7)
+
+**Prereqs:** dev DB up + migrated (0009 applied), app running,
+`npm run check` green. Reuses the fixture users from §1.A / §1.D.
+Assumes `cls_teach_a` owns a class (`10A Computing`) with
+`cls_pupil_1` enrolled and topic `1.1` assigned; if §1.D ended with
+`1.1` unassigned, re-assign it before step 1. The pupil must submit a
+fresh attempt for this walk-through that contains **at least one
+open-response part** (e.g. `extended_response`) and one objective part
+(e.g. `multiple_choice`). If the only approved `1.1` question is a
+single short-text part, author and approve a new two-part question
+first (part `(a)` `multiple_choice` with a `CPU`-style mark point,
+part `(b)` `extended_response` with a rubric mark point whose text
+contains the marker string `RUBRIC-LEAK-CHECK`).
+
+Keep a `psql` window open:
+
+```sql
+SELECT event_type, count(*) FROM audit_events
+WHERE event_type = 'marking.override' GROUP BY 1;
+```
+
+Note the baseline count before step 1.
+
+| #   | Action                                                                                                                                                                                            | Expected                                                                                                                                                                                                                                                                                                |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | As `cls_pupil_1`, start and submit a fresh attempt on topic `1.1` covering the two-part question described in the prereqs. Answer the MC part correctly (`CPU`) and the open part with any prose. | Review page shows `Score: 1 / 7 · 1 part awaiting teacher marking`. The open-response part reads `pending / 6` with "Your teacher will mark this — come back later." Note the attempt id (`/attempts/<id>`).                                                                                            |
+| 2   | Sign out. Sign in as `cls_teach_a`. Visit `/admin/classes/<class_id>`.                                                                                                                            | Class detail renders. In the header actions, a **Submissions** link is visible next to **Back to classes**.                                                                                                                                                                                             |
+| 3   | Click **Submissions**.                                                                                                                                                                            | Lands on `/admin/classes/<class_id>/attempts`. Table shows one row: pupil display name ("Pupil One" + pseudonym), topic `1.1`, submitted timestamp, `Parts marked` column showing `1/2` with a `1 pending` badge, **Mark** link.                                                                        |
+| 4   | Click **Mark**.                                                                                                                                                                                   | Lands on `/admin/attempts/<id>`. Header reads `Attempt <id> · mark`. Summary line reads `Current score: 1 / 7 · 1 part awaiting your mark`. Both question parts render with pupil answer in a `<pre>` block. Each part has an inline **Mark scheme** `<details>` disclosure and a **Save mark** form.   |
+| 5   | On the objective `(a)` part, open the **Mark scheme** disclosure.                                                                                                                                 | The matched mark point (`CPU`) shows with a `✓` and the `mp--hit` style. Any unmatched mark points show with `·` and `mp--miss`.                                                                                                                                                                        |
+| 6   | On the open-response `(b)` part, open the **Mark scheme** disclosure.                                                                                                                             | All rubric mark points render with `·` (miss — nothing has been awarded yet). The `RUBRIC-LEAK-CHECK` string is present (teacher-only view).                                                                                                                                                            |
+| 7   | Submit the `(b)` mark form with `marks_awarded=4` and reason "Strong on fetch–decode–execute; missed pipelining.".                                                                                | Redirects to the same URL with flash "Mark updated." The `(b)` part now shows `4 / 6 · teacher_override`. Summary updates to `Current score: 5 / 7` with no "awaiting your mark" text. `audit_events` gained one `marking.override` row whose `subject_user_id` is the pupil's id.                      |
+| 8   | Submit the `(b)` mark form again with `marks_awarded=5` and reason "Revised after re-read — pipelining implied.".                                                                                 | Flash "Mark updated." `(b)` shows `5 / 6`. In `psql`: `SELECT count(*) FROM awarded_marks WHERE attempt_part_id = <b_part_id>;` returns `2`, and `SELECT count(*) FROM teacher_overrides tov JOIN awarded_marks am ON am.id = tov.awarded_mark_id WHERE am.attempt_part_id = <b_part_id>;` returns `2`. |
+| 9   | On the `(a)` part, submit `marks_awarded=0` and reason "Pupil admitted guessing.".                                                                                                                | Flash "Mark updated." `(a)` now shows `0 / 1 · teacher_override`. `awarded_marks` for that part has two rows (the original `deterministic` + the new `teacher_override`), but the loaded bundle picks the latest.                                                                                       |
+| 10  | Submit the `(b)` mark form with `marks_awarded=99`.                                                                                                                                               | Flash starts "That mark is outside the allowed range." No new audit row. No new `awarded_marks` row.                                                                                                                                                                                                    |
+| 11  | Submit the `(b)` mark form with a blank (whitespace-only) reason.                                                                                                                                 | Flash mentions "reason". No new audit row.                                                                                                                                                                                                                                                              |
+| 12  | In a second private window, sign in as `cls_teach_b`. Visit `/admin/classes/<alpha_class_id>/attempts`.                                                                                           | HTTP 403. Teachers cannot see other teachers' submissions.                                                                                                                                                                                                                                              |
+| 13  | Still as Teacher Beta, paste the attempt URL `/admin/attempts/<id>` directly.                                                                                                                     | HTTP 403. Cross-teacher access on the attempt detail page is blocked.                                                                                                                                                                                                                                   |
+| 14  | Sign in as `cls_pupil_1`. Visit `/admin/attempts/<id>`.                                                                                                                                           | HTTP 403. Pupils never reach the teacher marking UI.                                                                                                                                                                                                                                                    |
+| 15  | As `cls_pupil_1`, visit `/attempts/<id>`.                                                                                                                                                         | Review page now shows `Score: 5 / 7` with no "awaiting teacher marking" phrase. Part `(b)` shows `5 / 6 · teacher_override` and **no** Model answer bullets. Part `(a)` shows `0 / 1 · teacher_override`. View source: `RUBRIC-LEAK-CHECK` is absent.                                                   |
+| 16  | Attempt a write without a CSRF token (e.g. `curl -X POST http://localhost:3030/admin/attempts/<id>/parts/<part_id>/mark -d 'marks_awarded=3&reason=x'`).                                          | HTTP 403 from the CSRF prevalidation hook. No audit row written.                                                                                                                                                                                                                                        |
+| 17  | Re-run the audit query from the prereq block.                                                                                                                                                     | Count bumped by exactly 3 (steps 7, 8, 9). Steps 10, 11, and the 403s in 12–14, 16 wrote nothing.                                                                                                                                                                                                       |
+| 18  | (Optional — admin only.) Sign in as an admin user. Visit `/admin/classes/<alpha_class_id>/attempts`, then open the attempt, then post a mark on any part with a valid reason.                     | Admin bypass works: the submissions list and attempt detail both render, and the mark is saved. A `marking.override` audit row is written with the admin's `actor_user_id`.                                                                                                                             |
+
+### Sign-off checklist (Chunk 7)
+
+- [ ] All 17 steps above produced the expected result (18 skipped if no
+      admin user exists).
+- [ ] `npm run check` green on the same commit.
+- [ ] No console errors in the dev server log during the walk-through.
+- [ ] Every successful `Save mark` wrote exactly one `marking.override`
+      audit row; every rejected submission (invalid marks, blank reason, 403) wrote zero.
+- [ ] `awarded_marks` retains every override (history is never mutated
+      in place); only the latest row per part drives the bundle view.
+- [ ] Cross-teacher (step 12, 13) and pupil (step 14) access returned
+      403; the CSRF-less write (step 16) returned 403.
+- [ ] Teacher-only rubric text (`RUBRIC-LEAK-CHECK`) never appeared on
+      the pupil review page (step 15).
+
 ### Phase 1 sign-off checklist
 
 - [ ] (Filled in once all chunks ship.)
