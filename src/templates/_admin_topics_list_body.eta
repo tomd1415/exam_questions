@@ -1,13 +1,11 @@
+<%~ include('_page_header', {
+  crumbs: [{ label: 'Topics' }],
+  heading: 'Topics',
+  subtitle:
+    'Browse the curriculum and print a blank preview paper for any topic that has approved questions.',
+}) %>
+
 <section class="admin-card">
-  <header class="admin-card__header">
-    <div>
-      <h1>Topics</h1>
-      <p class="admin-card__sub">
-        Browse the curriculum and print a blank preview paper for any topic
-        that has approved questions.
-      </p>
-    </div>
-  </header>
 
   <% if (!it.topics || it.topics.length === 0) { %>
     <p class="empty">No topics loaded yet.</p>

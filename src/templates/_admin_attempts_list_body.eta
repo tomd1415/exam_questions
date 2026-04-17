@@ -1,11 +1,17 @@
+<%
+const crumbs = [
+  { label: 'Classes', href: '/admin/classes' },
+  { label: it.cls.name, href: '/admin/classes/' + it.cls.id },
+  { label: 'Submissions' },
+];
+%>
+<%~ include('_page_header', {
+  crumbs,
+  heading: 'Submissions · ' + it.cls.name,
+  subtitle: it.cls.academic_year,
+}) %>
+
 <section class="admin-card">
-  <header class="admin-card__header">
-    <div>
-      <h1>Submissions · <%= it.cls.name %></h1>
-      <p class="admin-card__sub"><%= it.cls.academic_year %></p>
-    </div>
-    <a href="/admin/classes/<%= it.cls.id %>">Back to class</a>
-  </header>
 
   <% if (it.flash) { %>
     <p class="flash flash--ok" role="status"><%= it.flash %></p>

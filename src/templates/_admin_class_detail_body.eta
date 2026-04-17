@@ -1,14 +1,19 @@
+<%
+const crumbs = [
+  { label: 'Classes', href: '/admin/classes' },
+  { label: it.cls.name },
+];
+const actionsHtml =
+  `<a class="btn btn--secondary btn--sm" href="/admin/classes/${it.cls.id}/attempts">Submissions</a>`;
+%>
+<%~ include('_page_header', {
+  crumbs,
+  heading: it.cls.name,
+  subtitle: it.cls.academic_year + (it.cls.active ? '' : ' · inactive'),
+  actionsHtml,
+}) %>
+
 <section class="admin-card">
-  <header class="admin-card__header">
-    <div>
-      <h1><%= it.cls.name %></h1>
-      <p class="admin-card__sub"><%= it.cls.academic_year %><% if (!it.cls.active) { %> · inactive<% } %></p>
-    </div>
-    <div class="admin-card__actions">
-      <a href="/admin/classes/<%= it.cls.id %>/attempts">Submissions</a>
-      <a href="/admin/classes">Back to classes</a>
-    </div>
-  </header>
 
   <% if (it.flash) { %>
     <p class="flash flash--ok" role="status"><%= it.flash %></p>

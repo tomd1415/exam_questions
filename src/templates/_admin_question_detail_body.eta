@@ -1,18 +1,23 @@
+<%
+const qCrumbs = [
+  { label: 'Questions', href: '/admin/questions' },
+  { label: 'Question #' + it.detail.question.id },
+];
+const qSubtitle =
+  it.detail.question.component_code + ' · ' +
+  it.detail.question.topic_code + ' ' + it.detail.question.topic_title + ' · ' +
+  it.detail.question.subtopic_code + ' ' + it.detail.question.subtopic_title;
+const qActions =
+  `<a class="btn btn--secondary btn--sm" href="/admin/questions/${it.detail.question.id}/edit">Edit</a>`;
+%>
+<%~ include('_page_header', {
+  crumbs: qCrumbs,
+  heading: 'Question #' + it.detail.question.id,
+  subtitle: qSubtitle,
+  actionsHtml: qActions,
+}) %>
+
 <section class="admin-card">
-  <header class="admin-card__header">
-    <div>
-      <h1>Question #<%= it.detail.question.id %></h1>
-      <p class="admin-card__sub">
-        <%= it.detail.question.component_code %> ·
-        <%= it.detail.question.topic_code %> <%= it.detail.question.topic_title %> ·
-        <%= it.detail.question.subtopic_code %> <%= it.detail.question.subtopic_title %>
-      </p>
-    </div>
-    <div class="admin-card__actions">
-      <a href="/admin/questions/<%= it.detail.question.id %>/edit" class="btn btn--secondary btn--sm">Edit</a>
-      <a href="/admin/questions">Back to questions</a>
-    </div>
-  </header>
 
   <% if (it.flash) { %>
     <p class="flash" role="status"><%= it.flash %></p>

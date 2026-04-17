@@ -10,7 +10,12 @@ const timerMinutes = it.bundle.attempt.timer_minutes;
 const timerStartedAt = it.bundle.attempt.started_at instanceof Date
   ? it.bundle.attempt.started_at.toISOString()
   : it.bundle.attempt.started_at;
+const crumbs = [
+  { label: 'My attempts', href: '/me/attempts' },
+  { label: 'Attempt ' + it.bundle.attempt.id },
+];
 %>
+<%~ include('_breadcrumbs', { crumbs }) %>
 <section class="paper-root" aria-label="Question paper">
   <header class="paper-header">
     <% if (paper.componentCode) { %>

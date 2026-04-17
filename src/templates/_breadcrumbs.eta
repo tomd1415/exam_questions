@@ -1,0 +1,18 @@
+<% if (it.crumbs && it.crumbs.length > 0) { %>
+  <nav class="breadcrumbs" aria-label="Breadcrumb">
+    <ol class="breadcrumbs__list">
+      <% it.crumbs.forEach(function(c, idx) { %>
+        <% const isLast = idx === it.crumbs.length - 1; %>
+        <li class="breadcrumbs__item">
+          <% if (!isLast && c.href) { %>
+            <a href="<%= c.href %>"><%= c.label %></a>
+          <% } else if (isLast) { %>
+            <span aria-current="page"><%= c.label %></span>
+          <% } else { %>
+            <span><%= c.label %></span>
+          <% } %>
+        </li>
+      <% }); %>
+    </ol>
+  </nav>
+<% } %>

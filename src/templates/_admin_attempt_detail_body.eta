@@ -11,18 +11,26 @@ it.bundle.questions.forEach(function(q) {
   });
 });
 %>
+<%
+const attemptCrumbs = [
+  { label: 'Marking queue', href: '/admin/attempts' },
+  { label: 'Class submissions', href: '/admin/classes/' + it.bundle.attempt.class_id + '/attempts' },
+  { label: 'Attempt ' + it.bundle.attempt.id },
+];
+const submittedAt = it.bundle.attempt.submitted_at
+  ? it.bundle.attempt.submitted_at.toISOString().slice(0, 16).replace('T', ' ')
+  : '';
+const subtitle =
+  'Topic: ' + (it.bundle.attempt.target_topic_code || 'n/a') +
+  ' · Submitted ' + submittedAt;
+%>
+<%~ include('_page_header', {
+  crumbs: attemptCrumbs,
+  heading: 'Attempt ' + it.bundle.attempt.id + ' · mark',
+  subtitle,
+}) %>
+
 <section class="admin-card">
-  <header class="admin-card__header">
-    <div>
-      <h1>Attempt <%= it.bundle.attempt.id %> · mark</h1>
-      <p class="admin-card__sub">
-        Pupil id: <%= it.bundle.attempt.user_id %> ·
-        Topic: <%= it.bundle.attempt.target_topic_code || 'n/a' %> ·
-        Submitted <%= it.bundle.attempt.submitted_at ? it.bundle.attempt.submitted_at.toISOString().slice(0, 16).replace('T', ' ') : '' %>
-      </p>
-    </div>
-    <a href="/admin/classes/<%= it.bundle.attempt.class_id %>/attempts">Back to submissions</a>
-  </header>
 
   <% if (it.flash) { %>
     <p class="flash flash--ok" role="status"><%= it.flash %></p>

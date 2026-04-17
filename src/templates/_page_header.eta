@@ -1,0 +1,12 @@
+<%~ include('_breadcrumbs', it) %>
+<header class="page-header">
+  <div class="page-header__titles">
+    <h1 class="page-header__h1"><%= it.heading %></h1>
+    <% if (it.subtitle) { %>
+      <p class="page-header__sub"><%= it.subtitle %></p>
+    <% } %>
+  </div>
+  <% if (it.actionsHtml) { %>
+    <div class="page-header__actions"><%~ it.actionsHtml %></div>
+  <% } %>
+</header>
