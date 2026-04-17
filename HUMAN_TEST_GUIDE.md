@@ -685,18 +685,58 @@ event_type = 'class.timer_set'` — there should be one row for this
     `/static/timer.js` should NOT be referenced in the page source
     (chrome only loads it when `timerEnabled` is truthy).
 
+### 2.E Chunk 5 — review page with model answer side-by-side
+
+> **Shipped:** the submitted-attempt review page now renders each part
+> with a pupil-answer column on the left and a model-answer column on
+> the right (the mark-points text list). Beneath that, awarded
+> objective parts show a `.mark-points-grid` with per-mark-point
+> `mp--hit` / `mp--miss` badges (`✓` / `✗`). Open parts keep the
+> "Marking criteria" list and the pupil self-estimate form in the
+> model column. No schema change.
+
+1. As a pupil in a class that has the curated question bank seeded,
+   start and submit an attempt on topic `1.2` with the objective part
+   answered correctly (e.g. answer `CPU` for the "Pick the correct
+   component" part) and the open part filled with a short essay.
+2. Open the review page (you are redirected there on submit). Each
+   `question-part--review` card should show two columns side by side on
+   a ≥720 px viewport: "Your answer:" on the left, "Model answer:" (or
+   "Marking criteria:" for unmarked open parts) on the right.
+3. Resize the browser below 720 px. The two columns should stack
+   vertically — pupil on top, model underneath — with no horizontal
+   scroll.
+4. For the awarded objective part, confirm a `.mark-points-grid`
+   appears underneath the columns with green (`.mp--hit`, `✓`) rows
+   for every mark point you earned.
+5. Repeat the attempt but answer the objective part incorrectly (e.g.
+   `RAM`). The review should still show both columns and the grid, but
+   the row(s) should render red (`.mp--miss`, `✗`). The "Model answer:"
+   bullets remain visible — the whole point of review is to see what
+   the right answer was.
+6. For the open part, confirm no grid renders. The model column still
+   shows the "Marking criteria:" bullets, and below the columns there
+   is a self-estimate form. Enter a number, save it, reload the page,
+   and confirm the value persists.
+7. Use keyboard navigation only (Tab, Shift+Tab). The self-estimate
+   input and Save button should both be reachable, and the `✓` / `✗`
+   glyphs should carry an `sr-only` "Awarded" / "Not awarded" prefix
+   for screen readers (inspect the DOM to confirm).
+8. Use the browser's print preview. Both columns should remain side by
+   side (or stack cleanly) with no clipped content or cut-off grid
+   rows.
+
 ### Stub — remaining Phase 2 chunks
 
 **To be filled in when the remaining chunks ship.**
 
 Will need to cover:
 
-- Visual fidelity to OCR paper layout (header, marks-in-margin,
-  line-ruled answer space sized to mark tariff).
-- "Submit and review" page, including model answer for objective items.
-- Print-to-PDF round-trip.
+- Print-to-PDF round-trip (Chunk 6).
 - Accessibility pass: keyboard-only, screen reader, contrast, dyslexia
-  font, colour-blindness sim.
+  font, colour-blindness sim (Chunk 7).
+- Teacher quality-of-life on the marking queue (Chunk 8).
+- End-to-end lesson-style walkthrough (Chunk 9).
 
 ### Sign-off checklist
 

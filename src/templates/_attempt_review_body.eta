@@ -63,6 +63,7 @@ it.bundle.questions.forEach(function(q) {
         <% const awarded = it.bundle.awardedByAttemptPart.get(part.id); %>
         <% const isObjective = OBJECTIVE_TYPES.has(part.expected_response_type); %>
         <% const markPoints = it.bundle.markPointsByPart.get(part.question_part_id) || []; %>
+        <% const showHitMissGrid = awarded && isObjective && awarded.marker === 'deterministic' && markPoints.length > 0; %>
         <div class="question-part question-part--review" id="p-<%= part.id %>">
           <div class="question-part__head">
             <span class="question-part__label"><%= part.part_label %></span>
@@ -75,37 +76,48 @@ it.bundle.questions.forEach(function(q) {
               <% } %>
             </span>
           </div>
-          <div class="question-part__answer">
-            <strong>Your answer:</strong>
-            <pre><%= part.raw_answer || '(blank)' %></pre>
+
+          <div class="review-columns">
+            <div class="pupil-col">
+              <h3 class="review-col__heading">Your answer:</h3>
+              <pre class="review-col__answer"><%= part.raw_answer || '(blank)' %></pre>
+            </div>
+            <div class="model-col">
+              <h3 class="review-col__heading">
+                <% if (awarded) { %>Model answer:<% } else { %>Marking criteria:<% } %>
+              </h3>
+              <% if (!awarded) { %>
+                <p class="pending-note">Teacher to mark.</p>
+              <% } %>
+              <% if (markPoints.length > 0) { %>
+                <ul class="markpoints markpoints--model">
+                  <% markPoints.forEach(function(mp) { %>
+                    <li>
+                      <span class="mp__text"><%= mp.text %></span>
+                      <% if (mp.is_required) { %><span class="badge badge--muted">required</span><% } %>
+                      <span class="mp__marks">[<%= mp.marks %>]</span>
+                    </li>
+                  <% }); %>
+                </ul>
+              <% } %>
+            </div>
           </div>
-          <% if (awarded && isObjective && awarded.marker === 'deterministic' && markPoints.length > 0) { %>
-            <p class="markpoints__heading"><strong>Model answer:</strong></p>
-            <ul class="markpoints">
+
+          <% if (showHitMissGrid) { %>
+            <ul class="mark-points-grid">
               <% markPoints.forEach(function(mp) { %>
                 <% const hit = awarded.mark_points_hit.indexOf(mp.id) !== -1; %>
                 <li class="<%= hit ? 'mp--hit' : 'mp--miss' %>">
-                  <span class="mp__status"><%= hit ? '✓' : '✗' %></span>
+                  <span class="mp__status" aria-hidden="true"><%= hit ? '✓' : '✗' %></span>
+                  <span class="sr-only"><%= hit ? 'Awarded' : 'Not awarded' %>:</span>
                   <span class="mp__text"><%= mp.text %></span>
-                  <% if (mp.is_required) { %><span class="badge badge--muted">required</span><% } %>
                   <span class="mp__marks">[<%= mp.marks %>]</span>
                 </li>
               <% }); %>
             </ul>
-          <% } else if (!awarded) { %>
-            <p class="pending-note">Teacher to mark.</p>
-            <% if (markPoints.length > 0) { %>
-              <p class="markpoints__heading"><strong>Marking criteria:</strong></p>
-              <ul class="markpoints">
-                <% markPoints.forEach(function(mp) { %>
-                  <li>
-                    <span class="mp__text"><%= mp.text %></span>
-                    <% if (mp.is_required) { %><span class="badge badge--muted">required</span><% } %>
-                    <span class="mp__marks">[<%= mp.marks %>]</span>
-                  </li>
-                <% }); %>
-              </ul>
-            <% } %>
+          <% } %>
+
+          <% if (!awarded) { %>
             <% if (isPupil) { %>
               <form method="post"
                     action="/attempts/<%= it.bundle.attempt.id %>/parts/<%= part.id %>/self-mark"

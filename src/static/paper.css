@@ -1,5 +1,6 @@
 /* Phase 2 Chunk 1 — OCR paper-style layout for the pupil edit view.
-   Scoped to .paper-root to avoid touching admin or review pages. */
+   Most rules are scoped to .paper-root (edit view). The review-page rules
+   at the bottom are scoped to .question-part--review (Chunk 5). */
 
 :root {
   --paper-bg: #ffffff;
@@ -328,4 +329,137 @@
   background: #eef;
   padding: 0 0.25rem;
   border-radius: 0.2rem;
+}
+
+/* --- Phase 2 Chunk 5: review page two-column layout ------------------- */
+
+.question-part--review {
+  border: 1px solid var(--paper-rule);
+  border-radius: 0.4rem;
+  padding: 0.9rem 1rem;
+  margin: 0 0 1rem 0;
+}
+
+.question-part--review .question-part__head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.75rem;
+  align-items: baseline;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px dashed var(--paper-rule);
+  margin-bottom: 0.75rem;
+}
+.question-part--review .question-part__label {
+  font-weight: 600;
+  color: var(--paper-accent);
+  min-width: 1.5em;
+}
+.question-part--review .question-part__prompt {
+  font-weight: 500;
+  flex: 1 1 14rem;
+}
+.question-part--review .question-part__marks {
+  color: var(--paper-ink-muted);
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.review-columns {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.9rem;
+}
+@media (min-width: 720px) {
+  .review-columns {
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+  }
+}
+
+.pupil-col,
+.model-col {
+  min-width: 0;
+}
+
+.review-col__heading {
+  font-size: 0.95rem;
+  margin: 0 0 0.35rem 0;
+  color: var(--paper-ink);
+}
+
+.review-col__answer {
+  margin: 0;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--paper-rule);
+  border-radius: 0.25rem;
+  background: #fafafb;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  font: inherit;
+  min-height: 2.2em;
+}
+
+.markpoints--model {
+  list-style: disc;
+  padding-left: 1.25rem;
+  margin: 0;
+}
+.markpoints--model li {
+  margin: 0.15rem 0;
+}
+
+.mark-points-grid {
+  list-style: none;
+  padding: 0;
+  margin: 0.9rem 0 0 0;
+  display: grid;
+  gap: 0.3rem;
+}
+.mark-points-grid li {
+  display: grid;
+  grid-template-columns: 1.4rem 1fr auto;
+  align-items: baseline;
+  gap: 0.4rem 0.6rem;
+  padding: 0.35rem 0.55rem;
+  border-radius: 0.25rem;
+  border: 1px solid var(--paper-rule);
+}
+.mark-points-grid .mp--hit,
+.mark-points-grid li.mp--hit {
+  background: #e6f7ea;
+  border-color: #3c9a5a;
+}
+.mark-points-grid .mp--miss,
+.mark-points-grid li.mp--miss {
+  background: #fdecec;
+  border-color: #c33;
+}
+.mark-points-grid .mp__status {
+  font-weight: 700;
+  text-align: center;
+}
+.mark-points-grid .mp--hit .mp__status {
+  color: #1f7a3a;
+}
+.mark-points-grid .mp--miss .mp__status {
+  color: #a00;
+}
+.mark-points-grid .mp__marks {
+  color: var(--paper-ink-muted);
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.question-part--review .pending-note {
+  margin: 0.35rem 0;
+  color: var(--paper-ink-muted);
+  font-style: italic;
+}
+
+.question-part--review .self-mark-form {
+  margin-top: 0.75rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem 0.75rem;
 }
