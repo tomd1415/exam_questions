@@ -28,6 +28,7 @@ import { registerQuestionRoutes } from './routes/questions.js';
 import { registerAdminClassRoutes } from './routes/admin-classes.js';
 import { registerAdminQuestionRoutes } from './routes/admin-questions.js';
 import { registerAdminAttemptRoutes } from './routes/admin-attempts.js';
+import { registerAdminTopicRoutes } from './routes/admin-topics.js';
 import { registerAttemptRoutes } from './routes/attempts.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -157,6 +158,7 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
   registerAdminClassRoutes(app);
   registerAdminAttemptRoutes(app);
   registerAdminQuestionRoutes(app);
+  registerAdminTopicRoutes(app);
 
   app.get('/healthz', () => ({ ok: true }));
 

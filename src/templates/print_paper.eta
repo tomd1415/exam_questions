@@ -1,0 +1,3 @@
+<%
+const body = include('_print_paper_body', it);
+%><%~ include('_print_chrome', { ...it, body }) %>

@@ -48,7 +48,11 @@
                 <span class="badge badge--warn"><%= a.pending_parts %> pending</span>
               <% } %>
             </td>
-            <td><a href="/admin/attempts/<%= a.id %>">Mark</a></td>
+            <td>
+              <a href="/admin/attempts/<%= a.id %>">Mark</a>
+              · <a href="/attempts/<%= a.id %>/print?answers=1" target="_blank" rel="noopener">Print (answers)</a>
+              · <a href="/attempts/<%= a.id %>/print?answers=0" target="_blank" rel="noopener">Blank</a>
+            </td>
           </tr>
         <% }); %>
       </tbody>

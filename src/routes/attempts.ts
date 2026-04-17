@@ -151,6 +151,80 @@ export function registerAttemptRoutes(app: FastifyInstance): void {
     }
   });
 
+  app.get('/attempts/:id/print', async (req, reply) => {
+    const actor = requireAnyActor(req, reply);
+    if (!actor) return reply;
+    const params = AttemptParams.safeParse(req.params);
+    if (!params.success) return reply.code(404).send('Not found');
+    try {
+      const bundle = await app.services.attempts.getAttemptForActor(actor, String(params.data.id));
+
+      // Pupils always get their answers (they only print their own); teachers
+      // and admins honour ?answers=0|1. Default for non-pupil: show answers.
+      const raw = (req.query as { answers?: unknown }).answers;
+      const wantsAnswers = raw === '0' || raw === 'false' ? false : true;
+      const showAnswers = actor.role === 'pupil' ? true : wantsAnswers;
+
+      const answersByPartId = new Map<string, string>();
+      for (const list of bundle.partsByQuestion.values()) {
+        for (const p of list) answersByPartId.set(p.id, p.raw_answer || '');
+      }
+
+      return reply.view('print_paper.eta', {
+        title: `Print · Attempt ${bundle.attempt.id}`,
+        paper: bundle.paper,
+        questions: bundle.questions,
+        partsByQuestion: bundle.partsByQuestion,
+        markPointsByPart: bundle.markPointsByPart,
+        showAnswers,
+        answersByPartId,
+        header: {
+          candidate: req.currentUser?.pseudonym ?? null,
+          attemptId: bundle.attempt.id,
+          submittedAt: bundle.attempt.submitted_at,
+          mode: 'attempt',
+        },
+      });
+    } catch (err) {
+      if (err instanceof AttemptAccessError) {
+        if (err.reason === 'not_found') return reply.code(404).send('Not found');
+        return reply.code(403).send('Forbidden');
+      }
+      throw err;
+    }
+  });
+
+  app.get('/topics/:code/print', async (req, reply) => {
+    const actor = requireAnyActor(req, reply);
+    if (!actor) return reply;
+    if (actor.role !== 'teacher' && actor.role !== 'admin') {
+      return reply.code(403).send('Forbidden');
+    }
+    const params = TopicParams.safeParse(req.params);
+    if (!params.success) return reply.code(404).send('Not found');
+    try {
+      const preview = await app.services.attempts.getTopicPreviewForActor(actor, params.data.code);
+      return reply.view('print_paper.eta', {
+        title: `Preview · ${preview.paper.topicCode ?? params.data.code}`,
+        paper: preview.paper,
+        questions: preview.questions,
+        partsByQuestion: preview.partsByQuestion,
+        markPointsByPart: preview.markPointsByPart,
+        showAnswers: false,
+        answersByPartId: new Map<string, string>(),
+        header: { mode: 'preview' },
+      });
+    } catch (err) {
+      if (err instanceof AttemptAccessError) {
+        if (err.reason === 'not_teacher') return reply.code(403).send('Forbidden');
+        if (err.reason === 'no_questions') {
+          return reply.code(404).send('No approved questions are available for that topic yet.');
+        }
+      }
+      throw err;
+    }
+  });
+
   app.get('/attempts/:id', async (req, reply) => {
     const actor = requireAnyActor(req, reply);
     if (!actor) return reply;

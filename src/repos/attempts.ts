@@ -213,6 +213,112 @@ export class AttemptRepo {
     }
   }
 
+  async loadTopicPreview(
+    topicCode: string,
+    limit: number,
+  ): Promise<TopicPreviewBundle | { error: 'no_questions' }> {
+    const { rows: picked } = await this.pool.query<{
+      id: string;
+      stem: string;
+      topic_code: string;
+      subtopic_code: string;
+      command_word_code: string;
+      marks_total: number;
+    }>(
+      `SELECT id::text, stem, topic_code, subtopic_code, command_word_code, marks_total
+         FROM questions
+        WHERE topic_code = $1
+          AND active = true
+          AND approval_status = 'approved'
+        ORDER BY random()
+        LIMIT $2`,
+      [topicCode, limit],
+    );
+    if (picked.length === 0) return { error: 'no_questions' };
+
+    const questionIds = picked.map((q) => q.id);
+    const { rows: parts } = await this.pool.query<TopicPreviewPartRow>(
+      `SELECT id::text,
+              question_id::text,
+              part_label,
+              prompt,
+              marks,
+              expected_response_type,
+              display_order
+         FROM question_parts
+        WHERE question_id = ANY($1::bigint[])
+        ORDER BY question_id, display_order ASC`,
+      [questionIds],
+    );
+    const partsByQuestion = new Map<string, TopicPreviewPartRow[]>();
+    for (const p of parts) {
+      const list = partsByQuestion.get(p.question_id) ?? [];
+      list.push(p);
+      partsByQuestion.set(p.question_id, list);
+    }
+
+    const { rows: markPoints } = await this.pool.query<AttemptPartMarkPointRow>(
+      `SELECT mp.id::text,
+              mp.question_part_id::text,
+              mp.text,
+              mp.accepted_alternatives,
+              mp.marks,
+              mp.is_required,
+              mp.display_order
+         FROM mark_points mp
+         JOIN question_parts qp ON qp.id = mp.question_part_id
+        WHERE qp.question_id = ANY($1::bigint[])
+        ORDER BY mp.display_order ASC`,
+      [questionIds],
+    );
+    const markPointsByPart = new Map<string, AttemptPartMarkPointRow[]>();
+    for (const mp of markPoints) {
+      const list = markPointsByPart.get(mp.question_part_id) ?? [];
+      list.push(mp);
+      markPointsByPart.set(mp.question_part_id, list);
+    }
+
+    const totalMarks = picked.reduce((sum, q) => sum + q.marks_total, 0);
+    let paper: PaperHeader = {
+      componentCode: null,
+      componentTitle: null,
+      topicCode,
+      topicTitle: null,
+      totalMarks,
+    };
+    const { rows: hdr } = await this.pool.query<{
+      component_code: string;
+      component_title: string;
+      topic_title: string;
+    }>(
+      `SELECT t.component_code, c.title AS component_title, t.title AS topic_title
+         FROM topics t
+         JOIN components c ON c.code = t.component_code
+        WHERE t.code = $1`,
+      [topicCode],
+    );
+    if (hdr[0]) {
+      paper = {
+        componentCode: hdr[0].component_code,
+        componentTitle: hdr[0].component_title,
+        topicCode,
+        topicTitle: hdr[0].topic_title,
+        totalMarks,
+      };
+    }
+
+    // Preserve the random order chosen by the first query.
+    const orderedQuestions = picked.map((q) => ({
+      id: q.id,
+      stem: q.stem,
+      topic_code: q.topic_code,
+      subtopic_code: q.subtopic_code,
+      command_word_code: q.command_word_code,
+      marks_total: q.marks_total,
+    }));
+    return { questions: orderedQuestions, partsByQuestion, markPointsByPart, paper };
+  }
+
   async findInProgressAttemptForPupilTopic(
     pupilId: string,
     topicCode: string,
@@ -688,6 +794,26 @@ export interface SubmittedAttemptSummary {
   pending_parts: number;
   timer_minutes: number | null;
   elapsed_seconds: number | null;
+}
+
+export interface TopicPreviewPartRow {
+  id: string;
+  question_id: string;
+  part_label: string;
+  prompt: string;
+  marks: number;
+  expected_response_type: string;
+  display_order: number;
+}
+
+export interface TopicPreviewBundle {
+  questions: Pick<
+    AttemptQuestionRow,
+    'id' | 'stem' | 'topic_code' | 'subtopic_code' | 'command_word_code' | 'marks_total'
+  >[];
+  partsByQuestion: Map<string, TopicPreviewPartRow[]>;
+  markPointsByPart: Map<string, AttemptPartMarkPointRow[]>;
+  paper: PaperHeader;
 }
 
 export interface PupilAttemptSummary {

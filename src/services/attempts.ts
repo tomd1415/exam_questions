@@ -5,6 +5,7 @@ import type {
   AttemptRepo,
   PupilAttemptSummary,
   SubmittedAttemptSummary,
+  TopicPreviewBundle,
 } from '../repos/attempts.js';
 import type { ClassRepo } from '../repos/classes.js';
 import type { RevealMode, UserRepo, UserRow } from '../repos/users.js';
@@ -144,6 +145,19 @@ export class AttemptService {
       if (cls?.teacher_id === actor.id) return bundle;
     }
     throw new AttemptAccessError('not_owner');
+  }
+
+  async getTopicPreviewForActor(
+    actor: ActorForAttempt,
+    topicCode: string,
+    limit = 8,
+  ): Promise<TopicPreviewBundle> {
+    if (actor.role !== 'teacher' && actor.role !== 'admin') {
+      throw new AttemptAccessError('not_teacher');
+    }
+    const result = await this.repo.loadTopicPreview(topicCode, limit);
+    if ('error' in result) throw new AttemptAccessError('no_questions');
+    return result;
   }
 
   async listSubmittedAttemptsForClass(

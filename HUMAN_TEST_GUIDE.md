@@ -726,13 +726,116 @@ event_type = 'class.timer_set'` — there should be one row for this
    side (or stack cleanly) with no clipped content or cut-off grid
    rows.
 
+### 2.F Chunk 6 — Print-to-PDF mode
+
+> **Shipped:** two new routes render a stripped-down "print paper"
+> page with its own chrome (no site header, no autosave, no timer).
+> `GET /attempts/:id/print?answers=0|1` prints an existing attempt —
+> pupils always see their own answers regardless of the flag; teachers
+> owning the class (or admins) can toggle. `GET /topics/:code/print`
+> renders a blank preview paper (teacher/admin only) _without_ writing
+> an `attempts` row. Admin surfaces got two new entry points: "Print"
+> links on every row of `/admin/classes/:id/attempts`, and a new
+> `/admin/topics` index with a "Print preview" link per topic.
+> Answer space is sized from the mark tariff via the `--print-lines`
+> CSS variable; `@media print` forces `break-before: page` between
+> questions.
+
+1. As a teacher with at least one assigned topic that has approved
+   questions (topic `1.2` if you seeded the curated bank), open
+   `/admin/topics`. Every row should show a **Print preview** link in
+   the action column.
+2. Click Print preview for topic `1.2`. A new tab opens on
+   `/topics/1.2/print`. Confirm:
+   - The page has a pale paper background and a single centred
+     `.paper-root.print-paper` panel; there is **no** site header, no
+     sidebar, no "Saving…" widget, no timer pill.
+   - The header shows component code + title, topic code + title, a
+     blank Candidate line, the total marks, the question count, and
+     the `Mode: Preview (blank paper)` row.
+   - A short note below the header says "Preview only — questions are
+     drawn at random from the curated bank for this topic … No attempt
+     row is created."
+   - Each question starts with `Q<n>.` and has `[<n> marks]` on the
+     right; parts are labelled `(a)`, `(b)` and so on with a marks
+     chip in the right-hand gutter.
+   - Multiple-choice parts render as a list of `◯`-prefixed options;
+     tick-box parts render as `☐`-prefixed options; short-text parts
+     render a narrow single-line blank; long-answer parts render
+     ruled blank answer space whose height scales with the mark
+     tariff (e.g. 1 mark → 2 lines; 6 marks → 12 lines; capped at 20).
+3. Check `SELECT COUNT(*) FROM attempts` before and after the preview
+   view; the count must not change (no attempt row is created by
+   hitting `/topics/:code/print`).
+4. Open the browser print dialog (Ctrl/Cmd+P). Confirm:
+   - A4 paper is selected (or whatever your default is — the `@page`
+     rule declares `A4` with 14mm top/bottom, 12mm left/right).
+   - Each question starts on a fresh page; no question is split
+     across a page break.
+   - No URLs are appended after links (the `a[href]::after { content:
+'' }` rule strips them).
+   - Backgrounds are white and text is black regardless of system
+     theme; the "Preview only" note is legible in both on-screen and
+     print previews.
+5. Back in the teacher UI, open `/admin/classes/<id>/attempts` for a
+   class that has at least one submitted attempt. Each row should
+   show two new action links: **Print (answers)** and **Blank**.
+6. Click **Print (answers)** on a submitted attempt. The same paper
+   chrome should appear, but the header now shows `Candidate:
+<pseudonym>`, `Attempt: #<id>`, and `Submitted: <YYYY-MM-DD HH:MM>`.
+   Each answered part should render the pupil's raw answer inside a
+   `<pre class="print-answer__pupil">` block; MC/tick-box parts
+   render as filled-in lists (the pupil's chosen option is printed
+   verbatim as free text — the boxes are only used when no answer
+   is supplied).
+7. Go back and click **Blank** (same attempt, `?answers=0`). The
+   paper should render with all pupil answers stripped and the
+   mark-tariff-sized ruled blanks in their place. A "Blank paper.
+   Pupil answers are not included on this copy." note should appear
+   below the header.
+8. As a **pupil**, open your own attempt's `/attempts/:id/print`
+   (manually construct the URL — the pupil UI deliberately does not
+   surface a Print link yet). Confirm your answers are always
+   included, even if you pass `?answers=0`. Confirm you cannot print
+   another pupil's attempt: substitute a different attempt id and
+   expect a `403`.
+9. Log in as a **different teacher** who does not own the class and
+   try to hit the same attempt's print URL with `?answers=1`. You
+   should get a `403`.
+10. Automated smoke (optional): run the Phase 2 print driver to
+    confirm headless Chromium renders both routes to real PDF files.
+    From the repo root:
+
+    ```bash
+    export APP_URL=http://localhost:3000
+    export PHASE2_TEACHER_USER=<your-teacher-fixture>
+    export PHASE2_TEACHER_PW=<pw>
+    export PHASE2_TOPIC_CODE=1.2
+    export PHASE2_ATTEMPT_ID=<a submitted attempt id in your class>
+    export PHASE2_OUT=tmp/human-tests/phase2-print.json
+    export PHASE2_SCREENSHOTS=tmp/human-tests/phase2-print-shots
+    export PHASE2_PDF_DIR=tmp/human-tests/phase2-print-pdfs
+    npx tsx scripts/phase2-browser.ts
+    ```
+
+    Each generated PDF in `$PHASE2_PDF_DIR` should be > 10 KB; the
+    JSON at `$PHASE2_OUT` should have `status: "pass"` for every
+    non-skipped step. Opening any of the PDFs in your viewer should
+    show selectable text (the question stem and part prompts).
+
+11. Print one of the blank papers on a real printer — do **not** edit
+    it in another tool. Mark it by hand with a red pen as if a pupil
+    had sat it. The margins, rule density, marks gutter, and
+    question-per-page flow should all feel comfortable for hand
+    marking; answer spaces for 6-mark parts should feel roughly the
+    right size for a paragraph.
+
 ### Stub — remaining Phase 2 chunks
 
 **To be filled in when the remaining chunks ship.**
 
 Will need to cover:
 
-- Print-to-PDF round-trip (Chunk 6).
 - Accessibility pass: keyboard-only, screen reader, contrast, dyslexia
   font, colour-blindness sim (Chunk 7).
 - Teacher quality-of-life on the marking queue (Chunk 8).

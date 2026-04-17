@@ -1,0 +1,147 @@
+/* Phase 2 Chunk 6 — printable-paper layout.
+   Works in both screen preview (so teachers can sanity-check before
+   printing) and in @media print (where browser chrome, nav, buttons,
+   and anything not inside .print-paper is hidden). */
+
+.print-body {
+  background: #f4f4f8;
+  margin: 0;
+  color: #1a1a22;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+.print-main {
+  max-width: 780px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+.print-paper {
+  background: #ffffff;
+  border: 1px solid var(--paper-rule, #c9c9d4);
+  border-radius: 0.25rem;
+  padding: 2rem 2rem 3rem 2rem;
+}
+
+.print-preview-note {
+  margin: 0.75rem 0 0 0;
+  padding: 0.4rem 0.6rem;
+  border-left: 3px solid var(--paper-accent, #1d4ed8);
+  background: #f0f5ff;
+  font-size: 0.9rem;
+}
+
+.print-fill-line {
+  display: inline-block;
+  min-width: 12em;
+  border-bottom: 1px solid var(--paper-ink, #1a1a22);
+}
+
+/* --- Blank ruled answer space: one line per 1.5em, height driven by the
+       per-part marks tariff via --print-lines (set inline on the div). */
+.print-answer__blank {
+  min-height: calc(var(--print-lines, 3) * 1.5em);
+  border: 1px solid var(--paper-rule, #c9c9d4);
+  border-radius: 0.25rem;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent calc(1.5em - 1px),
+    var(--paper-rule, #c9c9d4) calc(1.5em - 1px),
+    var(--paper-rule, #c9c9d4) 1.5em
+  );
+  background-position: 0 0.45em;
+  background-attachment: local;
+}
+.print-answer__blank--short {
+  min-height: 1.8em;
+  border: 0;
+  border-bottom: 1px solid var(--paper-ink, #1a1a22);
+  background: none;
+  border-radius: 0;
+}
+
+.print-answer__pupil {
+  margin: 0;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--paper-rule, #c9c9d4);
+  border-radius: 0.25rem;
+  background: #fafafb;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  font: inherit;
+  min-height: 2.2em;
+}
+
+.print-choices {
+  list-style: none;
+  padding: 0;
+  margin: 0.25rem 0;
+  display: grid;
+  gap: 0.35rem;
+}
+.print-choices li {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+.print-choice__box {
+  font-size: 1.15em;
+  line-height: 1;
+}
+
+.print-footer {
+  margin-top: 2rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--paper-rule, #c9c9d4);
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  color: var(--paper-ink-muted, #5b5b6a);
+}
+
+/* --- Print media: strip chrome, force black on white, page-break between
+       questions, and avoid mid-part breaks. */
+@media print {
+  @page {
+    size: A4;
+    margin: 14mm 12mm;
+  }
+  html,
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+  .print-body {
+    background: #ffffff;
+  }
+  .print-main {
+    max-width: none;
+    margin: 0;
+    padding: 0;
+  }
+  .print-paper {
+    border: 0;
+    border-radius: 0;
+    padding: 0;
+  }
+  .print-question {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  .print-question + .print-question {
+    break-before: page;
+    page-break-before: always;
+  }
+  .print-part {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  .print-preview-note {
+    break-inside: avoid;
+  }
+  a[href]::after {
+    content: '';
+  }
+}

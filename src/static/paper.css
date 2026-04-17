@@ -333,6 +333,12 @@
 
 /* --- Phase 2 Chunk 5: review page two-column layout ------------------- */
 
+/* The global .site-main is capped at 720px which squashes the side-by-side
+   review columns. Widen only on pages that actually render the review. */
+.site-main:has(.question-part--review) {
+  max-width: 1100px;
+}
+
 .question-part--review {
   border: 1px solid var(--paper-rule);
   border-radius: 0.4rem;

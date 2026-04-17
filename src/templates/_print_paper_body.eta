@@ -1,0 +1,113 @@
+<%
+const OBJECTIVE_TYPES = new Set(['multiple_choice', 'tick_box', 'short_text']);
+const paper = it.paper;
+const questions = it.questions;
+const partsByQuestion = it.partsByQuestion;
+const markPointsByPart = it.markPointsByPart;
+const showAnswers = !!it.showAnswers;
+const answersByPartId = it.answersByPartId || new Map();
+const header = it.header || {};
+function linesForMarks(marks) {
+  if (marks <= 0) return 2;
+  if (marks === 1) return 2;
+  if (marks === 2) return 4;
+  return Math.min(20, Math.max(4, marks * 2));
+}
+%>
+<section class="paper-root print-paper" aria-label="Printable question paper">
+  <header class="paper-header">
+    <% if (paper.componentCode) { %>
+      <div class="paper-header__component"><%= paper.componentCode %><% if (paper.componentTitle) { %> · <%= paper.componentTitle %><% } %></div>
+    <% } %>
+    <h1 class="paper-header__title">
+      <% if (paper.topicCode) { %><%= paper.topicCode %><% if (paper.topicTitle) { %>: <%= paper.topicTitle %><% } %><% } else { %>Mixed revision<% } %>
+    </h1>
+    <dl class="paper-header__meta">
+      <% if (header.candidate) { %>
+        <div><dt>Candidate</dt><dd><%= header.candidate %></dd></div>
+      <% } else { %>
+        <div><dt>Candidate</dt><dd class="print-fill-line">&nbsp;</dd></div>
+      <% } %>
+      <div>
+        <dt>Total marks</dt>
+        <dd><%= paper.totalMarks %></dd>
+      </div>
+      <div>
+        <dt>Questions</dt>
+        <dd><%= questions.length %></dd>
+      </div>
+      <% if (header.attemptId) { %>
+        <div><dt>Attempt</dt><dd>#<%= header.attemptId %></dd></div>
+      <% } %>
+      <% if (header.submittedAt) { %>
+        <div><dt>Submitted</dt><dd><%= header.submittedAt.toISOString().slice(0, 16).replace('T', ' ') %></dd></div>
+      <% } %>
+      <% if (header.mode === 'preview') { %>
+        <div><dt>Mode</dt><dd>Preview (blank paper)</dd></div>
+      <% } %>
+    </dl>
+    <% if (header.mode === 'preview') { %>
+      <p class="print-preview-note">
+        Preview only — questions are drawn at random from the curated bank for
+        this topic, just as a pupil attempt would be. No attempt row is
+        created.
+      </p>
+    <% } else if (!showAnswers) { %>
+      <p class="print-preview-note">Blank paper. Pupil answers are not included on this copy.</p>
+    <% } %>
+  </header>
+
+  <% questions.forEach(function(q, idx) { %>
+    <article class="paper-question print-question" id="q-<%= q.id %>">
+      <header class="paper-question__header">
+        <p class="paper-question__stem">
+          <span class="paper-question__number">Q<%= idx + 1 %>.</span>
+          <%= q.stem %>
+        </p>
+        <span class="paper-question__total-marks">[<%= q.marks_total %> marks]</span>
+      </header>
+
+      <% (partsByQuestion.get(q.id) || []).forEach(function(part) { %>
+        <% const mps = markPointsByPart.get(part.question_part_id || part.id) || []; %>
+        <% const t = part.expected_response_type; %>
+        <% const rawAnswer = showAnswers ? (answersByPartId.get(part.id) || '') : ''; %>
+        <div class="paper-part print-part" id="p-<%= part.id %>">
+          <div class="paper-part__prompt">
+            <span class="paper-part__label"><%= part.part_label %></span>
+            <span class="paper-part__text"><%= part.prompt %></span>
+          </div>
+          <span class="paper-marks-gutter">[<%= part.marks %> marks]</span>
+          <div class="paper-answer print-answer">
+            <% if (showAnswers && rawAnswer.length > 0) { %>
+              <pre class="print-answer__pupil"><%= rawAnswer %></pre>
+            <% } else if (t === 'multiple_choice' && mps.length > 0) { %>
+              <ul class="print-choices print-choices--mc">
+                <% mps.forEach(function(mp) { %>
+                  <li><span class="print-choice__box" aria-hidden="true">◯</span> <%= mp.text %></li>
+                <% }); %>
+              </ul>
+            <% } else if (t === 'tick_box' && mps.length > 0) { %>
+              <ul class="print-choices print-choices--tick">
+                <% mps.forEach(function(mp) { %>
+                  <li><span class="print-choice__box" aria-hidden="true">☐</span> <%= mp.text %></li>
+                <% }); %>
+              </ul>
+            <% } else if (t === 'short_text') { %>
+              <div class="print-answer__blank print-answer__blank--short"></div>
+            <% } else { %>
+              <% const lines = linesForMarks(part.marks); %>
+              <div class="print-answer__blank" data-lines="<%= lines %>" style="--print-lines: <%= lines %>;"></div>
+            <% } %>
+          </div>
+        </div>
+      <% }); %>
+    </article>
+  <% }); %>
+
+  <footer class="print-footer">
+    <span>End of paper</span>
+    <% if (header.mode === 'preview') { %>
+      <span>Preview · <%= new Date().toISOString().slice(0, 10) %></span>
+    <% } %>
+  </footer>
+</section>

@@ -2,6 +2,7 @@
 const navItems = [
   { href: '/admin/classes', label: 'Classes', key: 'classes' },
   { href: '/admin/questions', label: 'Questions', key: 'questions' },
+  { href: '/admin/topics', label: 'Topics', key: 'topics' },
 ];
 const navHtml = `
 <nav class="admin-nav" aria-label="Admin sections">

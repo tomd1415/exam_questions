@@ -1,0 +1,40 @@
+<section class="admin-card">
+  <header class="admin-card__header">
+    <div>
+      <h1>Topics</h1>
+      <p class="admin-card__sub">
+        Browse the curriculum and print a blank preview paper for any topic
+        that has approved questions.
+      </p>
+    </div>
+  </header>
+
+  <% if (!it.topics || it.topics.length === 0) { %>
+    <p class="empty">No topics loaded yet.</p>
+  <% } else { %>
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Code</th>
+          <th>Title</th>
+          <th>Component</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% it.topics.forEach(function(t) { %>
+          <tr>
+            <td><%= t.code %></td>
+            <td><%= t.title %></td>
+            <td>
+              <%= t.component_code %><% if (t.component_title) { %> · <%= t.component_title %><% } %>
+            </td>
+            <td>
+              <a href="/topics/<%= encodeURIComponent(t.code) %>/print" target="_blank" rel="noopener">Print preview</a>
+            </td>
+          </tr>
+        <% }); %>
+      </tbody>
+    </table>
+  <% } %>
+</section>
