@@ -53,6 +53,7 @@ export async function cleanDb(pool: pg.Pool = getSharedPool()): Promise<void> {
   // No seeded enrolments exist (per 0007_seed_phase0_question.sql), so wipe
   // all of them — tests own everything in this table.
   await pool.query(`DELETE FROM enrolments`);
+  await pool.query(`DELETE FROM class_assigned_topics`);
   // Drop classes owned by non-seed teachers (i.e. test-created ones); the
   // 'Phase 0 Demo' class belongs to phase0_seed and survives.
   await pool.query(`

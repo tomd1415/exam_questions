@@ -1,0 +1,79 @@
+<%
+let totalAwarded = 0;
+let totalPossible = 0;
+let pendingCount = 0;
+it.bundle.questions.forEach(function(q) {
+  (it.bundle.partsByQuestion.get(q.id) || []).forEach(function(part) {
+    totalPossible += part.marks;
+    const aw = it.bundle.awardedByAttemptPart.get(part.id);
+    if (aw) totalAwarded += aw.marks_awarded;
+    else pendingCount += 1;
+  });
+});
+%>
+<section class="admin-card">
+  <header class="admin-card__header">
+    <div>
+      <h1>Attempt <%= it.bundle.attempt.id %> · review</h1>
+      <p class="admin-card__sub">
+        Topic: <%= it.bundle.attempt.target_topic_code || 'n/a' %> ·
+        Submitted <%= it.bundle.attempt.submitted_at ? it.bundle.attempt.submitted_at.toISOString().slice(0, 16).replace('T', ' ') : '' %>
+      </p>
+    </div>
+    <a href="/topics">Back to topics</a>
+  </header>
+
+  <p class="attempt-summary">
+    <strong>Score:</strong> <%= totalAwarded %> / <%= totalPossible %>
+    <% if (pendingCount > 0) { %>
+      · <%= pendingCount %> part<%= pendingCount === 1 ? '' : 's' %> awaiting teacher marking
+    <% } %>
+  </p>
+
+  <% it.bundle.questions.forEach(function(q, idx) { %>
+    <article class="question-card">
+      <header class="question-card__meta">
+        <span class="badge">Q<%= idx + 1 %></span>
+        <span class="badge badge--muted"><%= q.topic_code %> · <%= q.subtopic_code %></span>
+        <span class="badge badge--muted"><%= q.command_word_code %></span>
+        <span class="badge badge--muted"><%= q.marks_total %> marks</span>
+      </header>
+      <p class="question-card__stem"><%= q.stem %></p>
+
+      <% (it.bundle.partsByQuestion.get(q.id) || []).forEach(function(part) { %>
+        <% const awarded = it.bundle.awardedByAttemptPart.get(part.id); %>
+        <div class="question-part question-part--review">
+          <div class="question-part__head">
+            <span class="question-part__label"><%= part.part_label %></span>
+            <span class="question-part__prompt"><%= part.prompt %></span>
+            <span class="question-part__marks">
+              <% if (awarded) { %>
+                <%= awarded.marks_awarded %> / <%= part.marks %>
+              <% } else { %>
+                pending / <%= part.marks %>
+              <% } %>
+            </span>
+          </div>
+          <div class="question-part__answer">
+            <strong>Your answer:</strong>
+            <pre><%= part.raw_answer || '(blank)' %></pre>
+          </div>
+          <% const markPoints = it.bundle.markPointsByPart.get(part.question_part_id) || []; %>
+          <% if (awarded && markPoints.length > 0) { %>
+            <ul class="markpoints">
+              <% markPoints.forEach(function(mp) { %>
+                <% const hit = awarded.mark_points_hit.indexOf(mp.id) !== -1; %>
+                <li class="<%= hit ? 'mp--hit' : 'mp--miss' %>">
+                  <span class="mp__status"><%= hit ? '✓' : '✗' %></span>
+                  <span class="mp__text"><%= mp.text %></span>
+                  <% if (mp.is_required) { %><span class="badge badge--muted">required</span><% } %>
+                  <span class="mp__marks">[<%= mp.marks %>]</span>
+                </li>
+              <% }); %>
+            </ul>
+          <% } %>
+        </div>
+      <% }); %>
+    </article>
+  <% }); %>
+</section>

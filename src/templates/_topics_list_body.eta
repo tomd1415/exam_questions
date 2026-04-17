@@ -1,0 +1,42 @@
+<section class="admin-card">
+  <header class="admin-card__header">
+    <div>
+      <h1>Revision topics</h1>
+      <p class="admin-card__sub">Pick a topic to start a new attempt.</p>
+    </div>
+  </header>
+
+  <% if (it.flash) { %>
+    <p class="flash flash--ok" role="status"><%= it.flash %></p>
+  <% } %>
+
+  <% if (!it.topics || it.topics.length === 0) { %>
+    <p class="empty">No topics have been assigned to your class yet.</p>
+  <% } else { %>
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Component</th>
+          <th>Topic</th>
+          <th>Title</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% it.topics.forEach(function(t) { %>
+          <tr>
+            <td><%= t.component_code %></td>
+            <td><%= t.topic_code %></td>
+            <td><%= t.topic_title %></td>
+            <td>
+              <form method="post" action="/topics/<%= encodeURIComponent(t.topic_code) %>/start" class="inline-form">
+                <input type="hidden" name="_csrf" value="<%= it.csrfToken %>" />
+                <button type="submit">Start attempt</button>
+              </form>
+            </td>
+          </tr>
+        <% }); %>
+      </tbody>
+    </table>
+  <% } %>
+</section>

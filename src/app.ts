@@ -21,10 +21,12 @@ import { AuditService } from './services/audit.js';
 import { AuthService } from './services/auth.js';
 import { ClassService } from './services/classes.js';
 import { QuestionService } from './services/questions.js';
+import { AttemptService } from './services/attempts.js';
 import { registerAuthRoutes } from './routes/auth.js';
 import { registerQuestionRoutes } from './routes/questions.js';
 import { registerAdminClassRoutes } from './routes/admin-classes.js';
 import { registerAdminQuestionRoutes } from './routes/admin-questions.js';
+import { registerAttemptRoutes } from './routes/attempts.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const TEMPLATES_DIR = resolve(__dirname, 'templates');
@@ -37,6 +39,7 @@ declare module 'fastify' {
       audit: AuditService;
       classes: ClassService;
       questions: QuestionService;
+      attempts: AttemptService;
     };
     repos: {
       questions: QuestionRepo;
@@ -104,12 +107,14 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
   const authService = new AuthService(userRepo, sessionRepo, auditService);
   const classService = new ClassService(classRepo, auditService);
   const questionService = new QuestionService(questionRepo, curriculumRepo, auditService);
+  const attemptService = new AttemptService(attemptRepo, classRepo, auditService);
 
   app.decorate('services', {
     auth: authService,
     audit: auditService,
     classes: classService,
     questions: questionService,
+    attempts: attemptService,
   });
   app.decorate('repos', {
     questions: questionRepo,
@@ -133,14 +138,15 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
   });
 
   app.get('/', (req, reply) => {
-    if (req.currentUser) {
-      return reply.redirect('/q/1');
-    }
-    return reply.redirect('/login');
+    const user = req.currentUser;
+    if (!user) return reply.redirect('/login');
+    if (user.role === 'pupil') return reply.redirect('/topics');
+    return reply.redirect('/admin/classes');
   });
 
   registerAuthRoutes(app);
   registerQuestionRoutes(app);
+  registerAttemptRoutes(app);
   registerAdminClassRoutes(app);
   registerAdminQuestionRoutes(app);
 

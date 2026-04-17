@@ -1,4 +1,5 @@
 import type {
+  AssignedTopicRow,
   ClassRepo,
   ClassRow,
   ClassWithTeacherRow,
@@ -108,6 +109,46 @@ export class ClassService {
         { class_id: classId, pupil_id: pupilId },
         pupilId,
       );
+    }
+    return status;
+  }
+
+  async listAssignedTopics(actor: ActorForClass, classId: string): Promise<AssignedTopicRow[]> {
+    const cls = await this.getClassFor(actor, classId);
+    if (!cls) return [];
+    return this.repo.listAssignedTopics(classId);
+  }
+
+  async assignTopic(
+    actor: ActorForClass,
+    classId: string,
+    topicCode: string,
+  ): Promise<'added' | 'already'> {
+    const cls = await this.getClassFor(actor, classId);
+    if (!cls) throw new ClassAccessError('not_owner');
+    const status = await this.repo.assignTopic(classId, topicCode, actor.id);
+    if (status === 'added') {
+      await this.audit.record({ userId: actor.id, role: actor.role }, 'class.topic.assigned', {
+        class_id: classId,
+        topic_code: topicCode,
+      });
+    }
+    return status;
+  }
+
+  async unassignTopic(
+    actor: ActorForClass,
+    classId: string,
+    topicCode: string,
+  ): Promise<'removed' | 'not_assigned'> {
+    const cls = await this.getClassFor(actor, classId);
+    if (!cls) throw new ClassAccessError('not_owner');
+    const status = await this.repo.unassignTopic(classId, topicCode);
+    if (status === 'removed') {
+      await this.audit.record({ userId: actor.id, role: actor.role }, 'class.topic.unassigned', {
+        class_id: classId,
+        topic_code: topicCode,
+      });
     }
     return status;
   }

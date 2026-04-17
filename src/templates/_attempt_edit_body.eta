@@ -1,0 +1,54 @@
+<section class="admin-card">
+  <header class="admin-card__header">
+    <div>
+      <h1>Attempt <%= it.bundle.attempt.id %></h1>
+      <p class="admin-card__sub">
+        Topic: <%= it.bundle.attempt.target_topic_code || 'n/a' %> ·
+        <%= it.bundle.questions.length %> question<%= it.bundle.questions.length === 1 ? '' : 's' %>
+      </p>
+    </div>
+    <a href="/topics">Back to topics</a>
+  </header>
+
+  <% if (it.flash) { %>
+    <p class="flash flash--ok" role="status"><%= it.flash %></p>
+  <% } %>
+
+  <form method="post" action="/attempts/<%= it.bundle.attempt.id %>/save" class="question-form">
+    <input type="hidden" name="_csrf" value="<%= it.csrfToken %>" />
+    <% it.bundle.questions.forEach(function(q, idx) { %>
+      <article class="question-card">
+        <header class="question-card__meta">
+          <span class="badge">Q<%= idx + 1 %></span>
+          <span class="badge badge--muted"><%= q.topic_code %> · <%= q.subtopic_code %></span>
+          <span class="badge badge--muted"><%= q.command_word_code %></span>
+          <span class="badge badge--muted"><%= q.marks_total %> marks</span>
+        </header>
+        <p class="question-card__stem"><%= q.stem %></p>
+
+        <% (it.bundle.partsByQuestion.get(q.id) || []).forEach(function(part) { %>
+          <fieldset class="question-part">
+            <legend>
+              <span class="question-part__label"><%= part.part_label %></span>
+              <span class="question-part__prompt"><%= part.prompt %></span>
+              <span class="question-part__marks">[<%= part.marks %> marks]</span>
+            </legend>
+            <textarea name="part_<%= part.id %>"
+                      rows="5"
+                      maxlength="5000"
+                      autocapitalize="sentences"
+                      spellcheck="true"
+            ><%= part.raw_answer %></textarea>
+          </fieldset>
+        <% }); %>
+      </article>
+    <% }); %>
+
+    <div class="attempt-actions">
+      <button type="submit">Save progress</button>
+      <button type="submit" formaction="/attempts/<%= it.bundle.attempt.id %>/submit" class="button button--primary">
+        Submit attempt
+      </button>
+    </div>
+  </form>
+</section>

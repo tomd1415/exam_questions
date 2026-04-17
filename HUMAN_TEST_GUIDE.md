@@ -266,6 +266,62 @@ exactly one counter.
 - [ ] State-machine violations (step 15) and authorisation failures
       (steps 1, 11, 12) left the DB unchanged.
 
+### 1.D Pupil topic-set flow (Chunk 5)
+
+**Prereqs:** dev DB up + migrated (0008 applied), app running,
+`npm run check` green. Reuses the fixture users from §1.A
+(`cls_teach_a`, `cls_pupil_1`). Also reuses the approved question from
+§1.C (a short-text ALU question on topic `1.1`) — if §1.C has not been
+walked through, approve at least one active question on topic `1.1`
+first, otherwise the pupil will get "no approved questions".
+
+Keep a `psql` window open:
+
+```sql
+SELECT event_type, count(*) FROM audit_events
+WHERE event_type IN ('attempt.started', 'attempt.part.saved',
+                     'attempt.submitted', 'marking.completed',
+                     'class.topic.assigned', 'class.topic.unassigned')
+GROUP BY 1 ORDER BY 1;
+```
+
+Note the baseline counts before step 1.
+
+| #   | Action                                                                                                                                                                            | Expected                                                                                                                                                                                                                                                                                                                                       |
+| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Sign in as `cls_teach_a`. Open the class detail page for "10A Computing". Under **Assigned topics** you should see "No topics assigned yet" and an **Assign topic** select below. | Empty state renders; the select lists every seeded topic grouped by component.                                                                                                                                                                                                                                                                 |
+| 2   | Pick `1.1 Systems architecture` from the select and click **Assign**.                                                                                                             | Redirects with the flash "Topic 1.1 assigned." The assigned-topics table now lists the row with Teacher Alpha as the assigner. `audit_events` gained one `class.topic.assigned` row.                                                                                                                                                           |
+| 3   | Click **Assign** again after re-selecting `1.1`.                                                                                                                                  | Flash reads "Topic 1.1 was already assigned." No new audit row, no duplicate DB row.                                                                                                                                                                                                                                                           |
+| 4   | Make sure `cls_pupil_1` is enrolled in "10A Computing" (re-run §1.A step 6 if you removed them in step 12).                                                                       | `enrolments` has the class/pupil pair.                                                                                                                                                                                                                                                                                                         |
+| 5   | Sign out and sign in as `cls_pupil_1`. You should land on `/topics`.                                                                                                              | The topics page lists the assigned `1.1 · Systems architecture` row with a **Start attempt** button. No other topics appear.                                                                                                                                                                                                                   |
+| 6   | Click **Start attempt**.                                                                                                                                                          | Redirects to `/attempts/<id>` showing one or more question cards (up to `topic_set_size`, default 8). Each part has an empty textarea. `audit_events` gained one `attempt.started` row; `attempts` table has a row with `submitted_at = NULL`.                                                                                                 |
+| 7   | Type an answer into the first part (e.g. "Arithmetic Logic Unit"). Click **Save progress**.                                                                                       | Redirects back to the same attempt URL with "Saved 1 answer." The textarea still shows your text on reload. `audit_events` gained one `attempt.part.saved` row.                                                                                                                                                                                |
+| 8   | Close the browser tab. Reopen `/attempts/<id>` (or navigate from `/topics` by starting again — no, just revisit the URL from history).                                            | The same answer is present. The attempt is still editable (no review banner).                                                                                                                                                                                                                                                                  |
+| 9   | Click **Submit attempt**.                                                                                                                                                         | Redirects to the same `/attempts/<id>` URL, which now renders the review view: a "Score: X / Y" line, each part labelled with its awarded/total marks (or "pending" for open-response parts), and mark-point hit/miss bullets for objective parts that matched. `audit_events` gained one `attempt.submitted` and one `marking.completed` row. |
+| 10  | Refresh `/attempts/<id>`.                                                                                                                                                         | Same review view (not the editor). Attempt is terminal.                                                                                                                                                                                                                                                                                        |
+| 11  | POST to `/attempts/<id>/save` (e.g. via browser devtools or `curl` with cookies) attempting to change a part's answer.                                                            | HTTP 302 redirect with flash "Attempt already submitted." `attempt_parts.raw_answer` is unchanged in the DB.                                                                                                                                                                                                                                   |
+| 12  | Grab the attempt URL from step 6. In a second private window sign in as a different pupil (create one if needed) and paste the attempt URL.                                       | HTTP 403. Cross-pupil access is forbidden.                                                                                                                                                                                                                                                                                                     |
+| 13  | As `cls_teach_a`, visit the same attempt URL.                                                                                                                                     | HTTP 403. Teachers are not owners (admin override would work — optional step 15).                                                                                                                                                                                                                                                              |
+| 14  | As `cls_teach_a`, go to `/admin/classes/<class_id>` and click **Remove** next to the assigned `1.1` topic.                                                                        | Redirects with "Topic 1.1 removed." The assigned-topics table reverts to empty. `audit_events` gained one `class.topic.unassigned` row. The pupil's existing attempt is untouched (assignment removal is forward-looking).                                                                                                                     |
+| 15  | (Optional — admin only.) Sign in as an admin and open the pupil's attempt URL from step 6.                                                                                        | The review page renders; `class_assigned_topics` removal does not break historic attempts.                                                                                                                                                                                                                                                     |
+| 16  | As `cls_pupil_1`, visit `/topics` again.                                                                                                                                          | The list is empty now ("No topics have been assigned to your class yet.") because `1.1` was unassigned in step 14.                                                                                                                                                                                                                             |
+| 17  | Attempt a write without a CSRF token (e.g. `curl -X POST http://localhost:3030/topics/1.1/start` with no `_csrf`).                                                                | HTTP 403 from the CSRF prevalidation hook. No attempt row created.                                                                                                                                                                                                                                                                             |
+| 18  | Re-run the audit query from the prereq block.                                                                                                                                     | Counts bumped exactly: `class.topic.assigned` +1 (step 2), `class.topic.unassigned` +1 (step 14), `attempt.started` +1 (step 6), `attempt.part.saved` +1 (step 7), `attempt.submitted` +1 (step 9), `marking.completed` +1 (step 9).                                                                                                           |
+
+### Sign-off checklist (Chunk 5)
+
+- [ ] All 18 steps above produced the expected result (15 skipped if no
+      admin user exists).
+- [ ] `npm run check` green on the same commit.
+- [ ] No console errors in the dev server log during the walk-through.
+- [ ] Every write triggered exactly one audit row; no reads wrote audit
+      rows.
+- [ ] Objective parts received a deterministic mark; open-response
+      parts (medium/extended/code/algorithm/trace table) appeared as
+      "pending" and did **not** produce `awarded_marks` rows.
+- [ ] Cross-pupil and teacher-without-admin access returned 403
+      (steps 12 and 13).
+
 ### Phase 1 sign-off checklist
 
 - [ ] (Filled in once all chunks ship.)

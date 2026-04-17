@@ -6,8 +6,17 @@ export interface ClassRow {
   teacher_id: string;
   academic_year: string;
   active: boolean;
+  topic_set_size: number;
   created_at: Date;
   updated_at: Date;
+}
+
+export interface AssignedTopicRow {
+  topic_code: string;
+  topic_title: string;
+  component_code: string;
+  assigned_by_display_name: string;
+  created_at: Date;
 }
 
 export interface ClassWithTeacherRow extends ClassRow {
@@ -30,6 +39,7 @@ const CLASS_COLUMNS = `
   teacher_id::text,
   academic_year,
   active,
+  topic_set_size,
   created_at,
   updated_at
 `;
@@ -127,6 +137,80 @@ export class ClassRepo {
          FROM users
         WHERE username = $1 AND role = 'pupil' AND active = true`,
       [username],
+    );
+    return rows[0] ?? null;
+  }
+
+  async assignTopic(
+    classId: string,
+    topicCode: string,
+    assignedBy: string,
+  ): Promise<'added' | 'already'> {
+    const { rowCount } = await this.pool.query(
+      `INSERT INTO class_assigned_topics (class_id, topic_code, assigned_by)
+       VALUES ($1::bigint, $2, $3::bigint)
+       ON CONFLICT DO NOTHING`,
+      [classId, topicCode, assignedBy],
+    );
+    return rowCount === 0 ? 'already' : 'added';
+  }
+
+  async unassignTopic(classId: string, topicCode: string): Promise<'removed' | 'not_assigned'> {
+    const { rowCount } = await this.pool.query(
+      `DELETE FROM class_assigned_topics WHERE class_id = $1::bigint AND topic_code = $2`,
+      [classId, topicCode],
+    );
+    return rowCount === 0 ? 'not_assigned' : 'removed';
+  }
+
+  async listAssignedTopics(classId: string): Promise<AssignedTopicRow[]> {
+    const { rows } = await this.pool.query<AssignedTopicRow>(
+      `SELECT cat.topic_code,
+              t.title AS topic_title,
+              t.component_code,
+              u.display_name AS assigned_by_display_name,
+              cat.created_at
+         FROM class_assigned_topics cat
+         JOIN topics t ON t.code = cat.topic_code
+         JOIN users  u ON u.id   = cat.assigned_by
+        WHERE cat.class_id = $1::bigint
+        ORDER BY t.component_code ASC, cat.topic_code ASC`,
+      [classId],
+    );
+    return rows;
+  }
+
+  async listAssignedTopicsForPupil(pupilId: string): Promise<AssignedTopicRow[]> {
+    const { rows } = await this.pool.query<AssignedTopicRow>(
+      `SELECT DISTINCT cat.topic_code,
+              t.title AS topic_title,
+              t.component_code,
+              u.display_name AS assigned_by_display_name,
+              cat.created_at
+         FROM class_assigned_topics cat
+         JOIN topics     t ON t.code = cat.topic_code
+         JOIN users      u ON u.id   = cat.assigned_by
+         JOIN enrolments e ON e.class_id = cat.class_id
+        WHERE e.user_id = $1::bigint
+        ORDER BY t.component_code ASC, cat.topic_code ASC`,
+      [pupilId],
+    );
+    return rows;
+  }
+
+  async findClassForPupilAndTopic(
+    pupilId: string,
+    topicCode: string,
+  ): Promise<{ class_id: string; topic_set_size: number } | null> {
+    const { rows } = await this.pool.query<{ class_id: string; topic_set_size: number }>(
+      `SELECT c.id::text AS class_id, c.topic_set_size
+         FROM classes c
+         JOIN enrolments e            ON e.class_id = c.id
+         JOIN class_assigned_topics t ON t.class_id = c.id
+        WHERE e.user_id = $1::bigint AND t.topic_code = $2
+        ORDER BY c.id
+        LIMIT 1`,
+      [pupilId, topicCode],
     );
     return rows[0] ?? null;
   }

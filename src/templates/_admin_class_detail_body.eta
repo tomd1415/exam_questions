@@ -21,6 +21,55 @@
     <button type="submit">Enrol</button>
   </form>
 
+  <h2>Assigned topics</h2>
+  <% if (!it.assignedTopics || it.assignedTopics.length === 0) { %>
+    <p class="empty">No topics assigned yet.</p>
+  <% } else { %>
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Topic</th>
+          <th>Title</th>
+          <th>Component</th>
+          <th>Assigned by</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% it.assignedTopics.forEach(function(t) { %>
+          <tr>
+            <td><%= t.topic_code %></td>
+            <td><%= t.topic_title %></td>
+            <td><%= t.component_code %></td>
+            <td><%= t.assigned_by_display_name %></td>
+            <td>
+              <form method="post" action="/admin/classes/<%= it.cls.id %>/topics/<%= encodeURIComponent(t.topic_code) %>/remove" class="inline-form">
+                <input type="hidden" name="_csrf" value="<%= it.csrfToken %>" />
+                <button type="submit" class="button button--danger">Remove</button>
+              </form>
+            </td>
+          </tr>
+        <% }); %>
+      </tbody>
+    </table>
+  <% } %>
+
+  <% if (it.availableTopics && it.availableTopics.length > 0) { %>
+    <form method="post" action="/admin/classes/<%= it.cls.id %>/topics" class="admin-form admin-form--inline">
+      <input type="hidden" name="_csrf" value="<%= it.csrfToken %>" />
+      <label>
+        <span>Assign topic</span>
+        <select name="topic_code" required>
+          <option value="">— Choose a topic —</option>
+          <% it.availableTopics.forEach(function(t) { %>
+            <option value="<%= t.code %>"><%= t.component_code %> · <%= t.code %> · <%= t.title %></option>
+          <% }); %>
+        </select>
+      </label>
+      <button type="submit">Assign</button>
+    </form>
+  <% } %>
+
   <h2>Enrolled pupils</h2>
   <% if (!it.pupils || it.pupils.length === 0) { %>
     <p class="empty">No pupils enrolled yet.</p>

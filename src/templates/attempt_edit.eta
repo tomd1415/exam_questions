@@ -1,0 +1,3 @@
+<%
+const body = include('_attempt_edit_body', it);
+%><%~ include('_chrome', { ...it, body, currentUser: it.currentUser }) %>
