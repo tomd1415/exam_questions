@@ -4,25 +4,37 @@ const perQuestion = it.bundle.attempt.reveal_mode === 'per_question';
 const totalQuestions = it.bundle.questions.length;
 let submittedCount = 0;
 it.bundle.questions.forEach(function(q) { if (q.submitted_at) submittedCount += 1; });
-
-function renderPart(part, questionSubmitted, csrfToken, attemptId, markPoints) {
-  // rendered inline below via eta; helper kept as a no-op placeholder
-}
+const paper = it.bundle.paper;
+const candidate = it.currentUser ? it.currentUser.pseudonym : null;
 %>
-<section class="admin-card">
-  <header class="admin-card__header">
-    <div>
-      <h1>Attempt <%= it.bundle.attempt.id %></h1>
-      <p class="admin-card__sub">
-        Topic: <%= it.bundle.attempt.target_topic_code || 'n/a' %> ·
-        <%= totalQuestions %> question<%= totalQuestions === 1 ? '' : 's' %>
-        <% if (perQuestion) { %>
-          · <%= submittedCount %> / <%= totalQuestions %> submitted
-        <% } %>
-        · Mode: <%= perQuestion ? 'one question at a time' : 'whole attempt' %>
-      </p>
-    </div>
-    <a href="/topics">Back to topics</a>
+<section class="paper-root" aria-label="Question paper">
+  <header class="paper-header">
+    <% if (paper.componentCode) { %>
+      <div class="paper-header__component"><%= paper.componentCode %><% if (paper.componentTitle) { %> · <%= paper.componentTitle %><% } %></div>
+    <% } %>
+    <h1 class="paper-header__title">
+      <% if (paper.topicCode) { %><%= paper.topicCode %><% if (paper.topicTitle) { %>: <%= paper.topicTitle %><% } %><% } else { %>Mixed revision<% } %>
+    </h1>
+    <dl class="paper-header__meta">
+      <% if (candidate) { %>
+        <div><dt>Candidate</dt><dd><%= candidate %></dd></div>
+      <% } %>
+      <div>
+        <dt>Total marks</dt>
+        <dd><%= paper.totalMarks %></dd>
+      </div>
+      <div>
+        <dt>Questions</dt>
+        <dd>
+          <%= totalQuestions %>
+          <% if (perQuestion) { %> · <%= submittedCount %> / <%= totalQuestions %> submitted<% } %>
+        </dd>
+      </div>
+      <div>
+        <dt>Mode</dt>
+        <dd><%= perQuestion ? 'one question at a time' : 'whole attempt' %></dd>
+      </div>
+    </dl>
   </header>
 
   <% if (it.flash) { %>
@@ -33,34 +45,36 @@ function renderPart(part, questionSubmitted, csrfToken, attemptId, markPoints) {
     <form method="post" action="/attempts/<%= it.bundle.attempt.id %>/save" class="question-form">
       <input type="hidden" name="_csrf" value="<%= it.csrfToken %>" />
       <% it.bundle.questions.forEach(function(q, idx) { %>
-        <article class="question-card" id="q-<%= q.id %>">
-          <header class="question-card__meta">
-            <span class="badge">Q<%= idx + 1 %></span>
-            <span class="badge badge--muted"><%= q.topic_code %> · <%= q.subtopic_code %></span>
-            <span class="badge badge--muted"><%= q.command_word_code %></span>
-            <span class="badge badge--muted"><%= q.marks_total %> marks</span>
+        <article class="paper-question" id="q-<%= q.id %>">
+          <header class="paper-question__header">
+            <p class="paper-question__stem">
+              <span class="paper-question__number">Q<%= idx + 1 %>.</span>
+              <%= q.stem %>
+            </p>
+            <span class="paper-question__total-marks">[<%= q.marks_total %> marks]</span>
           </header>
-          <p class="question-card__stem"><%= q.stem %></p>
 
           <% (it.bundle.partsByQuestion.get(q.id) || []).forEach(function(part) { %>
-            <fieldset class="question-part" id="p-<%= part.id %>">
-              <legend>
-                <span class="question-part__label"><%= part.part_label %></span>
-                <span class="question-part__prompt"><%= part.prompt %></span>
-                <span class="question-part__marks">[<%= part.marks %> marks]</span>
-              </legend>
-              <textarea name="part_<%= part.id %>"
-                        rows="5"
-                        maxlength="5000"
-                        autocapitalize="sentences"
-                        spellcheck="true"
-              ><%= part.raw_answer %></textarea>
-            </fieldset>
+            <div class="paper-part" id="p-<%= part.id %>">
+              <div class="paper-part__prompt">
+                <span class="paper-part__label"><%= part.part_label %></span>
+                <span class="paper-part__text"><%= part.prompt %></span>
+              </div>
+              <span class="paper-marks-gutter">[<%= part.marks %> marks]</span>
+              <div class="paper-answer">
+                <textarea name="part_<%= part.id %>"
+                          rows="5"
+                          maxlength="5000"
+                          autocapitalize="sentences"
+                          spellcheck="true"
+                ><%= part.raw_answer %></textarea>
+              </div>
+            </div>
           <% }); %>
         </article>
       <% }); %>
 
-      <div class="attempt-actions">
+      <div class="paper-actions">
         <button type="submit">Save progress</button>
         <button type="submit" formaction="/attempts/<%= it.bundle.attempt.id %>/submit" class="button button--primary">
           Submit attempt
@@ -87,9 +101,9 @@ function renderPart(part, questionSubmitted, csrfToken, attemptId, markPoints) {
     const nextUnsubmitted = it.bundle.questions.find(function(x) { return x.submitted_at === null; });
     %>
 
-    <nav class="attempt-nav">
+    <nav class="paper-nav">
       <span>Question <%= idx + 1 %> of <%= totalQuestions %></span>
-      <span class="attempt-nav__links">
+      <span class="paper-nav__links">
         <% if (prevQ) { %>
           <a href="/attempts/<%= it.bundle.attempt.id %>?q=<%= prevQ.id %>">← Previous</a>
         <% } %>
@@ -99,19 +113,19 @@ function renderPart(part, questionSubmitted, csrfToken, attemptId, markPoints) {
       </span>
     </nav>
 
-    <article class="question-card" id="q-<%= q.id %>">
-      <header class="question-card__meta">
-        <span class="badge">Q<%= idx + 1 %></span>
-        <span class="badge badge--muted"><%= q.topic_code %> · <%= q.subtopic_code %></span>
-        <span class="badge badge--muted"><%= q.command_word_code %></span>
-        <span class="badge badge--muted"><%= q.marks_total %> marks</span>
-        <% if (questionSubmitted) { %>
-          <span class="badge">
-            Question score: <%= questionAwarded %> / <%= questionPossible %><% if (questionPending > 0) { %> · <%= questionPending %> pending<% } %>
-          </span>
-        <% } %>
+    <article class="paper-question" id="q-<%= q.id %>">
+      <header class="paper-question__header">
+        <p class="paper-question__stem">
+          <span class="paper-question__number">Q<%= idx + 1 %>.</span>
+          <%= q.stem %>
+        </p>
+        <span class="paper-question__total-marks">
+          [<%= q.marks_total %> marks]
+          <% if (questionSubmitted) { %>
+            · <%= questionAwarded %> / <%= questionPossible %><% if (questionPending > 0) { %> · <%= questionPending %> pending<% } %>
+          <% } %>
+        </span>
       </header>
-      <p class="question-card__stem"><%= q.stem %></p>
 
       <% if (!questionSubmitted) { %>
         <form method="post"
@@ -119,21 +133,23 @@ function renderPart(part, questionSubmitted, csrfToken, attemptId, markPoints) {
               class="question-form">
           <input type="hidden" name="_csrf" value="<%= it.csrfToken %>" />
           <% parts.forEach(function(part) { %>
-            <fieldset class="question-part" id="p-<%= part.id %>">
-              <legend>
-                <span class="question-part__label"><%= part.part_label %></span>
-                <span class="question-part__prompt"><%= part.prompt %></span>
-                <span class="question-part__marks">[<%= part.marks %> marks]</span>
-              </legend>
-              <textarea name="part_<%= part.id %>"
-                        rows="5"
-                        maxlength="5000"
-                        autocapitalize="sentences"
-                        spellcheck="true"
-              ><%= part.raw_answer %></textarea>
-            </fieldset>
+            <div class="paper-part" id="p-<%= part.id %>">
+              <div class="paper-part__prompt">
+                <span class="paper-part__label"><%= part.part_label %></span>
+                <span class="paper-part__text"><%= part.prompt %></span>
+              </div>
+              <span class="paper-marks-gutter">[<%= part.marks %> marks]</span>
+              <div class="paper-answer">
+                <textarea name="part_<%= part.id %>"
+                          rows="5"
+                          maxlength="5000"
+                          autocapitalize="sentences"
+                          spellcheck="true"
+                ><%= part.raw_answer %></textarea>
+              </div>
+            </div>
           <% }); %>
-          <div class="attempt-actions">
+          <div class="paper-actions">
             <button type="submit" formaction="/attempts/<%= it.bundle.attempt.id %>/save">Save progress</button>
             <button type="submit" class="button button--primary">Submit question</button>
           </div>
@@ -205,7 +221,7 @@ function renderPart(part, questionSubmitted, csrfToken, attemptId, markPoints) {
           </div>
         <% }); %>
 
-        <div class="attempt-actions">
+        <div class="paper-actions">
           <% if (nextUnsubmitted) { %>
             <a class="btn button button--primary" href="/attempts/<%= it.bundle.attempt.id %>?q=<%= nextUnsubmitted.id %>">Next question →</a>
           <% } else { %>

@@ -517,7 +517,40 @@ questions for pupils to practise against.
 ... does it feel like an exam? Are the answer boxes the right size? Is
 the feedback panel useful?").
 
-### Stub — to be filled in when Phase 2 ships
+### 2.A Chunk 1 — paper-style chrome on the pupil edit view
+
+> **Shipped:** paper layout for the pre-submit pupil attempt view
+> (`_attempt_edit_body.eta` + new `paper.css`). Teacher metadata badges
+> (topic / subtopic / command word) were removed from the pupil surface;
+> they remain on the admin / review surfaces.
+
+1. As a pupil with at least one assigned topic, start a topic-set
+   attempt and land on `/attempts/:id`.
+2. Confirm the page reads like an OCR paper:
+   - A single bordered "paper" panel with a top header strip.
+   - Header shows the component code + title (e.g. `J277/01 · Computer
+systems`), the topic code + title (e.g. `1.2: Memory and storage`),
+     the candidate pseudonym, total marks, question count, and the
+     attempt mode (`one question at a time` or `whole attempt`).
+   - Each question starts with `Q<n>.` in the accent colour and lists
+     `[<marks> marks]` at the far right of the question header row.
+   - Each part has its `(a)` / `(b)` label on the left and a
+     `[<marks> marks]` chip in the right-hand gutter, aligned as if
+     printed in the margin.
+   - The answer textarea sits full-width under the part prompt, with a
+     thin paper-rule border (no heavy form chrome).
+3. Confirm the pupil view does **not** show teacher-facing metadata
+   badges (topic / subtopic / command-word chips). These still appear
+   on the admin question list and on the teacher review screens.
+4. Switch attempt mode (per-question vs whole-attempt) and confirm the
+   header mode line updates and the per-question branch shows
+   `<n> / <total> submitted` in the question count row.
+5. Resize the window down to a phone width; the marks gutter should
+   stay legible (no overflow, no crushed textareas).
+
+### Stub — remaining Phase 2 chunks
+
+**To be filled in when the remaining chunks ship.**
 
 Will need to cover:
 

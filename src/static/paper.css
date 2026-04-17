@@ -1,0 +1,190 @@
+/* Phase 2 Chunk 1 — OCR paper-style layout for the pupil edit view.
+   Scoped to .paper-root to avoid touching admin or review pages. */
+
+:root {
+  --paper-bg: #ffffff;
+  --paper-rule: #c9c9d4;
+  --paper-ink: #1a1a22;
+  --paper-ink-muted: #5b5b6a;
+  --paper-accent: #1d4ed8;
+  --paper-gutter: 6rem;
+  --paper-sep: #0f0f1a;
+}
+
+.paper-root {
+  background: var(--paper-bg);
+  border: 1px solid var(--paper-rule);
+  border-radius: 0.25rem;
+  padding: 2rem 1.5rem;
+  color: var(--paper-ink);
+}
+
+/* --- Header block -------------------------------------------------------- */
+
+.paper-header {
+  border-bottom: 2px solid var(--paper-sep);
+  padding-bottom: 1rem;
+  margin-bottom: 1.5rem;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.25rem 1rem;
+  align-items: end;
+}
+
+.paper-header__component {
+  grid-column: 1 / 2;
+  font-size: 0.85rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--paper-ink-muted);
+}
+
+.paper-header__title {
+  grid-column: 1 / 2;
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 600;
+}
+
+.paper-header__meta {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  font-size: 0.9rem;
+  color: var(--paper-ink-muted);
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--paper-rule);
+  margin-top: 0.5rem;
+}
+
+.paper-header__meta dt {
+  display: inline;
+  font-weight: 600;
+  color: var(--paper-ink);
+  margin-right: 0.35rem;
+}
+.paper-header__meta dd {
+  display: inline;
+  margin: 0;
+}
+.paper-header__meta > div {
+  display: inline-flex;
+  gap: 0.25rem;
+}
+
+/* --- Question block ------------------------------------------------------ */
+
+.paper-question {
+  border-top: 1px solid var(--paper-rule);
+  padding: 1.5rem 0 1rem 0;
+  margin: 0;
+}
+.paper-question:first-of-type {
+  border-top: 0;
+  padding-top: 0.5rem;
+}
+
+.paper-question__header {
+  display: grid;
+  grid-template-columns: 1fr var(--paper-gutter);
+  gap: 0.5rem 1rem;
+  align-items: baseline;
+  margin-bottom: 0.75rem;
+}
+
+.paper-question__number {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--paper-accent);
+}
+
+.paper-question__stem {
+  grid-column: 1 / 2;
+  font-size: 1rem;
+  margin: 0;
+}
+
+.paper-question__total-marks {
+  grid-column: 2 / 3;
+  justify-self: end;
+  align-self: start;
+  font-size: 0.85rem;
+  color: var(--paper-ink-muted);
+}
+
+/* --- Part / marks-in-margin --------------------------------------------- */
+
+.paper-part {
+  display: grid;
+  grid-template-columns: 1fr var(--paper-gutter);
+  gap: 0.5rem 1rem;
+  padding: 0.5rem 0 1rem 0;
+  border: 0;
+}
+.paper-part + .paper-part {
+  border-top: 1px dashed var(--paper-rule);
+  padding-top: 1rem;
+}
+
+.paper-part__prompt {
+  grid-column: 1 / 2;
+  display: flex;
+  gap: 0.4rem;
+  align-items: baseline;
+}
+.paper-part__label {
+  font-weight: 600;
+  color: var(--paper-accent);
+  min-width: 1.5em;
+}
+.paper-part__text {
+  font-weight: 500;
+}
+
+.paper-marks-gutter {
+  grid-column: 2 / 3;
+  justify-self: end;
+  align-self: start;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--paper-ink-muted);
+  white-space: nowrap;
+}
+
+.paper-answer {
+  grid-column: 1 / -1;
+  margin-top: 0.25rem;
+}
+.paper-answer textarea {
+  width: 100%;
+  font: inherit;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--paper-rule);
+  border-radius: 0.25rem;
+  resize: vertical;
+}
+
+/* --- Per-question nav + actions ---------------------------------------- */
+
+.paper-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+  color: var(--paper-ink-muted);
+}
+.paper-nav__links {
+  display: inline-flex;
+  gap: 1rem;
+}
+
+.paper-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 2px solid var(--paper-sep);
+}

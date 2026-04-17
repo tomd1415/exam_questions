@@ -6,6 +6,7 @@
     <meta name="robots" content="noindex" />
     <title><%= it.title %> · J277 revision</title>
     <link rel="stylesheet" href="/static/site.css" />
+    <link rel="stylesheet" href="/static/paper.css" />
   </head>
   <body>
     <header class="site-header">

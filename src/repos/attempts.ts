@@ -66,12 +66,21 @@ export interface AwardedMarkRow {
   created_at: Date;
 }
 
+export interface PaperHeader {
+  componentCode: string | null;
+  componentTitle: string | null;
+  topicCode: string | null;
+  topicTitle: string | null;
+  totalMarks: number;
+}
+
 export interface AttemptBundle {
   attempt: AttemptRow;
   questions: AttemptQuestionRow[];
   partsByQuestion: Map<string, AttemptPartRow[]>;
   markPointsByPart: Map<string, AttemptPartMarkPointRow[]>;
   awardedByAttemptPart: Map<string, AwardedMarkRow>;
+  paper: PaperHeader;
 }
 
 export class AttemptRepo {
@@ -348,7 +357,45 @@ export class AttemptRepo {
       });
     }
 
-    return { attempt, questions, partsByQuestion, markPointsByPart, awardedByAttemptPart };
+    const totalMarks = questions.reduce((sum, q) => sum + q.marks_total, 0);
+    let paper: PaperHeader = {
+      componentCode: null,
+      componentTitle: null,
+      topicCode: attempt.target_topic_code,
+      topicTitle: null,
+      totalMarks,
+    };
+    if (attempt.target_topic_code) {
+      const { rows: hdr } = await this.pool.query<{
+        component_code: string;
+        component_title: string;
+        topic_title: string;
+      }>(
+        `SELECT t.component_code, c.title AS component_title, t.title AS topic_title
+           FROM topics t
+           JOIN components c ON c.code = t.component_code
+          WHERE t.code = $1`,
+        [attempt.target_topic_code],
+      );
+      if (hdr[0]) {
+        paper = {
+          componentCode: hdr[0].component_code,
+          componentTitle: hdr[0].component_title,
+          topicCode: attempt.target_topic_code,
+          topicTitle: hdr[0].topic_title,
+          totalMarks,
+        };
+      }
+    }
+
+    return {
+      attempt,
+      questions,
+      partsByQuestion,
+      markPointsByPart,
+      awardedByAttemptPart,
+      paper,
+    };
   }
 
   async saveAnswer(attemptPartId: string, rawAnswer: string): Promise<number> {
