@@ -1,0 +1,41 @@
+<%
+const cfg = ((it.draft.payload || {}).parts?.[0]?.part_config) || {};
+const rows = Array.isArray(cfg.rows) ? cfg.rows : [];
+const columns = Array.isArray(cfg.columns) ? cfg.columns : [];
+const correctByRow = Array.isArray(cfg.correctByRow) ? cfg.correctByRow : [];
+const partialCredit = cfg.partialCredit !== false;
+const issueMap = it.issueMap || {};
+%>
+<fieldset class="wizard-step wizard-step--4 wizard-step--matrix">
+  <legend>Matrix &mdash; multiple ticks per row</legend>
+
+  <label for="rows">Row labels (one per line)</label>
+  <textarea id="rows" name="rows" rows="4" required><%= rows.join('\n') %></textarea>
+  <% (issueMap.rows || []).forEach(function (m) { %><p class="form-error"><%= m %></p><% }); %>
+
+  <label for="columns">Column labels (one per line, at least two)</label>
+  <textarea id="columns" name="columns" rows="3" required><%= columns.join('\n') %></textarea>
+  <% (issueMap.columns || []).forEach(function (m) { %><p class="form-error"><%= m %></p><% }); %>
+
+  <% if (rows.length > 0 && columns.length > 0) { %>
+    <fieldset class="matrix-correct">
+      <legend>Correct columns for each row (one per line, copy from the column list above)</legend>
+      <% rows.forEach(function (row, i) { %>
+        <div class="matrix-correct__row matrix-correct__row--multi">
+          <label for="correct_<%= i %>"><%= row %></label>
+          <textarea id="correct_<%= i %>" name="correct_<%= i %>" rows="3"><%
+            const list = Array.isArray(correctByRow[i]) ? correctByRow[i] : [];
+          %><%= list.join('\n') %></textarea>
+          <% (issueMap['correct_' + i] || []).forEach(function (m) { %><p class="form-error"><%= m %></p><% }); %>
+        </div>
+      <% }); %>
+    </fieldset>
+  <% } else { %>
+    <p class="form-hint">Save the rows and columns first; you&rsquo;ll mark the correct cells next.</p>
+  <% } %>
+
+  <label class="form-checkbox">
+    <input type="checkbox" name="partialCredit" <% if (partialCredit) { %>checked<% } %> />
+    Award partial credit (each correct tick scores; otherwise the row is all-or-nothing)
+  </label>
+</fieldset>

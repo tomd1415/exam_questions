@@ -1,0 +1,19 @@
+<%
+const cfg = ((it.draft.payload || {}).parts?.[0]?.part_config) || {};
+const tickOpts = Array.isArray(cfg.options) ? cfg.options : [];
+const tickExactly = typeof cfg.tickExactly === 'number' ? cfg.tickExactly : '';
+const issueMap = it.issueMap || {};
+%>
+<fieldset class="wizard-step wizard-step--4 wizard-step--tick-box">
+  <legend>Tick-box options</legend>
+
+  <label for="options">Options (one per line, in the order pupils will see them)</label>
+  <textarea id="options" name="options" rows="6" required><%= tickOpts.join('\n') %></textarea>
+  <% (issueMap.options || []).forEach(function (m) { %><p class="form-error"><%= m %></p><% }); %>
+
+  <label for="tickExactly">Tick exactly (optional)</label>
+  <input id="tickExactly" name="tickExactly" type="number" min="1" inputmode="numeric"
+         value="<%= tickExactly %>" />
+  <p class="form-hint">Leave blank to let pupils tick any number; set to e.g. 2 to require exactly that many.</p>
+  <% (issueMap.tickExactly || []).forEach(function (m) { %><p class="form-error"><%= m %></p><% }); %>
+</fieldset>

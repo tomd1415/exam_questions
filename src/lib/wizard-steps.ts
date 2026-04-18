@@ -26,6 +26,7 @@ import type { QuestionDraftPayload } from '../repos/question_drafts.js';
 import type { PartDraft, MarkPointDraft, MisconceptionDraft } from './question-invariants.js';
 import { SOURCE_TYPES, type SourceType } from './question-invariants.js';
 import { getWidget, registeredWidgetTypes } from './widgets.js';
+import { parseWidgetConfig } from './wizard-widget-editors.js';
 
 export interface StepIssue {
   path: string;
@@ -260,15 +261,29 @@ export function parseStep3(body: unknown, ctx: StepParseContext): StepParseResul
 }
 
 // ---------------------------------------------------------------------------
-// Step 4 — widget-specific editor (placeholder; per-widget editors land next)
+// Step 4 — widget-specific editor
 // ---------------------------------------------------------------------------
 
-export function parseStep4(_body: unknown, _ctx: StepParseContext): StepParseResult {
-  // Per-widget editors ship in the next sequencing chunk. Until then the
-  // page just advances; part_config was seeded on step 3 from the widget
-  // registry's exampleConfig, so the draft stays publishable for widgets
-  // where the example is a reasonable starting point.
-  return { ok: true, patch: {} };
+export function parseStep4(body: unknown, ctx: StepParseContext): StepParseResult {
+  const existing = ctx.currentPayload.parts?.[0];
+  const widget = existing?.expected_response_type;
+  if (!widget) {
+    return {
+      ok: false,
+      issues: [
+        {
+          path: 'expected_response_type',
+          message: 'Pick a widget on step 3 before configuring it.',
+        },
+      ],
+    };
+  }
+  const result = parseWidgetConfig(widget, body);
+  if (!result.ok) return { ok: false, issues: result.issues };
+
+  const base = ensurePart(ctx.currentPayload);
+  const part: PartDraft = { ...base, part_config: result.config ?? null };
+  return { ok: true, patch: { parts: [part] } };
 }
 
 // ---------------------------------------------------------------------------

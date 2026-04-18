@@ -1,0 +1,50 @@
+<%
+const cfg = ((it.draft.payload || {}).parts?.[0]?.part_config) || {};
+const left = Array.isArray(cfg.left) ? cfg.left : [];
+const right = Array.isArray(cfg.right) ? cfg.right : [];
+const correctPairs = Array.isArray(cfg.correctPairs) ? cfg.correctPairs : [];
+const partialCredit = cfg.partialCredit !== false;
+function rightFor(leftIdx) {
+  for (const pair of correctPairs) {
+    if (Array.isArray(pair) && pair[0] === leftIdx) return pair[1];
+  }
+  return null;
+}
+const issueMap = it.issueMap || {};
+%>
+<fieldset class="wizard-step wizard-step--4 wizard-step--matching">
+  <legend>Matching prompts to options</legend>
+
+  <label for="left">Prompts (one per line, in display order)</label>
+  <textarea id="left" name="left" rows="4" required><%= left.join('\n') %></textarea>
+  <% (issueMap.left || []).forEach(function (m) { %><p class="form-error"><%= m %></p><% }); %>
+
+  <label for="right">Options (one per line, may include distractors)</label>
+  <textarea id="right" name="right" rows="5" required><%= right.join('\n') %></textarea>
+  <% (issueMap.right || []).forEach(function (m) { %><p class="form-error"><%= m %></p><% }); %>
+
+  <% if (left.length > 0 && right.length > 0) { %>
+    <fieldset class="matching-pairs">
+      <legend>Pair each prompt with its correct option</legend>
+      <% left.forEach(function (lbl, i) { %>
+        <div class="matching-pairs__row">
+          <label for="right_for_<%= i %>"><%= lbl %></label>
+          <select id="right_for_<%= i %>" name="right_for_<%= i %>" required>
+            <option value="">&mdash; pick &mdash;</option>
+            <% right.forEach(function (r, j) { %>
+              <option value="<%= j %>" <% if (rightFor(i) === j) { %>selected<% } %>><%= r %></option>
+            <% }); %>
+          </select>
+          <% (issueMap['right_for_' + i] || []).forEach(function (m) { %><p class="form-error"><%= m %></p><% }); %>
+        </div>
+      <% }); %>
+    </fieldset>
+  <% } else { %>
+    <p class="form-hint">Save the prompts and options first; you&rsquo;ll pair them up next.</p>
+  <% } %>
+
+  <label class="form-checkbox">
+    <input type="checkbox" name="partialCredit" <% if (partialCredit) { %>checked<% } %> />
+    Award partial credit (each correct pair scores; otherwise the whole question is all-or-nothing)
+  </label>
+</fieldset>

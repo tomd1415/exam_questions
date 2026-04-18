@@ -1,0 +1,25 @@
+<%
+const cfg = ((it.draft.payload || {}).parts?.[0]?.part_config) || {};
+const canvas = (cfg.canvas && typeof cfg.canvas === 'object') ? cfg.canvas : {};
+const width = typeof canvas.width === 'number' ? canvas.width : 600;
+const height = typeof canvas.height === 'number' ? canvas.height : 500;
+const issueMap = it.issueMap || {};
+%>
+<fieldset class="wizard-step wizard-step--4 wizard-step--canvas">
+  <legend>Flowchart canvas</legend>
+
+  <p class="form-hint">
+    Pupils will draw their flowchart on a blank canvas of the size you set here. Phase&nbsp;2.5
+    ships pen-and-clear only; the flowchart is sent to teacher review as an image.
+  </p>
+
+  <label for="canvas_width">Canvas width (px)</label>
+  <input id="canvas_width" name="canvas_width" type="number" min="100" max="2000"
+         inputmode="numeric" value="<%= width %>" required />
+  <% (issueMap.canvas_width || []).forEach(function (m) { %><p class="form-error"><%= m %></p><% }); %>
+
+  <label for="canvas_height">Canvas height (px)</label>
+  <input id="canvas_height" name="canvas_height" type="number" min="100" max="2000"
+         inputmode="numeric" value="<%= height %>" required />
+  <% (issueMap.canvas_height || []).forEach(function (m) { %><p class="form-error"><%= m %></p><% }); %>
+</fieldset>

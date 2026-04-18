@@ -1,0 +1,42 @@
+<%
+const cfg = ((it.draft.payload || {}).parts?.[0]?.part_config) || {};
+const imageUrl = typeof cfg.imageUrl === 'string' ? cfg.imageUrl : '';
+const imageAlt = typeof cfg.imageAlt === 'string' ? cfg.imageAlt : '';
+const width = typeof cfg.width === 'number' ? cfg.width : '';
+const height = typeof cfg.height === 'number' ? cfg.height : '';
+const hotspots = Array.isArray(cfg.hotspots) ? cfg.hotspots : [];
+function formatHotspots(list) {
+  return list.map(function (h) {
+    if (!h || typeof h !== 'object') return '';
+    const accept = Array.isArray(h.accept) ? h.accept.join(', ') : '';
+    return [h.id, h.x, h.y, h.width, h.height, accept].join('|');
+  }).join('\n');
+}
+const issueMap = it.issueMap || {};
+%>
+<fieldset class="wizard-step wizard-step--4 wizard-step--diagram-labels">
+  <legend>Diagram with labelled hotspots</legend>
+
+  <label for="imageUrl">Image URL (must start with <code>/static/</code> or <code>https://</code>)</label>
+  <input id="imageUrl" name="imageUrl" type="text" value="<%= imageUrl %>" required />
+  <% (issueMap.imageUrl || []).forEach(function (m) { %><p class="form-error"><%= m %></p><% }); %>
+
+  <label for="imageAlt">Image alt text (for screen readers)</label>
+  <input id="imageAlt" name="imageAlt" type="text" value="<%= imageAlt %>" required />
+  <% (issueMap.imageAlt || []).forEach(function (m) { %><p class="form-error"><%= m %></p><% }); %>
+
+  <label for="width">Image width (px)</label>
+  <input id="width" name="width" type="number" min="50" max="4000" inputmode="numeric"
+         value="<%= width %>" required />
+  <% (issueMap.width || []).forEach(function (m) { %><p class="form-error"><%= m %></p><% }); %>
+
+  <label for="height">Image height (px)</label>
+  <input id="height" name="height" type="number" min="50" max="4000" inputmode="numeric"
+         value="<%= height %>" required />
+  <% (issueMap.height || []).forEach(function (m) { %><p class="form-error"><%= m %></p><% }); %>
+
+  <label for="hotspots">Hotspots (one per line, format <code>id|x|y|width|height|answer1, answer2</code>)</label>
+  <textarea id="hotspots" name="hotspots" rows="6" required><%= formatHotspots(hotspots) %></textarea>
+  <p class="form-hint">x, y are the top-left corner of the hotspot in pixels relative to the image.</p>
+  <% (issueMap.hotspots || []).forEach(function (m) { %><p class="form-error"><%= m %></p><% }); %>
+</fieldset>

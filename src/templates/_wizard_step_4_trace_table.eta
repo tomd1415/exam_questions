@@ -1,0 +1,42 @@
+<%
+const cfg = ((it.draft.payload || {}).parts?.[0]?.part_config) || {};
+const cols = Array.isArray(cfg.columns) ? cfg.columns : [];
+const colNames = cols.map(function (c) { return c && typeof c.name === 'string' ? c.name : ''; });
+const rows = typeof cfg.rows === 'number' ? cfg.rows : '';
+const prefill = (cfg.prefill && typeof cfg.prefill === 'object') ? cfg.prefill : {};
+const expected = (cfg.expected && typeof cfg.expected === 'object') ? cfg.expected : {};
+function formatCells(map) {
+  return Object.keys(map).sort().map(function (k) { return k + '=' + map[k]; }).join('\n');
+}
+const mode = (cfg.marking && typeof cfg.marking.mode === 'string') ? cfg.marking.mode : 'perCell';
+const issueMap = it.issueMap || {};
+%>
+<fieldset class="wizard-step wizard-step--4 wizard-step--trace">
+  <legend>Trace / truth table</legend>
+
+  <label for="columns">Column names (one per line, in display order)</label>
+  <textarea id="columns" name="columns" rows="3" required><%= colNames.join('\n') %></textarea>
+  <% (issueMap.columns || []).forEach(function (m) { %><p class="form-error"><%= m %></p><% }); %>
+
+  <label for="rows">Number of rows</label>
+  <input id="rows" name="rows" type="number" min="1" max="50" inputmode="numeric"
+         value="<%= rows %>" required />
+  <% (issueMap.rows || []).forEach(function (m) { %><p class="form-error"><%= m %></p><% }); %>
+
+  <label for="prefill">Pre-filled cells (one per line, format <code>row,col=value</code>; row and col are 0-indexed)</label>
+  <textarea id="prefill" name="prefill" rows="4"><%= formatCells(prefill) %></textarea>
+  <p class="form-hint">Use this for the cells you give the pupil up front. Pupils see them as read-only.</p>
+  <% (issueMap.prefill || []).forEach(function (m) { %><p class="form-error"><%= m %></p><% }); %>
+
+  <label for="expected">Expected cells (one per line, format <code>row,col=value</code>)</label>
+  <textarea id="expected" name="expected" rows="6" required><%= formatCells(expected) %></textarea>
+  <p class="form-hint">List every cell the pupil must fill in. Cells not listed here will be marked decorative.</p>
+  <% (issueMap.expected || []).forEach(function (m) { %><p class="form-error"><%= m %></p><% }); %>
+
+  <label for="mode">Marking mode</label>
+  <select id="mode" name="mode">
+    <option value="perCell" <% if (mode === 'perCell') { %>selected<% } %>>Per cell (each correct cell scores)</option>
+    <option value="perRow" <% if (mode === 'perRow') { %>selected<% } %>>Per row (whole row must be right)</option>
+    <option value="allOrNothing" <% if (mode === 'allOrNothing') { %>selected<% } %>>All or nothing (whole table must be right)</option>
+  </select>
+</fieldset>

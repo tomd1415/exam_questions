@@ -1,0 +1,29 @@
+<%
+const cfg = ((it.draft.payload || {}).parts?.[0]?.part_config) || {};
+const text = typeof cfg.text === 'string' ? cfg.text : '';
+const gaps = Array.isArray(cfg.gaps) ? cfg.gaps : [];
+const bank = Array.isArray(cfg.bank) ? cfg.bank : [];
+function formatGaps(list) {
+  return list.map(function (g) {
+    const accept = Array.isArray(g.accept) ? g.accept.join(', ') : '';
+    return (g && typeof g.id === 'string' ? g.id : '') + '|' + accept;
+  }).join('\n');
+}
+const issueMap = it.issueMap || {};
+%>
+<fieldset class="wizard-step wizard-step--4 wizard-step--cloze wizard-step--cloze-bank">
+  <legend>Cloze with word bank</legend>
+
+  <label for="text">Passage (use <code>{{id}}</code> markers for each gap)</label>
+  <textarea id="text" name="text" rows="6" required><%= text %></textarea>
+  <% (issueMap.text || []).forEach(function (m) { %><p class="form-error"><%= m %></p><% }); %>
+
+  <label for="gaps">Gaps (one per line, format <code>id|answer1, answer2</code>)</label>
+  <textarea id="gaps" name="gaps" rows="5" required><%= formatGaps(gaps) %></textarea>
+  <% (issueMap.gaps || []).forEach(function (m) { %><p class="form-error"><%= m %></p><% }); %>
+
+  <label for="bank">Word bank (one per line, include distractors)</label>
+  <textarea id="bank" name="bank" rows="4" required><%= bank.join('\n') %></textarea>
+  <p class="form-hint">Pupils pick from this list. Add a few distractors so the answer isn&rsquo;t given away.</p>
+  <% (issueMap.bank || []).forEach(function (m) { %><p class="form-error"><%= m %></p><% }); %>
+</fieldset>

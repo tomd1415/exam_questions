@@ -1,20 +1,18 @@
 <%
 const p = it.draft.payload || {};
 const widget = p.expected_response_type || '';
+// Widgets that don't accept a part_config get the noop partial; everything
+// else has its own template name suffix.
+const NOOP = new Set([
+  'multiple_choice', 'short_text', 'medium_text',
+  'extended_response', 'code', 'algorithm',
+]);
+const partial = widget && !NOOP.has(widget) ? '_wizard_step_4_' + widget : '_wizard_step_4_noop';
 %>
-<fieldset class="wizard-step wizard-step--4">
-  <legend class="visually-hidden">Widget configuration</legend>
-  <div class="admin-wizard__placeholder">
-    <p>
-      You picked <strong><%= widget || '(no widget yet)' %></strong>.
-      The per-widget editor that lets you set rows, columns, gaps, hotspots, and
-      the like lands in the next change. For now, the draft uses the widget&rsquo;s
-      example configuration; you can fine-tune it on the single-page form after
-      publishing, or wait for the per-widget editor.
-    </p>
-    <p>
-      Pressing <strong>Save and continue</strong> leaves the example configuration
-      in place and moves you to writing the stem.
-    </p>
-  </div>
-</fieldset>
+<% if (!widget) { %>
+  <fieldset class="wizard-step wizard-step--4">
+    <p class="form-error">Pick a widget on step 3 first.</p>
+  </fieldset>
+<% } else { %>
+  <%~ include(partial, it) %>
+<% } %>

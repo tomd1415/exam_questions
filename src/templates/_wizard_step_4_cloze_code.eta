@@ -1,0 +1,23 @@
+<%
+const cfg = ((it.draft.payload || {}).parts?.[0]?.part_config) || {};
+const text = typeof cfg.text === 'string' ? cfg.text : '';
+const gaps = Array.isArray(cfg.gaps) ? cfg.gaps : [];
+function formatGaps(list) {
+  return list.map(function (g) {
+    const accept = Array.isArray(g.accept) ? g.accept.join(', ') : '';
+    return (g && typeof g.id === 'string' ? g.id : '') + '|' + accept;
+  }).join('\n');
+}
+const issueMap = it.issueMap || {};
+%>
+<fieldset class="wizard-step wizard-step--4 wizard-step--cloze wizard-step--cloze-code">
+  <legend>Cloze (code / pseudocode)</legend>
+
+  <label for="text">Code or pseudocode (use <code>{{id}}</code> markers for each gap; whitespace is preserved)</label>
+  <textarea id="text" name="text" rows="8" required class="font-mono"><%= text %></textarea>
+  <% (issueMap.text || []).forEach(function (m) { %><p class="form-error"><%= m %></p><% }); %>
+
+  <label for="gaps">Gaps (one per line, format <code>id|answer1, answer2</code>)</label>
+  <textarea id="gaps" name="gaps" rows="5" required><%= formatGaps(gaps) %></textarea>
+  <% (issueMap.gaps || []).forEach(function (m) { %><p class="form-error"><%= m %></p><% }); %>
+</fieldset>
