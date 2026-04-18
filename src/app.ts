@@ -34,6 +34,7 @@ import { registerAdminAttemptRoutes } from './routes/admin-attempts.js';
 import { registerAdminTopicRoutes } from './routes/admin-topics.js';
 import { registerAttemptRoutes } from './routes/attempts.js';
 import { registerFeedbackRoutes } from './routes/feedback.js';
+import { registerApiRoutes } from './routes/api.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const TEMPLATES_DIR = resolve(__dirname, 'templates');
@@ -234,6 +235,7 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
   registerAdminQuestionRoutes(app);
   registerAdminTopicRoutes(app);
   registerFeedbackRoutes(app);
+  registerApiRoutes(app);
 
   app.get('/healthz', () => ({ ok: true }));
 

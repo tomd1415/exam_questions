@@ -4,6 +4,12 @@ import {
   markCloze,
   parseClozeRawAnswer,
 } from '../../lib/cloze.js';
+import {
+  isTraceGridConfig,
+  markTraceGrid,
+  parseTraceGridRawAnswer,
+  serialiseTraceGridAnswer,
+} from '../../lib/trace-grid.js';
 import { normalise } from './normalise.js';
 
 // Pure deterministic marker. No DB, no HTTP, no LLM. Feed it a part, a
@@ -19,6 +25,7 @@ export const OBJECTIVE_RESPONSE_TYPES = new Set<string>([
   'cloze_free',
   'cloze_with_bank',
   'cloze_code',
+  'trace_table',
 ]);
 
 export const OPEN_RESPONSE_TYPES = new Set<string>([
@@ -26,7 +33,6 @@ export const OPEN_RESPONSE_TYPES = new Set<string>([
   'extended_response',
   'code',
   'algorithm',
-  'trace_table',
 ]);
 
 export interface MarkingInputPart {
@@ -83,6 +89,7 @@ export function markAttemptPart(
   if (type === 'cloze_free' || type === 'cloze_with_bank' || type === 'cloze_code') {
     return markClozePart(part, rawAnswer, markPoints, type);
   }
+  if (type === 'trace_table') return markTraceTable(part, rawAnswer, markPoints);
   return markShortText(part, rawAnswer, markPoints);
 }
 
@@ -490,5 +497,80 @@ function markClozePart(
     marks_possible: part.marks,
     mark_point_outcomes: outcomes,
     normalised_answer: normalisedLines.join('\n'),
+  };
+}
+
+// trace_table
+//
+// raw_answer encodes one line per filled cell, in the shape
+// `<row>,<col>=<value>` (0-indexed, both row and col within the grid).
+// Pre-filled cells are not posted by the renderer; they live in
+// `part_config.prefill` only.
+//
+// `markPoints` should contain one entry per author-marked cell, in
+// row-then-column order matching the iteration over `part_config.expected`.
+// If `markPoints` runs short, the cell coordinate stands in for the label.
+
+function markTraceTable(
+  part: MarkingInputPart,
+  rawAnswer: string,
+  markPoints: readonly MarkingInputMarkPoint[],
+): MarkingResult {
+  const config = part.part_config;
+  if (!isTraceGridConfig(config)) {
+    return { kind: 'teacher_pending', marks_possible: part.marks, reason: 'unknown_type' };
+  }
+
+  const pupilAnswers = parseTraceGridRawAnswer(rawAnswer);
+  const result = markTraceGrid(config, pupilAnswers);
+
+  // For perRow, a cell scores only if every cell in its row also hit.
+  // For allOrNothing, a cell scores only if every expected cell hit.
+  // Per-cell `hit` flags reflect exact match regardless of mode.
+  const fullyCorrectRows = new Set<number>();
+  if (config.marking.mode === 'perRow') {
+    const byRow = new Map<number, boolean>();
+    for (const cell of result.outcomes) {
+      const prior = byRow.get(cell.r) ?? true;
+      byRow.set(cell.r, prior && cell.hit);
+    }
+    for (const [row, allHit] of byRow) {
+      if (allHit) fullyCorrectRows.add(row);
+    }
+  }
+  const wholeGridCorrect =
+    config.marking.mode === 'allOrNothing' &&
+    result.total > 0 &&
+    result.outcomes.every((o) => o.hit);
+
+  const outcomes: MarkPointOutcome[] = result.outcomes.map((cell, i) => {
+    const mp = markPoints[i];
+    let awardedHit = cell.hit;
+    if (config.marking.mode === 'perRow') {
+      awardedHit = cell.hit && fullyCorrectRows.has(cell.r);
+    } else if (config.marking.mode === 'allOrNothing') {
+      awardedHit = wholeGridCorrect;
+    }
+    return {
+      text: mp ? mp.text : `Cell ${cell.key}`,
+      marks: mp ? mp.marks : 1,
+      is_required: mp ? mp.is_required : false,
+      hit: awardedHit,
+    };
+  });
+
+  const hitMarks = outcomes.filter((o) => o.hit).reduce((sum, o) => sum + o.marks, 0);
+
+  const filteredAnswers = new Map<string, string>();
+  for (const [key, value] of pupilAnswers) {
+    if (key in config.expected) filteredAnswers.set(key, value);
+  }
+
+  return {
+    kind: 'awarded',
+    marks_awarded: clampMarks(enforceRequired(hitMarks, outcomes), part.marks),
+    marks_possible: part.marks,
+    mark_point_outcomes: outcomes,
+    normalised_answer: serialiseTraceGridAnswer(filteredAnswers),
   };
 }

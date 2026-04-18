@@ -14,24 +14,51 @@
   "parts": [
     {
       "label": "(a)",
-      "prompt": "Complete a trace table showing the value of total after each iteration, and state the final output.",
-      "marks": 3,
+      "prompt": "Complete the trace table showing the value of total after each iteration. The i column is filled in for you.",
+      "marks": 4,
       "expected_response_type": "trace_table",
+      "part_config": {
+        "columns": [
+          { "name": "i", "width": 3 },
+          { "name": "total", "width": 4 },
+          { "name": "output", "width": 6 }
+        ],
+        "rows": 5,
+        "prefill": {
+          "0,0": "1",
+          "1,0": "2",
+          "2,0": "3",
+          "3,0": "4"
+        },
+        "expected": {
+          "0,1": "2",
+          "1,1": "6",
+          "2,1": "12",
+          "3,1": "20",
+          "4,2": "20"
+        },
+        "marking": { "mode": "perCell" }
+      },
       "mark_points": [
         {
-          "text": "correct intermediate values: total = 2, 6, 12, 20",
+          "text": "row 1: total = 2",
           "marks": 1,
-          "accepted_alternatives": ["trace shows 2, 6, 12, 20"]
+          "accepted_alternatives": []
         },
         {
-          "text": "shows working with i values 1, 2, 3, 4",
+          "text": "row 2: total = 6",
           "marks": 1,
-          "accepted_alternatives": ["records i going 1..4"]
+          "accepted_alternatives": []
         },
         {
-          "text": "final printed output is 20",
+          "text": "row 3: total = 12",
           "marks": 1,
-          "accepted_alternatives": ["output: 20"]
+          "accepted_alternatives": []
+        },
+        {
+          "text": "row 4: total = 20; final output 20",
+          "marks": 1,
+          "accepted_alternatives": []
         }
       ]
     }

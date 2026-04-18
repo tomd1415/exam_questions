@@ -321,20 +321,79 @@ const t = part.expected_response_type;
     <% if (isCode) { %></pre><% } else { %></p><% } %>
   </div>
 <% } else if (t === 'trace_table') { %>
-  <p class="widget-hint">
-    One row per line; separate columns with <code>|</code>.
-    The header row should name each variable or output column.
-  </p>
-  <textarea class="widget widget--trace-table"
-            name="<%= fieldName %>"
-            rows="<%= Math.min(14, Math.max(5, part.marks * 2)) %>"
-            maxlength="5000"
-            spellcheck="false"
-            autocapitalize="none"
-            autocorrect="off"
-            data-autosave-part-id="<%= part.id %>"
-            aria-describedby="marks-<%= part.id %>"
-  ><%= prior %></textarea>
+  <%
+    const tg = part.part_config || {};
+    const tgColumns = Array.isArray(tg.columns) ? tg.columns : [];
+    const tgRows = Number.isInteger(tg.rows) && tg.rows > 0 ? tg.rows : 0;
+    const tgPrefill = (tg.prefill && typeof tg.prefill === 'object') ? tg.prefill : {};
+    const tgExpected = (tg.expected && typeof tg.expected === 'object') ? tg.expected : {};
+    // Reconstitute prior pupil answers from raw_answer's `r,c=value` lines.
+    const priorByCell = new Map();
+    priorLines.forEach(function(line) {
+      const eq = line.indexOf('=');
+      if (eq <= 0) return;
+      const key = line.slice(0, eq).trim();
+      const value = line.slice(eq + 1);
+      if (!/^\d+,\d+$/.test(key) || value.length === 0) return;
+      if (!priorByCell.has(key)) priorByCell.set(key, value);
+    });
+    function colWidth(col) {
+      if (col && Number.isInteger(col.width) && col.width > 0) {
+        return Math.min(40, Math.max(2, col.width));
+      }
+      return 6;
+    }
+  %>
+  <div class="widget widget--trace-table trace-grid-wrap"
+       data-autosave-part-id="<%= part.id %>"
+       aria-describedby="marks-<%= part.id %>">
+    <table class="trace-grid">
+      <thead>
+        <tr>
+          <th scope="col" class="trace-grid__row-head">#</th>
+          <% tgColumns.forEach(function(col) { %>
+            <th scope="col"><%= col.name %></th>
+          <% }); %>
+        </tr>
+      </thead>
+      <tbody>
+        <% for (let r = 0; r < tgRows; r++) { %>
+          <tr>
+            <th scope="row" class="trace-grid__row-head"><%= r + 1 %></th>
+            <% tgColumns.forEach(function(col, c) {
+                 const key = r + ',' + c;
+                 const isPrefilled = Object.prototype.hasOwnProperty.call(tgPrefill, key);
+                 const isExpected = Object.prototype.hasOwnProperty.call(tgExpected, key);
+                 const cellName = fieldName + '__' + key;
+                 const value = isPrefilled
+                   ? tgPrefill[key]
+                   : (priorByCell.get(key) || '');
+            %>
+              <td class="trace-grid__cell<%= isPrefilled ? ' trace-grid__cell--prefilled' : '' %>">
+                <% if (isPrefilled) { %>
+                  <span class="trace-grid__prefill"
+                        aria-label="Pre-filled <%= col.name %> row <%= r + 1 %>"><%= value %></span>
+                <% } else { %>
+                  <input type="text"
+                         class="trace-grid__input"
+                         name="<%= cellName %>"
+                         value="<%= value %>"
+                         size="<%= colWidth(col) %>"
+                         maxlength="40"
+                         autocomplete="off"
+                         autocapitalize="none"
+                         autocorrect="off"
+                         spellcheck="false"
+                         data-trace-cell="<%= key %>"
+                         aria-label="<%= col.name %> row <%= r + 1 %><%= isExpected ? '' : ' (working)' %>" />
+                <% } %>
+              </td>
+            <% }); %>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
 <% } else { %>
   <textarea class="widget widget--fallback"
             name="<%= fieldName %>"

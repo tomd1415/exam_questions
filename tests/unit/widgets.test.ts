@@ -53,7 +53,6 @@ const NO_CONFIG_WIDGETS: readonly string[] = [
   'extended_response',
   'code',
   'algorithm',
-  'trace_table',
 ];
 
 // tick_box accepts a part_config but it is optional, so it is excluded

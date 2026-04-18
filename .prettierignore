@@ -5,3 +5,4 @@ OCR_Docs/
 content/source/
 *.min.js
 package-lock.json
+docs/widgets.schema.json

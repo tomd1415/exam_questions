@@ -18,8 +18,16 @@ afterAll(async () => {
   await app.close();
 });
 
-describe('trace_table: pipe-separated grid round-trips via save + submit', () => {
-  it('stores the verbatim string and marks the part as teacher_pending', async () => {
+const TRACE_PART_CONFIG = {
+  columns: [{ name: 'i' }, { name: 'total' }],
+  rows: 2,
+  prefill: { '0,0': '1', '1,0': '2' },
+  expected: { '0,1': '2', '1,1': '6' },
+  marking: { mode: 'perCell' },
+} as const;
+
+describe('trace_table: grid round-trips via save + submit', () => {
+  it('stores per-cell raw_answer and awards deterministic marks', async () => {
     const pool = getSharedPool();
     const teacher = await createUser(pool, { role: 'teacher' });
     const pupil = await createUser(pool, { role: 'pupil' });
@@ -51,8 +59,13 @@ describe('trace_table: pipe-separated grid round-trips via save + submit', () =>
         {
           label: '(a)',
           prompt: 'Trace this algorithm.',
-          marks: 3,
+          marks: 2,
           expectedResponseType: 'trace_table',
+          partConfig: TRACE_PART_CONFIG,
+          markPoints: [
+            { text: 'row 1: total = 2', marks: 1, acceptedAlternatives: [] },
+            { text: 'row 2: total = 6', marks: 1, acceptedAlternatives: [] },
+          ],
         },
       ],
     });
@@ -71,9 +84,10 @@ describe('trace_table: pipe-separated grid round-trips via save + submit', () =>
     expect(partRows.length).toBe(1);
     const attemptPartId = partRows[0]!.id;
 
-    const gridAnswer = 'x | y | output\n1 | 2 | 3\n2 | 5 | 7';
+    // Cells posted as `<r>,<c>=<value>` lines (the route aggregator
+    // turns `part_<id>__<r>,<c>` form fields into these lines).
+    const gridAnswer = '0,1=2\n1,1=6';
 
-    // Save → submit, mimicking the HTTP flow.
     await app.services.attempts.saveAnswer(actor, attemptId, [
       { attemptPartId, rawAnswer: gridAnswer },
     ]);
@@ -89,8 +103,9 @@ describe('trace_table: pipe-separated grid round-trips via save + submit', () =>
       `SELECT marker, marks_awarded FROM awarded_marks WHERE attempt_part_id = $1::bigint`,
       [attemptPartId],
     );
-    // Open type: teacher will mark it; no deterministic row is written.
-    expect(awarded).toHaveLength(0);
+    expect(awarded).toHaveLength(1);
+    expect(awarded[0]?.marker).toBe('deterministic');
+    expect(awarded[0]?.marks_awarded).toBe(2);
 
     const { rows: attemptRow } = await pool.query<{ submitted_at: Date | null }>(
       `SELECT submitted_at FROM attempts WHERE id = $1::bigint`,

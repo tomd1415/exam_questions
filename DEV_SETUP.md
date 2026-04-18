@@ -63,19 +63,20 @@ Extensions enabled on first init: `vector`, `pg_trgm`, `citext`. See [scripts/db
 
 Useful variations:
 
-| Command                     | Purpose                                                                                                              |
-| --------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| `npm run db:down`           | stop the container (data persists)                                                                                   |
-| `npm run db:reset`          | stop and **wipe** the volume, then recreate (runs `db-init.sh` again)                                                |
-| `npm run db:logs`           | tail the container logs                                                                                              |
-| `npm run db:migrate`        | apply any unapplied migrations in `migrations/` via `src/db/migrate.ts` — idempotent, safe to re-run                 |
-| `npm run db:backup`         | pg_dump to `./tmp/backups/exam_dev-<ts>.dump` plus a `.sha256`                                                       |
-| `npm run db:restore-drill`  | restore the latest backup into a scratch DB, assert sensible row counts, then drop the scratch DB                    |
-| `npm run user:create`       | CLI to create a user (role/username/display-name/pseudonym/password). Idempotent. See `src/scripts/create-user.ts`   |
-| `npm run content:seed`      | CLI to upsert curated questions from `content/curated/*.json`. Supports `--dry-run`                                  |
-| `npm run setup:lesson`      | CLI that seeds a teacher, a class, pupils, and an assigned topic for a fresh demo. See `src/scripts/setup-lesson.ts` |
-| `npm run test:human:phase0` | Run the Phase 0 automated human-test walker                                                                          |
-| `npm run test:human:phase1` | Run the Phase 1 automated human-test walker (requires Playwright Chromium on first use)                              |
+| Command                      | Purpose                                                                                                                                                              |
+| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm run db:down`            | stop the container (data persists)                                                                                                                                   |
+| `npm run db:reset`           | stop and **wipe** the volume, then recreate (runs `db-init.sh` again)                                                                                                |
+| `npm run db:logs`            | tail the container logs                                                                                                                                              |
+| `npm run db:migrate`         | apply any unapplied migrations in `migrations/` via `src/db/migrate.ts` — idempotent, safe to re-run                                                                 |
+| `npm run db:backup`          | pg_dump to `./tmp/backups/exam_dev-<ts>.dump` plus a `.sha256`                                                                                                       |
+| `npm run db:restore-drill`   | restore the latest backup into a scratch DB, assert sensible row counts, then drop the scratch DB                                                                    |
+| `npm run user:create`        | CLI to create a user (role/username/display-name/pseudonym/password). Idempotent. See `src/scripts/create-user.ts`                                                   |
+| `npm run content:seed`       | CLI to upsert curated questions from `content/curated/*.json`. Supports `--dry-run`                                                                                  |
+| `npm run setup:lesson`       | CLI that seeds a teacher, a class, pupils, and an assigned topic for a fresh demo. See `src/scripts/setup-lesson.ts`                                                 |
+| `npm run gen:widgets-schema` | Snapshot the live widget registry to `docs/widgets.schema.json`. Re-run after editing `src/lib/widgets.ts`; CI's freshness test fails if the committed file is stale |
+| `npm run test:human:phase0`  | Run the Phase 0 automated human-test walker                                                                                                                          |
+| `npm run test:human:phase1`  | Run the Phase 1 automated human-test walker (requires Playwright Chromium on first use)                                                                              |
 
 ## Daily workflow
 

@@ -129,11 +129,20 @@ schema rename — so live seeded content continues to resolve.
 Grouped by user-visible surface. Detailed per-chunk breakdown is §5.
 
 - **Widget registry.** `src/lib/widgets.ts` exports a registry keyed
-  by `expected_response_type` with `{ partial, validate, summarise,
-deterministicMarker | null }` per entry. `_paper_part_widget.eta`
-  reads the registry at render time rather than branching on a
-  hardcoded `if` chain. Adding a widget is an entry + a template +
-  (optionally) a marker.
+  by `expected_response_type`. Each entry now carries marker
+  classification, a `validateConfig` function, and wizard-facing
+  metadata: `displayName`, `description`, `markPointGuidance`, an
+  `exampleConfig`, and a JSON Schema (`configSchema`) describing the
+  shape of `part_config`. `_paper_part_widget.eta` branches on the
+  registered type rather than a hardcoded `if` chain. The full
+  registry is snapshotted to `docs/widgets.schema.json` (regenerate
+  with `npm run gen:widgets-schema`; freshness is enforced by a CI
+  test) and re-served at runtime via `GET /api/widgets`
+  (teacher/admin only) so the wizard in 2.5j and any future
+  external integration can discover the question type catalogue
+  without booting a Fastify route handler. Adding a widget is an
+  entry + a template + (optionally) a marker + a regenerated
+  schema snapshot.
 - **New answer widgets,** each with its own pupil-facing partial,
   teacher-facing editor partial (used by the wizard in 2.5j), audit
   events where a state change warrants one, tests at HTTP /
@@ -1052,6 +1061,8 @@ expected order:
 
 ## Appendix — Revision history
 
-| Date       | Author | Change                                                                                                                                                                                                                                                                                                                                     |
-| ---------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 2026-04-18 | TD     | First draft at the close of Phase 2 chunk 9b. Phase 2.5 scoped off the live-paper audit (2022–2024 J277/01 + /02) and the first seven rows of PUPIL_FEEDBACK.md. Ten chunks 2.5a–2.5j scheduled: eight widget chunks, one cross-widget polish chunk, one teacher-wizard chunk. Decisions §9 recorded. Forward-compatibility note honoured. |
+| Date       | Author | Change                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| ---------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-04-18 | TD     | First draft at the close of Phase 2 chunk 9b. Phase 2.5 scoped off the live-paper audit (2022–2024 J277/01 + /02) and the first seven rows of PUPIL_FEEDBACK.md. Ten chunks 2.5a–2.5j scheduled: eight widget chunks, one cross-widget polish chunk, one teacher-wizard chunk. Decisions §9 recorded. Forward-compatibility note honoured.                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| 2026-04-18 | TD     | Mini-chunk between 2.5c and 2.5d: extended `WidgetRegistration` with wizard metadata (displayName, description, markPointGuidance, exampleConfig) and a JSON Schema (`configSchema`) per widget. Snapshot committed to `docs/widgets.schema.json` via `npm run gen:widgets-schema`; freshness test enforces it. New `GET /api/widgets` endpoint (teacher/admin only) returns the same payload at runtime. Parity tests assert ajv and the functional validator agree on every schema-checkable fixture; "stricter schema" tests document `additionalProperties: false` as a wizard-facing tightening. Documented in ARCHITECTURE.md. Unblocks 2.5j wizard.                                                                                                                                   |
+| 2026-04-18 | TD     | Chunk 2.5d shipped: trace*table re-implemented as a proper grid via the new `src/lib/trace-grid.ts` (config types, validator, parser, marker, `generateTruthTablePrefill` for truth-table authoring). Promoted from `teacher_pending` to `deterministic` in the marker; per-cell, per-row, and all-or-nothing modes. Template renders `<table class="trace-grid">` with sticky left column and pre-filled cells as read-only `<span>`s (screen-reader friendly). Form fields posted as `part*<id>\_\_r,c`and aggregated via the existing`routes/attempts.ts`suffix path. Migration`0019_trace_table_grid.sql`(documentation-only) plus idempotent`scripts/migrate/0019-trace-table-backfill.ts`. Curated `2.1_trace-table.json`updated with new`part_config`. Resolves PUPIL_FEEDBACK row 1. |

@@ -1,0 +1,37 @@
+-- Phase 2.5 chunk 2.5d — trace_table proper grid (and truth tables).
+--
+-- Documentation-only migration. `question_parts.expected_response_type`
+-- remains unconstrained TEXT (see migration 0004); the recognised set
+-- lives at the application layer in src/lib/question-invariants.ts and
+-- the widget registry in src/lib/widgets.ts.
+--
+-- This migration records that `trace_table` — already in the registry
+-- but previously a free-text textarea — is re-implemented as a proper
+-- grid widget. Truth tables piggy-back on the same shape: the input
+-- columns are authored as `prefill` cells covering every 0/1
+-- combination, while output cells live in `expected`.
+--
+-- New `part_config` shape:
+--   { columns: [{ name: string, width?: integer }],
+--     rows: integer (>= 1),
+--     prefill?: { "<r>,<c>": string, ... },
+--     expected: { "<r>,<c>": string, ... },
+--     marking: { mode: 'perCell'|'perRow'|'allOrNothing',
+--                caseSensitive?: boolean,
+--                trimWhitespace?: boolean }
+--   }
+--
+-- Live existing `trace_table` `part_config` values from the Phase 2
+-- pipe-separated convention (the legacy textarea posted free text;
+-- nothing structured was stored in part_config) are backfilled by the
+-- idempotent script at scripts/migrate/0019-trace-table-backfill.ts.
+-- The script is safe to re-run: rows already migrated to the new shape
+-- are detected by presence of `columns`/`expected`/`marking` keys and
+-- are skipped.
+--
+-- Marking is deterministic: per-cell exact match against `expected`,
+-- with optional per-row aggregation (a row scores only if every cell
+-- in it hits) or all-or-nothing aggregation (the grid scores only if
+-- every expected cell hits).
+
+SELECT 1;

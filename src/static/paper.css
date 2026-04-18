@@ -307,8 +307,7 @@
 }
 
 .widget--code,
-.widget--algorithm,
-.widget--trace-table {
+.widget--algorithm {
   font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
   font-size: 0.95rem;
   padding: 0.5rem 0.6rem;
@@ -648,4 +647,71 @@
   flex-wrap: wrap;
   align-items: baseline;
   gap: 0.5rem 0.75rem;
+}
+
+/* --- Phase 2.5 Chunk 2.5d: trace_table / truth_table grid ------------ */
+
+/* Wrapper handles horizontal overflow on narrow viewports while the
+   left-most column (row index) stays sticky so the pupil never loses
+   their bearings. The table itself uses tabular-numerals so 0/1/digits
+   line up vertically across rows. */
+.widget--trace-table {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+}
+.trace-grid-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--paper-rule);
+  border-radius: 0.25rem;
+  background: #fafafb;
+}
+.trace-grid {
+  border-collapse: collapse;
+  font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.95rem;
+  min-width: 100%;
+}
+.trace-grid th,
+.trace-grid td {
+  border: 1px solid var(--paper-rule);
+  padding: 0.3rem 0.5rem;
+  text-align: left;
+  vertical-align: middle;
+}
+.trace-grid thead th {
+  background: #f0f0f4;
+  font-weight: 600;
+}
+.trace-grid__row-head {
+  position: sticky;
+  left: 0;
+  background: #f0f0f4;
+  text-align: right;
+  color: var(--paper-ink-muted);
+  font-weight: 500;
+  z-index: 1;
+}
+.trace-grid__cell--prefilled {
+  background: #eef3ff;
+}
+.trace-grid__prefill {
+  display: inline-block;
+  padding: 0.1rem 0.25rem;
+  color: var(--paper-ink);
+}
+.trace-grid__input {
+  width: 100%;
+  min-width: 3rem;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  padding: 0.15rem 0.25rem;
+}
+.trace-grid__input:focus {
+  outline: 2px solid #4a6cf7;
+  outline-offset: -2px;
+  background: #fff;
 }
