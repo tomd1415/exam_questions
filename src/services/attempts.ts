@@ -9,7 +9,7 @@ import type {
   TopicPreviewBundle,
 } from '../repos/attempts.js';
 import type { ClassRepo } from '../repos/classes.js';
-import type { RevealMode, UserRepo, UserRow } from '../repos/users.js';
+import type { FontPreference, RevealMode, UserRepo, UserRow } from '../repos/users.js';
 import {
   markAttemptPart,
   type MarkingInputMarkPoint,
@@ -69,6 +69,17 @@ export class AttemptService {
       { userId: actor.id, role: actor.role },
       'user.reveal_mode.set',
       { mode },
+      actor.id,
+    );
+  }
+
+  async setFontPreferenceForUser(actor: ActorForAttempt, font: FontPreference): Promise<void> {
+    if (!this.userRepo) throw new Error('UserRepo not configured');
+    await this.userRepo.setFontPreference(actor.id, font);
+    await this.audit.record(
+      { userId: actor.id, role: actor.role },
+      'user.font_preference.set',
+      { font },
       actor.id,
     );
   }

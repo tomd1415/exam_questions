@@ -28,7 +28,23 @@
         <button type="submit" class="btn btn--primary btn--sm">Save preference</button>
       </fieldset>
     </form>
-  <% } else { %>
-    <p class="empty">There are no teacher-facing preferences yet.</p>
   <% } %>
+
+  <form method="post" action="/me/preferences/font" class="inline-form">
+    <input type="hidden" name="_csrf" value="<%= it.csrfToken %>" />
+    <fieldset>
+      <legend>Page font</legend>
+      <label>
+        <input type="radio" name="font" value="system"
+          <%= it.fontPreference === 'system' ? 'checked' : '' %> />
+        Default system font
+      </label>
+      <label>
+        <input type="radio" name="font" value="dyslexic"
+          <%= it.fontPreference === 'dyslexic' ? 'checked' : '' %> />
+        OpenDyslexic (easier to read for some readers)
+      </label>
+      <button type="submit" class="btn btn--primary btn--sm">Save font</button>
+    </fieldset>
+  </form>
 </section>

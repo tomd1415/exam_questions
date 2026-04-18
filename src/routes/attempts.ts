@@ -1,7 +1,7 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { z } from 'zod';
 import { AttemptAccessError } from '../services/attempts.js';
-import { REVEAL_MODES } from '../repos/users.js';
+import { FONT_PREFERENCES, REVEAL_MODES } from '../repos/users.js';
 
 const StartBody = z.object({ _csrf: z.string().min(1) });
 
@@ -22,6 +22,11 @@ const SelfMarkBody = z.object({
 const RevealModeBody = z.object({
   _csrf: z.string().min(1),
   mode: z.enum(REVEAL_MODES as readonly ['per_question', 'whole_attempt']),
+});
+
+const FontPreferenceBody = z.object({
+  _csrf: z.string().min(1),
+  font: z.enum(FONT_PREFERENCES as readonly ['system', 'dyslexic']),
 });
 
 const TopicParams = z.object({
@@ -111,6 +116,7 @@ export function registerAttemptRoutes(app: FastifyInstance): void {
       currentUser: req.currentUser,
       csrfToken: reply.generateCsrf(),
       revealMode: req.currentUser.reveal_mode ?? 'per_question',
+      fontPreference: req.currentUser.font_preference ?? 'system',
       flash: readQueryFlash(req),
     });
   });
@@ -138,6 +144,18 @@ export function registerAttemptRoutes(app: FastifyInstance): void {
       );
     },
   );
+
+  app.post('/me/preferences/font', { preValidation: csrfPreValidation }, async (req, reply) => {
+    const actor = requireAnyActor(req, reply);
+    if (!actor) return reply;
+    const parsed = FontPreferenceBody.safeParse(req.body);
+    if (!parsed.success) return reply.code(400).send('Bad request');
+    await app.services.attempts.setFontPreferenceForUser(actor, parsed.data.font);
+    const label = parsed.data.font === 'dyslexic' ? 'OpenDyslexic font' : 'the default font';
+    return reply.redirect(
+      `/me/preferences?flash=${encodeURIComponent(`Preference saved: using ${label}.`)}`,
+    );
+  });
 
   app.post('/topics/:code/start', { preValidation: csrfPreValidation }, async (req, reply) => {
     const actor = requirePupil(req, reply);

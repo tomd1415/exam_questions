@@ -6,6 +6,10 @@ export type RevealMode = 'per_question' | 'whole_attempt';
 
 export const REVEAL_MODES: readonly RevealMode[] = ['per_question', 'whole_attempt'] as const;
 
+export type FontPreference = 'system' | 'dyslexic';
+
+export const FONT_PREFERENCES: readonly FontPreference[] = ['system', 'dyslexic'] as const;
+
 export interface UserRow {
   id: string;
   role: UserRole;
@@ -19,6 +23,7 @@ export interface UserRow {
   active: boolean;
   pseudonym: string;
   reveal_mode: RevealMode;
+  font_preference: FontPreference;
   created_at: Date;
   updated_at: Date;
 }
@@ -30,7 +35,7 @@ export class UserRepo {
     const { rows } = await this.db.query<UserRow>(
       `SELECT id::text, role, display_name, username, password_hash,
               must_change_password, failed_login_count, locked_until,
-              last_login_at, active, pseudonym, reveal_mode,
+              last_login_at, active, pseudonym, reveal_mode, font_preference,
               created_at, updated_at
          FROM users
         WHERE username = $1`,
@@ -43,7 +48,7 @@ export class UserRepo {
     const { rows } = await this.db.query<UserRow>(
       `SELECT id::text, role, display_name, username, password_hash,
               must_change_password, failed_login_count, locked_until,
-              last_login_at, active, pseudonym, reveal_mode,
+              last_login_at, active, pseudonym, reveal_mode, font_preference,
               created_at, updated_at
          FROM users
         WHERE id = $1`,
@@ -68,6 +73,13 @@ export class UserRepo {
     await this.db.query(
       `UPDATE users SET reveal_mode = $2, updated_at = now() WHERE id = $1::bigint`,
       [userId, mode],
+    );
+  }
+
+  async setFontPreference(userId: string, font: FontPreference): Promise<void> {
+    await this.db.query(
+      `UPDATE users SET font_preference = $2, updated_at = now() WHERE id = $1::bigint`,
+      [userId, font],
     );
   }
 

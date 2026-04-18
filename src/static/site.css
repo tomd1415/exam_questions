@@ -3,6 +3,21 @@
    component classes (.btn, .input, .card, .flash) plus page-scoped rules
    that existed before Chunk 6a. */
 
+@font-face {
+  font-family: 'OpenDyslexic';
+  src: url('/static/fonts/opendyslexic-latin-400-normal.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'OpenDyslexic';
+  src: url('/static/fonts/opendyslexic-latin-700-normal.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -15,6 +30,11 @@ body {
   background: var(--color-surface-1);
   color: var(--color-ink-1);
   line-height: 1.5;
+}
+
+html[data-font='dyslexic'],
+html[data-font='dyslexic'] body {
+  font-family: 'OpenDyslexic', var(--font-sans);
 }
 
 a {
