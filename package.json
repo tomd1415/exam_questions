@@ -33,6 +33,7 @@
     "setup:lesson": "tsx src/scripts/setup-lesson.ts",
     "test:human:phase0": "bash scripts/human-test-phase0.sh",
     "test:human:phase1": "bash scripts/human-test-phase1.sh",
+    "test:human:phase2": "bash scripts/human-test-phase2.sh",
     "check": "npm run typecheck && npm run lint && npm run format:check && npm run test:coverage"
   },
   "dependencies": {
