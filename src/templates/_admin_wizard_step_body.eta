@@ -12,20 +12,24 @@ const STEP_TITLES = {
 };
 const STEP_HINTS = {
   1: 'Pick the component, topic, and subtopic the question fits under. Pupils will see the question filed here.',
-  2: 'The command word (\u201cdescribe\u201d, \u201cstate\u201d, \u201ccomplete the table\u201d\u2026) sets the tone and the typical mark tariff.',
+  2: 'The command word (&ldquo;describe&rdquo;, &ldquo;state&rdquo;, &ldquo;complete the table&rdquo;&hellip;) sets the tone and the typical mark tariff.',
   3: 'Pick the answer widget that matches the shape of the answer. The next step will set up its details.',
   4: 'Configure the widget you picked. Each widget asks a slightly different set of questions.',
-  5: 'Type the stem the pupil will read. The preview on the right shows what they\u2019ll see.',
+  5: 'Type the stem the pupil will read. The preview on the right shows what they&rsquo;ll see.',
   6: 'Set the mark tariff and write the model answer. List one mark point per line.',
-  7: 'Optional. Note any wrong-answer patterns you\u2019ve seen pupils make on this kind of question.',
+  7: 'Optional. Note any wrong-answer patterns you&rsquo;ve seen pupils make on this kind of question.',
   8: 'Pick the difficulty band and tag the question with paper section / source.',
   9: 'Try the question yourself. If it works the way you intended, publish it from here.',
 };
 const stepN = it.step;
 const draftId = it.draft.id;
 const prevStep = stepN > 1 ? stepN - 1 : null;
-const nextStep = stepN < 9 ? stepN + 1 : null;
 const isPublishStep = stepN === 9;
+const issueMap = {};
+(it.issues || []).forEach(function (i) {
+  if (!issueMap[i.path]) issueMap[i.path] = [];
+  issueMap[i.path].push(i.message);
+});
 %>
 <section class="admin-card admin-wizard">
   <nav class="admin-wizard__breadcrumbs" aria-label="Breadcrumb">
@@ -38,7 +42,7 @@ const isPublishStep = stepN === 9;
     <div>
       <p class="admin-wizard__step-counter">Step <%= stepN %> of 9</p>
       <h1><%= STEP_TITLES[stepN] %></h1>
-      <p class="admin-wizard__hint"><%= STEP_HINTS[stepN] %></p>
+      <p class="admin-wizard__hint"><%~ STEP_HINTS[stepN] %></p>
     </div>
   </header>
 
@@ -62,18 +66,22 @@ const isPublishStep = stepN === 9;
     <p class="flash" role="status"><%= it.flash %></p>
   <% } %>
 
+  <% if ((it.issues || []).length > 0) { %>
+    <div class="alert alert--error" role="alert">
+      <p><strong>Please fix the following:</strong></p>
+      <ul>
+        <% it.issues.forEach(function (i) { %>
+          <li><%= i.message %></li>
+        <% }); %>
+      </ul>
+    </div>
+  <% } %>
+
   <form method="post"
         action="/admin/questions/wizard/<%= draftId %>/step/<%= stepN %>"
         class="admin-wizard__form stacked-form">
     <input type="hidden" name="_csrf" value="<%= it.csrfToken %>" />
-
-    <div class="admin-wizard__placeholder">
-      <p>
-        This step&rsquo;s editor will land in the next change. For now, pressing
-        <strong>Save and continue</strong> records that you&rsquo;ve seen step <%= stepN %>
-        and moves you to the next one.
-      </p>
-    </div>
+    <%~ include('_wizard_step_' + stepN, { ...it, issueMap }) %>
 
     <div class="admin-wizard__actions">
       <% if (prevStep !== null) { %>
@@ -84,7 +92,7 @@ const isPublishStep = stepN === 9;
       <% } %>
 
       <% if (isPublishStep) { %>
-        <button type="submit" class="btn btn--secondary">Save</button>
+        <button type="submit" class="btn btn--secondary">Save review notes</button>
       <% } else { %>
         <button type="submit" class="btn btn--primary">Save and continue</button>
       <% } %>

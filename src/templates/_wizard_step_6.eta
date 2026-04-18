@@ -1,0 +1,32 @@
+<%
+const p = it.draft.payload || {};
+const part = (p.parts && p.parts[0]) || {};
+const marks = part.marks || '';
+const model = p.model_answer || '';
+const mpLines = (part.mark_points || []).map(function (mp) { return mp.text; }).join('\n');
+%>
+<fieldset class="wizard-step wizard-step--6">
+  <legend class="visually-hidden">Marks and model answer</legend>
+
+  <label class="stacked-field">
+    <span class="stacked-field__label">Total marks for this question</span>
+    <input type="number" name="marks" min="1" max="60" value="<%= marks %>" required />
+  </label>
+
+  <label class="stacked-field">
+    <span class="stacked-field__label">Model answer</span>
+    <textarea name="model_answer" rows="5" maxlength="4000" required><%= model %></textarea>
+    <span class="stacked-field__hint">
+      The complete answer a pupil earning every mark would write.
+    </span>
+  </label>
+
+  <label class="stacked-field">
+    <span class="stacked-field__label">Mark points (one per line)</span>
+    <textarea name="mark_points" rows="6" required><%= mpLines %></textarea>
+    <span class="stacked-field__hint">
+      One idea per line; each line is worth one mark. Alternative phrasings can be
+      added later by editing the published question.
+    </span>
+  </label>
+</fieldset>

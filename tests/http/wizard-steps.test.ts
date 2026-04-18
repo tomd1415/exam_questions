@@ -70,6 +70,53 @@ async function startDraft(jar: ReturnType<typeof newJar>): Promise<string> {
   return m![1]!;
 }
 
+// Minimum-viable payloads for steps 1–8 that pass every parser. Tests that
+// want to check just one step's behaviour thread these through all *other*
+// steps so the happy path holds. Fixtures live here (not shared) because
+// they're tied to the parsers' field names.
+const STEP_FIELDS: Record<number, Record<string, string>> = {
+  1: { component_code: 'J277/01', topic_code: '1.1', subtopic_code: '1.1.1' },
+  2: { command_word_code: 'state', archetype_code: 'recall' },
+  3: { expected_response_type: 'short_text' },
+  4: {},
+  5: { stem: 'State one role of the CPU.' },
+  6: {
+    marks: '1',
+    model_answer: 'It fetches, decodes, and executes instructions.',
+    mark_points: 'fetches instructions\ndecodes instructions\nexecutes instructions',
+  },
+  7: { misconceptions: '' },
+  8: { difficulty_band: '3', difficulty_step: '1', source_type: 'teacher' },
+};
+
+async function postStep(
+  jar: ReturnType<typeof newJar>,
+  draftId: string,
+  n: number,
+  fields: Record<string, string>,
+): Promise<ReturnType<typeof app.inject> extends Promise<infer T> ? T : never> {
+  const { csrf } = await fetchCsrf(jar, `/admin/questions/wizard/${draftId}/step/${n}`);
+  const res = await app.inject({
+    method: 'POST',
+    url: `/admin/questions/wizard/${draftId}/step/${n}`,
+    headers: { 'content-type': 'application/x-www-form-urlencoded', cookie: cookieHeader(jar) },
+    payload: form({ _csrf: csrf, ...fields }),
+  });
+  updateJar(jar, res);
+  return res;
+}
+
+async function walkStepsUpTo(
+  jar: ReturnType<typeof newJar>,
+  draftId: string,
+  stopAfter: number,
+): Promise<void> {
+  for (let n = 1; n <= stopAfter; n++) {
+    const res = await postStep(jar, draftId, n, STEP_FIELDS[n]!);
+    expect(res.statusCode, `step ${n} body=${res.payload.slice(0, 400)}`).toBe(302);
+  }
+}
+
 describe('wizard scaffolding (chunk 2.5j step 2)', () => {
   it('redirects unauthenticated users to /login', async () => {
     const res = await app.inject({ method: 'GET', url: '/admin/questions/wizard' });
@@ -128,25 +175,15 @@ describe('wizard scaffolding (chunk 2.5j step 2)', () => {
     expect(res.statusCode).toBe(403);
   });
 
-  it('advances through every step by repeated POST and lands at step 9', async () => {
+  it('advances through every step with valid fields and lands at step 9', async () => {
     const teacher = await createUser(pool(), { role: 'teacher' });
     const jar = await loginAs(teacher);
     const draftId = await startDraft(jar);
 
     for (let n = 1; n <= 8; n++) {
-      const { csrf } = await fetchCsrf(jar, `/admin/questions/wizard/${draftId}/step/${n}`);
-      const res = await app.inject({
-        method: 'POST',
-        url: `/admin/questions/wizard/${draftId}/step/${n}`,
-        headers: {
-          'content-type': 'application/x-www-form-urlencoded',
-          cookie: cookieHeader(jar),
-        },
-        payload: form({ _csrf: csrf }),
-      });
-      expect(res.statusCode).toBe(302);
+      const res = await postStep(jar, draftId, n, STEP_FIELDS[n]!);
+      expect(res.statusCode, `step ${n} body=${res.payload.slice(0, 400)}`).toBe(302);
       expect(res.headers.location).toBe(`/admin/questions/wizard/${draftId}/step/${n + 1}`);
-      updateJar(jar, res);
     }
 
     const last = await app.inject({
@@ -194,7 +231,7 @@ describe('wizard scaffolding (chunk 2.5j step 2)', () => {
         'content-type': 'application/x-www-form-urlencoded',
         cookie: cookieHeader(bobJar),
       },
-      payload: form({ _csrf: csrf }),
+      payload: form({ _csrf: csrf, ...STEP_FIELDS[1]! }),
     });
     expect(post.statusCode).toBe(403);
   });
@@ -222,5 +259,150 @@ describe('wizard scaffolding (chunk 2.5j step 2)', () => {
     expect(list.statusCode).toBe(200);
     expect(list.payload).toContain('Resume');
     expect(list.payload).toContain(`/admin/questions/wizard/${draftId}/step/1`);
+  });
+});
+
+describe('wizard per-step validation (chunk 2.5j step 3)', () => {
+  it('step 1 rejects an empty body with a field issue', async () => {
+    const teacher = await createUser(pool(), { role: 'teacher' });
+    const jar = await loginAs(teacher);
+    const draftId = await startDraft(jar);
+    const res = await postStep(jar, draftId, 1, {});
+    expect(res.statusCode).toBe(400);
+    expect(res.payload).toContain('Pick a component.');
+    expect(res.payload).toContain('Pick a topic.');
+    expect(res.payload).toContain('Pick a subtopic.');
+  });
+
+  it('step 1 rejects a subtopic that does not belong to the topic', async () => {
+    const teacher = await createUser(pool(), { role: 'teacher' });
+    const jar = await loginAs(teacher);
+    const draftId = await startDraft(jar);
+    const res = await postStep(jar, draftId, 1, {
+      component_code: 'J277/01',
+      topic_code: '1.1',
+      subtopic_code: '2.1.1',
+    });
+    expect(res.statusCode).toBe(400);
+    expect(res.payload).toContain('Subtopic');
+    expect(res.payload).toContain('2.1.1');
+    expect(res.payload).toContain('belongs to topic');
+  });
+
+  it('step 2 rejects an unknown command word', async () => {
+    const teacher = await createUser(pool(), { role: 'teacher' });
+    const jar = await loginAs(teacher);
+    const draftId = await startDraft(jar);
+    await postStep(jar, draftId, 1, STEP_FIELDS[1]!);
+    const res = await postStep(jar, draftId, 2, {
+      command_word_code: 'shout',
+      archetype_code: 'recall',
+    });
+    expect(res.statusCode).toBe(400);
+    expect(res.payload).toContain('Unknown command word');
+    expect(res.payload).toContain('shout');
+  });
+
+  it('step 3 persists expected_response_type and pre-selects it on revisit', async () => {
+    const teacher = await createUser(pool(), { role: 'teacher' });
+    const jar = await loginAs(teacher);
+    const draftId = await startDraft(jar);
+    await walkStepsUpTo(jar, draftId, 3);
+
+    const res = await app.inject({
+      method: 'GET',
+      url: `/admin/questions/wizard/${draftId}/step/3`,
+      headers: { cookie: cookieHeader(jar) },
+    });
+    expect(res.statusCode).toBe(200);
+    // The chosen widget tile is checked.
+    expect(res.payload).toMatch(/value="short_text"\s+checked/);
+  });
+
+  it('step 6 rejects an empty model answer', async () => {
+    const teacher = await createUser(pool(), { role: 'teacher' });
+    const jar = await loginAs(teacher);
+    const draftId = await startDraft(jar);
+    await walkStepsUpTo(jar, draftId, 5);
+
+    const res = await postStep(jar, draftId, 6, {
+      marks: '2',
+      model_answer: '',
+      mark_points: 'one\ntwo',
+    });
+    expect(res.statusCode).toBe(400);
+    expect(res.payload).toContain('The model answer is required.');
+  });
+
+  it('step 6 splits mark_points on newlines and round-trips them on revisit', async () => {
+    const teacher = await createUser(pool(), { role: 'teacher' });
+    const jar = await loginAs(teacher);
+    const draftId = await startDraft(jar);
+    await walkStepsUpTo(jar, draftId, 6);
+
+    const res = await app.inject({
+      method: 'GET',
+      url: `/admin/questions/wizard/${draftId}/step/6`,
+      headers: { cookie: cookieHeader(jar) },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.payload).toContain('fetches instructions');
+    expect(res.payload).toContain('decodes instructions');
+    expect(res.payload).toContain('executes instructions');
+  });
+
+  it('step 7 rejects a misconception line without the "label : description" format', async () => {
+    const teacher = await createUser(pool(), { role: 'teacher' });
+    const jar = await loginAs(teacher);
+    const draftId = await startDraft(jar);
+    await walkStepsUpTo(jar, draftId, 6);
+
+    const res = await postStep(jar, draftId, 7, {
+      misconceptions: 'no colon here',
+    });
+    expect(res.statusCode).toBe(400);
+    expect(res.payload).toContain('label : description');
+  });
+
+  it('step 8 clamps source_type to a known value', async () => {
+    const teacher = await createUser(pool(), { role: 'teacher' });
+    const jar = await loginAs(teacher);
+    const draftId = await startDraft(jar);
+    await walkStepsUpTo(jar, draftId, 7);
+
+    const res = await postStep(jar, draftId, 8, {
+      difficulty_band: '4',
+      difficulty_step: '2',
+      source_type: 'nonsense',
+    });
+    expect(res.statusCode).toBe(302);
+    // Arriving on step 9, the review dl shows the default source_type.
+    const review = await app.inject({
+      method: 'GET',
+      url: `/admin/questions/wizard/${draftId}/step/9`,
+      headers: { cookie: cookieHeader(jar) },
+    });
+    expect(review.statusCode).toBe(200);
+    expect(review.payload).toContain('teacher');
+  });
+
+  it('step 9 flags every missing field when the teacher jumps ahead', async () => {
+    const teacher = await createUser(pool(), { role: 'teacher' });
+    const jar = await loginAs(teacher);
+    const draftId = await startDraft(jar);
+    // Advance just through step 1 so the draft has current_step = 2 but all
+    // later steps are empty. Visit step 9 directly.
+    await postStep(jar, draftId, 1, STEP_FIELDS[1]!);
+
+    const res = await app.inject({
+      method: 'GET',
+      url: `/admin/questions/wizard/${draftId}/step/9`,
+      headers: { cookie: cookieHeader(jar) },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.payload).toContain('Not ready to publish');
+    expect(res.payload).toContain('Step 2: command word');
+    expect(res.payload).toContain('Step 5: stem');
+    expect(res.payload).toContain('Step 6: model answer');
   });
 });

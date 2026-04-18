@@ -1,0 +1,20 @@
+<%
+const p = it.draft.payload || {};
+const part = (p.parts && p.parts[0]) || {};
+const lines = (part.misconceptions || [])
+  .map(function (m) { return (m.label || '') + ' : ' + (m.description || ''); })
+  .join('\n');
+%>
+<fieldset class="wizard-step wizard-step--7">
+  <legend class="visually-hidden">Misconceptions</legend>
+
+  <label class="stacked-field">
+    <span class="stacked-field__label">Misconceptions (optional)</span>
+    <textarea name="misconceptions" rows="6"
+              placeholder="confuses RAM with ROM : pupils often say RAM is non-volatile"><%= lines %></textarea>
+    <span class="stacked-field__hint">
+      One per line, using the format <code>label : description</code>. Leave blank if
+      you haven&rsquo;t spotted any for this question yet.
+    </span>
+  </label>
+</fieldset>

@@ -1,0 +1,84 @@
+<%
+const p = it.draft.payload || {};
+const part = (p.parts && p.parts[0]) || {};
+const ready = it.publishReady === true;
+const missing = it.missingFields || [];
+%>
+<fieldset class="wizard-step wizard-step--9">
+  <legend class="visually-hidden">Review and publish</legend>
+
+  <div class="admin-wizard__review">
+    <h2>Review</h2>
+    <dl>
+      <dt>Component &middot; Topic &middot; Subtopic</dt>
+      <dd><%= p.component_code || '-' %> &middot; <%= p.topic_code || '-' %> &middot; <%= p.subtopic_code || '-' %></dd>
+
+      <dt>Command word &middot; Archetype</dt>
+      <dd><%= p.command_word_code || '-' %> &middot; <%= p.archetype_code || '-' %></dd>
+
+      <dt>Widget</dt>
+      <dd><%= p.expected_response_type || '-' %></dd>
+
+      <dt>Stem</dt>
+      <dd><%= p.stem || '-' %></dd>
+
+      <dt>Total marks</dt>
+      <dd><%= part.marks || '-' %></dd>
+
+      <dt>Model answer</dt>
+      <dd><%= p.model_answer || '-' %></dd>
+
+      <dt>Mark points</dt>
+      <dd>
+        <% if (part.mark_points && part.mark_points.length > 0) { %>
+          <ol>
+            <% part.mark_points.forEach(function (mp) { %>
+              <li><%= mp.text %></li>
+            <% }); %>
+          </ol>
+        <% } else { %>
+          -
+        <% } %>
+      </dd>
+
+      <dt>Misconceptions</dt>
+      <dd>
+        <% if (part.misconceptions && part.misconceptions.length > 0) { %>
+          <ul>
+            <% part.misconceptions.forEach(function (m) { %>
+              <li><strong><%= m.label %></strong>: <%= m.description %></li>
+            <% }); %>
+          </ul>
+        <% } else { %>
+          (none)
+        <% } %>
+      </dd>
+
+      <dt>Difficulty</dt>
+      <dd>band <%= p.difficulty_band || '-' %> &middot; step <%= p.difficulty_step || '-' %></dd>
+
+      <dt>Source</dt>
+      <dd><%= p.source_type || 'teacher' %></dd>
+    </dl>
+  </div>
+
+  <% if (!ready) { %>
+    <div class="alert alert--warning" role="alert">
+      <p><strong>Not ready to publish.</strong> Finish these steps first:</p>
+      <ul>
+        <% missing.forEach(function (name) { %>
+          <li><%= name %></li>
+        <% }); %>
+      </ul>
+    </div>
+  <% } %>
+
+  <label class="stacked-field">
+    <span class="stacked-field__label">Review notes (optional)</span>
+    <textarea name="review_notes" rows="3" maxlength="2000"><%= p.review_notes || '' %></textarea>
+    <span class="stacked-field__hint">
+      Anything you want the reviewer (often yourself in a fresh frame of mind) to
+      notice before approving.
+    </span>
+  </label>
+</fieldset>

@@ -1,0 +1,58 @@
+<%
+const p = it.draft.payload || {};
+const selectedCw = p.command_word_code || '';
+const selectedArch = p.archetype_code || '';
+%>
+<fieldset class="wizard-step wizard-step--2">
+  <legend class="visually-hidden">Command word and archetype</legend>
+
+  <label class="stacked-field">
+    <span class="stacked-field__label">Command word</span>
+    <select name="command_word_code" required>
+      <option value="" <% if (!selectedCw) { %>selected<% } %>>&mdash; choose &mdash;</option>
+      <% (it.refs.commandWords || []).forEach(function (c) { %>
+        <option value="<%= c.code %>" <% if (selectedCw === c.code) { %>selected<% } %>>
+          <%= c.code %> &middot; <%= c.expected_response_shape %>
+        </option>
+      <% }); %>
+    </select>
+    <span class="stacked-field__hint">
+      The command word steers both the mark tariff and the shape of the answer.
+    </span>
+  </label>
+
+  <details class="admin-wizard__definitions">
+    <summary>What do these command words mean?</summary>
+    <dl>
+      <% (it.refs.commandWords || []).forEach(function (c) { %>
+        <dt><%= c.code %></dt>
+        <dd><%= c.definition %></dd>
+      <% }); %>
+    </dl>
+  </details>
+
+  <label class="stacked-field">
+    <span class="stacked-field__label">Question archetype</span>
+    <select name="archetype_code" required>
+      <option value="" <% if (!selectedArch) { %>selected<% } %>>&mdash; choose &mdash;</option>
+      <% (it.refs.archetypes || []).forEach(function (a) { %>
+        <option value="<%= a.code %>" <% if (selectedArch === a.code) { %>selected<% } %>>
+          <%= a.code %>
+        </option>
+      <% }); %>
+    </select>
+    <span class="stacked-field__hint">
+      The archetype groups questions with similar marking patterns together for progress dashboards.
+    </span>
+  </label>
+
+  <details class="admin-wizard__definitions">
+    <summary>What do these archetypes mean?</summary>
+    <dl>
+      <% (it.refs.archetypes || []).forEach(function (a) { %>
+        <dt><%= a.code %></dt>
+        <dd><%= a.description %></dd>
+      <% }); %>
+    </dl>
+  </details>
+</fieldset>

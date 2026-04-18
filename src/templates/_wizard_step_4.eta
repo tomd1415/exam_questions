@@ -1,0 +1,20 @@
+<%
+const p = it.draft.payload || {};
+const widget = p.expected_response_type || '';
+%>
+<fieldset class="wizard-step wizard-step--4">
+  <legend class="visually-hidden">Widget configuration</legend>
+  <div class="admin-wizard__placeholder">
+    <p>
+      You picked <strong><%= widget || '(no widget yet)' %></strong>.
+      The per-widget editor that lets you set rows, columns, gaps, hotspots, and
+      the like lands in the next change. For now, the draft uses the widget&rsquo;s
+      example configuration; you can fine-tune it on the single-page form after
+      publishing, or wait for the per-widget editor.
+    </p>
+    <p>
+      Pressing <strong>Save and continue</strong> leaves the example configuration
+      in place and moves you to writing the stem.
+    </p>
+  </div>
+</fieldset>

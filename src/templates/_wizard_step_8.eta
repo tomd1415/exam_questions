@@ -1,0 +1,51 @@
+<%
+const p = it.draft.payload || {};
+const band = p.difficulty_band || 3;
+const step = p.difficulty_step || 1;
+const source = p.source_type || 'teacher';
+%>
+<fieldset class="wizard-step wizard-step--8">
+  <legend class="visually-hidden">Difficulty and tags</legend>
+
+  <label class="stacked-field">
+    <span class="stacked-field__label">Difficulty band</span>
+    <select name="difficulty_band" required>
+      <% for (let b = 1; b <= 9; b++) { %>
+        <option value="<%= b %>" <% if (Number(band) === b) { %>selected<% } %>><%= b %></option>
+      <% } %>
+    </select>
+    <span class="stacked-field__hint">
+      1 is the easiest, 9 the hardest. Pick the band you&rsquo;d give a pupil who just
+      learned this subtopic.
+    </span>
+  </label>
+
+  <label class="stacked-field">
+    <span class="stacked-field__label">Difficulty step within the band</span>
+    <select name="difficulty_step" required>
+      <% for (let s = 1; s <= 3; s++) { %>
+        <option value="<%= s %>" <% if (Number(step) === s) { %>selected<% } %>><%= s %></option>
+      <% } %>
+    </select>
+    <span class="stacked-field__hint">
+      1 = start of band, 3 = top of band. Used by the adaptive recap flow in pupil
+      mode.
+    </span>
+  </label>
+
+  <fieldset class="wizard-step__source">
+    <legend class="stacked-field__label">Source</legend>
+    <label class="radio-row">
+      <input type="radio" name="source_type" value="teacher" <% if (source === 'teacher') { %>checked<% } %> />
+      <span>Teacher-authored (recommended)</span>
+    </label>
+    <label class="radio-row">
+      <input type="radio" name="source_type" value="imported_pattern" <% if (source === 'imported_pattern') { %>checked<% } %> />
+      <span>Imported from an OCR pattern</span>
+    </label>
+    <label class="radio-row">
+      <input type="radio" name="source_type" value="ai_generated" <% if (source === 'ai_generated') { %>checked<% } %> />
+      <span>AI-generated (must be reviewed before approval)</span>
+    </label>
+  </fieldset>
+</fieldset>

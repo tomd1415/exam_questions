@@ -6,6 +6,21 @@ import {
   DraftStateError,
   type ActorForDraft,
 } from '../services/question_drafts.js';
+import {
+  parseWizardStep,
+  widgetChoicesFor,
+  type StepIssue,
+  type StepParseContext,
+} from '../lib/wizard-steps.js';
+import { widgetDescriptors, type WidgetDescriptor } from '../lib/widgets.js';
+import type {
+  ComponentRow,
+  TopicRow,
+  SubtopicRow,
+  CommandWordRow,
+  ArchetypeRow,
+} from '../repos/curriculum.js';
+import type { QuestionDraftPayload, QuestionDraftRow } from '../repos/question_drafts.js';
 
 // The wizard is its own route file (not bolted onto admin-questions.ts) so the
 // nine GET / nine POST endpoints, the "My drafts" list, and the publish action
@@ -23,6 +38,14 @@ const DraftIdParams = z.object({
 });
 
 const CsrfOnly = z.object({ _csrf: z.string().min(1) });
+
+interface WizardRefs {
+  components: ComponentRow[];
+  topics: TopicRow[];
+  subtopics: SubtopicRow[];
+  commandWords: CommandWordRow[];
+  archetypes: ArchetypeRow[];
+}
 
 function requireTeacherOrAdmin(req: FastifyRequest, reply: FastifyReply): ActorForDraft | null {
   if (!req.currentUser) {
@@ -64,6 +87,92 @@ function handleDraftError(err: unknown, reply: FastifyReply, draftId: string | n
     return reply.code(400).send('Bad request');
   }
   throw err;
+}
+
+async function loadRefs(app: FastifyInstance): Promise<WizardRefs> {
+  const [components, topics, subtopics, commandWords, archetypes] = await Promise.all([
+    app.repos.curriculum.listComponents(),
+    app.repos.curriculum.listTopics(),
+    app.repos.curriculum.listSubtopics(),
+    app.repos.curriculum.listCommandWords(),
+    app.repos.curriculum.listArchetypes(),
+  ]);
+  return { components, topics, subtopics, commandWords, archetypes };
+}
+
+function buildStepContext(refs: WizardRefs, payload: QuestionDraftPayload): StepParseContext {
+  return {
+    currentPayload: payload,
+    components: refs.components.map((c) => c.code),
+    topicComponent: new Map(refs.topics.map((t) => [t.code, t.component_code])),
+    subtopicTopic: new Map(refs.subtopics.map((s) => [s.code, s.topic_code])),
+    commandWords: new Set(refs.commandWords.map((c) => c.code)),
+    archetypes: new Set(refs.archetypes.map((a) => a.code)),
+  };
+}
+
+function widgetGroupsForDraft(payload: QuestionDraftPayload): {
+  recommended: WidgetDescriptor[];
+  other: WidgetDescriptor[];
+} {
+  const { recommended, other } = widgetChoicesFor(payload.command_word_code);
+  const all = widgetDescriptors();
+  const byType = new Map(all.map((w) => [w.type, w]));
+  return {
+    recommended: recommended.map((t) => byType.get(t)!).filter((w) => w !== undefined),
+    other: other.map((t) => byType.get(t)!).filter((w) => w !== undefined),
+  };
+}
+
+// Lists, in plain English, what the teacher still has to fill in before
+// publishing. Used by step 9 to show a "not ready" notice (the publish
+// button is still there; the service enforces the real gate).
+function missingFieldsForPublish(payload: QuestionDraftPayload): string[] {
+  const missing: string[] = [];
+  if (!payload.component_code || !payload.topic_code || !payload.subtopic_code)
+    missing.push('Step 1: component, topic, and subtopic');
+  if (!payload.command_word_code || !payload.archetype_code)
+    missing.push('Step 2: command word and archetype');
+  if (!payload.expected_response_type) missing.push('Step 3: widget choice');
+  if (!payload.stem) missing.push('Step 5: stem');
+  if (!payload.model_answer) missing.push('Step 6: model answer');
+  const part = payload.parts?.[0];
+  if (!part) missing.push('Step 6: mark points');
+  else {
+    if (!part.mark_points || part.mark_points.length === 0)
+      missing.push('Step 6: at least one mark point');
+    if (!part.marks || part.marks < 1) missing.push('Step 6: marks total');
+  }
+  if (!payload.difficulty_band || !payload.difficulty_step)
+    missing.push('Step 8: difficulty band and step');
+  return missing;
+}
+
+async function renderStep(
+  reply: FastifyReply,
+  req: FastifyRequest,
+  draft: QuestionDraftRow,
+  n: number,
+  refs: WizardRefs,
+  opts: { issues?: StepIssue[]; flash?: string | null; status?: number } = {},
+): Promise<FastifyReply> {
+  const widgets = n === 3 ? widgetGroupsForDraft(draft.payload) : null;
+  const missing = n === 9 ? missingFieldsForPublish(draft.payload) : [];
+  const publishReady = n === 9 ? missing.length === 0 : false;
+  if (opts.status) reply.code(opts.status);
+  return reply.view('admin_wizard_step.eta', {
+    title: `Step ${n} of 9`,
+    currentUser: req.currentUser,
+    csrfToken: reply.generateCsrf(),
+    draft,
+    step: n,
+    flash: opts.flash ?? readQueryFlash(req),
+    issues: opts.issues ?? [],
+    refs,
+    widgets,
+    missingFields: missing,
+    publishReady,
+  });
 }
 
 export function registerAdminQuestionWizardRoutes(app: FastifyInstance): void {
@@ -115,20 +224,15 @@ export function registerAdminQuestionWizardRoutes(app: FastifyInstance): void {
       return handleDraftError(err, reply, draftIdStr);
     }
 
-    return reply.view('admin_wizard_step.eta', {
-      title: `Step ${n} of 9`,
-      currentUser: req.currentUser,
-      csrfToken: reply.generateCsrf(),
-      draft,
-      step: n,
-      flash: readQueryFlash(req),
-    });
+    const refs = await loadRefs(app);
+    return renderStep(reply, req, draft, n, refs);
   });
 
-  // Advance a step. Step-specific parsing/validation will land alongside
-  // each step template; for the scaffolding pass we accept just the CSRF
-  // token and merge nothing into the payload. That's enough to prove the
-  // POST routes round-trip and the audit event fires.
+  // Advance a step. The per-step parser in src/lib/wizard-steps.ts turns the
+  // form body into a Partial<QuestionDraft> patch. If parsing fails we
+  // re-render the same step with 400 + field-level issues; otherwise we
+  // hand the patch to the draft service, which merges it into the payload,
+  // bumps current_step, and records an audit event.
   app.post(
     '/admin/questions/wizard/:draftId/step/:n',
     { preValidation: csrfPreValidation },
@@ -142,9 +246,33 @@ export function registerAdminQuestionWizardRoutes(app: FastifyInstance): void {
       const { draftId, n } = params.data;
       const draftIdStr = String(draftId);
 
+      let draft: QuestionDraftRow;
       try {
-        const updated = await app.services.questionDrafts.advance(actor, draftIdStr, n, {});
-        const next = Math.min(9, updated.current_step);
+        draft = await app.services.questionDrafts.findForActor(actor, draftIdStr);
+      } catch (err) {
+        return handleDraftError(err, reply, draftIdStr);
+      }
+
+      const refs = await loadRefs(app);
+      const ctx = buildStepContext(refs, draft.payload);
+      const parsed = parseWizardStep(n, req.body, ctx);
+      if (!parsed.ok) {
+        return renderStep(reply, req, draft, n, refs, {
+          issues: parsed.issues,
+          flash: 'Please fix the highlighted fields.',
+          status: 400,
+        });
+      }
+
+      try {
+        const updated = await app.services.questionDrafts.advance(
+          actor,
+          draftIdStr,
+          n,
+          parsed.patch,
+        );
+        // Step 9's save stays on 9 (advance caps current_step at 9).
+        const next = Math.min(9, Math.max(n + 1, updated.current_step));
         return reply.redirect(`/admin/questions/wizard/${draftIdStr}/step/${next}`);
       } catch (err) {
         return handleDraftError(err, reply, draftIdStr);

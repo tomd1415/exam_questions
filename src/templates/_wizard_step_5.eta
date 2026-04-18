@@ -1,0 +1,16 @@
+<%
+const p = it.draft.payload || {};
+const stem = p.stem || '';
+%>
+<fieldset class="wizard-step wizard-step--5">
+  <legend class="visually-hidden">Write the question stem</legend>
+
+  <label class="stacked-field">
+    <span class="stacked-field__label">Stem</span>
+    <textarea name="stem" rows="6" maxlength="4000" required><%= stem %></textarea>
+    <span class="stacked-field__hint">
+      Type the text the pupil reads. Markdown is <em>not</em> processed yet &mdash;
+      what you type is what they see.
+    </span>
+  </label>
+</fieldset>
