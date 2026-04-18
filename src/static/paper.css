@@ -715,3 +715,111 @@
   outline-offset: -2px;
   background: #fff;
 }
+
+/* --- Matching widget (Chunk 2.5e) --------------------------------------- */
+
+.widget--matching {
+  position: relative;
+  border: 1px solid var(--paper-rule);
+  border-radius: 0.25rem;
+  background: #fafafb;
+  padding: 0.75rem;
+}
+.matching__rows {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  row-gap: 0.4rem;
+}
+.matching__row {
+  display: grid;
+  grid-template-columns: minmax(10ch, 1fr) auto minmax(12ch, 1fr);
+  column-gap: 0.6rem;
+  align-items: center;
+}
+.matching__left {
+  font-weight: 500;
+}
+.matching__endpoint {
+  display: none;
+  border: 0;
+  background: transparent;
+  color: var(--paper-accent);
+  font-size: 1.2rem;
+  padding: 0.1rem 0.3rem;
+  cursor: pointer;
+}
+.matching__endpoint--armed {
+  color: #b91c1c;
+}
+.matching__picker {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+}
+.matching__select {
+  width: 100%;
+  font: inherit;
+  padding: 0.25rem 0.35rem;
+  border: 1px solid var(--paper-rule);
+  border-radius: 0.2rem;
+  background: #fff;
+}
+.matching__targets {
+  display: none;
+  list-style: none;
+  padding: 0;
+  margin: 0.6rem 0 0;
+}
+.matching__target {
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--paper-rule);
+  border-radius: 0.2rem;
+  background: #fff;
+  cursor: pointer;
+}
+.matching__overlay {
+  display: none;
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.matching__line {
+  stroke: var(--paper-accent);
+  stroke-width: 2;
+  fill: none;
+}
+
+/* Desktop enhancement: JS adds .matching--enhanced when a fine-pointer
+   viewport is wide enough for the drag-line UI. */
+.matching--enhanced {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  column-gap: 1.5rem;
+}
+.matching--enhanced .matching__rows {
+  grid-column: 1 / 2;
+}
+.matching--enhanced .matching__row {
+  grid-template-columns: 1fr auto;
+}
+.matching--enhanced .matching__endpoint {
+  display: inline-block;
+}
+.matching--enhanced .matching__picker {
+  display: none;
+}
+.matching--enhanced .matching__targets {
+  display: grid;
+  grid-column: 3 / 4;
+  align-content: start;
+  row-gap: 0.4rem;
+  margin: 0;
+}
+.matching--enhanced .matching__overlay {
+  display: block;
+  grid-column: 1 / -1;
+  grid-row: 1 / -1;
+  z-index: 0;
+}

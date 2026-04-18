@@ -394,6 +394,69 @@ const t = part.expected_response_type;
       </tbody>
     </table>
   </div>
+<% } else if (t === 'matching') { %>
+  <%
+    const mcfg = part.part_config || {};
+    const mLeft = Array.isArray(mcfg.left) ? mcfg.left : [];
+    const mRight = Array.isArray(mcfg.right) ? mcfg.right : [];
+    // Reconstitute prior pupil answers from raw_answer's `L=R` lines.
+    const priorByLeft = new Map();
+    priorLines.forEach(function(line) {
+      const eq = line.indexOf('=');
+      if (eq <= 0) return;
+      const l = line.slice(0, eq).trim();
+      const r = line.slice(eq + 1).trim();
+      if (!/^\d+$/.test(l) || !/^\d+$/.test(r)) return;
+      priorByLeft.set(l, r);
+    });
+  %>
+  <div class="widget widget--matching matching"
+       data-autosave-part-id="<%= part.id %>"
+       data-matching-left-count="<%= mLeft.length %>"
+       data-matching-right-count="<%= mRight.length %>"
+       aria-describedby="marks-<%= part.id %>">
+    <ul class="matching__rows" role="list">
+      <% mLeft.forEach(function(leftLabel, li) { %>
+        <%
+          const rowFieldName = fieldName + '__' + li;
+          const priorRight = priorByLeft.get(String(li)) || '';
+          const selectId = 'matching-' + part.id + '-' + li;
+        %>
+        <li class="matching__row" data-matching-left="<%= li %>">
+          <span class="matching__left"
+                id="<%= selectId %>-label"
+                data-matching-left-label><%= leftLabel %></span>
+          <button type="button"
+                  class="matching__endpoint"
+                  data-matching-endpoint
+                  data-matching-for="<%= selectId %>"
+                  aria-labelledby="<%= selectId %>-label"
+                  aria-hidden="true"
+                  tabindex="-1">●</button>
+          <label class="matching__picker" for="<%= selectId %>">
+            <span class="sr-only">Match "<%= leftLabel %>" to</span>
+            <select class="matching__select"
+                    id="<%= selectId %>"
+                    name="<%= rowFieldName %>"
+                    data-matching-select>
+              <option value="">— choose —</option>
+              <% mRight.forEach(function(rightLabel, ri) { %>
+                <option value="<%= ri %>" <%= priorRight === String(ri) ? 'selected' : '' %>><%= rightLabel %></option>
+              <% }); %>
+            </select>
+          </label>
+        </li>
+      <% }); %>
+    </ul>
+    <ul class="matching__targets" role="list" aria-hidden="true">
+      <% mRight.forEach(function(rightLabel, ri) { %>
+        <li class="matching__target"
+            data-matching-right="<%= ri %>"
+            tabindex="-1"><%= rightLabel %></li>
+      <% }); %>
+    </ul>
+    <svg class="matching__overlay" data-matching-overlay aria-hidden="true"></svg>
+  </div>
 <% } else { %>
   <textarea class="widget widget--fallback"
             name="<%= fieldName %>"

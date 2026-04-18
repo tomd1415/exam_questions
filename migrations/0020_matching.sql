@@ -1,0 +1,22 @@
+-- Phase 2.5 chunk 2.5e — matching widget.
+--
+-- Documentation-only migration. `question_parts.expected_response_type`
+-- remains unconstrained TEXT (see migration 0004); the recognised set
+-- lives at the application layer in src/lib/question-invariants.ts and
+-- the widget registry in src/lib/widgets.ts.
+--
+-- This migration records that `matching` is now an accepted response
+-- type. No existing rows carry this type (it is a new addition), so no
+-- backfill is required.
+--
+-- `part_config` shape:
+--   { left: string[],
+--     right: string[],
+--     correctPairs: [leftIndex, rightIndex][],
+--     partialCredit?: boolean }
+--
+-- Marking is deterministic: each left row is compared against its
+-- authored partner. `partialCredit` (default true) awards one mark per
+-- correct pairing; `false` zeros the part on any miss.
+
+SELECT 1;

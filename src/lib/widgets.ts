@@ -16,6 +16,7 @@
 
 import { EXPECTED_RESPONSE_TYPES } from './question-invariants.js';
 import { validateClozeConfigShape } from './cloze.js';
+import { validateMatchingConfigShape } from './matching.js';
 import { validateTraceGridConfigShape } from './trace-grid.js';
 
 export type WidgetMarker = 'deterministic' | 'teacher_pending';
@@ -229,6 +230,38 @@ const TRACE_TABLE_SCHEMA: WidgetConfigSchema = {
   },
 };
 
+const MATCHING_SCHEMA: WidgetConfigSchema = {
+  $schema: SCHEMA_DRAFT,
+  title: 'matching part_config',
+  type: 'object',
+  additionalProperties: false,
+  required: ['left', 'right', 'correctPairs'],
+  properties: {
+    left: {
+      type: 'array',
+      minItems: 1,
+      uniqueItems: true,
+      items: { type: 'string', minLength: 1 },
+    },
+    right: {
+      type: 'array',
+      minItems: 1,
+      uniqueItems: true,
+      items: { type: 'string', minLength: 1 },
+    },
+    correctPairs: {
+      type: 'array',
+      items: {
+        type: 'array',
+        minItems: 2,
+        maxItems: 2,
+        items: { type: 'integer', minimum: 0 },
+      },
+    },
+    partialCredit: { type: 'boolean' },
+  },
+};
+
 const REGISTRATIONS: readonly WidgetRegistration[] = [
   {
     type: 'multiple_choice',
@@ -395,6 +428,27 @@ const REGISTRATIONS: readonly WidgetRegistration[] = [
     },
     validateConfig: (c) =>
       validateClozeConfigShape(c, { requireBank: true }).map((m) => ({ message: m })),
+  },
+  {
+    type: 'matching',
+    marker: 'deterministic',
+    displayName: 'Matching — pair prompts to options',
+    description:
+      'Pupil pairs each left-column prompt with one right-column option. Right column may include distractors; options may legitimately be shared across multiple prompts.',
+    markPointGuidance:
+      'One mark_point per left row, in the same order as part_config.left; mark_point.text names the correct pairing (e.g. "HTTP — web page transfer").',
+    configSchema: MATCHING_SCHEMA,
+    exampleConfig: {
+      left: ['HTTP', 'SMTP', 'FTP'],
+      right: ['web pages', 'email', 'file transfer', 'remote shell'],
+      correctPairs: [
+        [0, 0],
+        [1, 1],
+        [2, 2],
+      ],
+      partialCredit: true,
+    },
+    validateConfig: (c) => validateMatchingConfigShape(c).map((m) => ({ message: m })),
   },
   {
     type: 'cloze_code',

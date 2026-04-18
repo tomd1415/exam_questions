@@ -170,6 +170,57 @@ const PARITY_FIXTURES: Record<string, SchemaFixture[]> = {
       expectAccept: false,
     },
   ],
+  matching: [
+    {
+      label: 'minimal valid',
+      config: {
+        left: ['a'],
+        right: ['x', 'y'],
+        correctPairs: [[0, 0]],
+      },
+      expectAccept: true,
+    },
+    {
+      label: 'with partialCredit=false',
+      config: {
+        left: ['a', 'b'],
+        right: ['x', 'y'],
+        correctPairs: [
+          [0, 0],
+          [1, 1],
+        ],
+        partialCredit: false,
+      },
+      expectAccept: true,
+    },
+    {
+      label: 'left empty',
+      config: { left: [], right: ['x'], correctPairs: [] },
+      expectAccept: false,
+    },
+    {
+      label: 'left has duplicate',
+      config: {
+        left: ['a', 'a'],
+        right: ['x', 'y'],
+        correctPairs: [
+          [0, 0],
+          [1, 1],
+        ],
+      },
+      expectAccept: false,
+    },
+    {
+      label: 'correctPairs entry not a pair',
+      config: { left: ['a'], right: ['x'], correctPairs: [[0, 0, 1]] },
+      expectAccept: false,
+    },
+    {
+      label: 'partialCredit wrong type',
+      config: { left: ['a'], right: ['x'], correctPairs: [[0, 0]], partialCredit: 'yes' },
+      expectAccept: false,
+    },
+  ],
   trace_table: [
     {
       label: 'minimal valid grid',

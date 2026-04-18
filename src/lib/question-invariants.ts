@@ -29,6 +29,7 @@ export const EXPECTED_RESPONSE_TYPES: readonly string[] = [
   'cloze_free',
   'cloze_with_bank',
   'cloze_code',
+  'matching',
 ] as const;
 
 export interface MarkPointDraft {

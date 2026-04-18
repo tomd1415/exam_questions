@@ -5,6 +5,12 @@ import {
   parseClozeRawAnswer,
 } from '../../lib/cloze.js';
 import {
+  isMatchingConfig,
+  markMatching,
+  parseMatchingRawAnswer,
+  serialiseMatchingAnswer,
+} from '../../lib/matching.js';
+import {
   isTraceGridConfig,
   markTraceGrid,
   parseTraceGridRawAnswer,
@@ -26,6 +32,7 @@ export const OBJECTIVE_RESPONSE_TYPES = new Set<string>([
   'cloze_with_bank',
   'cloze_code',
   'trace_table',
+  'matching',
 ]);
 
 export const OPEN_RESPONSE_TYPES = new Set<string>([
@@ -90,6 +97,7 @@ export function markAttemptPart(
     return markClozePart(part, rawAnswer, markPoints, type);
   }
   if (type === 'trace_table') return markTraceTable(part, rawAnswer, markPoints);
+  if (type === 'matching') return markMatchingPart(part, rawAnswer, markPoints);
   return markShortText(part, rawAnswer, markPoints);
 }
 
@@ -572,5 +580,53 @@ function markTraceTable(
     marks_possible: part.marks,
     mark_point_outcomes: outcomes,
     normalised_answer: serialiseTraceGridAnswer(filteredAnswers),
+  };
+}
+
+// matching
+//
+// raw_answer encodes one pair per line, in the shape
+// `<leftIdx>=<rightIdx>` (both 0-indexed into part_config.left and
+// part_config.right). Left rows the pupil has not paired are simply
+// absent.
+//
+// `markPoints` should contain one entry per left row in the same order
+// as part_config.correctPairs. If it runs short, a synthesised label
+// ("Row N") stands in so the review page still names the row.
+
+function markMatchingPart(
+  part: MarkingInputPart,
+  rawAnswer: string,
+  markPoints: readonly MarkingInputMarkPoint[],
+): MarkingResult {
+  const config = part.part_config;
+  if (!isMatchingConfig(config)) {
+    return { kind: 'teacher_pending', marks_possible: part.marks, reason: 'unknown_type' };
+  }
+
+  const pupilPairs = parseMatchingRawAnswer(rawAnswer);
+  const result = markMatching(config, pupilPairs);
+  const partialCredit = config.partialCredit !== false;
+  const allHit = result.total > 0 && result.hits === result.total;
+
+  const outcomes: MarkPointOutcome[] = result.outcomes.map((row, i) => {
+    const mp = markPoints[i];
+    const awardedHit = partialCredit ? row.hit : allHit;
+    return {
+      text: mp ? mp.text : `Row ${row.leftIndex + 1}`,
+      marks: mp ? mp.marks : 1,
+      is_required: mp ? mp.is_required : false,
+      hit: awardedHit,
+    };
+  });
+
+  const hitMarks = outcomes.filter((o) => o.hit).reduce((sum, o) => sum + o.marks, 0);
+
+  return {
+    kind: 'awarded',
+    marks_awarded: clampMarks(enforceRequired(hitMarks, outcomes), part.marks),
+    marks_possible: part.marks,
+    mark_point_outcomes: outcomes,
+    normalised_answer: serialiseMatchingAnswer(pupilPairs),
   };
 }
