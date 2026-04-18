@@ -187,7 +187,7 @@ describe('markAttemptPart — short_text', () => {
 });
 
 describe('markAttemptPart — open response types', () => {
-  it.each(['medium_text', 'extended_response', 'code', 'algorithm'])(
+  it.each(['medium_text', 'extended_response', 'code', 'algorithm', 'logic_diagram'])(
     'returns teacher_pending for %s',
     (type) => {
       const r = markAttemptPart(part(type, 6), 'anything at all', []);

@@ -274,6 +274,38 @@ const PARITY_FIXTURES: Record<string, SchemaFixture[]> = {
       expectAccept: false,
     },
   ],
+  logic_diagram: [
+    {
+      label: 'minimal valid (image variant)',
+      config: { variant: 'image', canvas: { width: 600, height: 400 } },
+      expectAccept: true,
+    },
+    {
+      label: 'unknown variant',
+      config: { variant: 'gate_in_box', canvas: { width: 600, height: 400 } },
+      expectAccept: false,
+    },
+    {
+      label: 'canvas missing width',
+      config: { variant: 'image', canvas: { height: 400 } },
+      expectAccept: false,
+    },
+    {
+      label: 'canvas width too small',
+      config: { variant: 'image', canvas: { width: 50, height: 400 } },
+      expectAccept: false,
+    },
+    {
+      label: 'unknown top-level key',
+      config: { variant: 'image', canvas: { width: 600, height: 400 }, palette: ['AND'] },
+      expectAccept: false,
+    },
+    {
+      label: 'unknown canvas key',
+      config: { variant: 'image', canvas: { width: 600, height: 400, depth: 1 } },
+      expectAccept: false,
+    },
+  ],
 };
 
 function buildAjv(): Ajv2020 {

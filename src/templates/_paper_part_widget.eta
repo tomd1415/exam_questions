@@ -457,6 +457,54 @@ const t = part.expected_response_type;
     </ul>
     <svg class="matching__overlay" data-matching-overlay aria-hidden="true"></svg>
   </div>
+<% } else if (t === 'logic_diagram') { %>
+  <%
+    const ldCfg = part.part_config || {};
+    const ldVariant = typeof ldCfg.variant === 'string' ? ldCfg.variant : 'image';
+    const ldCanvas = (ldCfg.canvas && typeof ldCfg.canvas === 'object') ? ldCfg.canvas : {};
+    const ldWidth = Number.isInteger(ldCanvas.width) ? ldCanvas.width : 600;
+    const ldHeight = Number.isInteger(ldCanvas.height) ? ldCanvas.height : 400;
+    // Pull the prior PNG out of the `image=…` line, if any. We deliberately
+    // accept whatever shape the DB holds so a malformed payload is shown as
+    // an empty canvas rather than a server error.
+    let ldPriorImage = '';
+    priorLines.forEach(function(line) {
+      const eq = line.indexOf('=');
+      if (eq <= 0) return;
+      const key = line.slice(0, eq).trim();
+      if (key === 'image') ldPriorImage = line.slice(eq + 1);
+    });
+  %>
+  <div class="widget widget--logic-diagram logic-diagram"
+       data-autosave-part-id="<%= part.id %>"
+       data-logic-diagram-variant="<%= ldVariant %>"
+       data-logic-diagram-width="<%= ldWidth %>"
+       data-logic-diagram-height="<%= ldHeight %>"
+       aria-describedby="marks-<%= part.id %>">
+    <div class="logic-diagram__toolbar" role="toolbar" aria-label="Drawing tools">
+      <button type="button" class="logic-diagram__tool" data-logic-diagram-tool="pen" aria-pressed="true">Pen</button>
+      <button type="button" class="logic-diagram__tool" data-logic-diagram-tool="eraser" aria-pressed="false">Eraser</button>
+      <button type="button" class="logic-diagram__clear" data-logic-diagram-clear>Clear</button>
+      <span class="logic-diagram__hint" data-logic-diagram-hint>
+        Draw your gates and wires by hand. Use the Eraser to rub out mistakes; Clear wipes the whole canvas.
+      </span>
+    </div>
+    <canvas class="logic-diagram__canvas"
+            data-logic-diagram-canvas
+            width="<%= ldWidth %>"
+            height="<%= ldHeight %>"
+            aria-label="Logic-diagram drawing area, <%= ldWidth %> by <%= ldHeight %> pixels"
+            tabindex="0"></canvas>
+    <input type="hidden"
+           name="<%= fieldName %>__image"
+           value="<%= ldPriorImage %>"
+           data-logic-diagram-image />
+    <noscript>
+      <p class="logic-diagram__noscript">
+        This widget needs JavaScript to draw. Without it, you cannot submit a diagram.
+      </p>
+    </noscript>
+  </div>
 <% } else { %>
   <textarea class="widget widget--fallback"
             name="<%= fieldName %>"

@@ -1,0 +1,32 @@
+{
+  "external_key": "j277-2-4-logic-diagram-and-or",
+  "component_code": "J277/02",
+  "topic_code": "2.4",
+  "subtopic_code": "2.4.1",
+  "command_word_code": "draw",
+  "archetype_code": "explain",
+  "expected_response_type": "logic_diagram",
+  "stem": "A burglar alarm sounds when the system is armed AND (a door is open OR a window is open).",
+  "model_answer": "An AND gate takes ARMED on one input. The other input of the AND gate is the output of an OR gate fed by DOOR and WINDOW. The AND gate's output is the alarm signal.",
+  "difficulty_band": 5,
+  "difficulty_step": 3,
+  "source_type": "imported_pattern",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Draw a logic-gate diagram for the alarm. Label the three inputs ARMED, DOOR and WINDOW; label the output ALARM. Use AND and OR gates only.",
+      "marks": 4,
+      "expected_response_type": "logic_diagram",
+      "part_config": {
+        "variant": "image",
+        "canvas": { "width": 700, "height": 360 }
+      },
+      "mark_points": [
+        { "text": "OR gate fed by DOOR and WINDOW", "marks": 1 },
+        { "text": "AND gate fed by ARMED and the OR-gate output", "marks": 1 },
+        { "text": "ALARM taken from the AND gate output", "marks": 1 },
+        { "text": "All three inputs and the output are clearly labelled", "marks": 1 }
+      ]
+    }
+  ]
+}

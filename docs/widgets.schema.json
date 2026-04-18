@@ -649,6 +649,58 @@
           }
         ]
       }
+    },
+    {
+      "type": "logic_diagram",
+      "marker": "teacher_pending",
+      "displayName": "Logic diagram (free draw)",
+      "description": "Pupil draws a Boolean / logic-gate diagram on a canvas; the answer is sent to teacher review as a PNG. Phase-2.5 MVP: pen + clear only, no structured wire model.",
+      "markPointGuidance": "List the assessable features the diagram should show (e.g. \"AND gate fed by A and B\", \"output Q = (A AND B) OR (NOT C)\"). The teacher applies them while viewing the image.",
+      "configSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "title": "logic_diagram part_config",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "variant",
+          "canvas"
+        ],
+        "properties": {
+          "variant": {
+            "type": "string",
+            "enum": [
+              "image"
+            ]
+          },
+          "canvas": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "width",
+              "height"
+            ],
+            "properties": {
+              "width": {
+                "type": "integer",
+                "minimum": 100,
+                "maximum": 2000
+              },
+              "height": {
+                "type": "integer",
+                "minimum": 100,
+                "maximum": 2000
+              }
+            }
+          }
+        }
+      },
+      "exampleConfig": {
+        "variant": "image",
+        "canvas": {
+          "width": 600,
+          "height": 400
+        }
+      }
     }
   ]
 }

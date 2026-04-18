@@ -40,6 +40,7 @@ export const OPEN_RESPONSE_TYPES = new Set<string>([
   'extended_response',
   'code',
   'algorithm',
+  'logic_diagram',
 ]);
 
 export interface MarkingInputPart {

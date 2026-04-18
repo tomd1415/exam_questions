@@ -30,6 +30,7 @@ export const EXPECTED_RESPONSE_TYPES: readonly string[] = [
   'cloze_with_bank',
   'cloze_code',
   'matching',
+  'logic_diagram',
 ] as const;
 
 export interface MarkPointDraft {

@@ -1,0 +1,28 @@
+-- Phase 2.5 chunk 2.5f — logic_diagram widget (image-variant MVP).
+--
+-- Documentation-only migration. `question_parts.expected_response_type`
+-- remains unconstrained TEXT (see migration 0004); the recognised set
+-- lives at the application layer in src/lib/question-invariants.ts and
+-- the widget registry in src/lib/widgets.ts.
+--
+-- This migration records that `logic_diagram` is now an accepted
+-- response type. No existing rows carry this type (it is a new
+-- addition), so no backfill is required.
+--
+-- `part_config` shape (Phase 2.5 MVP):
+--   { variant: 'image',
+--     canvas: { width: number, height: number } }
+--
+-- The MVP variant is `'image'`: the pupil draws on a <canvas> and
+-- submits the result as a base64-encoded PNG. The marker is
+-- teacher_pending (no auto-marking). Future variants (`structured_free`,
+-- `gate_in_box`) are anticipated for Phase 3 and will live alongside
+-- this one inside the same `expected_response_type`, dispatched by the
+-- `variant` field — no further migration required.
+--
+-- `attempt_parts.raw_answer` for an image-variant answer is a single
+-- line: `image=data:image/png;base64,<base64chars>`. SVG and JPEG are
+-- deliberately excluded (script-injection risk and wasteful encoding
+-- of line art respectively).
+
+SELECT 1;
