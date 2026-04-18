@@ -1,0 +1,66 @@
+# Pupil feedback tracker
+
+A curated log of pupil feedback across every phase of the project. One row
+per comment. This is the **planning view** — the raw DB table
+`pupil_feedback` is the authoritative record of what pupils submitted
+through `/feedback` on the site. Transcribe each new entry into the table
+below as part of triage.
+
+## How this works
+
+- **Pupils submit** free-text feedback at `/feedback` while signed in
+  (any role can submit — pupils, teachers, admins).
+- **Teachers and admins triage** each entry at `/admin/feedback`: set a
+  status, pick a category, and add triage notes. The DB records the
+  triage actor and timestamp, and fills `resolved_at` when status is
+  `resolved` or `wontfix`.
+- **This file** is the project-planning view. Add one row per comment.
+  If a DB entry turns into a code change, link the commit or PR in the
+  Resolved column so future-you can see the paper trail without digging
+  through `audit_events`.
+
+## Columns
+
+| Column            | Meaning                                                                                                                                      |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Date              | When the feedback arrived (`YYYY-MM-DD`). Use the DB `submitted_at` date for on-site submissions; use the conversation date for verbal ones. |
+| Source            | Pupil username/display name, or `verbal`, `classroom`, `email`, etc. Keep it short.                                                          |
+| Phase             | Which project phase the comment relates to (`Phase 0`, `Phase 1`, `Phase 2`, …).                                                             |
+| Comment           | Paste the comment verbatim. Trim only leading/trailing whitespace.                                                                           |
+| Category          | `UI`, `UX`, `docs`, `new feature`, `change feature`, `bug`, `other`.                                                                         |
+| Needs addressing? | `yes` / `no` / `maybe`. A `no` usually pairs with a `wontfix` status.                                                                        |
+| How to address    | Short plan — one sentence is fine. Link to a chunk/milestone if scheduled.                                                                   |
+| Status            | `new`, `triaged`, `in_progress`, `resolved`, `wontfix`. Mirrors the DB status column.                                                        |
+| Resolved (commit) | Commit SHA, PR, or migration number when the change lands. Leave blank while open.                                                           |
+
+## Status vocabulary
+
+- **new** — submitted but not yet triaged. Keep time here short.
+- **triaged** — read and understood; not yet being worked on.
+- **in_progress** — actively being worked on this phase/chunk.
+- **resolved** — a change has landed that addresses the feedback.
+- **wontfix** — considered and deliberately declined. Record _why_ in the
+  triage notes on the site so the pupil can be given a clear answer.
+
+## Category guidance
+
+- **UI** — visual appearance, layout, colour, typography.
+- **UX** — flow, wording, empty states, affordances, keyboard behaviour.
+- **docs** — anything that would be fixed by better help text, tooltips,
+  or a guide rather than code changes.
+- **new feature** — genuinely new capability.
+- **change feature** — an existing capability should behave differently.
+- **bug** — something is broken against the obvious intended behaviour.
+- **other** — doesn't fit the above (e.g. general thanks, off-topic).
+
+## Feedback log
+
+| Date | Source | Phase | Comment | Category | Needs addressing? | How to address | Status | Resolved (commit) |
+| ---- | ------ | ----- | ------- | -------- | ----------------- | -------------- | ------ | ----------------- |
+|      |        |       |         |          |                   |                |        |                   |
+
+<!--
+Copy this blank row when you add a new entry:
+
+| YYYY-MM-DD |        |       |         |          |                   |                | new    |                   |
+-->
