@@ -28,6 +28,7 @@ import {
   validateQuestionDraft,
   type QuestionDraftReferenceData,
 } from '../lib/question-invariants.js';
+import { validatePartConfig } from '../lib/widgets.js';
 import { hashPassword } from '../lib/passwords.js';
 import { randomBytes } from 'node:crypto';
 
@@ -158,6 +159,18 @@ export async function seedCuratedContent(
         summary.failed++;
         const msg = validation.issues.map((i) => `${i.path}: ${i.message}`).join('; ');
         summary.errors.push({ file, message: `invariants: ${msg}` });
+        continue;
+      }
+
+      const configIssues: string[] = [];
+      validation.value.parts.forEach((p, idx) => {
+        for (const issue of validatePartConfig(p.expected_response_type, p.part_config)) {
+          configIssues.push(`parts.${String(idx)}.part_config: ${issue.message}`);
+        }
+      });
+      if (configIssues.length > 0) {
+        summary.failed++;
+        summary.errors.push({ file, message: `widget config: ${configIssues.join('; ')}` });
         continue;
       }
 

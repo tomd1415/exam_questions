@@ -495,22 +495,57 @@ export function registerAttemptRoutes(app: FastifyInstance): void {
 function readAnswerFields(
   body: Record<string, unknown>,
 ): { attemptPartId: string; rawAnswer: string }[] {
-  const out: { attemptPartId: string; rawAnswer: string }[] = [];
+  const direct = new Map<string, string>();
+  const suffixed = new Map<string, string[]>();
   for (const [key, value] of Object.entries(body)) {
     if (!key.startsWith('part_')) continue;
-    const id = key.slice('part_'.length);
-    if (!/^\d+$/.test(id)) continue;
-    let raw: string;
-    if (typeof value === 'string') {
-      raw = value;
-    } else if (Array.isArray(value) && value.every((v) => typeof v === 'string')) {
-      raw = value.join('\n');
+    const rest = key.slice('part_'.length);
+    const sep = rest.indexOf('__');
+    if (sep === -1) {
+      if (!/^\d+$/.test(rest)) continue;
+      const raw = coerceFieldValue(value);
+      if (raw === null) continue;
+      direct.set(rest, raw);
     } else {
-      continue;
+      const id = rest.slice(0, sep);
+      const suffix = rest.slice(sep + 2);
+      if (!/^\d+$/.test(id)) continue;
+      if (suffix.length === 0) continue;
+      const values = coerceFieldValueList(value);
+      if (values.length === 0) continue;
+      const lines = suffixed.get(id) ?? [];
+      // Suffix carries the within-widget address (e.g. row index for a
+      // matrix tick). Each posted value becomes its own line so the
+      // marker can parse multi-pick rows from the multi widget.
+      for (const v of values) lines.push(`${suffix}=${v}`);
+      suffixed.set(id, lines);
     }
-    out.push({ attemptPartId: id, rawAnswer: raw });
+  }
+
+  const out: { attemptPartId: string; rawAnswer: string }[] = [];
+  const allIds = new Set<string>([...direct.keys(), ...suffixed.keys()]);
+  for (const id of allIds) {
+    if (direct.has(id)) {
+      out.push({ attemptPartId: id, rawAnswer: direct.get(id)! });
+    } else {
+      out.push({ attemptPartId: id, rawAnswer: suffixed.get(id)!.join('\n') });
+    }
   }
   return out;
+}
+
+function coerceFieldValue(value: unknown): string | null {
+  if (typeof value === 'string') return value;
+  if (Array.isArray(value) && value.every((v) => typeof v === 'string')) return value.join('\n');
+  return null;
+}
+
+function coerceFieldValueList(value: unknown): string[] {
+  if (typeof value === 'string') return value.length === 0 ? [] : [value];
+  if (Array.isArray(value) && value.every((v): v is string => typeof v === 'string')) {
+    return value.filter((v) => v.length > 0);
+  }
+  return [];
 }
 
 function parseElapsedSeconds(raw: string | undefined): number | null {

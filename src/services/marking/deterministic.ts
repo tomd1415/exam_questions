@@ -8,6 +8,8 @@ export const OBJECTIVE_RESPONSE_TYPES = new Set<string>([
   'multiple_choice',
   'tick_box',
   'short_text',
+  'matrix_tick_single',
+  'matrix_tick_multi',
 ]);
 
 export const OPEN_RESPONSE_TYPES = new Set<string>([
@@ -21,6 +23,10 @@ export const OPEN_RESPONSE_TYPES = new Set<string>([
 export interface MarkingInputPart {
   marks: number;
   expected_response_type: string;
+  // Widget-specific configuration mirrored from question_parts.part_config.
+  // Optional for back-compat — every widget that needs it reads its own
+  // shape internally. Existing types ignore this field.
+  part_config?: unknown;
 }
 
 export interface MarkingInputMarkPoint {
@@ -63,6 +69,8 @@ export function markAttemptPart(
 
   if (type === 'multiple_choice') return markMultipleChoice(part, rawAnswer, markPoints);
   if (type === 'tick_box') return markTickBox(part, rawAnswer, markPoints);
+  if (type === 'matrix_tick_single') return markMatrixTickSingle(part, rawAnswer, markPoints);
+  if (type === 'matrix_tick_multi') return markMatrixTickMulti(part, rawAnswer, markPoints);
   return markShortText(part, rawAnswer, markPoints);
 }
 
@@ -178,4 +186,241 @@ function enforceRequired(awarded: number, outcomes: readonly MarkPointOutcome[])
 
 function clampMarks(awarded: number, possible: number): number {
   return awarded > possible ? possible : awarded;
+}
+
+// matrix_tick_single
+//
+// raw_answer encodes one selection per row, one row per line, in the
+// shape `<row-index>=<column-label>`. Examples:
+//   0=Disk
+//   1=RAM
+// Rows the pupil left blank are simply absent from raw_answer.
+//
+// `part.part_config` carries `{ rows: string[], columns: string[],
+// correctByRow: string[], allOrNothing?: boolean }`. The marker compares
+// each row's selection to `correctByRow[i]` and awards one mark per
+// match (or zero if `allOrNothing` is true and any row is wrong).
+//
+// `markPoints` is expected to contain one entry per row, in row order;
+// each entry's text labels the row for the review page. The marker
+// produces a per-row hit/miss outcome list that lines up with that
+// ordering.
+
+interface MatrixTickConfig {
+  rows: readonly string[];
+  columns: readonly string[];
+  correctByRow: readonly string[];
+  allOrNothing?: boolean;
+}
+
+function isMatrixTickConfig(c: unknown): c is MatrixTickConfig {
+  if (c === null || typeof c !== 'object') return false;
+  const cfg = c as Record<string, unknown>;
+  const rows = cfg['rows'];
+  const columns = cfg['columns'];
+  const correctByRow = cfg['correctByRow'];
+  const allOrNothing = cfg['allOrNothing'];
+  if (!Array.isArray(rows) || !rows.every((r) => typeof r === 'string')) return false;
+  if (!Array.isArray(columns) || !columns.every((c2) => typeof c2 === 'string')) return false;
+  if (!Array.isArray(correctByRow) || !correctByRow.every((c2) => typeof c2 === 'string'))
+    return false;
+  if (correctByRow.length !== rows.length) return false;
+  if (allOrNothing !== undefined && allOrNothing !== null && typeof allOrNothing !== 'boolean')
+    return false;
+  return true;
+}
+
+export function parseMatrixTickRawAnswer(rawAnswer: string): Map<number, string> {
+  const out = new Map<number, string>();
+  for (const line of rawAnswer.split('\n')) {
+    const eq = line.indexOf('=');
+    if (eq <= 0) continue;
+    const idxStr = line.slice(0, eq).trim();
+    const value = line.slice(eq + 1).trim();
+    if (!/^\d+$/.test(idxStr)) continue;
+    const idx = Number(idxStr);
+    if (!Number.isInteger(idx) || idx < 0) continue;
+    if (value.length === 0) continue;
+    if (!out.has(idx)) out.set(idx, value);
+  }
+  return out;
+}
+
+function markMatrixTickSingle(
+  part: MarkingInputPart,
+  rawAnswer: string,
+  markPoints: readonly MarkingInputMarkPoint[],
+): MarkingResult {
+  const config = part.part_config;
+  if (!isMatrixTickConfig(config)) {
+    return { kind: 'teacher_pending', marks_possible: part.marks, reason: 'unknown_type' };
+  }
+
+  const selections = parseMatrixTickRawAnswer(rawAnswer);
+  const expectedNorm = config.correctByRow.map((c) => normalise(c));
+  const validColumns = new Set(config.columns.map((c) => normalise(c)));
+
+  const outcomes: MarkPointOutcome[] = config.rows.map((_, i) => {
+    const picked = selections.get(i);
+    const pickedNorm = picked === undefined ? '' : normalise(picked);
+    const inRange = pickedNorm.length > 0 && validColumns.has(pickedNorm);
+    const hit = inRange && pickedNorm === expectedNorm[i];
+    const mp = markPoints[i];
+    return {
+      text: mp ? mp.text : `Row ${i + 1}`,
+      marks: mp ? mp.marks : 1,
+      is_required: mp ? mp.is_required : false,
+      hit,
+    };
+  });
+
+  const hitMarks = outcomes.filter((o) => o.hit).reduce((sum, o) => sum + o.marks, 0);
+  const allHit = outcomes.length > 0 && outcomes.every((o) => o.hit);
+  const awardedRaw = config.allOrNothing === true ? (allHit ? hitMarks : 0) : hitMarks;
+  return {
+    kind: 'awarded',
+    marks_awarded: clampMarks(enforceRequired(awardedRaw, outcomes), part.marks),
+    marks_possible: part.marks,
+    mark_point_outcomes: outcomes,
+    normalised_answer: [...selections.entries()]
+      .sort((a, b) => a[0] - b[0])
+      .map(([i, v]) => `${i}=${v}`)
+      .join('\n'),
+  };
+}
+
+// matrix_tick_multi
+//
+// raw_answer encodes one selection per line, in the shape
+// `<row-index>=<column-label>`. A row may legitimately contribute
+// multiple lines if the pupil ticked more than one column; rows the
+// pupil left blank are absent.
+//
+// `part.part_config` carries `{ rows: string[], columns: string[],
+// correctByRow: string[][], partialCredit?: boolean }`. `correctByRow[i]`
+// lists every column that should be ticked on row `i`. `partialCredit`
+// defaults to true: under-ticking awards proportional credit per row,
+// over-ticking (any wrong tick on a row) zeros that row's marks.
+//
+// `markPoints` should contain one entry per (row, correctColumn) pair,
+// in row-then-column order (matching `correctByRow` flattened). Each
+// outcome lines up with that index — useful for the review page.
+
+interface MatrixTickMultiConfig {
+  rows: readonly string[];
+  columns: readonly string[];
+  correctByRow: readonly (readonly string[])[];
+  partialCredit?: boolean;
+}
+
+function isMatrixTickMultiConfig(c: unknown): c is MatrixTickMultiConfig {
+  if (c === null || typeof c !== 'object') return false;
+  const cfg = c as Record<string, unknown>;
+  const rows = cfg['rows'];
+  const columns = cfg['columns'];
+  const correctByRow = cfg['correctByRow'];
+  const partialCredit = cfg['partialCredit'];
+  if (!Array.isArray(rows) || !rows.every((r) => typeof r === 'string')) return false;
+  if (!Array.isArray(columns) || !columns.every((c2) => typeof c2 === 'string')) return false;
+  if (!Array.isArray(correctByRow)) return false;
+  if (correctByRow.length !== rows.length) return false;
+  for (const row of correctByRow) {
+    if (!Array.isArray(row)) return false;
+    if (!row.every((c2) => typeof c2 === 'string')) return false;
+  }
+  if (partialCredit !== undefined && partialCredit !== null && typeof partialCredit !== 'boolean')
+    return false;
+  return true;
+}
+
+export function parseMatrixTickMultiRawAnswer(rawAnswer: string): Map<number, Set<string>> {
+  const out = new Map<number, Set<string>>();
+  for (const line of rawAnswer.split('\n')) {
+    const eq = line.indexOf('=');
+    if (eq <= 0) continue;
+    const idxStr = line.slice(0, eq).trim();
+    const value = line.slice(eq + 1).trim();
+    if (!/^\d+$/.test(idxStr)) continue;
+    const idx = Number(idxStr);
+    if (!Number.isInteger(idx) || idx < 0) continue;
+    if (value.length === 0) continue;
+    let bucket = out.get(idx);
+    if (!bucket) {
+      bucket = new Set<string>();
+      out.set(idx, bucket);
+    }
+    bucket.add(value);
+  }
+  return out;
+}
+
+function markMatrixTickMulti(
+  part: MarkingInputPart,
+  rawAnswer: string,
+  markPoints: readonly MarkingInputMarkPoint[],
+): MarkingResult {
+  const config = part.part_config;
+  if (!isMatrixTickMultiConfig(config)) {
+    return { kind: 'teacher_pending', marks_possible: part.marks, reason: 'unknown_type' };
+  }
+
+  const selections = parseMatrixTickMultiRawAnswer(rawAnswer);
+  const validColsNorm = new Set(config.columns.map((c) => normalise(c)));
+  const partialCredit = config.partialCredit !== false;
+
+  const outcomes: MarkPointOutcome[] = [];
+  let mpIndex = 0;
+  const acceptedByRow = new Map<number, string[]>();
+
+  for (let i = 0; i < config.rows.length; i++) {
+    const correctList = config.correctByRow[i] ?? [];
+    const correctNormSet = new Set(correctList.map((c) => normalise(c)));
+    const rawPicks = selections.get(i) ?? new Set<string>();
+    const pickedNormSet = new Set<string>();
+    for (const p of rawPicks) {
+      const n = normalise(p);
+      if (validColsNorm.has(n)) pickedNormSet.add(n);
+    }
+
+    let hasIncorrect = false;
+    for (const p of pickedNormSet) {
+      if (!correctNormSet.has(p)) {
+        hasIncorrect = true;
+        break;
+      }
+    }
+    const setEquals =
+      !hasIncorrect &&
+      pickedNormSet.size === correctNormSet.size &&
+      [...pickedNormSet].every((p) => correctNormSet.has(p));
+    const rowAwards = !hasIncorrect && (partialCredit || setEquals);
+
+    for (const correctCol of correctList) {
+      const correctColNorm = normalise(correctCol);
+      const mp = markPoints[mpIndex];
+      const hit = rowAwards && pickedNormSet.has(correctColNorm);
+      outcomes.push({
+        text: mp ? mp.text : `${config.rows[i]}: ${correctCol}`,
+        marks: mp ? mp.marks : 1,
+        is_required: mp ? mp.is_required : false,
+        hit,
+      });
+      mpIndex++;
+    }
+    if (rawPicks.size > 0) acceptedByRow.set(i, [...rawPicks].sort());
+  }
+
+  const hitMarks = outcomes.filter((o) => o.hit).reduce((sum, o) => sum + o.marks, 0);
+  const normalisedAnswer: string[] = [];
+  const sortedRows = [...acceptedByRow.entries()].sort((a, b) => a[0] - b[0]);
+  for (const [i, vs] of sortedRows) {
+    for (const v of vs) normalisedAnswer.push(`${i}=${v}`);
+  }
+  return {
+    kind: 'awarded',
+    marks_awarded: clampMarks(enforceRequired(hitMarks, outcomes), part.marks),
+    marks_possible: part.marks,
+    mark_point_outcomes: outcomes,
+    normalised_answer: normalisedAnswer.join('\n'),
+  };
 }

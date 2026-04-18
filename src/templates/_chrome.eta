@@ -35,6 +35,7 @@ const fontPref = (it.currentUser && it.currentUser.font_preference) || 'system';
     <%~ include('_footer', it) %>
     <% if (it.autosaveEnabled) { %>
       <script src="/static/autosave.js" defer></script>
+      <script src="/static/widget_counters.js" defer></script>
     <% } %>
     <% if (it.timerEnabled) { %>
       <script src="/static/timer.js" defer></script>

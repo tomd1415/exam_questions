@@ -331,6 +331,109 @@
   border-radius: 0.2rem;
 }
 
+/* --- Phase 2.5 Chunk 2.5a-ii: matrix_tick_single ---------------------- */
+
+/* Renders as a real grid: row labels in the first column, one radio
+   per (row, column) cell. Each row is its own <fieldset> so screen
+   readers announce the row label as the group name. */
+.widget--matrix-tick {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+}
+.matrix-tick {
+  border-collapse: collapse;
+  width: 100%;
+  border: 1px solid var(--paper-rule);
+}
+.matrix-tick caption {
+  text-align: left;
+  padding: 0.3rem 0.4rem;
+  font-size: 0.85rem;
+  color: var(--paper-ink-muted);
+}
+.matrix-tick th,
+.matrix-tick td {
+  border: 1px solid var(--paper-rule);
+  padding: 0.45rem 0.6rem;
+  text-align: center;
+  vertical-align: middle;
+}
+.matrix-tick thead th {
+  background: #f5f5f9;
+  font-weight: 600;
+}
+.matrix-tick tbody tr:nth-child(even) td {
+  background: #fafafb;
+}
+.matrix-tick th[scope='row'] {
+  text-align: left;
+  font-weight: 500;
+  background: transparent;
+}
+.matrix-tick td label {
+  display: block;
+  cursor: pointer;
+  padding: 0.25rem;
+  margin: -0.25rem;
+  border-radius: 0.2rem;
+}
+.matrix-tick td label:hover {
+  background: #eef;
+}
+.matrix-tick td input[type='radio'] {
+  accent-color: var(--paper-accent);
+}
+.matrix-tick td input[type='radio']:focus-visible,
+.matrix-tick td input[type='checkbox']:focus-visible {
+  outline: 2px solid var(--paper-accent);
+  outline-offset: 2px;
+}
+.matrix-tick td input[type='checkbox'] {
+  accent-color: var(--paper-accent);
+}
+.matrix-tick__count-col {
+  width: 4.5rem;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- tick-exactly counter and matrix-tick-multi per-row counter ------ */
+
+.widget-counter {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.15rem;
+  padding: 0.1rem 0.5rem;
+  margin: 0.4rem 0 0;
+  font-size: 0.85rem;
+  border-radius: 999px;
+  background: #eef;
+  color: var(--paper-ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+.widget-counter--inline {
+  margin: 0;
+}
+.widget-counter.is-met {
+  background: #d6f5d6;
+  color: #1e6a1e;
+}
+.widget-counter.is-over {
+  background: #fde2e2;
+  color: #8a1f1f;
+}
+.widget-counter__current {
+  font-weight: 600;
+}
+.widget-counter__divider {
+  opacity: 0.6;
+}
+.widget-counter__label {
+  margin-left: 0.2rem;
+}
+
 /* --- Phase 2 Chunk 5: review page two-column layout ------------------- */
 
 /* The global .site-main is capped at 720px which squashes the side-by-side

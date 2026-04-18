@@ -1,0 +1,39 @@
+{
+  "external_key": "j277-1-2-storage-types-matrix",
+  "component_code": "J277/01",
+  "topic_code": "1.2",
+  "subtopic_code": "1.2.1",
+  "command_word_code": "tick",
+  "archetype_code": "recall",
+  "expected_response_type": "matrix_tick_single",
+  "stem": "The table lists four storage devices used in different computer systems. For each device, tick the row that best describes what kind of memory or storage it is.",
+  "model_answer": "RAM is volatile primary memory; ROM is non-volatile primary memory holding firmware; an HDD is secondary storage; cache is a small, very fast layer of primary memory inside or close to the CPU.",
+  "difficulty_band": 3,
+  "difficulty_step": 1,
+  "source_type": "imported_pattern",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Tick one box on each row to classify each device.",
+      "marks": 4,
+      "expected_response_type": "matrix_tick_single",
+      "part_config": {
+        "rows": ["RAM", "ROM", "HDD", "Cache"],
+        "columns": ["Volatile primary", "Non-volatile primary", "Secondary"],
+        "correctByRow": [
+          "Volatile primary",
+          "Non-volatile primary",
+          "Secondary",
+          "Volatile primary"
+        ],
+        "allOrNothing": false
+      },
+      "mark_points": [
+        { "text": "RAM is volatile primary memory.", "marks": 1 },
+        { "text": "ROM is non-volatile primary memory.", "marks": 1 },
+        { "text": "HDD is secondary storage.", "marks": 1 },
+        { "text": "Cache is volatile primary memory.", "marks": 1 }
+      ]
+    }
+  ]
+}

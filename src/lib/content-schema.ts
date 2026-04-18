@@ -35,6 +35,10 @@ export const PartJson = z
     prompt: z.string().trim().min(1).max(2000),
     marks: z.number().int().min(0),
     expected_response_type: ResponseTypeSchema,
+    // Widget-specific configuration. Shape is validated by the widget
+    // registry (src/lib/widgets.ts) at the service boundary, not here —
+    // each widget owns its own schema. Null/absent means "no config".
+    part_config: z.unknown().nullish(),
     mark_points: z.array(MarkPointJson).min(1),
     misconceptions: z.array(PartMisconceptionJson).default([]),
   })
@@ -89,6 +93,7 @@ export function toQuestionDraft(q: CuratedQuestion): QuestionDraft {
       prompt: p.prompt,
       marks: p.marks,
       expected_response_type: p.expected_response_type,
+      part_config: p.part_config ?? null,
       mark_points: p.mark_points.map((mp) => ({
         text: mp.text,
         accepted_alternatives: mp.accepted_alternatives,

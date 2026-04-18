@@ -1,0 +1,39 @@
+{
+  "external_key": "j277-2-2-data-types-matrix",
+  "component_code": "J277/02",
+  "topic_code": "2.2",
+  "subtopic_code": "2.2.2",
+  "command_word_code": "tick",
+  "archetype_code": "recall",
+  "expected_response_type": "matrix_tick_single",
+  "stem": "A pupil is choosing the most appropriate data type for each value below.",
+  "model_answer": "A pupil's age is a whole number, so an integer is appropriate. A price in pounds and pence has a fractional part, so a real (float) is needed. A name is a sequence of characters and is best stored as a string. Whether a pupil has paid is a yes/no flag, which is a Boolean.",
+  "difficulty_band": 2,
+  "difficulty_step": 1,
+  "source_type": "imported_pattern",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Tick one box on each row to show the most appropriate data type for each value.",
+      "marks": 4,
+      "expected_response_type": "matrix_tick_single",
+      "part_config": {
+        "rows": [
+          "A pupil's age in whole years",
+          "The price of a textbook in £",
+          "A pupil's full name",
+          "Whether the pupil has paid (yes/no)"
+        ],
+        "columns": ["Integer", "Real", "String", "Boolean"],
+        "correctByRow": ["Integer", "Real", "String", "Boolean"],
+        "allOrNothing": false
+      },
+      "mark_points": [
+        { "text": "Age is best stored as an integer.", "marks": 1 },
+        { "text": "Price with pence is best stored as a real.", "marks": 1 },
+        { "text": "Name is best stored as a string.", "marks": 1 },
+        { "text": "A yes/no payment flag is best stored as a Boolean.", "marks": 1 }
+      ]
+    }
+  ]
+}

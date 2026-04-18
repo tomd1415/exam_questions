@@ -845,6 +845,19 @@ attached to [RUNBOOK.md](RUNBOOK.md) §10 for Phase 2 sign-off.
 
 ### Chunk 9 — Real lesson with the class
 
+> **Deferred 2026-04-18 → rolled into Phase 2.5 sign-off.** The only
+> Phase 2 feedback to date (via the new `pupil_feedback` channel
+> shipped in chunks 9a/9b) was about widget types from pupils and
+> authoring ergonomics from the teacher — both addressed by Phase 2.5.
+> Running this lesson now would regenerate the same feedback against
+> a soon-to-change widget set. The real-lesson sign-off therefore
+> moves to Phase 2.5's user test (see PHASE2.5_PLAN.md §5 chunk
+> 2.5j and the §10 deliverables checklist), which will exercise the
+> Phase 2 paper layout, autosave, timer, print, and accessibility
+> surfaces alongside every new Phase 2.5 widget. The success
+> criteria below remain the Phase 2 sign-off bar — they are checked
+> as part of the combined lesson, not separately.
+
 **Goal.** The Phase 2 user test from [PLAN.md](PLAN.md): one real
 revision lesson where the teacher runs a timed paper-style set. Not
 code; it is the sign-off event.

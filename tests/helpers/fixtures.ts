@@ -93,6 +93,7 @@ export async function createQuestion(
       prompt: string;
       marks: number;
       expectedResponseType: string;
+      partConfig?: unknown;
       markPoints?: {
         text: string;
         acceptedAlternatives?: string[];
@@ -153,10 +154,18 @@ export async function createQuestion(
     const p = parts[i]!;
     const partRes = await pool.query<{ id: string }>(
       `INSERT INTO question_parts
-         (question_id, part_label, prompt, marks, expected_response_type, display_order)
-       VALUES ($1::bigint, $2, $3, $4, $5, $6)
+         (question_id, part_label, prompt, marks, expected_response_type, part_config, display_order)
+       VALUES ($1::bigint, $2, $3, $4, $5, $6::jsonb, $7)
        RETURNING id::text`,
-      [questionId, p.label, p.prompt, p.marks, p.expectedResponseType, i + 1],
+      [
+        questionId,
+        p.label,
+        p.prompt,
+        p.marks,
+        p.expectedResponseType,
+        p.partConfig === undefined || p.partConfig === null ? null : JSON.stringify(p.partConfig),
+        i + 1,
+      ],
     );
     const partId = partRes.rows[0]!.id;
     const markPoints = p.markPoints ?? [];

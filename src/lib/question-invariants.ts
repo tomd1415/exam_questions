@@ -24,6 +24,8 @@ export const EXPECTED_RESPONSE_TYPES: readonly string[] = [
   'code',
   'algorithm',
   'trace_table',
+  'matrix_tick_single',
+  'matrix_tick_multi',
 ] as const;
 
 export interface MarkPointDraft {
@@ -43,6 +45,12 @@ export interface PartDraft {
   prompt: string;
   marks: number;
   expected_response_type: string;
+  // Widget-specific configuration. NULL/undefined for widgets that need
+  // none (true for every type as of Phase 2.5a-i). The widget registry
+  // (src/lib/widgets.ts) owns shape validation; this interface only
+  // carries the value through to the repos so it can be persisted on
+  // question_parts.part_config (JSONB).
+  part_config?: unknown;
   mark_points: MarkPointDraft[];
   misconceptions: MisconceptionDraft[];
 }
@@ -298,6 +306,7 @@ export function validateQuestionDraft(
       prompt,
       marks: Number.isInteger(p.marks) ? p.marks : 0,
       expected_response_type: p.expected_response_type,
+      part_config: p.part_config ?? null,
       mark_points: normalisedMarkPoints,
       misconceptions: normalisedMisconceptions,
     });

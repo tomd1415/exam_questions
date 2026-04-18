@@ -29,17 +29,44 @@ const t = part.expected_response_type;
     <% }); %>
   </fieldset>
 <% } else if (t === 'tick_box') { %>
-  <fieldset class="widget widget--tick" data-autosave-part-id="<%= part.id %>" aria-describedby="marks-<%= part.id %>">
-    <legend class="sr-only">Tick all that apply</legend>
-    <% markPoints.forEach(function(mp) { %>
+  <%
+    const tickCfg = part.part_config || {};
+    const tickExactly = Number.isInteger(tickCfg.tickExactly) && tickCfg.tickExactly > 0
+      ? tickCfg.tickExactly : null;
+    // When part_config.options is set, render every option as a checkbox
+    // (so distractors appear alongside correct mark points). Without
+    // options, fall back to the Phase 2 behaviour of one checkbox per
+    // mark point.
+    const tickOptions = Array.isArray(tickCfg.options) && tickCfg.options.length > 0
+      ? tickCfg.options
+      : markPoints.map(function(mp) { return mp.text; });
+  %>
+  <fieldset class="widget widget--tick<%= tickExactly !== null ? ' widget--tick-exactly' : '' %>"
+            data-autosave-part-id="<%= part.id %>"
+            <%= tickExactly !== null ? 'data-tick-exactly="' + tickExactly + '"' : '' %>
+            aria-describedby="marks-<%= part.id %>">
+    <legend class="sr-only">
+      <%= tickExactly !== null ? 'Tick exactly ' + tickExactly : 'Tick all that apply' %>
+    </legend>
+    <% tickOptions.forEach(function(opt) { %>
       <label class="widget-choice">
         <input type="checkbox"
                name="<%= fieldName %>"
-               value="<%= mp.text %>"
-               <%= tickedSet.has(mp.text) ? 'checked' : '' %> />
-        <span class="widget-choice__label"><%= mp.text %></span>
+               value="<%= opt %>"
+               <%= tickedSet.has(opt) ? 'checked' : '' %> />
+        <span class="widget-choice__label"><%= opt %></span>
       </label>
     <% }); %>
+    <% if (tickExactly !== null) { %>
+      <p class="widget-counter"
+         data-tick-counter
+         data-target="<%= tickExactly %>">
+        <span class="widget-counter__current" data-current>0</span>
+        <span class="widget-counter__divider">/</span>
+        <span class="widget-counter__target"><%= tickExactly %></span>
+        <span class="widget-counter__label"> ticked</span>
+      </p>
+    <% } %>
   </fieldset>
 <% } else if (t === 'short_text') { %>
   <input class="widget widget--short"
@@ -95,6 +122,114 @@ const t = part.expected_response_type;
             data-autosave-part-id="<%= part.id %>"
             aria-describedby="marks-<%= part.id %>"
   ><%= prior %></textarea>
+<% } else if (t === 'matrix_tick_single') { %>
+  <%
+    const cfg = part.part_config || {};
+    const rows = Array.isArray(cfg.rows) ? cfg.rows : [];
+    const columns = Array.isArray(cfg.columns) ? cfg.columns : [];
+    const priorByRow = new Map();
+    priorLines.forEach(function(line) {
+      const eq = line.indexOf('=');
+      if (eq <= 0) return;
+      const idx = line.slice(0, eq).trim();
+      const val = line.slice(eq + 1).trim();
+      if (/^\d+$/.test(idx) && val.length > 0) priorByRow.set(idx, val);
+    });
+  %>
+  <table class="widget widget--matrix-tick matrix-tick" data-autosave-part-id="<%= part.id %>" aria-describedby="marks-<%= part.id %>">
+    <thead>
+      <tr>
+        <th scope="col"></th>
+        <% columns.forEach(function(col) { %>
+          <th scope="col"><%= col %></th>
+        <% }); %>
+      </tr>
+    </thead>
+    <tbody>
+      <% rows.forEach(function(rowLabel, i) { %>
+        <% const rowFieldName = fieldName + '__' + i; %>
+        <% const priorValue = priorByRow.get(String(i)) || ''; %>
+        <tr>
+          <th scope="row"><%= rowLabel %></th>
+          <% columns.forEach(function(col) { %>
+            <td>
+              <label aria-label="<%= rowLabel %>: <%= col %>">
+                <input type="radio"
+                       name="<%= rowFieldName %>"
+                       value="<%= col %>"
+                       <%= priorValue === col ? 'checked' : '' %> />
+              </label>
+            </td>
+          <% }); %>
+        </tr>
+      <% }); %>
+    </tbody>
+  </table>
+<% } else if (t === 'matrix_tick_multi') { %>
+  <%
+    const cfgM = part.part_config || {};
+    const rowsM = Array.isArray(cfgM.rows) ? cfgM.rows : [];
+    const columnsM = Array.isArray(cfgM.columns) ? cfgM.columns : [];
+    const correctByRowM = Array.isArray(cfgM.correctByRow) ? cfgM.correctByRow : [];
+    const priorByRowMulti = new Map();
+    priorLines.forEach(function(line) {
+      const eq = line.indexOf('=');
+      if (eq <= 0) return;
+      const idx = line.slice(0, eq).trim();
+      const val = line.slice(eq + 1).trim();
+      if (!/^\d+$/.test(idx) || val.length === 0) return;
+      let bucket = priorByRowMulti.get(idx);
+      if (!bucket) { bucket = new Set(); priorByRowMulti.set(idx, bucket); }
+      bucket.add(val);
+    });
+  %>
+  <table class="widget widget--matrix-tick-multi matrix-tick matrix-tick-multi"
+         data-autosave-part-id="<%= part.id %>"
+         aria-describedby="marks-<%= part.id %>">
+    <thead>
+      <tr>
+        <th scope="col"></th>
+        <% columnsM.forEach(function(col) { %>
+          <th scope="col"><%= col %></th>
+        <% }); %>
+        <th scope="col" class="matrix-tick__count-col"></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% rowsM.forEach(function(rowLabel, i) { %>
+        <%
+          const rowFieldName = fieldName + '__' + i;
+          const priorBucket = priorByRowMulti.get(String(i)) || new Set();
+          const targetRow = Array.isArray(correctByRowM[i]) ? correctByRowM[i].length : null;
+        %>
+        <tr>
+          <th scope="row"><%= rowLabel %></th>
+          <% columnsM.forEach(function(col) { %>
+            <td>
+              <label aria-label="<%= rowLabel %>: <%= col %>">
+                <input type="checkbox"
+                       name="<%= rowFieldName %>"
+                       value="<%= col %>"
+                       <%= priorBucket.has(col) ? 'checked' : '' %> />
+              </label>
+            </td>
+          <% }); %>
+          <td class="matrix-tick__count-col">
+            <% if (targetRow !== null) { %>
+              <span class="widget-counter widget-counter--inline"
+                    data-tick-counter-row
+                    data-row-field="<%= rowFieldName %>"
+                    data-target="<%= targetRow %>">
+                <span class="widget-counter__current" data-current><%= priorBucket.size %></span>
+                <span class="widget-counter__divider">/</span>
+                <span class="widget-counter__target"><%= targetRow %></span>
+              </span>
+            <% } %>
+          </td>
+        </tr>
+      <% }); %>
+    </tbody>
+  </table>
 <% } else if (t === 'trace_table') { %>
   <p class="widget-hint">
     One row per line; separate columns with <code>|</code>.

@@ -439,6 +439,7 @@ function runDeterministicMarker(
   const input: MarkingInputPart = {
     marks: part.marks,
     expected_response_type: part.expected_response_type,
+    part_config: part.part_config,
   };
   const mps: MarkingInputMarkPoint[] = markPoints.map((mp) => ({
     text: mp.text,

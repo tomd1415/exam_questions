@@ -9,6 +9,7 @@ export interface QuestionPartRow {
   prompt: string;
   marks: number;
   expected_response_type: string;
+  part_config: unknown;
   display_order: number;
 }
 
@@ -115,7 +116,7 @@ export class QuestionRepo {
     if (!q) return null;
 
     const partsRes = await this.pool.query<QuestionPartRow>(
-      `SELECT id::text, part_label, prompt, marks, expected_response_type, display_order
+      `SELECT id::text, part_label, prompt, marks, expected_response_type, part_config, display_order
          FROM question_parts
         WHERE question_id = $1::bigint
         ORDER BY display_order`,
@@ -201,7 +202,7 @@ export class QuestionRepo {
     if (!question) return null;
 
     const partsRes = await this.pool.query<QuestionPartRow>(
-      `SELECT id::text, part_label, prompt, marks, expected_response_type, display_order
+      `SELECT id::text, part_label, prompt, marks, expected_response_type, part_config, display_order
          FROM question_parts
         WHERE question_id = $1::bigint
         ORDER BY display_order`,
@@ -435,10 +436,18 @@ async function insertPartsAndMarkPoints(
     const p = parts[i]!;
     const partRes = await client.query<{ id: string }>(
       `INSERT INTO question_parts
-         (question_id, part_label, prompt, marks, expected_response_type, display_order)
-       VALUES ($1::bigint, $2, $3, $4, $5, $6)
+         (question_id, part_label, prompt, marks, expected_response_type, part_config, display_order)
+       VALUES ($1::bigint, $2, $3, $4, $5, $6::jsonb, $7)
        RETURNING id::text`,
-      [questionId, p.part_label, p.prompt, p.marks, p.expected_response_type, i + 1],
+      [
+        questionId,
+        p.part_label,
+        p.prompt,
+        p.marks,
+        p.expected_response_type,
+        partConfigParam(p.part_config),
+        i + 1,
+      ],
     );
     const partId = partRes.rows[0]!.id;
     for (let j = 0; j < p.mark_points.length; j++) {
@@ -501,18 +510,34 @@ async function upsertPartsAndMarkPoints(
             SET part_label = $2,
                 prompt = $3,
                 marks = $4,
-                expected_response_type = $5
+                expected_response_type = $5,
+                part_config = $6::jsonb
           WHERE id = $1::bigint`,
-        [existingId, p.part_label, p.prompt, p.marks, p.expected_response_type],
+        [
+          existingId,
+          p.part_label,
+          p.prompt,
+          p.marks,
+          p.expected_response_type,
+          partConfigParam(p.part_config),
+        ],
       );
       partId = existingId;
     } else {
       const partRes = await client.query<{ id: string }>(
         `INSERT INTO question_parts
-           (question_id, part_label, prompt, marks, expected_response_type, display_order)
-         VALUES ($1::bigint, $2, $3, $4, $5, $6)
+           (question_id, part_label, prompt, marks, expected_response_type, part_config, display_order)
+         VALUES ($1::bigint, $2, $3, $4, $5, $6::jsonb, $7)
          RETURNING id::text`,
-        [questionId, p.part_label, p.prompt, p.marks, p.expected_response_type, displayOrder],
+        [
+          questionId,
+          p.part_label,
+          p.prompt,
+          p.marks,
+          p.expected_response_type,
+          partConfigParam(p.part_config),
+          displayOrder,
+        ],
       );
       partId = partRes.rows[0]!.id;
     }
@@ -575,4 +600,12 @@ async function upsertPartsAndMarkPoints(
   if (partsToDelete.length > 0) {
     await client.query(`DELETE FROM question_parts WHERE id = ANY($1::bigint[])`, [partsToDelete]);
   }
+}
+
+// Serialise a part_config value for the JSONB column. NULL/undefined map
+// to a real SQL NULL so the column predicate `part_config IS NULL`
+// behaves intuitively, rather than storing the JSON literal "null".
+function partConfigParam(config: unknown): string | null {
+  if (config === null || config === undefined) return null;
+  return JSON.stringify(config);
 }

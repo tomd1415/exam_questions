@@ -40,6 +40,7 @@ export interface AttemptPartRow {
   prompt: string;
   marks: number;
   expected_response_type: string;
+  part_config: unknown;
   display_order: number;
   raw_answer: string;
   last_saved_at: Date;
@@ -244,6 +245,7 @@ export class AttemptRepo {
               prompt,
               marks,
               expected_response_type,
+              part_config,
               display_order
          FROM question_parts
         WHERE question_id = ANY($1::bigint[])
@@ -399,6 +401,7 @@ export class AttemptRepo {
               qp.prompt,
               qp.marks,
               qp.expected_response_type,
+              qp.part_config,
               qp.display_order,
               ap.raw_answer,
               ap.last_saved_at,
@@ -857,6 +860,7 @@ export interface TopicPreviewPartRow {
   prompt: string;
   marks: number;
   expected_response_type: string;
+  part_config: unknown;
   display_order: number;
 }
 
