@@ -1,0 +1,28 @@
+-- Phase 2.5 chunk 2.5h — flowchart widget.
+--
+-- Documentation-only migration. `question_parts.expected_response_type`
+-- remains unconstrained TEXT (see migration 0004); the recognised set
+-- lives at the application layer in src/lib/question-invariants.ts and
+-- the widget registry in src/lib/widgets.ts.
+--
+-- This migration records that `flowchart` is now an accepted response
+-- type. No existing rows carry this type (it is a new addition), so no
+-- backfill is required.
+--
+-- MVP scope (matches the logic_diagram MVP):
+--
+--   * `part_config` shape: { variant: 'image', canvas: {width, height} }.
+--     `variant` is a required tag so a later structured variant (shape
+--     palette: terminator/process/decision/io/arrow, as scoped in
+--     PHASE2.5_PLAN §Chunk 2.5h) can land under the same response type
+--     with no migration. The MVP registry rejects any other variant.
+--
+--   * `attempt_parts.raw_answer` carries a single line
+--     `image=data:image/png;base64,<base64>`. PNG-only so the teacher
+--     review page can render the image with a plain <img> tag and no
+--     sanitiser.
+--
+--   * Marking is teacher_pending: the deterministic marker treats the
+--     type as an open response and routes to the teacher review queue.
+
+SELECT 1;

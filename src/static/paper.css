@@ -916,3 +916,51 @@
   font: inherit;
   text-align: center;
 }
+
+/* ---------------------------------------------------------------------
+   flowchart (Phase 2.5h)
+   --------------------------------------------------------------------- */
+.widget--flowchart {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-width: 100%;
+}
+.flowchart__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+}
+.flowchart__tool,
+.flowchart__clear {
+  padding: 0.3rem 0.7rem;
+  border: 1px solid var(--paper-rule);
+  border-radius: 0.2rem;
+  background: #fff;
+  cursor: pointer;
+  font: inherit;
+}
+.flowchart__tool[aria-pressed='true'] {
+  background: var(--paper-accent, #1a4f8a);
+  color: #fff;
+  border-color: transparent;
+}
+.flowchart__hint {
+  font-size: 0.85rem;
+  color: var(--paper-muted, #555);
+}
+.flowchart__canvas {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  background: #fff;
+  border: 1px solid var(--paper-rule);
+  border-radius: 0.25rem;
+  touch-action: none;
+  cursor: crosshair;
+}
+.flowchart__noscript {
+  font-size: 0.9rem;
+  color: var(--paper-warn, #b3261e);
+}

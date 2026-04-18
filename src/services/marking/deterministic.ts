@@ -48,6 +48,7 @@ export const OPEN_RESPONSE_TYPES = new Set<string>([
   'code',
   'algorithm',
   'logic_diagram',
+  'flowchart',
 ]);
 
 export interface MarkingInputPart {

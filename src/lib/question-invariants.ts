@@ -32,6 +32,7 @@ export const EXPECTED_RESPONSE_TYPES: readonly string[] = [
   'matching',
   'logic_diagram',
   'diagram_labels',
+  'flowchart',
 ] as const;
 
 export interface MarkPointDraft {

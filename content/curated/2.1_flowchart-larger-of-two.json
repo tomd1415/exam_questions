@@ -1,0 +1,32 @@
+{
+  "external_key": "j277-2-1-flowchart-larger-of-two",
+  "component_code": "J277/02",
+  "topic_code": "2.1",
+  "subtopic_code": "2.1.1",
+  "command_word_code": "draw",
+  "archetype_code": "explain",
+  "expected_response_type": "flowchart",
+  "stem": "A program reads two whole numbers A and B from the user and outputs the larger of the two. If the two numbers are equal, the program outputs either value.",
+  "model_answer": "Start terminator. Input A and B. Decision: A > B? Yes branch outputs A; No branch outputs B. Both branches join at a Stop terminator. Arrows are labelled Yes / No on the decision's outgoing edges.",
+  "difficulty_band": 4,
+  "difficulty_step": 2,
+  "source_type": "imported_pattern",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Draw a flowchart for the program. Use the correct shapes (terminator, input/output, decision) and label the two branches of the decision Yes and No.",
+      "marks": 4,
+      "expected_response_type": "flowchart",
+      "part_config": {
+        "variant": "image",
+        "canvas": { "width": 600, "height": 500 }
+      },
+      "mark_points": [
+        { "text": "Start and Stop terminators at the ends of the flowchart", "marks": 1 },
+        { "text": "Input step reads A and B", "marks": 1 },
+        { "text": "Decision A > B with Yes and No branches labelled", "marks": 1 },
+        { "text": "Each branch outputs the correct value before Stop", "marks": 1 }
+      ]
+    }
+  ]
+}

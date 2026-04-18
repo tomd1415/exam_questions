@@ -557,6 +557,51 @@ const t = part.expected_response_type;
       </p>
     </noscript>
   </div>
+<% } else if (t === 'flowchart') { %>
+  <%
+    const fcCfg = part.part_config || {};
+    const fcVariant = typeof fcCfg.variant === 'string' ? fcCfg.variant : 'image';
+    const fcCanvas = (fcCfg.canvas && typeof fcCfg.canvas === 'object') ? fcCfg.canvas : {};
+    const fcWidth = Number.isInteger(fcCanvas.width) ? fcCanvas.width : 600;
+    const fcHeight = Number.isInteger(fcCanvas.height) ? fcCanvas.height : 500;
+    let fcPriorImage = '';
+    priorLines.forEach(function(line) {
+      const eq = line.indexOf('=');
+      if (eq <= 0) return;
+      const key = line.slice(0, eq).trim();
+      if (key === 'image') fcPriorImage = line.slice(eq + 1);
+    });
+  %>
+  <div class="widget widget--flowchart flowchart"
+       data-autosave-part-id="<%= part.id %>"
+       data-flowchart-variant="<%= fcVariant %>"
+       data-flowchart-width="<%= fcWidth %>"
+       data-flowchart-height="<%= fcHeight %>"
+       aria-describedby="marks-<%= part.id %>">
+    <div class="flowchart__toolbar" role="toolbar" aria-label="Drawing tools">
+      <button type="button" class="flowchart__tool" data-flowchart-tool="pen" aria-pressed="true">Pen</button>
+      <button type="button" class="flowchart__tool" data-flowchart-tool="eraser" aria-pressed="false">Eraser</button>
+      <button type="button" class="flowchart__clear" data-flowchart-clear>Clear</button>
+      <span class="flowchart__hint" data-flowchart-hint>
+        Draw your flowchart by hand. Use the Eraser to rub out mistakes; Clear wipes the whole canvas.
+      </span>
+    </div>
+    <canvas class="flowchart__canvas"
+            data-flowchart-canvas
+            width="<%= fcWidth %>"
+            height="<%= fcHeight %>"
+            aria-label="Flowchart drawing area, <%= fcWidth %> by <%= fcHeight %> pixels"
+            tabindex="0"></canvas>
+    <input type="hidden"
+           name="<%= fieldName %>__image"
+           value="<%= fcPriorImage %>"
+           data-flowchart-image />
+    <noscript>
+      <p class="flowchart__noscript">
+        This widget needs JavaScript to draw. Without it, you cannot submit a flowchart.
+      </p>
+    </noscript>
+  </div>
 <% } else { %>
   <textarea class="widget widget--fallback"
             name="<%= fieldName %>"

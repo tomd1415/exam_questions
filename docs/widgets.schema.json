@@ -824,6 +824,58 @@
           "height": 400
         }
       }
+    },
+    {
+      "type": "flowchart",
+      "marker": "teacher_pending",
+      "displayName": "Flowchart (free draw)",
+      "description": "Pupil draws a flowchart on a canvas; the answer is sent to teacher review as a PNG. Phase-2.5 MVP: pen + clear only, no structured shape palette.",
+      "markPointGuidance": "List the assessable features the flowchart should show (e.g. \"terminator Start\", \"decision IsEven? with Yes and No branches\", \"process Output N\"). The teacher applies them while viewing the image.",
+      "configSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "title": "flowchart part_config",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "variant",
+          "canvas"
+        ],
+        "properties": {
+          "variant": {
+            "type": "string",
+            "enum": [
+              "image"
+            ]
+          },
+          "canvas": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "width",
+              "height"
+            ],
+            "properties": {
+              "width": {
+                "type": "integer",
+                "minimum": 100,
+                "maximum": 2000
+              },
+              "height": {
+                "type": "integer",
+                "minimum": 100,
+                "maximum": 2000
+              }
+            }
+          }
+        }
+      },
+      "exampleConfig": {
+        "variant": "image",
+        "canvas": {
+          "width": 600,
+          "height": 500
+        }
+      }
     }
   ]
 }

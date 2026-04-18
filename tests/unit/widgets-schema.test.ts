@@ -398,6 +398,38 @@ const PARITY_FIXTURES: Record<string, SchemaFixture[]> = {
       expectAccept: false,
     },
   ],
+  flowchart: [
+    {
+      label: 'minimal valid (image variant)',
+      config: { variant: 'image', canvas: { width: 600, height: 500 } },
+      expectAccept: true,
+    },
+    {
+      label: 'unknown variant',
+      config: { variant: 'shapes', canvas: { width: 600, height: 500 } },
+      expectAccept: false,
+    },
+    {
+      label: 'canvas missing width',
+      config: { variant: 'image', canvas: { height: 500 } },
+      expectAccept: false,
+    },
+    {
+      label: 'canvas width too small',
+      config: { variant: 'image', canvas: { width: 50, height: 500 } },
+      expectAccept: false,
+    },
+    {
+      label: 'unknown top-level key',
+      config: { variant: 'image', canvas: { width: 600, height: 500 }, palette: ['process'] },
+      expectAccept: false,
+    },
+    {
+      label: 'unknown canvas key',
+      config: { variant: 'image', canvas: { width: 600, height: 500, depth: 1 } },
+      expectAccept: false,
+    },
+  ],
   logic_diagram: [
     {
       label: 'minimal valid (image variant)',

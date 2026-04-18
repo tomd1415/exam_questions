@@ -17,6 +17,7 @@
 import { EXPECTED_RESPONSE_TYPES } from './question-invariants.js';
 import { validateClozeConfigShape } from './cloze.js';
 import { validateDiagramLabelsConfigShape } from './diagram-labels.js';
+import { validateFlowchartConfigShape } from './flowchart.js';
 import { validateLogicDiagramConfigShape } from './logic-diagram.js';
 import { validateMatchingConfigShape } from './matching.js';
 import { validateTraceGridConfigShape } from './trace-grid.js';
@@ -267,6 +268,26 @@ const MATCHING_SCHEMA: WidgetConfigSchema = {
 const LOGIC_DIAGRAM_SCHEMA: WidgetConfigSchema = {
   $schema: SCHEMA_DRAFT,
   title: 'logic_diagram part_config',
+  type: 'object',
+  additionalProperties: false,
+  required: ['variant', 'canvas'],
+  properties: {
+    variant: { type: 'string', enum: ['image'] },
+    canvas: {
+      type: 'object',
+      additionalProperties: false,
+      required: ['width', 'height'],
+      properties: {
+        width: { type: 'integer', minimum: 100, maximum: 2000 },
+        height: { type: 'integer', minimum: 100, maximum: 2000 },
+      },
+    },
+  },
+};
+
+const FLOWCHART_SCHEMA: WidgetConfigSchema = {
+  $schema: SCHEMA_DRAFT,
+  title: 'flowchart part_config',
   type: 'object',
   additionalProperties: false,
   required: ['variant', 'canvas'],
@@ -560,6 +581,18 @@ const REGISTRATIONS: readonly WidgetRegistration[] = [
     configSchema: LOGIC_DIAGRAM_SCHEMA,
     exampleConfig: { variant: 'image', canvas: { width: 600, height: 400 } },
     validateConfig: (c) => validateLogicDiagramConfigShape(c).map((m) => ({ message: m })),
+  },
+  {
+    type: 'flowchart',
+    marker: 'teacher_pending',
+    displayName: 'Flowchart (free draw)',
+    description:
+      'Pupil draws a flowchart on a canvas; the answer is sent to teacher review as a PNG. Phase-2.5 MVP: pen + clear only, no structured shape palette.',
+    markPointGuidance:
+      'List the assessable features the flowchart should show (e.g. "terminator Start", "decision IsEven? with Yes and No branches", "process Output N"). The teacher applies them while viewing the image.',
+    configSchema: FLOWCHART_SCHEMA,
+    exampleConfig: { variant: 'image', canvas: { width: 600, height: 500 } },
+    validateConfig: (c) => validateFlowchartConfigShape(c).map((m) => ({ message: m })),
   },
 ];
 
