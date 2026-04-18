@@ -26,6 +26,9 @@ export const EXPECTED_RESPONSE_TYPES: readonly string[] = [
   'trace_table',
   'matrix_tick_single',
   'matrix_tick_multi',
+  'cloze_free',
+  'cloze_with_bank',
+  'cloze_code',
 ] as const;
 
 export interface MarkPointDraft {

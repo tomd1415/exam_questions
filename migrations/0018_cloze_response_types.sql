@@ -1,0 +1,31 @@
+-- Phase 2.5 chunk 2.5c — cloze widgets (free, banked, code).
+--
+-- Documentation-only migration. `question_parts.expected_response_type`
+-- remains unconstrained TEXT (see migration 0004); the recognised set
+-- lives at the application layer in src/lib/question-invariants.ts and
+-- the widget registry in src/lib/widgets.ts.
+--
+-- This migration records that three new response types join the set:
+--
+--   cloze_free       prose with `{{gap-id}}` markers, free-text per gap.
+--   cloze_with_bank  same shape plus a non-empty `bank: string[]` of
+--                    optional draggable / tappable terms above the prose.
+--   cloze_code       same shape rendered in a monospace code block;
+--                    whitespace is preserved.
+--
+-- All three share one `part_config` shape:
+--   { text: string,
+--     gaps: [
+--       { id: string,
+--         accept: string[],
+--         caseSensitive?: boolean,
+--         trimWhitespace?: boolean }
+--     ],
+--     bank?: string[]   -- only meaningful when type is cloze_with_bank
+--   }
+--
+-- Marking is deterministic: per-gap set match against `accept` with
+-- shared whitespace / case rules and one mark_point per gap. Existing
+-- rows are unaffected.
+
+SELECT 1;

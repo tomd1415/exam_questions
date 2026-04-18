@@ -15,6 +15,7 @@
 // `tests/unit/widgets.test.ts`.
 
 import { EXPECTED_RESPONSE_TYPES } from './question-invariants.js';
+import { validateClozeConfigShape } from './cloze.js';
 
 export type WidgetMarker = 'deterministic' | 'teacher_pending';
 
@@ -92,6 +93,24 @@ const REGISTRATIONS: readonly WidgetRegistration[] = [
     type: 'matrix_tick_multi',
     marker: 'deterministic',
     validateConfig: validateMatrixTickMultiConfig,
+  },
+  {
+    type: 'cloze_free',
+    marker: 'deterministic',
+    validateConfig: (c) =>
+      validateClozeConfigShape(c, { requireBank: false }).map((m) => ({ message: m })),
+  },
+  {
+    type: 'cloze_with_bank',
+    marker: 'deterministic',
+    validateConfig: (c) =>
+      validateClozeConfigShape(c, { requireBank: true }).map((m) => ({ message: m })),
+  },
+  {
+    type: 'cloze_code',
+    marker: 'deterministic',
+    validateConfig: (c) =>
+      validateClozeConfigShape(c, { requireBank: false }).map((m) => ({ message: m })),
   },
 ];
 

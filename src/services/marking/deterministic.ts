@@ -1,3 +1,9 @@
+import {
+  isClozeConfig,
+  isClozeWithBankConfig,
+  markCloze,
+  parseClozeRawAnswer,
+} from '../../lib/cloze.js';
 import { normalise } from './normalise.js';
 
 // Pure deterministic marker. No DB, no HTTP, no LLM. Feed it a part, a
@@ -10,6 +16,9 @@ export const OBJECTIVE_RESPONSE_TYPES = new Set<string>([
   'short_text',
   'matrix_tick_single',
   'matrix_tick_multi',
+  'cloze_free',
+  'cloze_with_bank',
+  'cloze_code',
 ]);
 
 export const OPEN_RESPONSE_TYPES = new Set<string>([
@@ -71,6 +80,9 @@ export function markAttemptPart(
   if (type === 'tick_box') return markTickBox(part, rawAnswer, markPoints);
   if (type === 'matrix_tick_single') return markMatrixTickSingle(part, rawAnswer, markPoints);
   if (type === 'matrix_tick_multi') return markMatrixTickMulti(part, rawAnswer, markPoints);
+  if (type === 'cloze_free' || type === 'cloze_with_bank' || type === 'cloze_code') {
+    return markClozePart(part, rawAnswer, markPoints, type);
+  }
   return markShortText(part, rawAnswer, markPoints);
 }
 
@@ -422,5 +434,61 @@ function markMatrixTickMulti(
     marks_possible: part.marks,
     mark_point_outcomes: outcomes,
     normalised_answer: normalisedAnswer.join('\n'),
+  };
+}
+
+// cloze_free / cloze_with_bank / cloze_code
+//
+// raw_answer encodes one line per filled gap, in the shape
+// `<gap-id>=<value>`. Empty gaps are omitted.
+//
+// `part.part_config` carries `{ text, gaps, bank? }` (see src/lib/cloze.ts
+// for the full shape). `cloze_with_bank` additionally requires a non-empty
+// `bank` of optional drag-or-tap terms.
+//
+// `markPoints` should contain one entry per gap, in document order. The
+// marker generates a per-gap outcome; if `markPoints` runs short, the
+// gap id stands in for the missing label so the review page still names
+// the gap.
+
+function markClozePart(
+  part: MarkingInputPart,
+  rawAnswer: string,
+  markPoints: readonly MarkingInputMarkPoint[],
+  type: 'cloze_free' | 'cloze_with_bank' | 'cloze_code',
+): MarkingResult {
+  const config = part.part_config;
+  if (type === 'cloze_with_bank') {
+    if (!isClozeWithBankConfig(config)) {
+      return { kind: 'teacher_pending', marks_possible: part.marks, reason: 'unknown_type' };
+    }
+  } else if (!isClozeConfig(config)) {
+    return { kind: 'teacher_pending', marks_possible: part.marks, reason: 'unknown_type' };
+  }
+
+  const pupilAnswers = parseClozeRawAnswer(rawAnswer);
+  const gapOutcomes = markCloze(config, pupilAnswers);
+
+  const outcomes: MarkPointOutcome[] = gapOutcomes.map((g, i) => {
+    const mp = markPoints[i];
+    return {
+      text: mp ? mp.text : `Gap ${g.id}`,
+      marks: mp ? mp.marks : 1,
+      is_required: mp ? mp.is_required : false,
+      hit: g.hit,
+    };
+  });
+
+  const hitMarks = outcomes.filter((o) => o.hit).reduce((sum, o) => sum + o.marks, 0);
+  const normalisedLines: string[] = [];
+  for (const g of gapOutcomes) {
+    if (g.pupilAnswer.length > 0) normalisedLines.push(`${g.id}=${g.pupilAnswer}`);
+  }
+  return {
+    kind: 'awarded',
+    marks_awarded: clampMarks(enforceRequired(hitMarks, outcomes), part.marks),
+    marks_possible: part.marks,
+    mark_point_outcomes: outcomes,
+    normalised_answer: normalisedLines.join('\n'),
   };
 }

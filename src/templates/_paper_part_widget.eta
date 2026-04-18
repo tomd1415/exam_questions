@@ -230,6 +230,96 @@ const t = part.expected_response_type;
       <% }); %>
     </tbody>
   </table>
+<% } else if (t === 'cloze_free' || t === 'cloze_with_bank' || t === 'cloze_code') { %>
+  <%
+    // Parse the authored prose into text and gap segments. We mirror
+    // the parser in src/lib/cloze.ts but only need the pure scan here:
+    // the widget registry already validated the config when the
+    // question was authored, so this template trusts the shape.
+    const clozeCfg = part.part_config || {};
+    const clozeText = typeof clozeCfg.text === 'string' ? clozeCfg.text : '';
+    const clozeGaps = Array.isArray(clozeCfg.gaps) ? clozeCfg.gaps : [];
+    const clozeBank = Array.isArray(clozeCfg.bank) ? clozeCfg.bank : [];
+    const gapById = new Map();
+    clozeGaps.forEach(function(g) { if (g && typeof g.id === 'string') gapById.set(g.id, g); });
+    function parseCloze(src) {
+      const segments = [];
+      let buf = '';
+      let i = 0;
+      while (i < src.length) {
+        if (src.startsWith('\\{{', i)) { buf += '{{'; i += 3; continue; }
+        if (src.startsWith('\\}}', i)) { buf += '}}'; i += 3; continue; }
+        if (src.startsWith('{{', i)) {
+          const close = src.indexOf('}}', i + 2);
+          if (close === -1) { buf += src.slice(i); break; }
+          const id = src.slice(i + 2, close).trim();
+          if (buf.length > 0) { segments.push({ kind: 'text', text: buf }); buf = ''; }
+          segments.push({ kind: 'gap', id: id });
+          i = close + 2;
+          continue;
+        }
+        buf += src[i]; i++;
+      }
+      if (buf.length > 0) segments.push({ kind: 'text', text: buf });
+      return segments;
+    }
+    const segments = parseCloze(clozeText);
+    // Reconstitute prior pupil answers from raw_answer's `gapId=value` lines.
+    const priorByGap = new Map();
+    priorLines.forEach(function(line) {
+      const eq = line.indexOf('=');
+      if (eq <= 0) return;
+      const id = line.slice(0, eq).trim();
+      const value = line.slice(eq + 1);
+      if (!/^[A-Za-z0-9_-]+$/.test(id)) return;
+      if (!priorByGap.has(id)) priorByGap.set(id, value);
+    });
+    function widthChars(gap) {
+      if (!gap || !Array.isArray(gap.accept) || gap.accept.length === 0) return 12;
+      let max = 0;
+      gap.accept.forEach(function(a) { if (typeof a === 'string' && a.length > max) max = a.length; });
+      // Pad a touch so the gap doesn't visually clip the longest accept.
+      return Math.max(6, Math.min(40, max + 2));
+    }
+    const isCode = t === 'cloze_code';
+    const wrapClass = 'widget widget--cloze cloze cloze--' + (isCode ? 'code' : (t === 'cloze_with_bank' ? 'with-bank' : 'free'));
+  %>
+  <div class="<%= wrapClass %>" data-autosave-part-id="<%= part.id %>" aria-describedby="marks-<%= part.id %>">
+    <% if (t === 'cloze_with_bank' && clozeBank.length > 0) { %>
+      <ul class="cloze-bank" role="list" aria-label="Word bank">
+        <% clozeBank.forEach(function(term) { %>
+          <li class="cloze-bank__term">
+            <button type="button" class="cloze-bank__copy" data-cloze-bank-term="<%= term %>">
+              <%= term %>
+            </button>
+          </li>
+        <% }); %>
+      </ul>
+    <% } %>
+    <% if (isCode) { %><pre class="cloze-code" aria-label="Code with gaps"><% } else { %><p class="cloze-prose"><% } %>
+      <% segments.forEach(function(seg) { %>
+        <% if (seg.kind === 'text') { %><%= seg.text %><% } else { %>
+          <%
+            const gap = gapById.get(seg.id);
+            const w = widthChars(gap);
+            const value = priorByGap.get(seg.id) || '';
+            const fieldName = 'part_' + part.id + '__' + seg.id;
+            const inputClass = 'cloze-gap' + (isCode ? ' cloze-gap--code' : '');
+          %><input type="text"
+                   class="<%= inputClass %>"
+                   name="<%= fieldName %>"
+                   data-cloze-gap-id="<%= seg.id %>"
+                   value="<%= value %>"
+                   size="<%= w %>"
+                   maxlength="200"
+                   autocomplete="off"
+                   autocapitalize="none"
+                   autocorrect="off"
+                   spellcheck="<%= isCode ? 'false' : 'true' %>"
+                   aria-label="Gap <%= seg.id %>" /><% } %>
+      <% }); %>
+    <% if (isCode) { %></pre><% } else { %></p><% } %>
+  </div>
 <% } else if (t === 'trace_table') { %>
   <p class="widget-hint">
     One row per line; separate columns with <code>|</code>.

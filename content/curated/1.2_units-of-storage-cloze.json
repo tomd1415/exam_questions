@@ -1,0 +1,37 @@
+{
+  "external_key": "j277-1-2-units-of-storage-cloze",
+  "component_code": "J277/01",
+  "topic_code": "1.2",
+  "subtopic_code": "1.2.2",
+  "command_word_code": "complete",
+  "archetype_code": "recall",
+  "expected_response_type": "cloze_free",
+  "stem": "Complete the paragraph about units of digital storage.",
+  "model_answer": "A bit holds 0 or 1; eight bits make a byte. A kibibyte is 1024 bytes; a mebibyte is 1024 kibibytes; a gibibyte is 1024 mebibytes. The OCR specification uses base-10 names (kilobyte, megabyte) for the same orders of magnitude.",
+  "difficulty_band": 2,
+  "difficulty_step": 1,
+  "source_type": "imported_pattern",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Fill in each gap with the correct unit name.",
+      "marks": 4,
+      "expected_response_type": "cloze_free",
+      "part_config": {
+        "text": "Eight bits make one {{u1}}. One thousand and twenty-four bytes make one {{u2}}. One thousand and twenty-four kilobytes make one {{u3}}. One thousand and twenty-four megabytes make one {{u4}}.",
+        "gaps": [
+          { "id": "u1", "accept": ["byte", "B"] },
+          { "id": "u2", "accept": ["kilobyte", "kibibyte", "KB", "KiB"] },
+          { "id": "u3", "accept": ["megabyte", "mebibyte", "MB", "MiB"] },
+          { "id": "u4", "accept": ["gigabyte", "gibibyte", "GB", "GiB"] }
+        ]
+      },
+      "mark_points": [
+        { "text": "byte", "marks": 1 },
+        { "text": "kilobyte / kibibyte", "marks": 1 },
+        { "text": "megabyte / mebibyte", "marks": 1 },
+        { "text": "gigabyte / gibibyte", "marks": 1 }
+      ]
+    }
+  ]
+}

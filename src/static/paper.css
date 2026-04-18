@@ -434,6 +434,83 @@
   margin-left: 0.2rem;
 }
 
+/* --- Phase 2.5c: cloze widgets ----------------------------------------- */
+
+.cloze {
+  display: block;
+}
+.cloze-prose {
+  margin: 0;
+  line-height: 1.85;
+}
+.cloze-code {
+  margin: 0;
+  padding: 0.75rem 1rem;
+  background: #f5f5f9;
+  border: 1px solid var(--paper-rule);
+  border-radius: 0.3rem;
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  white-space: pre;
+  overflow-x: auto;
+  tab-size: 2;
+}
+.cloze-gap {
+  display: inline-block;
+  vertical-align: baseline;
+  padding: 0.1rem 0.35rem;
+  margin: 0 0.1rem;
+  border: 1px solid var(--paper-rule);
+  border-radius: 0.2rem;
+  background: #fff;
+  font: inherit;
+  min-width: 4rem;
+}
+.cloze-gap--code {
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  background: #fff;
+}
+.cloze-gap:focus-visible {
+  outline: 2px solid var(--paper-accent);
+  outline-offset: 1px;
+}
+.cloze-bank {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  list-style: none;
+  padding: 0.6rem 0.75rem;
+  margin: 0 0 0.9rem 0;
+  background: #f0f3ff;
+  border: 1px dashed var(--paper-accent);
+  border-radius: 0.3rem;
+}
+.cloze-bank__term {
+  margin: 0;
+}
+.cloze-bank__copy {
+  min-height: 2.75rem;
+  min-width: 2.75rem;
+  padding: 0.4rem 0.85rem;
+  border: 1px solid var(--paper-accent);
+  border-radius: 0.25rem;
+  background: #fff;
+  color: var(--paper-ink);
+  font: inherit;
+  cursor: pointer;
+}
+.cloze-bank__copy:hover,
+.cloze-bank__copy:focus-visible {
+  background: var(--paper-accent);
+  color: #fff;
+  outline: none;
+}
+.cloze-bank__copy[data-cloze-bank-used='true'] {
+  opacity: 0.55;
+  text-decoration: line-through;
+}
+
 /* --- Phase 2 Chunk 5: review page two-column layout ------------------- */
 
 /* The global .site-main is capped at 720px which squashes the side-by-side
