@@ -24,6 +24,7 @@ export interface UserRow {
   pseudonym: string;
   reveal_mode: RevealMode;
   font_preference: FontPreference;
+  widget_tips_dismissed: Record<string, string>;
   created_at: Date;
   updated_at: Date;
 }
@@ -36,7 +37,7 @@ export class UserRepo {
       `SELECT id::text, role, display_name, username, password_hash,
               must_change_password, failed_login_count, locked_until,
               last_login_at, active, pseudonym, reveal_mode, font_preference,
-              created_at, updated_at
+              widget_tips_dismissed, created_at, updated_at
          FROM users
         WHERE username = $1`,
       [username],
@@ -49,7 +50,7 @@ export class UserRepo {
       `SELECT id::text, role, display_name, username, password_hash,
               must_change_password, failed_login_count, locked_until,
               last_login_at, active, pseudonym, reveal_mode, font_preference,
-              created_at, updated_at
+              widget_tips_dismissed, created_at, updated_at
          FROM users
         WHERE username = $1
           AND role = 'pupil'
@@ -64,7 +65,7 @@ export class UserRepo {
       `SELECT id::text, role, display_name, username, password_hash,
               must_change_password, failed_login_count, locked_until,
               last_login_at, active, pseudonym, reveal_mode, font_preference,
-              created_at, updated_at
+              widget_tips_dismissed, created_at, updated_at
          FROM users
         WHERE id = $1`,
       [id],
@@ -95,6 +96,22 @@ export class UserRepo {
     await this.db.query(
       `UPDATE users SET font_preference = $2, updated_at = now() WHERE id = $1::bigint`,
       [userId, font],
+    );
+  }
+
+  /**
+   * Records that the pupil has dismissed the help tip for one widget
+   * type. Idempotent: re-dismissing overwrites the timestamp. The
+   * `widgetKey` is taken from the widget registry; the route validates
+   * it before calling.
+   */
+  async dismissWidgetTip(userId: string, widgetKey: string, at: Date): Promise<void> {
+    await this.db.query(
+      `UPDATE users
+          SET widget_tips_dismissed = widget_tips_dismissed || jsonb_build_object($2::text, $3::text),
+              updated_at            = now()
+        WHERE id = $1::bigint`,
+      [userId, widgetKey, at.toISOString()],
     );
   }
 

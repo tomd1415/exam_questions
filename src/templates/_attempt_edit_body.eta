@@ -7,6 +7,17 @@ it.bundle.questions.forEach(function(q) { if (q.submitted_at) submittedCount += 
 const paper = it.bundle.paper;
 const candidate = it.currentUser ? it.currentUser.pseudonym : null;
 const timerMinutes = it.bundle.attempt.timer_minutes;
+const tipCatalogue = it.widgetTips || {};
+const tipsDismissed = it.widgetTipsDismissed || {};
+const tipsShown = new Set();
+function shouldShowTip(widgetKey) {
+  if (tipsShown.has(widgetKey)) return null;
+  if (Object.prototype.hasOwnProperty.call(tipsDismissed, widgetKey)) return null;
+  const tip = tipCatalogue[widgetKey];
+  if (!tip) return null;
+  tipsShown.add(widgetKey);
+  return tip;
+}
 const timerStartedAt = it.bundle.attempt.started_at instanceof Date
   ? it.bundle.attempt.started_at.toISOString()
   : it.bundle.attempt.started_at;
@@ -79,6 +90,7 @@ const crumbs = [
 
           <% (it.bundle.partsByQuestion.get(q.id) || []).forEach(function(part) { %>
             <% const mps = it.bundle.markPointsByPart.get(part.question_part_id) || []; %>
+            <% const tip = shouldShowTip(part.expected_response_type); %>
             <div class="paper-part" id="p-<%= part.id %>">
               <div class="paper-part__prompt">
                 <span class="paper-part__label"><%= part.part_label %></span>
@@ -86,6 +98,9 @@ const crumbs = [
               </div>
               <span class="paper-marks-gutter" id="marks-<%= part.id %>">[<%= part.marks %> marks]</span>
               <div class="paper-answer">
+                <% if (tip) { %>
+                  <%~ include('_widget_help', { widgetKey: part.expected_response_type, tip, csrfToken: it.csrfToken }) %>
+                <% } %>
                 <%~ include('_paper_part_widget', { part: part, markPoints: mps }) %>
               </div>
             </div>
@@ -155,6 +170,7 @@ const crumbs = [
           <input type="hidden" name="elapsed_seconds" value="" data-elapsed-input />
           <% parts.forEach(function(part) { %>
             <% const mps = it.bundle.markPointsByPart.get(part.question_part_id) || []; %>
+            <% const tip = shouldShowTip(part.expected_response_type); %>
             <div class="paper-part" id="p-<%= part.id %>">
               <div class="paper-part__prompt">
                 <span class="paper-part__label"><%= part.part_label %></span>
@@ -162,6 +178,9 @@ const crumbs = [
               </div>
               <span class="paper-marks-gutter" id="marks-<%= part.id %>">[<%= part.marks %> marks]</span>
               <div class="paper-answer">
+                <% if (tip) { %>
+                  <%~ include('_widget_help', { widgetKey: part.expected_response_type, tip, csrfToken: it.csrfToken }) %>
+                <% } %>
                 <%~ include('_paper_part_widget', { part: part, markPoints: mps }) %>
               </div>
             </div>

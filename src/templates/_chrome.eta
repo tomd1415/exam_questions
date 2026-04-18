@@ -40,6 +40,8 @@ const fontPref = (it.currentUser && it.currentUser.font_preference) || 'system';
       <script src="/static/matching.js" defer></script>
       <script src="/static/logic_diagram.js" defer></script>
       <script src="/static/flowchart.js" defer></script>
+      <script src="/static/trace_grid.js" defer></script>
+      <script src="/static/widget_tips.js" defer></script>
     <% } %>
     <% if (it.timerEnabled) { %>
       <script src="/static/timer.js" defer></script>

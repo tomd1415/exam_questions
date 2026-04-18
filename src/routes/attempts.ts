@@ -2,6 +2,7 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { z } from 'zod';
 import { AttemptAccessError } from '../services/attempts.js';
 import { FONT_PREFERENCES, REVEAL_MODES } from '../repos/users.js';
+import { isWidgetTipKey, WIDGET_TIPS } from '../lib/widget-tips.js';
 
 const StartBody = z.object({ _csrf: z.string().min(1) });
 
@@ -27,6 +28,11 @@ const RevealModeBody = z.object({
 const FontPreferenceBody = z.object({
   _csrf: z.string().min(1),
   font: z.enum(FONT_PREFERENCES as readonly ['system', 'dyslexic']),
+});
+
+const WidgetTipDismissBody = z.object({
+  _csrf: z.string().min(1),
+  key: z.string().trim().min(1).max(40),
 });
 
 const TopicParams = z.object({
@@ -155,6 +161,21 @@ export function registerAttemptRoutes(app: FastifyInstance): void {
     return reply.redirect(
       `/me/preferences?flash=${encodeURIComponent(`Preference saved: using ${label}.`)}`,
     );
+  });
+
+  app.post('/me/widget-tips/dismiss', { preValidation: csrfPreValidation }, async (req, reply) => {
+    const actor = requireAnyActor(req, reply);
+    if (!actor) return reply;
+    const parsed = WidgetTipDismissBody.safeParse(req.body);
+    if (!parsed.success) return reply.code(400).send('Bad request');
+    if (!isWidgetTipKey(parsed.data.key)) return reply.code(400).send('Bad request');
+    await app.services.attempts.dismissWidgetTipForUser(actor, parsed.data.key);
+    // The JS path ignores the response body; the noscript path
+    // follows the redirect back to the page the pupil was on so
+    // the server-rendered tip disappears on next render.
+    const referer = req.headers.referer;
+    const target = typeof referer === 'string' && referer.length > 0 ? referer : '/';
+    return reply.redirect(target);
   });
 
   app.post('/topics/:code/start', { preValidation: csrfPreValidation }, async (req, reply) => {
@@ -288,6 +309,7 @@ export function registerAttemptRoutes(app: FastifyInstance): void {
         }
       }
 
+      const dismissed = req.currentUser?.widget_tips_dismissed ?? {};
       return reply.view(view, {
         title:
           bundle.attempt.submitted_at === null
@@ -298,6 +320,8 @@ export function registerAttemptRoutes(app: FastifyInstance): void {
         bundle,
         currentQuestionIndex,
         flash: readQueryFlash(req),
+        widgetTipsDismissed: dismissed,
+        widgetTips: WIDGET_TIPS,
       });
     } catch (err) {
       if (err instanceof AttemptAccessError) {

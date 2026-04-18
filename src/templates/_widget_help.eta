@@ -1,0 +1,31 @@
+<%
+// Pupil-facing "how to answer this widget" first-encounter tip.
+// `it.widgetKey` is the widget registry key (e.g. 'flowchart').
+// `it.tip` is { title, body } from src/lib/widget-tips.ts.
+// `it.csrfToken` is the per-request CSRF token.
+//
+// Renders inert without JS: a noscript-friendly form posts to
+// /me/widget-tips/dismiss, the page reloads, and the tip is gone.
+// With JS, src/static/widget_tips.js intercepts the click, posts in
+// the background, and hides the panel without a reload.
+%>
+<aside class="widget-tip"
+       role="note"
+       aria-labelledby="widget-tip-title-<%= it.widgetKey %>"
+       data-widget-tip
+       data-widget-tip-key="<%= it.widgetKey %>">
+  <h3 class="widget-tip__title" id="widget-tip-title-<%= it.widgetKey %>">
+    <%= it.tip.title %>
+  </h3>
+  <p class="widget-tip__body"><%= it.tip.body %></p>
+  <form method="post"
+        action="/me/widget-tips/dismiss"
+        class="widget-tip__form"
+        data-widget-tip-form>
+    <input type="hidden" name="_csrf" value="<%= it.csrfToken %>" />
+    <input type="hidden" name="key" value="<%= it.widgetKey %>" />
+    <button type="submit" class="btn btn--secondary btn--sm widget-tip__dismiss">
+      Got it
+    </button>
+  </form>
+</aside>

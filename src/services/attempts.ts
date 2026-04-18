@@ -84,6 +84,17 @@ export class AttemptService {
     );
   }
 
+  async dismissWidgetTipForUser(actor: ActorForAttempt, widgetKey: string): Promise<void> {
+    if (!this.userRepo) throw new Error('UserRepo not configured');
+    await this.userRepo.dismissWidgetTip(actor.id, widgetKey, new Date());
+    await this.audit.record(
+      { userId: actor.id, role: actor.role },
+      'user.widget_tip.dismissed',
+      { widget_key: widgetKey },
+      actor.id,
+    );
+  }
+
   async listTopicsForPupil(actor: ActorForAttempt): Promise<
     {
       topic_code: string;
