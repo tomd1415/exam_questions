@@ -216,3 +216,96 @@ describe('/admin/feedback', () => {
     expect(after[0]!.triaged_by).toBe(teacher.id);
   });
 });
+
+describe('/admin/feedback/new', () => {
+  it('pupil cannot open the offline-entry form', async () => {
+    const pupil = await createUser(getSharedPool(), { role: 'pupil' });
+    const jar = await loginAs(pupil);
+    const res = await app.inject({
+      method: 'GET',
+      url: '/admin/feedback/new',
+      headers: { cookie: cookieHeader(jar) },
+    });
+    expect(res.statusCode).toBe(403);
+  });
+
+  it('teacher logs feedback on behalf of a pupil and it appears in both views', async () => {
+    const pool = getSharedPool();
+    const pupil = await createUser(pool, { role: 'pupil' });
+    const teacher = await createUser(pool, { role: 'teacher' });
+
+    const teacherJar = await loginAs(teacher);
+    const csrf = await getCsrfFor(teacherJar, '/admin/feedback/new');
+
+    const res = await app.inject({
+      method: 'POST',
+      url: '/admin/feedback/new',
+      headers: {
+        'content-type': 'application/x-www-form-urlencoded',
+        cookie: cookieHeader(teacherJar),
+      },
+      payload: form({
+        pupil_username: pupil.username,
+        comment: 'Pupil said the trace table widget is just a text box.',
+        _csrf: csrf,
+      }),
+    });
+    expect(res.statusCode).toBe(302);
+    expect(res.headers.location).toBe('/admin/feedback');
+
+    const { rows } = await pool.query<{
+      user_id: string;
+      submitted_by_user_id: string | null;
+      comment: string;
+    }>(
+      `SELECT user_id::text, submitted_by_user_id::text, comment
+         FROM pupil_feedback WHERE user_id = $1::bigint`,
+      [pupil.id],
+    );
+    expect(rows).toHaveLength(1);
+    expect(rows[0]!.submitted_by_user_id).toBe(teacher.id);
+    expect(rows[0]!.comment).toContain('trace table widget');
+
+    const adminList = await app.inject({
+      method: 'GET',
+      url: '/admin/feedback',
+      headers: { cookie: cookieHeader(teacherJar) },
+    });
+    expect(adminList.statusCode).toBe(200);
+    expect(adminList.payload).toContain('Logged offline by');
+    expect(adminList.payload).toContain('trace table widget');
+
+    const pupilJar = await loginAs(pupil);
+    const pupilView = await app.inject({
+      method: 'GET',
+      url: '/feedback',
+      headers: { cookie: cookieHeader(pupilJar) },
+    });
+    expect(pupilView.statusCode).toBe(200);
+    expect(pupilView.payload).toContain('Logged by a teacher on your behalf');
+    expect(pupilView.payload).toContain('trace table widget');
+  });
+
+  it('unknown pupil username re-renders the form with an error flash', async () => {
+    const teacher = await createUser(getSharedPool(), { role: 'teacher' });
+    const jar = await loginAs(teacher);
+    const csrf = await getCsrfFor(jar, '/admin/feedback/new');
+
+    const res = await app.inject({
+      method: 'POST',
+      url: '/admin/feedback/new',
+      headers: {
+        'content-type': 'application/x-www-form-urlencoded',
+        cookie: cookieHeader(jar),
+      },
+      payload: form({
+        pupil_username: 'not_a_real_pupil',
+        comment: 'something',
+        _csrf: csrf,
+      }),
+    });
+    expect(res.statusCode).toBe(400);
+    expect(res.payload).toContain('No active pupil with that username');
+    expect(res.payload).toContain('value="not_a_real_pupil"');
+  });
+});

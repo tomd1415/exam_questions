@@ -1,4 +1,4 @@
-import type { UserRow } from '../repos/users.js';
+import type { UserRepo, UserRow } from '../repos/users.js';
 import {
   FEEDBACK_CATEGORIES,
   FEEDBACK_STATUSES,
@@ -13,17 +13,19 @@ import type { AuditService } from './audit.js';
 
 export type ActorForFeedback = Pick<UserRow, 'id' | 'role'>;
 
+export type FeedbackErrorReason =
+  | 'empty_comment'
+  | 'comment_too_long'
+  | 'not_found'
+  | 'forbidden'
+  | 'invalid_status'
+  | 'invalid_category'
+  | 'notes_too_long'
+  | 'pupil_not_found'
+  | 'pupil_is_self';
+
 export class FeedbackError extends Error {
-  constructor(
-    public readonly reason:
-      | 'empty_comment'
-      | 'comment_too_long'
-      | 'not_found'
-      | 'forbidden'
-      | 'invalid_status'
-      | 'invalid_category'
-      | 'notes_too_long',
-  ) {
+  constructor(public readonly reason: FeedbackErrorReason) {
     super(`feedback error: ${reason}`);
     this.name = 'FeedbackError';
   }
@@ -50,6 +52,7 @@ export class FeedbackService {
   constructor(
     private readonly repo: FeedbackRepo,
     private readonly audit: AuditService,
+    private readonly users: UserRepo,
   ) {}
 
   async submit(actor: ActorForFeedback, input: SubmitFeedbackInput): Promise<FeedbackRow> {
@@ -63,6 +66,38 @@ export class FeedbackService {
       'feedback.submitted',
       { feedback_id: row.id, comment_length: comment.length },
       actor.id,
+    );
+    return row;
+  }
+
+  async submitOnBehalf(
+    actor: ActorForFeedback,
+    input: { pupilUsername: string; comment: string },
+  ): Promise<FeedbackRow> {
+    if (!canTriage(actor)) throw new FeedbackError('forbidden');
+    const comment = input.comment.trim();
+    if (comment.length === 0) throw new FeedbackError('empty_comment');
+    if (comment.length > COMMENT_MAX) throw new FeedbackError('comment_too_long');
+
+    const pupil = await this.users.findActivePupilByUsername(input.pupilUsername.trim());
+    if (!pupil) throw new FeedbackError('pupil_not_found');
+    if (pupil.id === actor.id) throw new FeedbackError('pupil_is_self');
+
+    const row = await this.repo.create({
+      userId: pupil.id,
+      comment,
+      submittedByUserId: actor.id,
+    });
+    await this.audit.record(
+      { userId: actor.id, role: actor.role },
+      'feedback.submitted_on_behalf',
+      {
+        feedback_id: row.id,
+        pupil_user_id: pupil.id,
+        pupil_username: pupil.username,
+        comment_length: comment.length,
+      },
+      pupil.id,
     );
     return row;
   }

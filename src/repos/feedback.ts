@@ -39,6 +39,7 @@ export interface FeedbackRow {
   triaged_by: string | null;
   triaged_at: Date | null;
   resolved_at: Date | null;
+  submitted_by_user_id: string | null;
 }
 
 export interface FeedbackWithAuthorRow extends FeedbackRow {
@@ -46,6 +47,7 @@ export interface FeedbackWithAuthorRow extends FeedbackRow {
   author_display_name: string;
   author_role: string;
   triaged_by_display_name: string | null;
+  submitted_by_display_name: string | null;
 }
 
 const SELECT_WITH_AUTHOR = `
@@ -60,13 +62,16 @@ const SELECT_WITH_AUTHOR = `
     f.triaged_by::text,
     f.triaged_at,
     f.resolved_at,
+    f.submitted_by_user_id::text,
     u.username AS author_username,
     u.display_name AS author_display_name,
     u.role::text AS author_role,
-    t.display_name AS triaged_by_display_name
+    t.display_name AS triaged_by_display_name,
+    s.display_name AS submitted_by_display_name
   FROM pupil_feedback f
   JOIN users u ON u.id = f.user_id
   LEFT JOIN users t ON t.id = f.triaged_by
+  LEFT JOIN users s ON s.id = f.submitted_by_user_id
 `;
 
 export interface TriageInput {
@@ -79,10 +84,15 @@ export interface TriageInput {
 export class FeedbackRepo {
   constructor(private readonly db: Pool) {}
 
-  async create(input: { userId: string; comment: string }): Promise<FeedbackRow> {
+  async create(input: {
+    userId: string;
+    comment: string;
+    submittedByUserId?: string | null;
+  }): Promise<FeedbackRow> {
+    const submittedBy = input.submittedByUserId ?? null;
     const { rows } = await this.db.query<FeedbackRow>(
-      `INSERT INTO pupil_feedback (user_id, comment)
-       VALUES ($1::bigint, $2)
+      `INSERT INTO pupil_feedback (user_id, comment, submitted_by_user_id)
+       VALUES ($1::bigint, $2, $3::bigint)
        RETURNING
          id::text,
          user_id::text,
@@ -93,8 +103,9 @@ export class FeedbackRepo {
          triage_notes,
          triaged_by::text,
          triaged_at,
-         resolved_at`,
-      [input.userId, input.comment],
+         resolved_at,
+         submitted_by_user_id::text`,
+      [input.userId, input.comment, submittedBy],
     );
     return rows[0]!;
   }
@@ -126,7 +137,8 @@ export class FeedbackRepo {
          triage_notes,
          triaged_by::text,
          triaged_at,
-         resolved_at
+         resolved_at,
+         submitted_by_user_id::text
        FROM pupil_feedback
        WHERE user_id = $1::bigint
        ORDER BY submitted_at DESC, id DESC`,
@@ -156,7 +168,8 @@ export class FeedbackRepo {
           triage_notes,
           triaged_by::text,
           triaged_at,
-          resolved_at`,
+          resolved_at,
+          submitted_by_user_id::text`,
       [id, input.status, input.category, input.triageNotes, input.triagedBy, isResolvedLike],
     );
     return rows[0] ?? null;

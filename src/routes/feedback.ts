@@ -8,6 +8,12 @@ const SubmitBody = z.object({
   _csrf: z.string().min(1),
 });
 
+const OfflineBody = z.object({
+  pupil_username: z.string(),
+  comment: z.string(),
+  _csrf: z.string().min(1),
+});
+
 const TriageParams = z.object({
   id: z.coerce.number().int().positive(),
 });
@@ -112,6 +118,71 @@ export function registerFeedbackRoutes(app: FastifyInstance): void {
       flashKind: 'ok',
       mine,
     });
+  });
+
+  app.get('/admin/feedback/new', async (req, reply) => {
+    const actor = requireTeacherOrAdmin(req, reply);
+    if (!actor) return reply;
+
+    return reply.view('admin_feedback_new.eta', {
+      title: 'Log offline feedback',
+      currentUser: req.currentUser,
+      csrfToken: reply.generateCsrf(),
+      flash: null,
+      flashKind: null,
+      pupilUsername: '',
+      comment: '',
+    });
+  });
+
+  app.post('/admin/feedback/new', { preValidation: csrfPreValidation }, async (req, reply) => {
+    const actor = requireTeacherOrAdmin(req, reply);
+    if (!actor) return reply;
+
+    const parsed = OfflineBody.safeParse(req.body);
+    if (!parsed.success) {
+      return reply.code(400).view('admin_feedback_new.eta', {
+        title: 'Log offline feedback',
+        currentUser: req.currentUser,
+        csrfToken: reply.generateCsrf(),
+        flash: 'Please fill in both the pupil username and the comment.',
+        flashKind: 'error',
+        pupilUsername: '',
+        comment: '',
+      });
+    }
+
+    try {
+      await app.services.feedback.submitOnBehalf(actor, {
+        pupilUsername: parsed.data.pupil_username,
+        comment: parsed.data.comment,
+      });
+    } catch (err) {
+      if (err instanceof FeedbackError) {
+        const msg =
+          err.reason === 'empty_comment'
+            ? 'Please add a comment before submitting.'
+            : err.reason === 'comment_too_long'
+              ? 'That comment is a bit long — please keep it under 2000 characters.'
+              : err.reason === 'pupil_not_found'
+                ? 'No active pupil with that username.'
+                : err.reason === 'pupil_is_self'
+                  ? 'You can submit your own feedback through /feedback.'
+                  : 'Could not log feedback.';
+        return reply.code(400).view('admin_feedback_new.eta', {
+          title: 'Log offline feedback',
+          currentUser: req.currentUser,
+          csrfToken: reply.generateCsrf(),
+          flash: msg,
+          flashKind: 'error',
+          pupilUsername: parsed.data.pupil_username,
+          comment: parsed.data.comment,
+        });
+      }
+      throw err;
+    }
+
+    return reply.redirect('/admin/feedback');
   });
 
   app.get('/admin/feedback', async (req, reply) => {

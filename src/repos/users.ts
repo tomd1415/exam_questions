@@ -44,6 +44,21 @@ export class UserRepo {
     return rows[0] ?? null;
   }
 
+  async findActivePupilByUsername(username: string): Promise<UserRow | null> {
+    const { rows } = await this.db.query<UserRow>(
+      `SELECT id::text, role, display_name, username, password_hash,
+              must_change_password, failed_login_count, locked_until,
+              last_login_at, active, pseudonym, reveal_mode, font_preference,
+              created_at, updated_at
+         FROM users
+        WHERE username = $1
+          AND role = 'pupil'
+          AND active = true`,
+      [username],
+    );
+    return rows[0] ?? null;
+  }
+
   async findById(id: string): Promise<UserRow | null> {
     const { rows } = await this.db.query<UserRow>(
       `SELECT id::text, role, display_name, username, password_hash,

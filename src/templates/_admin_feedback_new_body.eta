@@ -1,0 +1,42 @@
+<%~ include('_page_header', {
+  crumbs: [{ label: 'Feedback', href: '/admin/feedback' }, { label: 'Log offline feedback' }],
+  heading: 'Log offline feedback',
+  subtitle:
+    'Record a comment that a pupil gave verbally, in class, or on paper. The feedback is attributed to the pupil and marked as entered on their behalf.',
+}) %>
+
+<section class="admin-card">
+  <% if (it.flash) { %>
+    <p class="flash flash--<%= it.flashKind === 'ok' ? 'ok' : 'error' %>" role="status">
+      <%= it.flash %>
+    </p>
+  <% } %>
+
+  <form method="post" action="/admin/feedback/new" class="stacked-form">
+    <input type="hidden" name="_csrf" value="<%= it.csrfToken %>" />
+    <label>
+      Pupil username
+      <input
+        type="text"
+        name="pupil_username"
+        value="<%= it.pupilUsername || '' %>"
+        required
+        autocomplete="off"
+        spellcheck="false" />
+    </label>
+    <label>
+      Comment
+      <textarea
+        name="comment"
+        rows="6"
+        maxlength="2000"
+        required
+        placeholder="What did the pupil say?"><%= it.comment || '' %></textarea>
+    </label>
+    <p class="form-hint">Up to 2000 characters. The audit log will record you as the submitter.</p>
+    <div class="stacked-form__actions">
+      <button type="submit" class="btn btn--primary">Log feedback</button>
+      <a class="btn btn--ghost" href="/admin/feedback">Cancel</a>
+    </div>
+  </form>
+</section>

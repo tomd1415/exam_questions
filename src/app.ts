@@ -137,7 +137,7 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
   const questionService = new QuestionService(questionRepo, curriculumRepo, auditService);
   const attemptService = new AttemptService(attemptRepo, classRepo, auditService, userRepo);
   const teacherMarkingService = new TeacherMarkingService(attemptRepo, auditService);
-  const feedbackService = new FeedbackService(feedbackRepo, auditService);
+  const feedbackService = new FeedbackService(feedbackRepo, auditService, userRepo);
 
   app.decorate('services', {
     auth: authService,

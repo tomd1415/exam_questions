@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { FeedbackRepo } from '../../src/repos/feedback.js';
 import { AuditRepo } from '../../src/repos/audit.js';
+import { UserRepo } from '../../src/repos/users.js';
 import { AuditService } from '../../src/services/audit.js';
 import { FeedbackService, FeedbackError } from '../../src/services/feedback.js';
 import { cleanDb, getSharedPool } from '../helpers/db.js';
@@ -9,7 +10,8 @@ import { createUser } from '../helpers/fixtures.js';
 const pool = getSharedPool();
 const repo = new FeedbackRepo(pool);
 const audit = new AuditService(new AuditRepo(pool));
-const service = new FeedbackService(repo, audit);
+const users = new UserRepo(pool);
+const service = new FeedbackService(repo, audit, users);
 
 beforeEach(async () => {
   await cleanDb();
@@ -163,5 +165,102 @@ describe('FeedbackService', () => {
         triageNotes: null,
       }),
     ).rejects.toBeInstanceOf(FeedbackError);
+  });
+});
+
+describe('FeedbackService.submitOnBehalf', () => {
+  it('teacher can log feedback attributed to the pupil, recording themselves as submitter', async () => {
+    const pupil = await createUser(pool, { role: 'pupil' });
+    const teacher = await createUser(pool, { role: 'teacher' });
+
+    const row = await service.submitOnBehalf(
+      { id: teacher.id, role: 'teacher' },
+      { pupilUsername: pupil.username, comment: '  said the timer is hard to see  ' },
+    );
+
+    expect(row.user_id).toBe(pupil.id);
+    expect(row.submitted_by_user_id).toBe(teacher.id);
+    expect(row.comment).toBe('said the timer is hard to see');
+
+    const { rows } = await pool.query<{
+      event_type: string;
+      actor_user_id: string;
+      subject_user_id: string | null;
+      details: Record<string, unknown>;
+    }>(
+      `SELECT event_type, actor_user_id::text, subject_user_id::text, details
+         FROM audit_events
+        WHERE event_type = 'feedback.submitted_on_behalf'`,
+    );
+    expect(rows).toHaveLength(1);
+    expect(rows[0]!.actor_user_id).toBe(teacher.id);
+    expect(rows[0]!.subject_user_id).toBe(pupil.id);
+    expect(rows[0]!.details).toMatchObject({
+      feedback_id: row.id,
+      pupil_user_id: pupil.id,
+      pupil_username: pupil.username,
+    });
+  });
+
+  it('pupil caller is forbidden', async () => {
+    const pupilA = await createUser(pool, { role: 'pupil' });
+    const pupilB = await createUser(pool, { role: 'pupil' });
+    await expect(
+      service.submitOnBehalf(
+        { id: pupilA.id, role: 'pupil' },
+        { pupilUsername: pupilB.username, comment: 'hi' },
+      ),
+    ).rejects.toBeInstanceOf(FeedbackError);
+  });
+
+  it('unknown username raises pupil_not_found', async () => {
+    const teacher = await createUser(pool, { role: 'teacher' });
+    await expect(
+      service.submitOnBehalf(
+        { id: teacher.id, role: 'teacher' },
+        { pupilUsername: 'does_not_exist', comment: 'hi' },
+      ),
+    ).rejects.toMatchObject({ reason: 'pupil_not_found' });
+  });
+
+  it('teacher username is not treated as a pupil', async () => {
+    const teacher = await createUser(pool, { role: 'teacher' });
+    const otherTeacher = await createUser(pool, { role: 'teacher' });
+    await expect(
+      service.submitOnBehalf(
+        { id: teacher.id, role: 'teacher' },
+        { pupilUsername: otherTeacher.username, comment: 'hi' },
+      ),
+    ).rejects.toMatchObject({ reason: 'pupil_not_found' });
+  });
+
+  it('inactive pupils are not accepted', async () => {
+    const teacher = await createUser(pool, { role: 'teacher' });
+    const pupil = await createUser(pool, { role: 'pupil', active: false });
+    await expect(
+      service.submitOnBehalf(
+        { id: teacher.id, role: 'teacher' },
+        { pupilUsername: pupil.username, comment: 'hi' },
+      ),
+    ).rejects.toMatchObject({ reason: 'pupil_not_found' });
+  });
+
+  it('rejects empty and overly long comments', async () => {
+    const teacher = await createUser(pool, { role: 'teacher' });
+    const pupil = await createUser(pool, { role: 'pupil' });
+
+    await expect(
+      service.submitOnBehalf(
+        { id: teacher.id, role: 'teacher' },
+        { pupilUsername: pupil.username, comment: '   ' },
+      ),
+    ).rejects.toMatchObject({ reason: 'empty_comment' });
+
+    await expect(
+      service.submitOnBehalf(
+        { id: teacher.id, role: 'teacher' },
+        { pupilUsername: pupil.username, comment: 'x'.repeat(2001) },
+      ),
+    ).rejects.toMatchObject({ reason: 'comment_too_long' });
   });
 });

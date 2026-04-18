@@ -29,6 +29,7 @@ const items = it.items || [];
   heading: 'Pupil feedback',
   subtitle:
     'Every comment pupils have sent. Triage each one and record whether it needs addressing.',
+  actionsHtml: '<a class="btn btn--primary btn--sm" href="/admin/feedback/new">Log offline feedback</a>',
 }) %>
 
 <section class="admin-card">
@@ -57,6 +58,12 @@ const items = it.items || [];
             </td>
             <td>
               <p class="feedback-comment"><%= f.comment %></p>
+              <% if (f.submitted_by_user_id) { %>
+                <p class="muted">
+                  Logged offline by
+                  <%= f.submitted_by_display_name || ('user #' + f.submitted_by_user_id) %>.
+                </p>
+              <% } %>
               <% if (f.triaged_at) { %>
                 <p class="muted">
                   Triaged <%= fmtDate(f.triaged_at) %>

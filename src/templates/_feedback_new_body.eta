@@ -74,7 +74,12 @@ function fmtDate(d) {
         <% it.mine.forEach(function(f) { %>
           <tr>
             <td><%= fmtDate(f.submitted_at) %></td>
-            <td><%= f.comment %></td>
+            <td>
+              <%= f.comment %>
+              <% if (f.submitted_by_user_id) { %>
+                <br /><small class="muted">Logged by a teacher on your behalf.</small>
+              <% } %>
+            </td>
             <td><%= STATUS_LABELS[f.status] || f.status %></td>
             <td><%= f.category ? (CATEGORY_LABELS[f.category] || f.category) : '—' %></td>
           </tr>
