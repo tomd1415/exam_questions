@@ -457,6 +457,58 @@ const t = part.expected_response_type;
     </ul>
     <svg class="matching__overlay" data-matching-overlay aria-hidden="true"></svg>
   </div>
+<% } else if (t === 'diagram_labels') { %>
+  <%
+    const dlCfg = part.part_config || {};
+    const dlUrl = typeof dlCfg.imageUrl === 'string' ? dlCfg.imageUrl : '';
+    const dlAlt = typeof dlCfg.imageAlt === 'string' ? dlCfg.imageAlt : '';
+    const dlW = Number.isInteger(dlCfg.width) ? dlCfg.width : 600;
+    const dlH = Number.isInteger(dlCfg.height) ? dlCfg.height : 400;
+    const dlHotspots = Array.isArray(dlCfg.hotspots) ? dlCfg.hotspots : [];
+    // Reconstitute prior pupil answers from raw_answer's `id=value` lines.
+    const dlPriorById = new Map();
+    priorLines.forEach(function(line) {
+      const eq = line.indexOf('=');
+      if (eq <= 0) return;
+      const key = line.slice(0, eq).trim();
+      if (!/^[A-Za-z0-9_-]{1,40}$/.test(key)) return;
+      dlPriorById.set(key, line.slice(eq + 1));
+    });
+  %>
+  <div class="widget widget--diagram-labels diagram-labels"
+       data-autosave-part-id="<%= part.id %>"
+       style="--dl-w: <%= dlW %>px; --dl-h: <%= dlH %>px"
+       aria-describedby="marks-<%= part.id %>">
+    <div class="diagram-labels__stage" style="width: <%= dlW %>px; height: <%= dlH %>px;">
+      <img class="diagram-labels__image"
+           src="<%= dlUrl %>"
+           alt="<%= dlAlt %>"
+           width="<%= dlW %>"
+           height="<%= dlH %>" />
+      <% dlHotspots.forEach(function(hs, hi) {
+           if (!hs || typeof hs.id !== 'string') return;
+           const hsField = fieldName + '__' + hs.id;
+           const hsValue = dlPriorById.get(hs.id) || '';
+           const hsX = Number.isInteger(hs.x) ? hs.x : 0;
+           const hsY = Number.isInteger(hs.y) ? hs.y : 0;
+           const hsW = Number.isInteger(hs.width) ? hs.width : 80;
+           const hsH = Number.isInteger(hs.height) ? hs.height : 30;
+      %>
+        <label class="diagram-labels__hotspot"
+               data-diagram-hotspot="<%= hs.id %>"
+               style="left: <%= hsX %>px; top: <%= hsY %>px; width: <%= hsW %>px; height: <%= hsH %>px;">
+          <span class="sr-only">Label hotspot <%= hi + 1 %> on <%= dlAlt %></span>
+          <input type="text"
+                 class="diagram-labels__input"
+                 name="<%= hsField %>"
+                 value="<%= hsValue %>"
+                 maxlength="60"
+                 autocomplete="off"
+                 spellcheck="false" />
+        </label>
+      <% }); %>
+    </div>
+  </div>
 <% } else if (t === 'logic_diagram') { %>
   <%
     const ldCfg = part.part_config || {};

@@ -16,6 +16,7 @@
 
 import { EXPECTED_RESPONSE_TYPES } from './question-invariants.js';
 import { validateClozeConfigShape } from './cloze.js';
+import { validateDiagramLabelsConfigShape } from './diagram-labels.js';
 import { validateLogicDiagramConfigShape } from './logic-diagram.js';
 import { validateMatchingConfigShape } from './matching.js';
 import { validateTraceGridConfigShape } from './trace-grid.js';
@@ -283,6 +284,43 @@ const LOGIC_DIAGRAM_SCHEMA: WidgetConfigSchema = {
   },
 };
 
+const DIAGRAM_LABELS_SCHEMA: WidgetConfigSchema = {
+  $schema: SCHEMA_DRAFT,
+  title: 'diagram_labels part_config',
+  type: 'object',
+  additionalProperties: false,
+  required: ['imageUrl', 'imageAlt', 'width', 'height', 'hotspots'],
+  properties: {
+    imageUrl: { type: 'string', minLength: 1, pattern: '^(/static/|https://)' },
+    imageAlt: { type: 'string', minLength: 1 },
+    width: { type: 'integer', minimum: 50, maximum: 4000 },
+    height: { type: 'integer', minimum: 50, maximum: 4000 },
+    hotspots: {
+      type: 'array',
+      minItems: 1,
+      items: {
+        type: 'object',
+        additionalProperties: false,
+        required: ['id', 'x', 'y', 'width', 'height', 'accept'],
+        properties: {
+          id: { type: 'string', pattern: '^[A-Za-z0-9_-]{1,40}$' },
+          x: { type: 'integer', minimum: 0 },
+          y: { type: 'integer', minimum: 0 },
+          width: { type: 'integer', minimum: 20 },
+          height: { type: 'integer', minimum: 20 },
+          accept: {
+            type: 'array',
+            minItems: 1,
+            items: { type: 'string', minLength: 1 },
+          },
+          caseSensitive: { type: 'boolean' },
+          trimWhitespace: { type: 'boolean' },
+        },
+      },
+    },
+  },
+};
+
 const REGISTRATIONS: readonly WidgetRegistration[] = [
   {
     type: 'multiple_choice',
@@ -489,6 +527,27 @@ const REGISTRATIONS: readonly WidgetRegistration[] = [
     },
     validateConfig: (c) =>
       validateClozeConfigShape(c, { requireBank: false }).map((m) => ({ message: m })),
+  },
+  {
+    type: 'diagram_labels',
+    marker: 'deterministic',
+    displayName: 'Diagram labels (image with hotspots)',
+    description:
+      'Pupil types a short label into each hotspot overlaid on a teacher-supplied image. Marked deterministically per hotspot.',
+    markPointGuidance:
+      'One mark_point per hotspot, in the same order as part_config.hotspots; mark_point.text names what the hotspot expects (e.g. "Top router").',
+    configSchema: DIAGRAM_LABELS_SCHEMA,
+    exampleConfig: {
+      imageUrl: '/static/curated/network-topology-star.svg',
+      imageAlt: 'Star topology with a central switch and four labelled hosts.',
+      width: 600,
+      height: 360,
+      hotspots: [
+        { id: 'centre', x: 260, y: 140, width: 100, height: 60, accept: ['switch', 'hub'] },
+        { id: 'host-1', x: 40, y: 40, width: 120, height: 40, accept: ['client', 'host'] },
+      ],
+    },
+    validateConfig: (c) => validateDiagramLabelsConfigShape(c).map((m) => ({ message: m })),
   },
   {
     type: 'logic_diagram',

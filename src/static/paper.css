@@ -871,3 +871,48 @@
   font-size: 0.9rem;
   color: var(--paper-warn, #b3261e);
 }
+
+/* ---------------------------------------------------------------------
+   diagram_labels (Phase 2.5g)
+   --------------------------------------------------------------------- */
+.widget--diagram-labels {
+  max-width: 100%;
+  overflow-x: auto;
+}
+.diagram-labels__stage {
+  position: relative;
+  display: block;
+  background: #fff;
+  border: 1px solid var(--paper-rule);
+  border-radius: 0.25rem;
+}
+.diagram-labels__image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+.diagram-labels__hotspot {
+  position: absolute;
+  display: block;
+  margin: 0;
+  padding: 0;
+  background: rgba(255, 255, 255, 0.85);
+  border: 2px dashed var(--paper-accent, #1a4f8a);
+  border-radius: 0.2rem;
+}
+.diagram-labels__hotspot:focus-within {
+  outline: 2px solid var(--paper-accent, #1a4f8a);
+  outline-offset: 1px;
+}
+.diagram-labels__input {
+  width: 100%;
+  height: 100%;
+  padding: 0 0.3rem;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  text-align: center;
+}

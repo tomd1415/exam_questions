@@ -1,0 +1,77 @@
+{
+  "external_key": "j277-1-4-topology-star-labels",
+  "component_code": "J277/01",
+  "topic_code": "1.4",
+  "subtopic_code": "1.4.1",
+  "command_word_code": "label",
+  "archetype_code": "recall",
+  "expected_response_type": "diagram_labels",
+  "stem": "The diagram shows a star topology with a central network device connected to four end devices.",
+  "model_answer": "The central device is a switch (a hub is also accepted). Each of the four outer devices is a client (or host).",
+  "difficulty_band": 3,
+  "difficulty_step": 2,
+  "source_type": "imported_pattern",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Label the central device and each of the four end devices on the diagram.",
+      "marks": 5,
+      "expected_response_type": "diagram_labels",
+      "part_config": {
+        "imageUrl": "/static/curated/network-topology-star.svg",
+        "imageAlt": "Star topology: a central rectangle wired to four corner rectangles.",
+        "width": 600,
+        "height": 360,
+        "hotspots": [
+          {
+            "id": "centre",
+            "x": 240,
+            "y": 150,
+            "width": 120,
+            "height": 60,
+            "accept": ["switch", "hub"]
+          },
+          {
+            "id": "top-left",
+            "x": 40,
+            "y": 30,
+            "width": 120,
+            "height": 60,
+            "accept": ["client", "host", "computer", "device"]
+          },
+          {
+            "id": "top-right",
+            "x": 440,
+            "y": 30,
+            "width": 120,
+            "height": 60,
+            "accept": ["client", "host", "computer", "device"]
+          },
+          {
+            "id": "bottom-left",
+            "x": 40,
+            "y": 270,
+            "width": 120,
+            "height": 60,
+            "accept": ["client", "host", "computer", "device"]
+          },
+          {
+            "id": "bottom-right",
+            "x": 440,
+            "y": 270,
+            "width": 120,
+            "height": 60,
+            "accept": ["client", "host", "computer", "device"]
+          }
+        ]
+      },
+      "mark_points": [
+        { "text": "Central device labelled as switch (or hub)", "marks": 1 },
+        { "text": "Top-left device labelled as a client/host", "marks": 1 },
+        { "text": "Top-right device labelled as a client/host", "marks": 1 },
+        { "text": "Bottom-left device labelled as a client/host", "marks": 1 },
+        { "text": "Bottom-right device labelled as a client/host", "marks": 1 }
+      ]
+    }
+  ]
+}

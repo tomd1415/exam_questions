@@ -1,0 +1,42 @@
+-- Phase 2.5 chunk 2.5g — diagram_labels widget.
+--
+-- Documentation-only migration. `question_parts.expected_response_type`
+-- remains unconstrained TEXT (see migration 0004); the recognised set
+-- lives at the application layer in src/lib/question-invariants.ts and
+-- the widget registry in src/lib/widgets.ts.
+--
+-- This migration records that `diagram_labels` is now an accepted
+-- response type. No existing rows carry this type (it is a new
+-- addition), so no backfill is required.
+--
+-- `part_config` shape:
+--   { imageUrl: string,        -- '/static/...' or 'https://...'
+--     imageAlt: string,        -- required at authoring time
+--     width: number,           -- intrinsic image dimensions
+--     height: number,
+--     hotspots: [
+--       { id: string,          -- /^[A-Za-z0-9_-]{1,40}$/, unique
+--         x: number, y: number, width: number, height: number,
+--         accept: string[],
+--         caseSensitive?: boolean,    -- default false
+--         trimWhitespace?: boolean    -- default true
+--       },
+--       ...
+--     ] }
+--
+-- `attempt_parts.raw_answer` is line-encoded `<hotspotId>=<value>` per
+-- hotspot the pupil filled in. Form fields are
+-- `part_<partId>__<hotspotId>` and the existing route aggregator in
+-- src/routes/attempts.ts collapses them.
+--
+-- Marking is deterministic: per-hotspot set-match against `accept`
+-- with the hotspot's own caseSensitive / trimWhitespace flags.
+-- Mark points are matched to hotspots by index, mirroring `matching`.
+--
+-- Phase 2.5g ships the pupil widget + marker only. The teacher upload
+-- route (POST /admin/uploads/diagram-image), audit event
+-- (admin.upload.created), and authoring UI all land in chunk 2.5j
+-- (wizard) where the only caller will exist. Curated fixtures bundle
+-- their image under src/static/curated/.
+
+SELECT 1;

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 360" width="600" height="360" role="img" aria-label="Star topology with a central device and four hosts">
+  <rect x="0" y="0" width="600" height="360" fill="#fff"/>
+  <!-- Wires from centre to each host (drawn first so devices sit on top) -->
+  <g stroke="#444" stroke-width="2">
+    <line x1="300" y1="180" x2="100" y2="60"/>
+    <line x1="300" y1="180" x2="500" y2="60"/>
+    <line x1="300" y1="180" x2="100" y2="300"/>
+    <line x1="300" y1="180" x2="500" y2="300"/>
+  </g>
+  <!-- Centre device (unlabelled — pupil names it) -->
+  <g>
+    <rect x="240" y="150" width="120" height="60" fill="#eef" stroke="#1a4f8a" stroke-width="2" rx="4"/>
+  </g>
+  <!-- Four host devices (unlabelled — pupil names "client" / "host") -->
+  <g fill="#fee" stroke="#a33" stroke-width="2">
+    <rect x="40" y="30" width="120" height="60" rx="4"/>
+    <rect x="440" y="30" width="120" height="60" rx="4"/>
+    <rect x="40" y="270" width="120" height="60" rx="4"/>
+    <rect x="440" y="270" width="120" height="60" rx="4"/>
+  </g>
+</svg>

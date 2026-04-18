@@ -5,6 +5,12 @@ import {
   parseClozeRawAnswer,
 } from '../../lib/cloze.js';
 import {
+  isDiagramLabelsConfig,
+  markDiagramLabels,
+  parseDiagramLabelsRawAnswer,
+  serialiseDiagramLabelsAnswer,
+} from '../../lib/diagram-labels.js';
+import {
   isMatchingConfig,
   markMatching,
   parseMatchingRawAnswer,
@@ -33,6 +39,7 @@ export const OBJECTIVE_RESPONSE_TYPES = new Set<string>([
   'cloze_code',
   'trace_table',
   'matching',
+  'diagram_labels',
 ]);
 
 export const OPEN_RESPONSE_TYPES = new Set<string>([
@@ -99,6 +106,7 @@ export function markAttemptPart(
   }
   if (type === 'trace_table') return markTraceTable(part, rawAnswer, markPoints);
   if (type === 'matching') return markMatchingPart(part, rawAnswer, markPoints);
+  if (type === 'diagram_labels') return markDiagramLabelsPart(part, rawAnswer, markPoints);
   return markShortText(part, rawAnswer, markPoints);
 }
 
@@ -629,5 +637,42 @@ function markMatchingPart(
     marks_possible: part.marks,
     mark_point_outcomes: outcomes,
     normalised_answer: serialiseMatchingAnswer(pupilPairs),
+  };
+}
+
+// Diagram-labels marker. Each hotspot is independent: a hit awards the
+// matching mark_point's marks, a miss awards none. Mark points are
+// matched to hotspots by index, mirroring the matching widget.
+function markDiagramLabelsPart(
+  part: MarkingInputPart,
+  rawAnswer: string,
+  markPoints: readonly MarkingInputMarkPoint[],
+): MarkingResult {
+  const config = part.part_config;
+  if (!isDiagramLabelsConfig(config)) {
+    return { kind: 'teacher_pending', marks_possible: part.marks, reason: 'unknown_type' };
+  }
+
+  const pupilLabels = parseDiagramLabelsRawAnswer(rawAnswer);
+  const result = markDiagramLabels(config, pupilLabels);
+
+  const outcomes: MarkPointOutcome[] = result.outcomes.map((row, i) => {
+    const mp = markPoints[i];
+    return {
+      text: mp ? mp.text : `Hotspot ${row.hotspotId}`,
+      marks: mp ? mp.marks : 1,
+      is_required: mp ? mp.is_required : false,
+      hit: row.hit,
+    };
+  });
+
+  const hitMarks = outcomes.filter((o) => o.hit).reduce((sum, o) => sum + o.marks, 0);
+
+  return {
+    kind: 'awarded',
+    marks_awarded: clampMarks(enforceRequired(hitMarks, outcomes), part.marks),
+    marks_possible: part.marks,
+    mark_point_outcomes: outcomes,
+    normalised_answer: serialiseDiagramLabelsAnswer(config, pupilLabels),
   };
 }

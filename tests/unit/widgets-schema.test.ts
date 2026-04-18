@@ -274,6 +274,130 @@ const PARITY_FIXTURES: Record<string, SchemaFixture[]> = {
       expectAccept: false,
     },
   ],
+  diagram_labels: [
+    {
+      label: 'minimal valid',
+      config: {
+        imageUrl: '/static/curated/foo.svg',
+        imageAlt: 'A diagram',
+        width: 600,
+        height: 360,
+        hotspots: [{ id: 'a', x: 0, y: 0, width: 120, height: 60, accept: ['switch'] }],
+      },
+      expectAccept: true,
+    },
+    {
+      label: 'https:// imageUrl with case/trim flags',
+      config: {
+        imageUrl: 'https://cdn.example.com/d.png',
+        imageAlt: 'A diagram',
+        width: 600,
+        height: 360,
+        hotspots: [
+          {
+            id: 'a',
+            x: 0,
+            y: 0,
+            width: 120,
+            height: 60,
+            accept: ['Switch'],
+            caseSensitive: true,
+            trimWhitespace: false,
+          },
+        ],
+      },
+      expectAccept: true,
+    },
+    {
+      label: 'http:// imageUrl rejected',
+      config: {
+        imageUrl: 'http://example.com/d.png',
+        imageAlt: 'A diagram',
+        width: 600,
+        height: 360,
+        hotspots: [{ id: 'a', x: 0, y: 0, width: 120, height: 60, accept: ['x'] }],
+      },
+      expectAccept: false,
+    },
+    {
+      label: 'imageAlt empty',
+      config: {
+        imageUrl: '/static/curated/foo.svg',
+        imageAlt: '',
+        width: 600,
+        height: 360,
+        hotspots: [{ id: 'a', x: 0, y: 0, width: 120, height: 60, accept: ['x'] }],
+      },
+      expectAccept: false,
+    },
+    {
+      label: 'width below minimum',
+      config: {
+        imageUrl: '/static/curated/foo.svg',
+        imageAlt: 'A diagram',
+        width: 10,
+        height: 360,
+        hotspots: [{ id: 'a', x: 0, y: 0, width: 120, height: 60, accept: ['x'] }],
+      },
+      expectAccept: false,
+    },
+    {
+      label: 'hotspots empty',
+      config: {
+        imageUrl: '/static/curated/foo.svg',
+        imageAlt: 'A diagram',
+        width: 600,
+        height: 360,
+        hotspots: [],
+      },
+      expectAccept: false,
+    },
+    {
+      label: 'hotspot id with bad chars',
+      config: {
+        imageUrl: '/static/curated/foo.svg',
+        imageAlt: 'A diagram',
+        width: 600,
+        height: 360,
+        hotspots: [{ id: 'has space', x: 0, y: 0, width: 120, height: 60, accept: ['x'] }],
+      },
+      expectAccept: false,
+    },
+    {
+      label: 'hotspot accept empty',
+      config: {
+        imageUrl: '/static/curated/foo.svg',
+        imageAlt: 'A diagram',
+        width: 600,
+        height: 360,
+        hotspots: [{ id: 'a', x: 0, y: 0, width: 120, height: 60, accept: [] }],
+      },
+      expectAccept: false,
+    },
+    {
+      label: 'unknown top-level key',
+      config: {
+        imageUrl: '/static/curated/foo.svg',
+        imageAlt: 'A diagram',
+        width: 600,
+        height: 360,
+        hotspots: [{ id: 'a', x: 0, y: 0, width: 120, height: 60, accept: ['x'] }],
+        extra: 1,
+      },
+      expectAccept: false,
+    },
+    {
+      label: 'unknown hotspot key',
+      config: {
+        imageUrl: '/static/curated/foo.svg',
+        imageAlt: 'A diagram',
+        width: 600,
+        height: 360,
+        hotspots: [{ id: 'a', x: 0, y: 0, width: 120, height: 60, accept: ['x'], colour: 'red' }],
+      },
+      expectAccept: false,
+    },
+  ],
   logic_diagram: [
     {
       label: 'minimal valid (image variant)',
