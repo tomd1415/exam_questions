@@ -15,6 +15,7 @@ import { UserRepo, type UserRow } from './repos/users.js';
 import { SessionRepo } from './repos/sessions.js';
 import { AuditRepo } from './repos/audit.js';
 import { QuestionRepo } from './repos/questions.js';
+import { QuestionDraftRepo } from './repos/question_drafts.js';
 import { AttemptRepo } from './repos/attempts.js';
 import { ClassRepo } from './repos/classes.js';
 import { CurriculumRepo } from './repos/curriculum.js';
@@ -23,6 +24,7 @@ import { AuditService } from './services/audit.js';
 import { AuthService } from './services/auth.js';
 import { ClassService } from './services/classes.js';
 import { QuestionService } from './services/questions.js';
+import { QuestionDraftService } from './services/question_drafts.js';
 import { AttemptService } from './services/attempts.js';
 import { TeacherMarkingService } from './services/marking/teacher.js';
 import { FeedbackService } from './services/feedback.js';
@@ -30,6 +32,7 @@ import { registerAuthRoutes } from './routes/auth.js';
 import { registerQuestionRoutes } from './routes/questions.js';
 import { registerAdminClassRoutes } from './routes/admin-classes.js';
 import { registerAdminQuestionRoutes } from './routes/admin-questions.js';
+import { registerAdminQuestionWizardRoutes } from './routes/admin-question-wizard.js';
 import { registerAdminAttemptRoutes } from './routes/admin-attempts.js';
 import { registerAdminTopicRoutes } from './routes/admin-topics.js';
 import { registerAttemptRoutes } from './routes/attempts.js';
@@ -60,6 +63,7 @@ declare module 'fastify' {
       audit: AuditService;
       classes: ClassService;
       questions: QuestionService;
+      questionDrafts: QuestionDraftService;
       attempts: AttemptService;
       teacherMarking: TeacherMarkingService;
       feedback: FeedbackService;
@@ -67,6 +71,7 @@ declare module 'fastify' {
     repos: {
       users: UserRepo;
       questions: QuestionRepo;
+      questionDrafts: QuestionDraftRepo;
       attempts: AttemptRepo;
       classes: ClassRepo;
       curriculum: CurriculumRepo;
@@ -128,6 +133,7 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
   const sessionRepo = new SessionRepo(pool);
   const auditRepo = new AuditRepo(pool);
   const questionRepo = new QuestionRepo(pool);
+  const questionDraftRepo = new QuestionDraftRepo(pool);
   const attemptRepo = new AttemptRepo(pool);
   const classRepo = new ClassRepo(pool);
   const curriculumRepo = new CurriculumRepo(pool);
@@ -136,6 +142,11 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
   const authService = new AuthService(userRepo, sessionRepo, auditService);
   const classService = new ClassService(classRepo, auditService);
   const questionService = new QuestionService(questionRepo, curriculumRepo, auditService);
+  const questionDraftService = new QuestionDraftService(
+    questionDraftRepo,
+    questionService,
+    auditService,
+  );
   const attemptService = new AttemptService(attemptRepo, classRepo, auditService, userRepo);
   const teacherMarkingService = new TeacherMarkingService(attemptRepo, auditService);
   const feedbackService = new FeedbackService(feedbackRepo, auditService, userRepo);
@@ -145,6 +156,7 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
     audit: auditService,
     classes: classService,
     questions: questionService,
+    questionDrafts: questionDraftService,
     attempts: attemptService,
     teacherMarking: teacherMarkingService,
     feedback: feedbackService,
@@ -152,6 +164,7 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
   app.decorate('repos', {
     users: userRepo,
     questions: questionRepo,
+    questionDrafts: questionDraftRepo,
     attempts: attemptRepo,
     classes: classRepo,
     curriculum: curriculumRepo,
@@ -233,6 +246,7 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
   registerAdminClassRoutes(app);
   registerAdminAttemptRoutes(app);
   registerAdminQuestionRoutes(app);
+  registerAdminQuestionWizardRoutes(app);
   registerAdminTopicRoutes(app);
   registerFeedbackRoutes(app);
   registerApiRoutes(app);

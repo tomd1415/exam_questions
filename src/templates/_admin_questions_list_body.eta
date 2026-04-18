@@ -17,7 +17,10 @@ for (const t of it.topics) {
       <h1>Questions</h1>
       <span class="admin-card__sub"><%= it.questions.length %> match<%= it.questions.length === 1 ? '' : 'es' %></span>
     </div>
-    <a href="/admin/questions/new" class="btn btn--primary">New question</a>
+    <div class="admin-card__actions">
+      <a href="/admin/questions/wizard" class="btn btn--primary">New question (wizard)</a>
+      <a href="/admin/questions/new" class="btn btn--secondary">Single-page form</a>
+    </div>
   </header>
 
   <% if (it.flash) { %>

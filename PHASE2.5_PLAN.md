@@ -904,6 +904,73 @@ using only the wizard, meeting the time targets. Drafts can be
 resumed across sessions. "Try yourself" catches at least one
 planted rubric error in the human test.
 
+#### Implementation sequencing (agreed 2026-04-18)
+
+Chunk 2.5j is the largest single chunk in Phase 2.5 and gates
+teacher uptake (and therefore the pupil-feedback signal that
+Phase 3 marking quality depends on). Rather than landing it as
+one wall-of-diff, it ships in six reviewable steps. Each step
+is independently runnable (`npm run check` green) and each step
+locks decisions before the next one builds on them.
+
+1. **Schema + repo + service + audit.** Migration
+   `0025_question_drafts.sql`, `src/repos/question_drafts.ts`,
+   `src/services/question_drafts.ts` with `create`, `advance`,
+   and `publish`. The four audit events
+   (`question.draft.created`, `.advanced`, `.published`,
+   `.cloned`) all wired. `publish` writes through the same
+   service path the seeder uses — no second insert path. No
+   UI yet. `tests/integration/question-draft-flow.test.ts`
+   covers create → advance 1–9 → publish → row equality with a
+   seeder-equivalent insert; cross-author isolation; published
+   draft locked from further advance.
+2. **Wizard scaffolding.** `src/routes/admin-question-wizard.ts`
+   with `GET /admin/questions/wizard/new`,
+   `GET /admin/questions/wizard/:draftId/step/:n`, the matching
+   POST advance routes, and the "My drafts" list at
+   `/admin/questions/wizard`. Base `_wizard_chrome.eta` and
+   `_admin_drafts_list_body.eta`. Owner-only authz preHandler.
+   Back/Next plumbing. Initial `tests/http/wizard-steps.test.ts`
+   covering authz, CSRF on every POST, and step routing.
+3. **Non-widget steps (1, 2, 3, 5, 6, 7, 8).** Where-it-lives
+   pickers, command-word picker with mark-tariff hints, widget
+   picker filtered by command word, stem-with-live-preview,
+   marks/model-answer/mark-points editor, misconceptions,
+   difficulty/tags. Each step is its own `_wizard_step_<n>.eta`
+   with one question per screen. Extends `wizard-steps.test.ts`
+   with per-step round-trip + missing-field validation.
+   `tests/http/wizard-widget-filter.test.ts` lands here.
+4. **Step 4 — per-widget editor partials.** One
+   `_widget_editor_<type>.eta` per widget (11 partials, grouped
+   for review: tick / matrix-tick family →
+   cloze family → trace_table → matching → diagram_labels →
+   logic_diagram + flowchart). Each editor enforces the widget's
+   own validation (matrix tick must mark a correct answer; cloze
+   must contain at least one gap; trace table must have at least
+   one column; canvas widgets must contain at least one node).
+   This is where the teacher-ergonomics work concentrates and
+   where most of the human-test risk lives.
+5. **Step 9 — review and try-yourself.** Full pupil-flow
+   preview using the existing `_paper_part_widget.eta`
+   dispatcher. "Try yourself" button starts a throwaway
+   self-attempt that runs through the deterministic marker (or
+   surfaces the teacher-pending label) so the author catches
+   rubric errors before publish. Publish button only available
+   from step 9. `tests/http/wizard-try-yourself.test.ts` covers
+   the deterministic + teacher-pending branches.
+6. **Clone, filters, walker, human guide.** Clone-from-approved
+   action (seeds a draft at step 4 with widget editor
+   pre-filled), `tests/integration/wizard-clone.test.ts`,
+   topic / command-word / widget / difficulty / status filters
+   on `/admin/questions`, the wizard walkthrough in
+   `scripts/phase2_5-browser.ts`, and `HUMAN_TEST_GUIDE §2.5.j`.
+
+Each step has its own revision-history row in §10 when it lands.
+Teacher-ergonomics decisions made during step 4 (and any UX
+changes that turn out to be needed in steps 1–3 once a real
+editor is in front of them) are captured as inline edits to this
+sequencing block, not as a parallel design doc.
+
 ## 6. Test strategy across the phase
 
 Same layers as Phase 1 and Phase 2. Additions:
@@ -1132,3 +1199,5 @@ expected order:
 | 2026-04-18 | TD     | Chunk 2.5g shipped (MVP scope). New `diagram_labels` widget via `src/lib/diagram-labels.ts`: config validator (image URL restricted to `/static/...` or `https://`, hotspots overlaid as rectangular text inputs with per-hotspot `caseSensitive`/`trimWhitespace` flags), raw-answer parser/serialiser for `<hotspotId>=<value>` lines, deterministic per-hotspot set-match marker. Added to `EXPECTED_RESPONSE_TYPES`; registered in the widget registry with `marker='deterministic'` and a JSON Schema. Template renders `<img>` plus one absolutely-positioned `<input>` per hotspot named `part_<id>__<hotspotId>`; the existing `routes/attempts.ts` suffix aggregator collapses them into the line-encoded `raw_answer`. Mark points are matched to hotspots by index, mirroring `matching`. Migration `0022_diagram_labels.sql` (documentation-only). Curated `1.4_topology-star-labels.json` fixture + `src/static/curated/network-topology-star.svg` added. Resolves PUPIL_FEEDBACK row 6 as `triaged` — the teacher upload route (`POST /admin/uploads/diagram-image`) and `admin.upload.created` audit event are deferred to chunk 2.5j (wizard) where the only caller exists, with no further migration since `imageUrl` is the contract.                                                                                                                                                                                                                                                                                                                                                                                         |
 | 2026-04-18 | TD     | Chunk 2.5h shipped (MVP scope, scoped down from the original chunk plan). New `flowchart` widget via `src/lib/flowchart.ts`: config validator (`variant: 'image'` only, canvas dimensions clamped 100–2000), raw-answer parser/serialiser for the `image=<dataURL>` line — the same contract as `logic_diagram`. Added to `EXPECTED_RESPONSE_TYPES`; registered in the widget registry with `marker='teacher_pending'` and a JSON Schema; deterministic marker treats it as an open response. Template renders a `<canvas>` plus pen/eraser/clear toolbar and a hidden `part_<id>__image` input that the route aggregator stores as `image=…`. `src/static/flowchart.js` mirrors `logic_diagram.js` (mouse + touch drawing, PNG dataURL export on every stroke, ≤600 KB data URLs). Migration `0023_flowchart.sql` (documentation-only). Curated `2.1_flowchart-larger-of-two.json` fixture added. Structured shape palette (terminator/process/decision/io/arrow) + prefilled-shape "complete this flowchart" variant from the original chunk plan are deferred to Phase 3 and will live alongside the MVP under the same `expected_response_type` via a `variant: 'shapes'` tag, with no further migration. `canvas_core.js` extraction shared with `logic_diagram` is deferred with the shape palette — extracting now would be a premature abstraction over two ~15-line event loops.                                                                                                                                                                                                                                                       |
 | 2026-04-18 | TD     | Chunk 2.5i shipped (Option B MVP). Per-pupil widget-tip first-encounter panel via new `src/lib/widget-tips.ts` (tip catalogue keyed by widget type, dismissal validator) + `src/templates/_widget_help.eta` partial + `src/static/widget_tips.js` (progressive enhancement: noscript posts to `/me/widget-tips/dismiss` and reloads, JS hides in place). Migration `0024_widget_tips_dismissed.sql` adds `users.widget_tips_dismissed JSONB NOT NULL DEFAULT '{}'::jsonb`; `UserRepo.dismissWidgetTip` writes via `jsonb_build_object` so concurrent dismissals are safe. New `POST /me/widget-tips/dismiss` route on the existing attempts router (CSRF-required, key validated against `WIDGET_TIPS`). New audit event `user.widget_tip.dismissed`. Tips render at most once per widget type per page in `_attempt_edit_body.eta` (server filters by the dismissed JSONB; template tracks first-seen-this-render). Trace-grid Ctrl/Cmd-Z last-cell undo via new `src/static/trace_grid.js` (single-slot baseline captured on focus, restored on Ctrl/Cmd-Z). New `tests/http/widget-tips.test.ts` covers first-render, persistence in JSONB, second-render-omits, audit event written, CSRF-required, and shared-session guard. Final: 81 files / 658 tests passing. Option-A remainder (keyboard/mobile browser walker sweeps, canvas undo for logic_diagram + flowchart, ARIA review one-liners, autosave audit doc, per-widget axe coverage) deferred per the new "MVP scope vs deferred follow-up" subsection in §Chunk 2.5i — those each need a Playwright fixture or a live-Chromebook session and remain the Phase 2+2.5 sign-off bar. |
+| 2026-04-18 | TD     | Chunk 2.5j step 1 shipped: schema + repo + service + audit foundations for the teacher question-creation wizard. Migration `0025_question_drafts.sql` adds `question_drafts (id, author_user_id, current_step 1–9, payload JSONB, published_question_id, created_at, updated_at)` with `(author_user_id, created_at DESC)` index. New `src/repos/question_drafts.ts` (`create`, `findById`, `listByAuthor`, `update`, `markPublished`) treats payload as a partial `QuestionDraft` so there is no second canonical schema. New `src/services/question_drafts.ts` exposes `create` / `advance(step, patch)` / `publish` with monotonic `current_step`, owner-only authz (admins read all), and the four audit events `question.draft.created`, `.advanced`, `.published`, `.cloned` (cloned wired in step 6). `publish` hands the hardened payload to the existing `QuestionService.createDraft` so the wizard shares the seeder/admin-form insert path — no duplicate writes. Wired into `src/app.ts` decorators (`services.questionDrafts`, `repos.questionDrafts`). New `tests/integration/question-draft-flow.test.ts` covers happy-path 1→9 publish-equivalent rows, lock-after-publish, incomplete-publish guard, cross-author isolation, admin-read-all, step-range validation, and most-recently-updated ordering. No UI yet — that lands in step 2. Final: 82 files / 667 tests passing.                                                                                                                                                                                                                                                |
+| 2026-04-18 | TD     | Chunk 2.5j step 2 shipped: wizard scaffolding. New `src/routes/admin-question-wizard.ts` with `GET /admin/questions/wizard` ("My drafts" + recently published list), `POST /admin/questions/wizard/new` (creates a draft and redirects to step 1), `GET/POST /admin/questions/wizard/:draftId/step/:n` for steps 1–9, and `POST /admin/questions/wizard/:draftId/publish`. All routes guarded by `requireTeacherOrAdmin` (pupils → 403, anon → /login); all POSTs CSRF-required; cross-author access returns 403; unknown draft id returns 404; already-published or incomplete-publish errors round-trip through a flash message on step 9. New templates `admin_drafts_list.eta` + `_admin_drafts_list_body.eta` (in-progress and recently-published tables with payload summary line) and `admin_wizard_step.eta` + `_admin_wizard_step_body.eta` (per-step title + hint, 1-of-9 progress nav linking only to already-touched steps, Save/Continue placeholder form, separate Publish form on step 9). The step body renders only a placeholder editor — per-step editors land in step 3 of the sequencing plan. `/admin/questions` list now offers "New question (wizard)" alongside the existing single-page form. New `tests/http/wizard-steps.test.ts` covers anon→/login, pupil→403, empty drafts list, draft-create + step-1 redirect, CSRF on new + step POST, full 1→9 advance via repeated POST, cross-author 403 on GET and POST, 404 on unknown id, and the resume row appearing in the list. Final: 83 files / 677 tests passing.                                                                                                |
