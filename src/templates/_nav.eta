@@ -8,6 +8,7 @@ function navLinksFor(role) {
       { href: '/', label: 'Home', match: ['/', '/topics'], key: 'home', icon: 'home' },
       { href: '/topics', label: 'Topics', match: ['/topics'], key: 'topics', icon: 'book' },
       { href: '/me/attempts', label: 'My attempts', match: ['/me/attempts', '/attempts'], key: 'attempts', icon: 'file-text' },
+      { href: '/feedback', label: 'Feedback', match: ['/feedback'], key: 'feedback', icon: 'pencil-line' },
       { href: '/me/preferences', label: 'Preferences', match: ['/me/preferences'], key: 'prefs', icon: 'settings' },
     ];
   }
@@ -18,6 +19,7 @@ function navLinksFor(role) {
       { href: '/admin/questions', label: 'Questions', match: ['/admin/questions'], key: 'questions', icon: 'clipboard-check' },
       { href: '/admin/topics', label: 'Topics', match: ['/admin/topics'], key: 'topics', icon: 'book' },
       { href: '/admin/attempts', label: 'Marking queue', match: ['/admin/attempts'], key: 'queue', icon: 'list-checks' },
+      { href: '/admin/feedback', label: 'Feedback', match: ['/admin/feedback', '/feedback'], key: 'feedback', icon: 'pencil-line' },
       { href: '/me/preferences', label: 'Preferences', match: ['/me/preferences'], key: 'prefs', icon: 'settings' },
     ];
     if (role === 'admin') {

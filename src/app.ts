@@ -18,12 +18,14 @@ import { QuestionRepo } from './repos/questions.js';
 import { AttemptRepo } from './repos/attempts.js';
 import { ClassRepo } from './repos/classes.js';
 import { CurriculumRepo } from './repos/curriculum.js';
+import { FeedbackRepo } from './repos/feedback.js';
 import { AuditService } from './services/audit.js';
 import { AuthService } from './services/auth.js';
 import { ClassService } from './services/classes.js';
 import { QuestionService } from './services/questions.js';
 import { AttemptService } from './services/attempts.js';
 import { TeacherMarkingService } from './services/marking/teacher.js';
+import { FeedbackService } from './services/feedback.js';
 import { registerAuthRoutes } from './routes/auth.js';
 import { registerQuestionRoutes } from './routes/questions.js';
 import { registerAdminClassRoutes } from './routes/admin-classes.js';
@@ -31,6 +33,7 @@ import { registerAdminQuestionRoutes } from './routes/admin-questions.js';
 import { registerAdminAttemptRoutes } from './routes/admin-attempts.js';
 import { registerAdminTopicRoutes } from './routes/admin-topics.js';
 import { registerAttemptRoutes } from './routes/attempts.js';
+import { registerFeedbackRoutes } from './routes/feedback.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const TEMPLATES_DIR = resolve(__dirname, 'templates');
@@ -58,6 +61,7 @@ declare module 'fastify' {
       questions: QuestionService;
       attempts: AttemptService;
       teacherMarking: TeacherMarkingService;
+      feedback: FeedbackService;
     };
     repos: {
       users: UserRepo;
@@ -65,6 +69,7 @@ declare module 'fastify' {
       attempts: AttemptRepo;
       classes: ClassRepo;
       curriculum: CurriculumRepo;
+      feedback: FeedbackRepo;
     };
   }
   interface FastifyRequest {
@@ -125,12 +130,14 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
   const attemptRepo = new AttemptRepo(pool);
   const classRepo = new ClassRepo(pool);
   const curriculumRepo = new CurriculumRepo(pool);
+  const feedbackRepo = new FeedbackRepo(pool);
   const auditService = new AuditService(auditRepo);
   const authService = new AuthService(userRepo, sessionRepo, auditService);
   const classService = new ClassService(classRepo, auditService);
   const questionService = new QuestionService(questionRepo, curriculumRepo, auditService);
   const attemptService = new AttemptService(attemptRepo, classRepo, auditService, userRepo);
   const teacherMarkingService = new TeacherMarkingService(attemptRepo, auditService);
+  const feedbackService = new FeedbackService(feedbackRepo, auditService);
 
   app.decorate('services', {
     auth: authService,
@@ -139,6 +146,7 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
     questions: questionService,
     attempts: attemptService,
     teacherMarking: teacherMarkingService,
+    feedback: feedbackService,
   });
   app.decorate('repos', {
     users: userRepo,
@@ -146,6 +154,7 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
     attempts: attemptRepo,
     classes: classRepo,
     curriculum: curriculumRepo,
+    feedback: feedbackRepo,
   });
   app.decorateRequest('currentUser', null);
   app.decorateRequest('sessionId', null);
@@ -224,6 +233,7 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
   registerAdminAttemptRoutes(app);
   registerAdminQuestionRoutes(app);
   registerAdminTopicRoutes(app);
+  registerFeedbackRoutes(app);
 
   app.get('/healthz', () => ({ ok: true }));
 

@@ -1,0 +1,113 @@
+<%
+const CATEGORY_LABELS = {
+  ui: 'UI',
+  ux: 'UX',
+  docs: 'Docs',
+  new_feature: 'New feature',
+  change_feature: 'Change feature',
+  bug: 'Bug',
+  other: 'Other',
+};
+const STATUS_LABELS = {
+  new: 'New',
+  triaged: 'Triaged',
+  in_progress: 'In progress',
+  resolved: 'Resolved',
+  wontfix: 'Will not fix',
+};
+function fmtDate(d) {
+  if (!d) return '';
+  const iso = new Date(d).toISOString();
+  return iso.slice(0, 10) + ' ' + iso.slice(11, 16);
+}
+const statuses = it.statuses || [];
+const categories = it.categories || [];
+const items = it.items || [];
+%>
+<%~ include('_page_header', {
+  crumbs: [{ label: 'Feedback' }],
+  heading: 'Pupil feedback',
+  subtitle:
+    'Every comment pupils have sent. Triage each one and record whether it needs addressing.',
+}) %>
+
+<section class="admin-card">
+  <% if (items.length === 0) { %>
+    <p class="empty">No feedback has been submitted yet.</p>
+  <% } else { %>
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Sent</th>
+          <th>From</th>
+          <th>Comment</th>
+          <th>Triage</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% items.forEach(function(f) { %>
+          <tr>
+            <td>
+              <%= fmtDate(f.submitted_at) %><br />
+              <small>#<%= f.id %></small>
+            </td>
+            <td>
+              <%= f.author_display_name %><br />
+              <small><%= f.author_username %> · <%= f.author_role %></small>
+            </td>
+            <td>
+              <p class="feedback-comment"><%= f.comment %></p>
+              <% if (f.triaged_at) { %>
+                <p class="muted">
+                  Triaged <%= fmtDate(f.triaged_at) %>
+                  <% if (f.triaged_by_display_name) { %> by <%= f.triaged_by_display_name %><% } %>.
+                </p>
+              <% } %>
+              <% if (f.triage_notes) { %>
+                <p class="muted"><strong>Notes:</strong> <%= f.triage_notes %></p>
+              <% } %>
+            </td>
+            <td>
+              <form
+                method="post"
+                action="/admin/feedback/<%= encodeURIComponent(f.id) %>/triage"
+                class="stacked-form">
+                <input type="hidden" name="_csrf" value="<%= it.csrfToken %>" />
+                <label>
+                  Status
+                  <select name="status">
+                    <% statuses.forEach(function(s) { %>
+                      <option value="<%= s %>" <%= s === f.status ? 'selected' : '' %>>
+                        <%= STATUS_LABELS[s] || s %>
+                      </option>
+                    <% }); %>
+                  </select>
+                </label>
+                <label>
+                  Category
+                  <select name="category">
+                    <option value="" <%= f.category === null ? 'selected' : '' %>>—</option>
+                    <% categories.forEach(function(c) { %>
+                      <option value="<%= c %>" <%= c === f.category ? 'selected' : '' %>>
+                        <%= CATEGORY_LABELS[c] || c %>
+                      </option>
+                    <% }); %>
+                  </select>
+                </label>
+                <label>
+                  Notes
+                  <textarea
+                    name="triage_notes"
+                    rows="2"
+                    maxlength="2000"
+                    placeholder="How will we address this?"><%= f.triage_notes || '' %></textarea>
+                </label>
+                <button type="submit" class="btn btn--primary btn--sm">Save triage</button>
+              </form>
+            </td>
+          </tr>
+        <% }); %>
+      </tbody>
+    </table>
+  <% } %>
+</section>

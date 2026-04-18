@@ -64,7 +64,7 @@ describe('primary nav (Chunk 6b)', () => {
     expect(res.payload).not.toMatch(/<nav class="site-nav"/);
   });
 
-  it('pupil sees pupil link set with Home/Topics/My attempts/Preferences', async () => {
+  it('pupil sees pupil link set with Home/Topics/My attempts/Feedback/Preferences', async () => {
     const pupil = await createUser(getSharedPool(), { role: 'pupil' });
     const jar = await loginAs(pupil);
     const res = await app.inject({
@@ -75,7 +75,7 @@ describe('primary nav (Chunk 6b)', () => {
     expect(res.statusCode).toBe(200);
     const links = extractNavLinks(res.payload);
     const labels = links.map((l) => l.label);
-    expect(labels).toEqual(['Home', 'Topics', 'My attempts', 'Preferences']);
+    expect(labels).toEqual(['Home', 'Topics', 'My attempts', 'Feedback', 'Preferences']);
     const topics = links.find((l) => l.label === 'Topics');
     expect(topics?.active).toBe(true);
   });

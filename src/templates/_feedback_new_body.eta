@@ -1,0 +1,85 @@
+<%
+const CATEGORY_LABELS = {
+  ui: 'UI',
+  ux: 'UX',
+  docs: 'Docs',
+  new_feature: 'New feature',
+  change_feature: 'Change feature',
+  bug: 'Bug',
+  other: 'Other',
+};
+const STATUS_LABELS = {
+  new: 'New',
+  triaged: 'Triaged',
+  in_progress: 'In progress',
+  resolved: 'Resolved',
+  wontfix: 'Will not fix',
+};
+function fmtDate(d) {
+  if (!d) return '';
+  const iso = new Date(d).toISOString();
+  return iso.slice(0, 10) + ' ' + iso.slice(11, 16);
+}
+%>
+<%~ include('_page_header', {
+  crumbs: [{ label: 'Feedback' }],
+  heading: 'Send feedback',
+  subtitle:
+    'Tell us anything that is confusing, broken, missing, or working well. A teacher will read every comment.',
+}) %>
+
+<section class="admin-card">
+  <% if (it.flash) { %>
+    <p class="flash flash--<%= it.flashKind === 'ok' ? 'ok' : 'error' %>" role="status">
+      <%= it.flash %>
+    </p>
+  <% } %>
+
+  <form method="post" action="/feedback" class="inline-form">
+    <input type="hidden" name="_csrf" value="<%= it.csrfToken %>" />
+    <label for="feedback-comment">Your comment</label>
+    <textarea
+      id="feedback-comment"
+      name="comment"
+      rows="6"
+      maxlength="2000"
+      required
+      placeholder="What would you like us to know?"></textarea>
+    <p class="form-hint">Up to 2000 characters. Your name is attached so a teacher can follow up.</p>
+    <button type="submit" class="btn btn--primary">Send feedback</button>
+  </form>
+</section>
+
+<section class="admin-card">
+  <header class="admin-card__header">
+    <div>
+      <h2>Your previous feedback</h2>
+      <p class="admin-card__sub">A record of what you have sent and its current status.</p>
+    </div>
+  </header>
+
+  <% if (!it.mine || it.mine.length === 0) { %>
+    <p class="empty">You have not sent any feedback yet.</p>
+  <% } else { %>
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Sent</th>
+          <th>Comment</th>
+          <th>Status</th>
+          <th>Category</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% it.mine.forEach(function(f) { %>
+          <tr>
+            <td><%= fmtDate(f.submitted_at) %></td>
+            <td><%= f.comment %></td>
+            <td><%= STATUS_LABELS[f.status] || f.status %></td>
+            <td><%= f.category ? (CATEGORY_LABELS[f.category] || f.category) : '—' %></td>
+          </tr>
+        <% }); %>
+      </tbody>
+    </table>
+  <% } %>
+</section>
