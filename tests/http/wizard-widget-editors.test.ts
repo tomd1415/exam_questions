@@ -749,4 +749,44 @@ describe('wizard widget editors (chunk 2.5j step 4)', () => {
     // The textarea echo keeps the pipe-encoded source-of-truth lines.
     expect(reload.payload).toContain('start|terminator|220|20|160|50|TEXT|Start');
   });
+
+  it('logic_diagram editor exposes the visual picker hooks when the gate_in_box variant is saved', async () => {
+    const teacher = await createUser(pool(), { role: 'teacher' });
+    const jar = await loginAs(teacher);
+    const draftId = await startDraft(jar);
+    await pickWidget(jar, draftId, 'logic_diagram', 'draw');
+
+    const saved = await postStep(jar, draftId, 5, {
+      variant: 'gate_in_box',
+      canvas_width: '600',
+      canvas_height: '400',
+      gates: [
+        'g1|140|60|80|50|GATE|AND',
+        'g2|140|180|80|50|GATE|NOT',
+        'gout|360|110|80|50|BLANK|OR, or gate',
+      ].join('\n'),
+      terminals: [
+        'a|INPUT|A|40|75',
+        'b|INPUT|B|40|125',
+        'c|INPUT|C|40|205',
+        'p|OUTPUT|P|520|135',
+      ].join('\n'),
+      wires: ['a|g1', 'b|g1', 'c|g2', 'g1|gout', 'g2|gout', 'gout|p'].join('\n'),
+    });
+    expect(saved.statusCode).toBe(302);
+
+    const reload = await app.inject({
+      method: 'GET',
+      url: `/admin/questions/wizard/${draftId}/step/5`,
+      headers: { cookie: cookieHeader(jar) },
+    });
+    expect(reload.statusCode).toBe(200);
+    expect(reload.payload).toContain('data-widget-editor="logic_diagram"');
+    expect(reload.payload).toContain('data-logic-picker');
+    expect(reload.payload).toContain('data-logic-stage');
+    expect(reload.payload).toContain('data-logic-tool="add:AND"');
+    expect(reload.payload).toContain('data-logic-tool="add:wire"');
+    expect(reload.payload).toContain('/static/wizard_logic_diagram_picker.js');
+    expect(reload.payload).toContain('gout|360|110|80|50|BLANK|OR, or gate');
+  });
 });

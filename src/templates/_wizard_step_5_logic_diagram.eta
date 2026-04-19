@@ -141,7 +141,34 @@ const truthTableValue = echoStr('truth_table') !== null ? echoStr('truth_table')
 
   <div class="wizard-logic-diagram__gib-only"
        data-visible-when-variant="gate_in_box"
-       <%= variant === 'gate_in_box' ? '' : 'hidden' %>>
+       <%= variant === 'gate_in_box' ? '' : 'hidden' %>
+       data-widget-editor="logic_diagram">
+
+    <div class="wizard-logic-editor" data-logic-picker>
+      <div class="wizard-logic-editor__toolbar" data-logic-toolbar role="toolbar" aria-label="Logic-diagram tools">
+        <button type="button" data-logic-tool="select" aria-pressed="true">Select</button>
+        <button type="button" data-logic-tool="add:AND">+ AND</button>
+        <button type="button" data-logic-tool="add:OR">+ OR</button>
+        <button type="button" data-logic-tool="add:NOT">+ NOT</button>
+        <button type="button" data-logic-tool="add:blank">+ Blank</button>
+        <button type="button" data-logic-tool="add:input">+ Input</button>
+        <button type="button" data-logic-tool="add:output">+ Output</button>
+        <button type="button" data-logic-tool="add:wire">+ Wire</button>
+        <span class="wizard-logic-editor__hint" data-logic-hint></span>
+      </div>
+      <div class="wizard-logic-editor__workspace">
+        <svg class="wizard-logic-editor__stage" data-logic-stage
+             viewBox="0 0 <%= width %> <%= height %>"
+             width="<%= width %>" height="<%= height %>"
+             role="img" aria-label="Logic-diagram editor stage"></svg>
+        <aside class="wizard-logic-editor__inspector" data-logic-inspector hidden></aside>
+      </div>
+      <p class="form-hint">
+        The textareas below stay the source of truth — the stage above is a
+        visual shortcut. Teachers without JavaScript can still edit them directly.
+      </p>
+    </div>
+
     <label for="gates">Gates (one per line)</label>
     <p class="form-hint">
       Format: <code>id|x|y|width|height|GATE|AND</code> for a prefilled gate

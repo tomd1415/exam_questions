@@ -1309,6 +1309,170 @@ input[type='number'].input {
   font-weight: 500;
 }
 
+/* --- Logic-diagram visual editor (step 5, gate_in_box variant) ------------ */
+.wizard-logic-editor {
+  display: grid;
+  gap: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  background: var(--color-surface-1);
+  margin-bottom: var(--space-3);
+}
+.wizard-logic-editor__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+}
+.wizard-logic-editor__toolbar button[data-logic-tool] {
+  font: inherit;
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-0);
+  color: var(--color-ink-1);
+  cursor: pointer;
+}
+.wizard-logic-editor__toolbar button[data-logic-tool][aria-pressed='true'] {
+  background: var(--color-brand-500);
+  color: var(--color-brand-ink);
+  border-color: var(--color-brand-500);
+}
+.wizard-logic-editor__hint {
+  font-size: var(--type-small);
+  color: var(--color-ink-3);
+  flex: 1 1 18ch;
+}
+.wizard-logic-editor__workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-3);
+  align-items: start;
+}
+@media (min-width: 720px) {
+  .wizard-logic-editor__workspace {
+    grid-template-columns: minmax(0, 1fr) 18rem;
+  }
+}
+.wizard-logic-editor__stage {
+  width: 100%;
+  height: auto;
+  max-width: 100%;
+  background: #fff;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-ink-1);
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: none;
+}
+.wizard-logic-editor__node {
+  cursor: pointer;
+}
+.wizard-logic-editor__gate {
+  fill: #f6f6f6;
+  stroke: #111;
+  stroke-width: 1.5;
+}
+.wizard-logic-editor__gate.is-blank {
+  fill: #fffbe6;
+  stroke-dasharray: 4 3;
+}
+.wizard-logic-editor__gate.is-selected {
+  stroke: var(--color-brand-500);
+  stroke-width: 2.5;
+}
+.wizard-logic-editor__gate.is-wire-pending {
+  stroke: var(--color-accent-500);
+  stroke-dasharray: 6 3;
+}
+.wizard-logic-editor__gate-label {
+  font-size: 12px;
+  font-family: inherit;
+  fill: #111;
+  pointer-events: none;
+}
+.wizard-logic-editor__bubble {
+  fill: #f6f6f6;
+  stroke: #111;
+  stroke-width: 1.5;
+  pointer-events: none;
+}
+.wizard-logic-editor__terminal {
+  fill: #111;
+  stroke: #111;
+  stroke-width: 1;
+}
+.wizard-logic-editor__terminal.is-output {
+  fill: #fff;
+}
+.wizard-logic-editor__terminal.is-selected {
+  stroke: var(--color-brand-500);
+  stroke-width: 2.5;
+}
+.wizard-logic-editor__terminal.is-wire-pending {
+  stroke: var(--color-accent-500);
+  stroke-width: 2.5;
+}
+.wizard-logic-editor__terminal-label {
+  font-size: 12px;
+  font-family: inherit;
+  fill: #111;
+  pointer-events: none;
+}
+.wizard-logic-editor__wire {
+  stroke: #111;
+  stroke-width: 1.5;
+  fill: none;
+  cursor: pointer;
+}
+.wizard-logic-editor__wire.is-selected {
+  stroke: var(--color-brand-500);
+  stroke-width: 2.5;
+}
+.wizard-logic-editor__selection {
+  fill: none;
+  stroke: var(--color-brand-500);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+  pointer-events: none;
+}
+.wizard-logic-editor__resize {
+  fill: var(--color-brand-500);
+  stroke: #fff;
+  stroke-width: 1;
+  cursor: se-resize;
+}
+.wizard-logic-editor__inspector {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-0);
+  align-self: start;
+}
+.wizard-logic-editor__inspector[hidden] {
+  display: none;
+}
+.wizard-logic-editor__inspector-title {
+  margin: 0;
+  font-size: var(--type-body);
+}
+.wizard-logic-editor__inspector-meta {
+  margin: 0;
+  color: var(--color-ink-3);
+  font-family: var(--font-mono);
+  font-size: var(--type-small);
+}
+.wizard-logic-editor__inspector label {
+  display: grid;
+  gap: var(--space-1);
+  font-size: var(--type-small);
+  font-weight: 500;
+}
+
 /* --- Widget tile picker (step 3) ------------------------------------------ */
 .widget-tile-grid {
   display: grid;
