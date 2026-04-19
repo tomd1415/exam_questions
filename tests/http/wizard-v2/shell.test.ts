@@ -305,6 +305,25 @@ describe('Wizard v2 shell (Chunk 2.5p)', () => {
     expect(shellJs.statusCode).toBe(200);
   });
 
+  it('step counter carries a per-step subtitle (chunk 2.5t copy pass)', async () => {
+    const teacher = await createUser(getSharedPool(), { role: 'teacher' });
+    const jar = await loginAs(teacher);
+    const id = await createDraft(jar);
+    const step1 = await app.inject({
+      method: 'GET',
+      url: `/admin/questions/wizard/${id}/step/1`,
+      headers: { cookie: cookieHeader(jar) },
+    });
+    expect(step1.payload).toContain('wizard__step-subtitle');
+    expect(step1.payload).toContain('Home for the question');
+    const step9 = await app.inject({
+      method: 'GET',
+      url: `/admin/questions/wizard/${id}/step/9`,
+      headers: { cookie: cookieHeader(jar) },
+    });
+    expect(step9.payload).toContain('Try it, then publish');
+  });
+
   it('site.css ships the wizard v2 shell primitives', async () => {
     const css = await app.inject({ method: 'GET', url: '/static/site.css' });
     expect(css.statusCode).toBe(200);

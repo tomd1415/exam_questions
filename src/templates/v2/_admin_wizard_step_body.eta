@@ -24,6 +24,17 @@ const STEP_TITLES = {
   8: 'Difficulty and tags',
   9: 'Review and publish',
 };
+const STEP_SUBTITLES = {
+  1: 'Home for the question',
+  2: 'The command word',
+  3: 'Pick an answer widget',
+  4: 'Stem you&rsquo;ll show the pupil',
+  5: 'Configure the widget',
+  6: 'Mark tariff &amp; model answer',
+  7: 'Optional &mdash; wrong-answer patterns',
+  8: 'Calibrate &amp; tag',
+  9: 'Try it, then publish',
+};
 const STEP_HINTS = {
   1: 'Pick the component, topic, and subtopic the question fits under. Pupils will see the question filed here.',
   2: 'The command word (&ldquo;describe&rdquo;, &ldquo;state&rdquo;, &ldquo;complete the table&rdquo;&hellip;) sets the tone and the typical mark tariff.',
@@ -58,7 +69,10 @@ const railCtx = { ...it, stepTitles: STEP_TITLES };
 
     <div class="wizard__main">
       <header class="wizard__header">
-        <p class="wizard__step-counter">Step <%= stepN %> of 9</p>
+        <p class="wizard__step-counter">
+          Step <%= stepN %> of 9
+          <span class="wizard__step-subtitle">&middot; <%~ STEP_SUBTITLES[stepN] %></span>
+        </p>
         <h1 class="wizard__title"><%= STEP_TITLES[stepN] %></h1>
         <p class="wizard__hint"><%~ STEP_HINTS[stepN] %></p>
       </header>

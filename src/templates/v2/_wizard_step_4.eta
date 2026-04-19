@@ -19,8 +19,9 @@ const stem = p.stem || '';
       data-wizard-char-counter="wizard-stem-counter"
       required><%= stem %></textarea>
     <span class="stacked-field__hint">
-      Type the text the pupil reads. Markdown is <em>not</em> processed yet &mdash;
-      what you type is what they see.
+      Type exactly what the pupil will read. What you write is what they see
+      &mdash; no markdown, no templating. Aim for under 400 characters for a
+      one-screen stem.
     </span>
     <span class="wizard__char-counter"
           id="wizard-stem-counter"

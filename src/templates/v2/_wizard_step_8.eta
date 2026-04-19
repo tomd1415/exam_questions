@@ -31,8 +31,8 @@ const source = p.source_type || 'teacher';
       <% } %>
     </select>
     <span class="stacked-field__hint" id="wizard-difficulty-hint">
-      1 is the easiest, 9 the hardest. Pick the band you&rsquo;d give a pupil who just
-      learned this subtopic.
+      1 is the easiest, 9 the hardest. Aim for the band you&rsquo;d give a pupil
+      who just finished this subtopic &mdash; not a confident recap learner.
     </span>
   </div>
 
