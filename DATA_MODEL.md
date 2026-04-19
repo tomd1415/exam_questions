@@ -205,6 +205,44 @@ Stored excerpts from OCR papers used only for similarity comparison; never serve
 | `text`         | TEXT         |                    |
 | `embedding`    | VECTOR(1536) |                    |
 
+## Question authoring (Phase 2.5)
+
+### `question_drafts`
+
+In-progress wizard sessions. One row per draft; `payload` is the
+accumulated wizard state (a partial `QuestionDraft` JSON document
+whose shape is defined by `src/repos/question_drafts.ts`).
+`current_step` is the highest step the author has reached so resuming
+on another device lands them at the right step. `published_question_id`
+is set exactly once when the wizard's "Publish" action on step 9 hands
+the payload to `QuestionService.createDraft`; once set, the draft is
+locked from further `advance` calls (re-edit goes through the
+`/admin/questions` UI on the published row, not the wizard). Drafts are
+author-private — only `author_user_id` (and admins) can read or
+advance. Migration: `0025_question_drafts.sql`.
+
+| Column                  | Type                                            | Notes                                                                  |
+| ----------------------- | ----------------------------------------------- | ---------------------------------------------------------------------- |
+| `id`                    | BIGSERIAL PK                                    |                                                                        |
+| `author_user_id`        | BIGINT FK → users (ON DELETE CASCADE)           | Owner; used by the "My drafts" list and the owner-only authz guard.    |
+| `current_step`          | SMALLINT NOT NULL DEFAULT 1                     | `CHECK (current_step BETWEEN 1 AND 9)`. Monotonic — never decreases.   |
+| `payload`               | JSONB NOT NULL DEFAULT `'{}'::jsonb`            | Partial `QuestionDraft`. Shape is enforced in app code, not in the DB. |
+| `published_question_id` | BIGINT FK → questions NULL (ON DELETE SET NULL) | Set once on publish; presence locks the draft.                         |
+| `created_at`            | TIMESTAMPTZ NOT NULL DEFAULT `now()`            |                                                                        |
+| `updated_at`            | TIMESTAMPTZ NOT NULL DEFAULT `now()`            |                                                                        |
+
+Indexes:
+
+- `question_drafts_author_created_idx` on `(author_user_id, created_at DESC)` — the "My drafts" list.
+- `question_drafts_published_idx` on `(published_question_id) WHERE published_question_id IS NOT NULL` — partial index for the cross-link from a published question back to its source draft.
+
+Audit events emitted by the wizard service:
+
+- `question.draft.created` (actor, draft_id)
+- `question.draft.advanced` (actor, draft_id, step, widget_type)
+- `question.draft.published` (actor, draft_id, question_id)
+- `question.draft.cloned` (actor, source_question_id, new_draft_id)
+
 ## Attempts and marking (Phase 1, extended in Phase 3)
 
 ### `attempts`

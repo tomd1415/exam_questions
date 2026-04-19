@@ -570,7 +570,6 @@ describe('widget configSchema is at least as strict as the functional validator'
 describe('widget configSchema completeness', () => {
   it('schema is null iff the widget marker accepts no config (legacy widgets)', () => {
     const noConfig = new Set([
-      'multiple_choice',
       'short_text',
       'medium_text',
       'extended_response',

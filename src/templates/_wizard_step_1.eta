@@ -45,7 +45,7 @@ const subtopicsByTopic = {};
         </optgroup>
       <% }); %>
     </select>
-    <span class="stacked-field__hint">Only topics under the chosen component will accept on save.</span>
+    <span class="stacked-field__hint">Only topics under the chosen component are shown.</span>
   </label>
 
   <label class="stacked-field">

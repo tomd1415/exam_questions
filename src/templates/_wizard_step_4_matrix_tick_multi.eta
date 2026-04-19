@@ -1,9 +1,13 @@
 <%
 const cfg = ((it.draft.payload || {}).parts?.[0]?.part_config) || {};
 const rows = Array.isArray(cfg.rows) ? cfg.rows : [];
-const columns = Array.isArray(cfg.columns) ? cfg.columns : [];
+const cols = Array.isArray(cfg.columns) ? cfg.columns : [];
 const correctByRow = Array.isArray(cfg.correctByRow) ? cfg.correctByRow : [];
 const partialCredit = cfg.partialCredit !== false;
+function isChecked(rowIdx, colName) {
+  const row = correctByRow[rowIdx];
+  return Array.isArray(row) && row.indexOf(colName) >= 0;
+}
 const issueMap = it.issueMap || {};
 %>
 <fieldset class="wizard-step wizard-step--4 wizard-step--matrix">
@@ -14,24 +18,39 @@ const issueMap = it.issueMap || {};
   <% (issueMap.rows || []).forEach(function (m) { %><p class="form-error"><%= m %></p><% }); %>
 
   <label for="columns">Column labels (one per line, at least two)</label>
-  <textarea id="columns" name="columns" rows="3" required><%= columns.join('\n') %></textarea>
+  <textarea id="columns" name="columns" rows="3" required><%= cols.join('\n') %></textarea>
   <% (issueMap.columns || []).forEach(function (m) { %><p class="form-error"><%= m %></p><% }); %>
 
-  <% if (rows.length > 0 && columns.length > 0) { %>
-    <fieldset class="matrix-correct">
-      <legend>Correct columns for each row (one per line, copy from the column list above)</legend>
-      <% rows.forEach(function (row, i) { %>
-        <div class="matrix-correct__row matrix-correct__row--multi">
-          <label for="correct_<%= i %>"><%= row %></label>
-          <textarea id="correct_<%= i %>" name="correct_<%= i %>" rows="3"><%
-            const list = Array.isArray(correctByRow[i]) ? correctByRow[i] : [];
-          %><%= list.join('\n') %></textarea>
-          <% (issueMap['correct_' + i] || []).forEach(function (m) { %><p class="form-error"><%= m %></p><% }); %>
-        </div>
-      <% }); %>
+  <% if (rows.length > 0 && cols.length > 0) { %>
+    <fieldset class="matrix-multi-editor">
+      <legend>Tick the columns that should be correct for each row</legend>
+      <table class="matrix-multi-editor__table">
+        <thead>
+          <tr>
+            <th scope="col">Row</th>
+            <% cols.forEach(function (col) { %>
+              <th scope="col"><%= col %></th>
+            <% }); %>
+          </tr>
+        </thead>
+        <tbody>
+          <% rows.forEach(function (row, i) { %>
+            <tr>
+              <th scope="row"><%= row %></th>
+              <% cols.forEach(function (col, j) { %>
+                <td>
+                  <label class="visually-hidden" for="cell_<%= i %>_<%= j %>"><%= row %> &mdash; <%= col %></label>
+                  <input type="checkbox" id="cell_<%= i %>_<%= j %>" name="cell_<%= i %>_<%= j %>"
+                         <% if (isChecked(i, col)) { %>checked<% } %> />
+                </td>
+              <% }); %>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
     </fieldset>
   <% } else { %>
-    <p class="form-hint">Save the rows and columns first; you&rsquo;ll mark the correct cells next.</p>
+    <p class="form-hint">Save the rows and columns first; you&rsquo;ll tick the correct cells next.</p>
   <% } %>
 
   <label class="form-checkbox">

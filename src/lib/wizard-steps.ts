@@ -26,7 +26,7 @@ import type { QuestionDraftPayload } from '../repos/question_drafts.js';
 import type { PartDraft, MarkPointDraft, MisconceptionDraft } from './question-invariants.js';
 import { SOURCE_TYPES, type SourceType } from './question-invariants.js';
 import { getWidget, registeredWidgetTypes } from './widgets.js';
-import { parseWidgetConfig } from './wizard-widget-editors.js';
+import { parseWidgetConfig, widgetAutoDerivesMarkPoints } from './wizard-widget-editors.js';
 
 export interface StepIssue {
   path: string;
@@ -283,6 +283,17 @@ export function parseStep4(body: unknown, ctx: StepParseContext): StepParseResul
 
   const base = ensurePart(ctx.currentPayload);
   const part: PartDraft = { ...base, part_config: result.config ?? null };
+  // For widgets like multiple_choice the editor produces the mark_points
+  // as a by-product (one per ticked correct option). Write them straight
+  // onto parts[0] so step 6 doesn't have to ask for them again.
+  if (result.derivedMarkPoints) {
+    part.mark_points = result.derivedMarkPoints.map((mp) => ({
+      text: mp.text,
+      accepted_alternatives: [],
+      marks: mp.marks,
+      is_required: false,
+    }));
+  }
   return { ok: true, patch: { parts: [part] } };
 }
 
@@ -335,35 +346,68 @@ export function parseStep6(body: unknown, ctx: StepParseContext): StepParseResul
       message: `The model answer must be ≤${MAX_MODEL_ANSWER_LENGTH} characters.`,
     });
 
+  const base = ensurePart(ctx.currentPayload);
+  const widget = base.expected_response_type ?? '';
+  const autoDerived = widgetAutoDerivesMarkPoints(widget);
+
   const mark_points: MarkPointDraft[] = [];
-  const lines = markPointsBlock
-    .split(/\r?\n/)
-    .map((l) => l.trim())
-    .filter((l) => l.length > 0);
-  if (lines.length === 0)
-    issues.push({
-      path: 'mark_points',
-      message: 'List at least one mark point, one per line.',
-    });
-  for (const line of lines) {
-    if (line.length > MAX_MARK_POINT_TEXT) {
+  if (autoDerived) {
+    // Step 4 already wrote the mark_points (one per correct option). Keep
+    // them as-is; the textarea isn't rendered for these widgets.
+    for (const mp of base.mark_points ?? []) mark_points.push(mp);
+  } else {
+    const lines = markPointsBlock
+      .split(/\r?\n/)
+      .map((l) => l.trim())
+      .filter((l) => l.length > 0);
+    if (lines.length === 0)
       issues.push({
         path: 'mark_points',
-        message: `Each mark point must be ≤${MAX_MARK_POINT_TEXT} characters.`,
+        message: 'List at least one mark point, one per line.',
       });
-      continue;
+    for (const line of lines) {
+      // Pipe-syntax: "primary | alt1 | alt2" splits into text + accepted
+      // alternatives. The pupil's answer earns the mark if it matches the
+      // primary text or any alternative. Whitespace round each segment is
+      // trimmed; empty segments are dropped.
+      const segments = line
+        .split('|')
+        .map((s) => s.trim())
+        .filter((s) => s.length > 0);
+      if (segments.length === 0) continue;
+      const text = segments[0]!;
+      const accepted_alternatives = segments.slice(1);
+      const tooLong =
+        text.length > MAX_MARK_POINT_TEXT ||
+        accepted_alternatives.some((a) => a.length > MAX_MARK_POINT_TEXT);
+      if (tooLong) {
+        issues.push({
+          path: 'mark_points',
+          message: `Each mark point (and each alternative) must be ≤${MAX_MARK_POINT_TEXT} characters.`,
+        });
+        continue;
+      }
+      if (
+        new Set(accepted_alternatives.map((a) => a.toLowerCase())).size !==
+        accepted_alternatives.length
+      ) {
+        issues.push({
+          path: 'mark_points',
+          message: `Duplicate alternatives on "${text}" — list each accepted phrasing once.`,
+        });
+        continue;
+      }
+      mark_points.push({
+        text,
+        accepted_alternatives,
+        marks: 1,
+        is_required: false,
+      });
     }
-    mark_points.push({
-      text: line,
-      accepted_alternatives: [],
-      marks: 1,
-      is_required: false,
-    });
   }
 
   if (issues.length > 0) return { ok: false, issues };
 
-  const base = ensurePart(ctx.currentPayload);
   const part: PartDraft = {
     ...base,
     marks: marks!,

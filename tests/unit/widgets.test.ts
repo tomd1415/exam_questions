@@ -45,8 +45,10 @@ describe('widget registry', () => {
 // in this list because the default behaviour (one checkbox per mark
 // point, no tickExactly counter) is preserved when part_config is null;
 // see the dedicated tick_box test below for the optional shape.
+// multiple_choice is intentionally NOT in this list — chunk 2.5j step 5
+// promoted it to a part_config-bearing widget so the wizard can list
+// distractors alongside the correct option(s).
 const NO_CONFIG_WIDGETS: readonly string[] = [
-  'multiple_choice',
   'tick_box',
   'short_text',
   'medium_text',
@@ -165,6 +167,23 @@ describe('validatePartConfig', () => {
       partialCredit: 'yes',
     };
     expect(validatePartConfig('matrix_tick_multi', badPartialCredit).length).toBeGreaterThan(0);
+  });
+
+  it('multiple_choice requires a config with at least two unique options', () => {
+    expect(validatePartConfig('multiple_choice', null).length).toBeGreaterThan(0);
+    expect(validatePartConfig('multiple_choice', { options: ['only one'] }).length).toBeGreaterThan(
+      0,
+    );
+    expect(
+      validatePartConfig('multiple_choice', { options: ['CPU', 'CPU'] }).length,
+    ).toBeGreaterThan(0);
+    expect(validatePartConfig('multiple_choice', { options: ['CPU', ''] }).length).toBeGreaterThan(
+      0,
+    );
+    expect(
+      validatePartConfig('multiple_choice', { options: ['CPU', 'GPU'], mystery: true }).length,
+    ).toBeGreaterThan(0);
+    expect(validatePartConfig('multiple_choice', { options: ['CPU', 'GPU'] })).toEqual([]);
   });
 
   it('tick_box accepts an optional tickExactly + options part_config', () => {

@@ -13,6 +13,8 @@ import {
   type StepParseContext,
 } from '../lib/wizard-steps.js';
 import { widgetDescriptors, type WidgetDescriptor } from '../lib/widgets.js';
+import { widgetAutoDerivesMarkPoints } from '../lib/wizard-widget-editors.js';
+import { EXPECTED_RESPONSE_TYPES } from '../lib/question-invariants.js';
 import type {
   ComponentRow,
   TopicRow,
@@ -172,8 +174,21 @@ async function renderStep(
     widgets,
     missingFields: missing,
     publishReady,
+    autoDerivedMarkPointWidgets: AUTO_DERIVED_MARK_POINT_WIDGETS,
+    // Loads /static/wizard_curriculum_chain.js for the topic/subtopic
+    // dependent-select enhancement on step 1. Cheap to ship on every step
+    // (the script no-ops when its selectors aren't on the page) but we
+    // still gate it on step 1 so the network panel stays clean.
+    wizardScriptsEnabled: n === 1,
   });
 }
+
+// Materialised list of widget types whose mark_points come from step 4
+// (e.g. multiple_choice's "tick the correct option(s)"). Built from the
+// registry helper so the wizard route and the editor library stay in sync.
+const AUTO_DERIVED_MARK_POINT_WIDGETS: readonly string[] = EXPECTED_RESPONSE_TYPES.filter(
+  widgetAutoDerivesMarkPoints,
+);
 
 export function registerAdminQuestionWizardRoutes(app: FastifyInstance): void {
   const csrfPreValidation = [app.csrfProtection.bind(app)];

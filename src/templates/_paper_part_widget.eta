@@ -15,16 +15,25 @@ const tickedSet = new Set(priorLines.map(function(s) { return s.trim(); }));
 const t = part.expected_response_type;
 %>
 <% if (t === 'multiple_choice') { %>
+  <%
+    // Prefer part_config.options (wizard-authored questions, where the
+    // teacher lists every option including distractors). Fall back to the
+    // pre-2.5j shape, where the pupil saw one radio per mark_point — only
+    // correct options were rendered, no distractors.
+    const mcCfg = part.part_config || {};
+    const mcOptions = Array.isArray(mcCfg.options) && mcCfg.options.length > 0
+      ? mcCfg.options
+      : markPoints.map(function (mp) { return mp.text; });
+  %>
   <fieldset class="widget widget--mc" data-autosave-part-id="<%= part.id %>" aria-describedby="marks-<%= part.id %>">
     <legend class="sr-only">Choose one</legend>
-    <% markPoints.forEach(function(mp, i) { %>
+    <% mcOptions.forEach(function(opt) { %>
       <label class="widget-choice">
         <input type="radio"
                name="<%= fieldName %>"
-               value="<%= mp.text %>"
-               <%= prior === mp.text ? 'checked' : '' %>
-               <%= i === 0 && prior === '' ? '' : '' %> />
-        <span class="widget-choice__label"><%= mp.text %></span>
+               value="<%= opt %>"
+               <%= prior === opt ? 'checked' : '' %> />
+        <span class="widget-choice__label"><%= opt %></span>
       </label>
     <% }); %>
   </fieldset>

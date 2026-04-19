@@ -704,6 +704,521 @@ input[type='number'].input {
   }
 }
 
+/* Screen-reader-only utility — used widely but had no CSS until the
+   wizard polish pass. */
+.visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* --- Admin cards (chunk 2.5j step 5) -------------------------------------- */
+/* Shared chrome for /admin/* pages: a panel with a header and a body area.
+   Predates the wizard but had no CSS until the polish pass — every admin
+   page used to render flush against the page background. */
+
+.admin-card {
+  background: var(--color-surface-0);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-6);
+  margin-bottom: var(--space-5);
+}
+.admin-card__header {
+  margin: 0 0 var(--space-4) 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: baseline;
+  justify-content: space-between;
+}
+.admin-card__header h1,
+.admin-card__header h2 {
+  margin: 0;
+  font-size: var(--type-h1);
+}
+.admin-card__sub {
+  margin: var(--space-1) 0 0 0;
+  color: var(--color-ink-3);
+  font-size: var(--type-small);
+}
+
+/* --- Form helpers (chunk 2.5j step 5) ------------------------------------- */
+/* The wizard uses bare <label>/<input>/<textarea> rather than .input — this
+   block makes those bare controls render like the existing styled ones,
+   inside a .stacked-form which lays them out vertically with a consistent
+   gap. */
+
+.stacked-form {
+  display: grid;
+  gap: var(--space-4);
+}
+.stacked-form > label {
+  display: block;
+  font-weight: 500;
+  margin-bottom: var(--space-1);
+}
+.stacked-form input[type='text'],
+.stacked-form input[type='number'],
+.stacked-form input[type='email'],
+.stacked-form input[type='password'],
+.stacked-form select,
+.stacked-form textarea {
+  font: inherit;
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-0);
+  color: var(--color-ink-1);
+}
+.stacked-form textarea {
+  resize: vertical;
+  min-height: 4.5rem;
+  font-family: var(--font-sans);
+}
+.stacked-form input:focus-visible,
+.stacked-form select:focus-visible,
+.stacked-form textarea:focus-visible {
+  outline: none;
+  border-color: var(--color-brand-500);
+  box-shadow: var(--focus-ring);
+}
+.stacked-form fieldset {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  margin: 0;
+}
+.stacked-form fieldset > legend {
+  font-weight: 600;
+  padding: 0 var(--space-2);
+}
+.stacked-form .font-mono {
+  font-family: var(--font-mono);
+}
+
+.form-hint {
+  margin: var(--space-1) 0 0 0;
+  color: var(--color-ink-3);
+  font-size: var(--type-small);
+}
+.form-error {
+  margin: var(--space-1) 0 0 0;
+  color: var(--color-danger-700);
+  font-size: var(--type-small);
+}
+.form-checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-weight: 400;
+}
+.form-checkbox input[type='checkbox'] {
+  width: 1rem;
+  height: 1rem;
+}
+
+.alert {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-4);
+}
+.alert p {
+  margin: 0 0 var(--space-2) 0;
+}
+.alert ul {
+  margin: 0;
+  padding-left: var(--space-5);
+}
+.alert--error {
+  background: var(--color-danger-50);
+  border-color: var(--color-danger-100);
+  color: var(--color-danger-700);
+}
+.alert--warn {
+  background: var(--color-warn-50);
+  border-color: var(--color-warn-100);
+  color: var(--color-warn-700);
+}
+.alert--info {
+  background: var(--color-info-50);
+  border-color: var(--color-brand-100);
+  color: var(--color-info-700);
+}
+.alert--ok {
+  background: var(--color-success-50);
+  border-color: var(--color-success-100);
+  color: var(--color-success-700);
+}
+
+/* --- Question wizard (chunk 2.5j step 5) ---------------------------------- */
+/* Nine-step shell: breadcrumbs + step counter + numbered progress strip,
+   then the per-step form, then primary/secondary action buttons aligned
+   right. The per-step partials inside .admin-wizard__form pick up
+   .stacked-form spacing automatically. */
+
+.admin-wizard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.admin-wizard__breadcrumbs {
+  font-size: var(--type-small);
+  color: var(--color-ink-3);
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+}
+.admin-wizard__breadcrumbs a {
+  color: var(--color-ink-3);
+}
+.admin-wizard__header {
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: var(--space-3);
+}
+.admin-wizard__step-counter {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: var(--type-micro);
+  color: var(--color-ink-3);
+  font-weight: 600;
+}
+.admin-wizard__hint {
+  margin: var(--space-1) 0 0 0;
+  color: var(--color-ink-3);
+}
+.admin-wizard__lede {
+  margin: 0;
+  color: var(--color-ink-2);
+}
+.admin-wizard__progress {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+.admin-wizard__progress-item {
+  flex: 1 0 auto;
+  min-width: 2.25rem;
+}
+.admin-wizard__progress-item a,
+.admin-wizard__progress-item > span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-2);
+  color: var(--color-ink-3);
+  text-decoration: none;
+  font-weight: 600;
+  border: 1px solid transparent;
+}
+.admin-wizard__progress-item.is-done a {
+  background: var(--color-brand-100);
+  color: var(--color-brand-700);
+}
+.admin-wizard__progress-item.is-current a,
+.admin-wizard__progress-item.is-current > span {
+  background: var(--color-brand-500);
+  color: var(--color-brand-ink);
+  border-color: var(--color-brand-700);
+}
+.admin-wizard__progress-item a:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+.admin-wizard__form {
+  display: grid;
+  gap: var(--space-4);
+}
+.admin-wizard__actions {
+  display: flex;
+  gap: var(--space-3);
+  justify-content: flex-end;
+  align-items: center;
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--space-4);
+}
+.admin-wizard__actions > a:first-child {
+  margin-right: auto;
+}
+.admin-wizard__placeholder {
+  background: var(--color-surface-1);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  color: var(--color-ink-3);
+}
+.admin-wizard__definitions {
+  margin: 0;
+}
+.admin-wizard__more-widgets {
+  margin-top: var(--space-3);
+}
+.admin-wizard__more-widgets > summary {
+  cursor: pointer;
+  color: var(--color-brand-600);
+  font-weight: 500;
+  padding: var(--space-1) 0;
+}
+.admin-wizard__publish {
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.admin-wizard__publish-hint {
+  margin: 0;
+  color: var(--color-ink-3);
+  font-size: var(--type-small);
+}
+
+/* --- Widget tile picker (step 3) ------------------------------------------ */
+.widget-tile-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-3);
+}
+.widget-tile {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-0);
+  cursor: pointer;
+  transition:
+    border-color 120ms ease,
+    box-shadow 120ms ease,
+    background 120ms ease;
+}
+.widget-tile:hover {
+  border-color: var(--color-brand-500);
+  box-shadow: var(--shadow-sm);
+}
+.widget-tile.is-selected {
+  border-color: var(--color-brand-600);
+  background: var(--color-brand-50);
+  box-shadow: var(--shadow-md);
+}
+.widget-tile--alt {
+  background: var(--color-surface-1);
+}
+.widget-tile input[type='radio'] {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.widget-tile__name {
+  font-weight: 600;
+}
+.widget-tile__desc {
+  font-size: var(--type-small);
+  color: var(--color-ink-2);
+}
+.widget-tile__marking small {
+  color: var(--color-ink-3);
+  font-size: var(--type-micro);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* --- Per-widget step-4 editor styling ------------------------------------- */
+.wizard-step {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.matrix-correct,
+.matching-pairs {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  display: grid;
+  gap: var(--space-2);
+}
+.matrix-correct__row {
+  display: grid;
+  grid-template-columns: minmax(8rem, 1fr) auto;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) 0;
+  border-bottom: 1px dashed var(--color-border);
+}
+.matrix-correct__row:last-child {
+  border-bottom: 0;
+}
+.matrix-correct__label {
+  font-weight: 500;
+}
+.matrix-correct__choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+.matrix-correct__choice {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+.matching-pairs__row {
+  display: grid;
+  grid-template-columns: minmax(8rem, 1fr) minmax(10rem, 1.5fr);
+  align-items: center;
+  gap: var(--space-3);
+}
+
+/* Editable trace-table grid (step-4) */
+.trace-grid-editor {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  display: grid;
+  gap: var(--space-3);
+  background: var(--color-surface-1);
+}
+.trace-grid-editor__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  font-size: var(--type-small);
+  color: var(--color-ink-3);
+}
+.trace-grid-editor__swatch {
+  display: inline-block;
+  width: 0.9rem;
+  height: 0.9rem;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 2px;
+  vertical-align: -2px;
+  margin-right: var(--space-1);
+}
+.trace-grid-editor__swatch--prefill {
+  background: var(--color-warn-50);
+}
+.trace-grid-editor__swatch--expected {
+  background: var(--color-success-50);
+}
+.trace-grid-editor__swatch--decorative {
+  background: var(--color-surface-0);
+}
+.trace-grid-editor__table {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+  background: var(--color-surface-0);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+.trace-grid-editor__table th,
+.trace-grid-editor__table td {
+  border: 1px solid var(--color-border);
+  padding: var(--space-1);
+  vertical-align: middle;
+}
+.trace-grid-editor__table th {
+  background: var(--color-surface-2);
+  font-weight: 600;
+  text-align: left;
+}
+.trace-grid-editor__cell {
+  display: grid;
+  gap: 2px;
+}
+.trace-grid-editor__cell select {
+  font-size: var(--type-micro);
+  padding: 2px var(--space-1);
+}
+.trace-grid-editor__cell input {
+  font-family: var(--font-mono);
+  font-size: var(--type-small);
+  padding: 2px var(--space-2);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-0);
+}
+.trace-grid-editor__cell--prefill {
+  background: var(--color-warn-50);
+}
+.trace-grid-editor__cell--expected {
+  background: var(--color-success-50);
+}
+
+/* Matrix-multi checkbox grid */
+.matrix-multi-editor__table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.matrix-multi-editor__table th,
+.matrix-multi-editor__table td {
+  border: 1px solid var(--color-border);
+  padding: var(--space-2);
+  text-align: center;
+  background: var(--color-surface-0);
+}
+.matrix-multi-editor__table th {
+  background: var(--color-surface-2);
+}
+.matrix-multi-editor__table th:first-child,
+.matrix-multi-editor__table td:first-child {
+  text-align: left;
+  font-weight: 500;
+}
+.matrix-multi-editor__table input[type='checkbox'] {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+/* Drafts list table — used by /admin/questions/wizard. */
+.admin-drafts-list {
+  width: 100%;
+  border-collapse: collapse;
+}
+.admin-drafts-list th,
+.admin-drafts-list td {
+  text-align: left;
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+  vertical-align: top;
+}
+.admin-drafts-list th {
+  font-weight: 600;
+  font-size: var(--type-small);
+  color: var(--color-ink-3);
+}
+
+@media (max-width: 720px) {
+  .admin-wizard__progress {
+    overflow-x: auto;
+  }
+  .matching-pairs__row,
+  .matrix-correct__row {
+    grid-template-columns: 1fr;
+  }
+  .matrix-multi-editor__table,
+  .trace-grid-editor__table {
+    display: block;
+    overflow-x: auto;
+  }
+}
+
 /* Reduced motion: disable all non-essential animations/transitions */
 @media (prefers-reduced-motion: reduce) {
   *,

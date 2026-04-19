@@ -23,10 +23,21 @@
 import type { StepIssue } from './wizard-steps.js';
 import { getWidget, validatePartConfig } from './widgets.js';
 
+export interface DerivedMarkPoint {
+  text: string;
+  marks: number;
+}
+
 export interface WidgetConfigParseResult {
   ok: boolean;
   /** The parsed part_config to merge onto parts[0]. */
   config?: unknown;
+  /**
+   * Mark points derived from the editor's input (e.g. multiple_choice's
+   * "tick the correct option(s)"). When present, parseStep4 writes these
+   * onto parts[0].mark_points and step 6 hides the manual textarea.
+   */
+  derivedMarkPoints?: DerivedMarkPoint[];
   issues: StepIssue[];
 }
 
@@ -59,6 +70,44 @@ function noopParser(): WidgetConfigParseResult {
 }
 
 // ---------------------------------------------------------------------------
+// multiple_choice
+// ---------------------------------------------------------------------------
+
+function parseMultipleChoice(body: Record<string, unknown>): WidgetConfigParseResult {
+  const options = lines(body['options']);
+  const issues: StepIssue[] = [];
+
+  if (options.length < 2) {
+    issues.push({ path: 'options', message: 'List at least two options, one per line.' });
+  }
+  if (new Set(options).size !== options.length) {
+    issues.push({ path: 'options', message: 'Each option must be unique.' });
+  }
+
+  // Field convention: correct_<i> = 'on' for each correct option (by index
+  // into the parsed options array). Storing the index keeps the field name
+  // simple even when option labels contain spaces or punctuation.
+  const correct: string[] = [];
+  for (let i = 0; i < options.length; i++) {
+    if (trimmed(body[`correct_${i}`]) === 'on') correct.push(options[i]!);
+  }
+  if (options.length >= 2 && correct.length === 0) {
+    issues.push({
+      path: 'correct',
+      message: 'Tick at least one option as the correct answer.',
+    });
+  }
+
+  if (issues.length > 0) return { ok: false, issues };
+  return {
+    ok: true,
+    config: { options },
+    derivedMarkPoints: correct.map((text) => ({ text, marks: 1 })),
+    issues: [],
+  };
+}
+
+// ---------------------------------------------------------------------------
 // tick_box
 // ---------------------------------------------------------------------------
 
@@ -86,10 +135,35 @@ function parseTickBox(body: Record<string, unknown>): WidgetConfigParseResult {
     }
   }
 
+  // Field convention: correct_<i> = 'on' for each option that should be
+  // ticked. Mark_points are derived from this, so the teacher doesn't have
+  // to retype them on step 6.
+  const correct: string[] = [];
+  for (let i = 0; i < options.length; i++) {
+    if (trimmed(body[`correct_${i}`]) === 'on') correct.push(options[i]!);
+  }
+  if (options.length > 0 && correct.length === 0) {
+    issues.push({
+      path: 'correct',
+      message: 'Tick at least one option as a correct answer.',
+    });
+  }
+  if (tickExactly !== null && correct.length !== tickExactly) {
+    issues.push({
+      path: 'correct',
+      message: `Tick exactly ${tickExactly} option(s) — you ticked ${correct.length}.`,
+    });
+  }
+
   const config: Record<string, unknown> = { options };
   if (tickExactly !== null) config['tickExactly'] = tickExactly;
   if (issues.length > 0) return { ok: false, issues };
-  return { ok: true, config, issues: [] };
+  return {
+    ok: true,
+    config,
+    derivedMarkPoints: correct.map((text) => ({ text, marks: 1 })),
+    issues: [],
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -144,23 +218,14 @@ function parseMatrixMulti(body: Record<string, unknown>): WidgetConfigParseResul
   if (columns.length < 2)
     issues.push({ path: 'columns', message: 'List at least two columns, one per line.' });
 
+  // Field convention: cell_<row>_<colIdx> = 'on' for each ticked cell. Storing
+  // the column index (rather than the column name) keeps the input names
+  // simple even when column labels contain spaces or punctuation.
   const correctByRow: string[][] = [];
   for (let i = 0; i < rows.length; i++) {
-    const picks = lines(body[`correct_${i}`]);
-    if (columns.length > 0) {
-      for (const p of picks) {
-        if (!columns.includes(p))
-          issues.push({
-            path: `correct_${i}`,
-            message: `Row ${i + 1}: '${p}' is not one of the columns.`,
-          });
-      }
-    }
-    if (new Set(picks).size !== picks.length) {
-      issues.push({
-        path: `correct_${i}`,
-        message: `Row ${i + 1}: each correct column should appear at most once.`,
-      });
+    const picks: string[] = [];
+    for (let j = 0; j < columns.length; j++) {
+      if (trimmed(body[`cell_${i}_${j}`]) === 'on') picks.push(columns[j]!);
     }
     correctByRow.push(picks);
   }
@@ -175,36 +240,6 @@ function parseMatrixMulti(body: Record<string, unknown>): WidgetConfigParseResul
 // trace_table
 // ---------------------------------------------------------------------------
 
-function parseCellMap(
-  block: string,
-  fieldPath: string,
-  issues: StepIssue[],
-): Record<string, string> {
-  const out: Record<string, string> = {};
-  for (const line of lines(block)) {
-    const eq = line.indexOf('=');
-    if (eq < 1) {
-      issues.push({
-        path: fieldPath,
-        message: `Use the format "row,col=value" — got '${line}'.`,
-      });
-      continue;
-    }
-    const key = line.slice(0, eq).trim();
-    const value = line.slice(eq + 1).trim();
-    if (!/^\d+,\d+$/.test(key)) {
-      issues.push({ path: fieldPath, message: `Cell key '${key}' must be "row,col" (integers).` });
-      continue;
-    }
-    if (value.length === 0) {
-      issues.push({ path: fieldPath, message: `Cell '${key}' must have a value after '='.` });
-      continue;
-    }
-    out[key] = value;
-  }
-  return out;
-}
-
 function parseTraceTable(body: Record<string, unknown>): WidgetConfigParseResult {
   const colNames = lines(body['columns']);
   const rowsCount = intIn(body['rows'], 1, 50);
@@ -214,36 +249,48 @@ function parseTraceTable(body: Record<string, unknown>): WidgetConfigParseResult
   if (rowsCount === null)
     issues.push({ path: 'rows', message: 'Rows must be an integer between 1 and 50.' });
 
-  const prefill = parseCellMap(str(body['prefill']), 'prefill', issues);
-  const expected = parseCellMap(str(body['expected']), 'expected', issues);
-
   const modeRaw = trimmed(body['mode']);
   const mode = modeRaw === 'perRow' || modeRaw === 'allOrNothing' ? modeRaw : 'perCell';
 
-  // Cells out of range are a common slip.
-  const validate = (map: Record<string, string>, label: string): void => {
-    if (rowsCount === null || colNames.length === 0) return;
-    for (const k of Object.keys(map)) {
-      const [r, c] = k.split(',').map((n) => Number.parseInt(n, 10));
-      if (r === undefined || c === undefined || r < 0 || r >= rowsCount) {
-        issues.push({
-          path: label,
-          message: `Cell '${k}' row index is out of range (0..${rowsCount - 1}).`,
-        });
-      }
-      if (c === undefined || c < 0 || c >= colNames.length) {
-        issues.push({
-          path: label,
-          message: `Cell '${k}' column index is out of range (0..${colNames.length - 1}).`,
-        });
+  // Field convention: a per-cell `mode_<r>_<c>` select (prefill/expected/decorative)
+  // plus a `value_<r>_<c>` text input. The template renders them as a real
+  // editable grid; this parser walks the rectangle defined by colNames × rowsCount.
+  const prefill: Record<string, string> = {};
+  const expected: Record<string, string> = {};
+  if (rowsCount !== null && colNames.length > 0) {
+    for (let r = 0; r < rowsCount; r++) {
+      for (let c = 0; c < colNames.length; c++) {
+        const cellMode = trimmed(body[`mode_${r}_${c}`]);
+        const value = trimmed(body[`value_${r}_${c}`]);
+        if (cellMode === 'prefill') {
+          if (value.length === 0) {
+            issues.push({
+              path: `value_${r}_${c}`,
+              message: `Pre-filled cell at row ${r + 1}, ${colNames[c]} needs a value.`,
+            });
+          } else {
+            prefill[`${r},${c}`] = value;
+          }
+        } else if (cellMode === 'expected') {
+          if (value.length === 0) {
+            issues.push({
+              path: `value_${r}_${c}`,
+              message: `Expected cell at row ${r + 1}, ${colNames[c]} needs a value.`,
+            });
+          } else {
+            expected[`${r},${c}`] = value;
+          }
+        }
+        // decorative or empty mode: ignore the cell
       }
     }
-  };
-  validate(prefill, 'prefill');
-  validate(expected, 'expected');
+  }
 
   if (Object.keys(expected).length === 0)
-    issues.push({ path: 'expected', message: 'List at least one expected cell.' });
+    issues.push({
+      path: 'expected',
+      message: 'Mark at least one cell as Expected so the pupil has something to fill in.',
+    });
 
   const config = {
     columns: colNames.map((name) => ({ name })),
@@ -490,7 +537,7 @@ function parseDiagramLabels(body: Record<string, unknown>): WidgetConfigParseRes
 // ---------------------------------------------------------------------------
 
 const PARSERS: Readonly<Record<string, WidgetConfigParser>> = {
-  multiple_choice: noopParser,
+  multiple_choice: parseMultipleChoice,
   short_text: noopParser,
   medium_text: noopParser,
   extended_response: noopParser,
@@ -511,6 +558,18 @@ const PARSERS: Readonly<Record<string, WidgetConfigParser>> = {
 
 export function widgetEditorIsNoop(widgetType: string): boolean {
   return PARSERS[widgetType] === noopParser;
+}
+
+/**
+ * Widgets whose step-4 editor produces the part's mark_points as a
+ * by-product (currently: multiple_choice, where ticking "correct" on each
+ * option is the mark_point input). Step 6 hides the manual mark_points
+ * textarea for these widgets.
+ */
+const AUTO_DERIVES_MARK_POINTS = new Set<string>(['multiple_choice', 'tick_box']);
+
+export function widgetAutoDerivesMarkPoints(widgetType: string): boolean {
+  return AUTO_DERIVES_MARK_POINTS.has(widgetType);
 }
 
 export function parseWidgetConfig(widgetType: string, body: unknown): WidgetConfigParseResult {

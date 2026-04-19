@@ -132,6 +132,54 @@ describe('wizard widget editors (chunk 2.5j step 4)', () => {
     expect(res.headers.location).toBe(`/admin/questions/wizard/${draftId}/step/5`);
   });
 
+  it('multiple_choice editor saves options + correct ticks and derives mark_points', async () => {
+    const teacher = await createUser(pool(), { role: 'teacher' });
+    const jar = await loginAs(teacher);
+    const draftId = await startDraft(jar);
+    await pickWidget(jar, draftId, 'multiple_choice', 'identify');
+
+    const res = await postStep(jar, draftId, 4, {
+      options: 'CPU\nRAM\nGPU\nSSD',
+      correct_1: 'on',
+    });
+    expect(res.statusCode, `body=${res.payload.slice(0, 400)}`).toBe(302);
+
+    const reload = await app.inject({
+      method: 'GET',
+      url: `/admin/questions/wizard/${draftId}/step/4`,
+      headers: { cookie: cookieHeader(jar) },
+    });
+    expect(reload.statusCode).toBe(200);
+    expect(reload.payload).toContain('CPU');
+    expect(reload.payload).toContain('RAM');
+    // Re-render keeps the second checkbox ticked.
+    expect(reload.payload).toMatch(/name="correct_1"[^>]*checked/);
+
+    // Step 6 should now show the derived mark point and hide the manual textarea.
+    const step6 = await app.inject({
+      method: 'GET',
+      url: `/admin/questions/wizard/${draftId}/step/6`,
+      headers: { cookie: cookieHeader(jar) },
+    });
+    expect(step6.statusCode).toBe(200);
+    expect(step6.payload).toContain('Mark points (set on step 4)');
+    expect(step6.payload).toContain('RAM');
+    expect(step6.payload).not.toMatch(/name="mark_points"/);
+  });
+
+  it('multiple_choice rejects a body where no options are ticked correct', async () => {
+    const teacher = await createUser(pool(), { role: 'teacher' });
+    const jar = await loginAs(teacher);
+    const draftId = await startDraft(jar);
+    await pickWidget(jar, draftId, 'multiple_choice', 'identify');
+
+    const res = await postStep(jar, draftId, 4, {
+      options: 'CPU\nRAM\nGPU',
+    });
+    expect(res.statusCode).toBe(400);
+    expect(res.payload).toContain('Tick at least one option');
+  });
+
   it('tick_box editor saves options and tickExactly and pre-fills them on re-render', async () => {
     const teacher = await createUser(pool(), { role: 'teacher' });
     const jar = await loginAs(teacher);
@@ -141,6 +189,8 @@ describe('wizard widget editors (chunk 2.5j step 4)', () => {
     const res = await postStep(jar, draftId, 4, {
       options: 'CPU\nRAM\nGPU\nSSD',
       tickExactly: '2',
+      correct_0: 'on',
+      correct_2: 'on',
     });
     expect(res.statusCode, `body=${res.payload.slice(0, 400)}`).toBe(302);
 
@@ -153,6 +203,16 @@ describe('wizard widget editors (chunk 2.5j step 4)', () => {
     expect(reload.payload).toContain('CPU');
     expect(reload.payload).toContain('RAM');
     expect(reload.payload).toContain('value="2"');
+
+    const step6 = await app.inject({
+      method: 'GET',
+      url: `/admin/questions/wizard/${draftId}/step/6`,
+      headers: { cookie: cookieHeader(jar) },
+    });
+    expect(step6.statusCode).toBe(200);
+    expect(step6.payload).toContain('mc-derived-mark-points');
+    expect(step6.payload).toContain('CPU');
+    expect(step6.payload).toContain('GPU');
   });
 
   it('tick_box rejects an empty options list with a field-level error', async () => {
@@ -164,6 +224,34 @@ describe('wizard widget editors (chunk 2.5j step 4)', () => {
     const res = await postStep(jar, draftId, 4, { options: '' });
     expect(res.statusCode).toBe(400);
     expect(res.payload).toContain('at least one option');
+  });
+
+  it('tick_box rejects when no options are ticked correct', async () => {
+    const teacher = await createUser(pool(), { role: 'teacher' });
+    const jar = await loginAs(teacher);
+    const draftId = await startDraft(jar);
+    await pickWidget(jar, draftId, 'tick_box', 'tick');
+
+    const res = await postStep(jar, draftId, 4, {
+      options: 'CPU\nRAM\nGPU',
+    });
+    expect(res.statusCode).toBe(400);
+    expect(res.payload).toContain('at least one option as a correct');
+  });
+
+  it('tick_box rejects when ticked count does not match tickExactly', async () => {
+    const teacher = await createUser(pool(), { role: 'teacher' });
+    const jar = await loginAs(teacher);
+    const draftId = await startDraft(jar);
+    await pickWidget(jar, draftId, 'tick_box', 'tick');
+
+    const res = await postStep(jar, draftId, 4, {
+      options: 'CPU\nRAM\nGPU\nSSD',
+      tickExactly: '2',
+      correct_0: 'on',
+    });
+    expect(res.statusCode).toBe(400);
+    expect(res.payload).toContain('Tick exactly 2');
   });
 
   it('matrix_tick_single editor round-trips rows, columns, and per-row picks', async () => {
@@ -278,7 +366,7 @@ describe('wizard widget editors (chunk 2.5j step 4)', () => {
     expect(reload.payload).toMatch(/name="right_for_0"[\s\S]*?value="0" selected/);
   });
 
-  it('trace_table parses columns + rows + cell maps', async () => {
+  it('trace_table parses columns + rows + per-cell mode/value grid', async () => {
     const teacher = await createUser(pool(), { role: 'teacher' });
     const jar = await loginAs(teacher);
     const draftId = await startDraft(jar);
@@ -287,8 +375,14 @@ describe('wizard widget editors (chunk 2.5j step 4)', () => {
     const res = await postStep(jar, draftId, 4, {
       columns: 'i\ntotal',
       rows: '2',
-      prefill: '0,0=1',
-      expected: '0,1=2\n1,0=2\n1,1=6',
+      mode_0_0: 'prefill',
+      value_0_0: '1',
+      mode_0_1: 'expected',
+      value_0_1: '2',
+      mode_1_0: 'expected',
+      value_1_0: '2',
+      mode_1_1: 'expected',
+      value_1_1: '6',
       mode: 'perCell',
     });
     expect(res.statusCode, `body=${res.payload.slice(0, 400)}`).toBe(302);
@@ -299,11 +393,14 @@ describe('wizard widget editors (chunk 2.5j step 4)', () => {
       headers: { cookie: cookieHeader(jar) },
     });
     expect(reload.statusCode).toBe(200);
-    expect(reload.payload).toContain('0,0=1');
-    expect(reload.payload).toContain('1,1=6');
+    // Cell values pre-populate the per-cell text inputs on re-render.
+    expect(reload.payload).toMatch(/name="value_0_0"\s+type="text"\s+value="1"/);
+    expect(reload.payload).toMatch(/name="value_1_1"\s+type="text"\s+value="6"/);
+    // The pre-filled cell should have its mode select set to "prefill".
+    expect(reload.payload).toMatch(/id="mode_0_0"[\s\S]*?<option value="prefill" selected/);
   });
 
-  it('trace_table flags a cell whose row index is out of range', async () => {
+  it('trace_table flags a grid where no cells are marked Expected', async () => {
     const teacher = await createUser(pool(), { role: 'teacher' });
     const jar = await loginAs(teacher);
     const draftId = await startDraft(jar);
@@ -312,11 +409,42 @@ describe('wizard widget editors (chunk 2.5j step 4)', () => {
     const res = await postStep(jar, draftId, 4, {
       columns: 'i\ntotal',
       rows: '2',
-      expected: '5,0=99',
+      mode_0_0: 'prefill',
+      value_0_0: '1',
       mode: 'perCell',
     });
     expect(res.statusCode).toBe(400);
-    expect(res.payload).toContain('row index is out of range');
+    expect(res.payload).toContain('Mark at least one cell as Expected');
+  });
+
+  it('matrix_tick_multi parses ticked cells from the checkbox grid', async () => {
+    const teacher = await createUser(pool(), { role: 'teacher' });
+    const jar = await loginAs(teacher);
+    const draftId = await startDraft(jar);
+    await pickWidget(jar, draftId, 'matrix_tick_multi', 'tick');
+
+    const res = await postStep(jar, draftId, 4, {
+      rows: 'TCP\nUDP',
+      columns: 'Connection-oriented\nConnectionless\nReliable',
+      cell_0_0: 'on',
+      cell_0_2: 'on',
+      cell_1_1: 'on',
+      partialCredit: 'on',
+    });
+    expect(res.statusCode, `body=${res.payload.slice(0, 400)}`).toBe(302);
+
+    const reload = await app.inject({
+      method: 'GET',
+      url: `/admin/questions/wizard/${draftId}/step/4`,
+      headers: { cookie: cookieHeader(jar) },
+    });
+    expect(reload.statusCode).toBe(200);
+    expect(reload.payload).toContain('TCP');
+    expect(reload.payload).toContain('Connectionless');
+    // The (TCP, Connection-oriented) and (TCP, Reliable) cells should be checked.
+    expect(reload.payload).toMatch(/id="cell_0_0"[^>]*checked/);
+    expect(reload.payload).toMatch(/id="cell_0_2"[^>]*checked/);
+    expect(reload.payload).toMatch(/id="cell_1_1"[^>]*checked/);
   });
 
   it('logic_diagram and flowchart accept canvas dimensions', async () => {

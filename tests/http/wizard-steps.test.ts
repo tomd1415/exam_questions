@@ -161,6 +161,27 @@ describe('wizard scaffolding (chunk 2.5j step 2)', () => {
     expect(stepRes.statusCode).toBe(200);
     expect(stepRes.payload).toContain('Step 1 of 9');
     expect(stepRes.payload).toContain('Where does this question live');
+    // The dependent-select script ships only on step 1.
+    expect(stepRes.payload).toContain('/static/wizard_curriculum_chain.js');
+    // Topic options must carry data-component so the script can filter them.
+    expect(stepRes.payload).toMatch(/data-component="J277\/0[12]"/);
+    // Subtopic options must carry data-topic for the same reason.
+    expect(stepRes.payload).toMatch(/data-topic="\d+\.\d+"/);
+  });
+
+  it('does not load the wizard curriculum-chain script on later steps', async () => {
+    const teacher = await createUser(pool(), { role: 'teacher' });
+    const jar = await loginAs(teacher);
+    const draftId = await startDraft(jar);
+    await postStep(jar, draftId, 1, STEP_FIELDS[1]!);
+
+    const step2 = await app.inject({
+      method: 'GET',
+      url: `/admin/questions/wizard/${draftId}/step/2`,
+      headers: { cookie: cookieHeader(jar) },
+    });
+    expect(step2.statusCode).toBe(200);
+    expect(step2.payload).not.toContain('/static/wizard_curriculum_chain.js');
   });
 
   it('refuses POST /admin/questions/wizard/new without CSRF', async () => {
@@ -332,6 +353,43 @@ describe('wizard per-step validation (chunk 2.5j step 3)', () => {
     });
     expect(res.statusCode).toBe(400);
     expect(res.payload).toContain('The model answer is required.');
+  });
+
+  it('step 6 parses pipe-separated alternatives into accepted_alternatives and round-trips them', async () => {
+    const teacher = await createUser(pool(), { role: 'teacher' });
+    const jar = await loginAs(teacher);
+    const draftId = await startDraft(jar);
+    await walkStepsUpTo(jar, draftId, 5);
+
+    const res = await postStep(jar, draftId, 6, {
+      marks: '1',
+      model_answer: 'RAM is volatile primary storage.',
+      mark_points: 'RAM | Random Access Memory | Random-Access Memory',
+    });
+    expect(res.statusCode, `body=${res.payload.slice(0, 400)}`).toBe(302);
+
+    const reload = await app.inject({
+      method: 'GET',
+      url: `/admin/questions/wizard/${draftId}/step/6`,
+      headers: { cookie: cookieHeader(jar) },
+    });
+    expect(reload.statusCode).toBe(200);
+    expect(reload.payload).toContain('RAM | Random Access Memory | Random-Access Memory');
+  });
+
+  it('step 6 rejects duplicate alternatives on the same mark point', async () => {
+    const teacher = await createUser(pool(), { role: 'teacher' });
+    const jar = await loginAs(teacher);
+    const draftId = await startDraft(jar);
+    await walkStepsUpTo(jar, draftId, 5);
+
+    const res = await postStep(jar, draftId, 6, {
+      marks: '1',
+      model_answer: 'A model answer',
+      mark_points: 'RAM | Random Access Memory | random access memory',
+    });
+    expect(res.statusCode).toBe(400);
+    expect(res.payload).toContain('Duplicate alternatives');
   });
 
   it('step 6 splits mark_points on newlines and round-trips them on revisit', async () => {

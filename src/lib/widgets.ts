@@ -86,6 +86,22 @@ function configMustBeNull(type: string): (config: unknown) => PartConfigIssue[] 
 
 const SCHEMA_DRAFT = 'https://json-schema.org/draft/2020-12/schema';
 
+const MULTIPLE_CHOICE_SCHEMA: WidgetConfigSchema = {
+  $schema: SCHEMA_DRAFT,
+  title: 'multiple_choice part_config',
+  type: 'object',
+  additionalProperties: false,
+  required: ['options'],
+  properties: {
+    options: {
+      type: 'array',
+      minItems: 2,
+      uniqueItems: true,
+      items: { type: 'string', minLength: 1 },
+    },
+  },
+};
+
 const TICK_BOX_SCHEMA: WidgetConfigSchema = {
   $schema: SCHEMA_DRAFT,
   title: 'tick_box part_config',
@@ -348,11 +364,12 @@ const REGISTRATIONS: readonly WidgetRegistration[] = [
     marker: 'deterministic',
     displayName: 'Multiple choice',
     description:
-      'Pupil picks one option from a small list. Marked deterministically against the option flagged is_correct.',
-    markPointGuidance: 'One mark_point per correct option; mark_point.text is the option label.',
-    configSchema: null,
-    exampleConfig: null,
-    validateConfig: configMustBeNull('multiple_choice'),
+      'Pupil picks one option from a small list (including distractors). Marked deterministically against the options flagged correct.',
+    markPointGuidance:
+      'The wizard derives mark_points from the options you flag correct; you do not need to enter them by hand.',
+    configSchema: MULTIPLE_CHOICE_SCHEMA,
+    exampleConfig: { options: ['Option A', 'Option B'] },
+    validateConfig: validateMultipleChoiceConfig,
   },
   {
     type: 'tick_box',
@@ -595,6 +612,34 @@ const REGISTRATIONS: readonly WidgetRegistration[] = [
     validateConfig: (c) => validateFlowchartConfigShape(c).map((m) => ({ message: m })),
   },
 ];
+
+function validateMultipleChoiceConfig(config: unknown): PartConfigIssue[] {
+  if (config === null || config === undefined) {
+    return [{ message: "Widget 'multiple_choice' requires a part_config payload with options." }];
+  }
+  if (typeof config !== 'object' || Array.isArray(config)) {
+    return [{ message: "Widget 'multiple_choice' part_config must be an object." }];
+  }
+  const cfg = config as Record<string, unknown>;
+  const options = cfg['options'];
+  const issues: PartConfigIssue[] = [];
+
+  for (const key of Object.keys(cfg)) {
+    if (key !== 'options') {
+      issues.push({ message: `multiple_choice.part_config has unsupported key '${key}'.` });
+    }
+  }
+
+  if (!Array.isArray(options) || options.length < 2) {
+    issues.push({ message: 'multiple_choice.options must list at least two strings.' });
+  } else if (!options.every((o) => typeof o === 'string' && o.length > 0)) {
+    issues.push({ message: 'multiple_choice.options entries must be non-empty strings.' });
+  } else if (new Set(options as string[]).size !== options.length) {
+    issues.push({ message: 'multiple_choice.options must not list the same value twice.' });
+  }
+
+  return issues;
+}
 
 function validateTickBoxConfig(config: unknown): PartConfigIssue[] {
   if (config === null || config === undefined) return [];

@@ -3,7 +3,13 @@ const p = it.draft.payload || {};
 const part = (p.parts && p.parts[0]) || {};
 const marks = part.marks || '';
 const model = p.model_answer || '';
-const mpLines = (part.mark_points || []).map(function (mp) { return mp.text; }).join('\n');
+const widget = part.expected_response_type || '';
+const autoDerived = (it.autoDerivedMarkPointWidgets || []).indexOf(widget) >= 0;
+const mpLines = (part.mark_points || []).map(function (mp) {
+  const alts = (mp.accepted_alternatives || []).filter(function (a) { return a && a.length > 0; });
+  return alts.length > 0 ? mp.text + ' | ' + alts.join(' | ') : mp.text;
+}).join('\n');
+const derivedTexts = (part.mark_points || []).map(function (mp) { return mp.text; });
 %>
 <fieldset class="wizard-step wizard-step--6">
   <legend class="visually-hidden">Marks and model answer</legend>
@@ -21,12 +27,32 @@ const mpLines = (part.mark_points || []).map(function (mp) { return mp.text; }).
     </span>
   </label>
 
-  <label class="stacked-field">
-    <span class="stacked-field__label">Mark points (one per line)</span>
-    <textarea name="mark_points" rows="6" required><%= mpLines %></textarea>
-    <span class="stacked-field__hint">
-      One idea per line; each line is worth one mark. Alternative phrasings can be
-      added later by editing the published question.
-    </span>
-  </label>
+  <% if (autoDerived) { %>
+    <fieldset class="stacked-field">
+      <span class="stacked-field__label">Mark points (set on step 4)</span>
+      <% if (derivedTexts.length === 0) { %>
+        <p class="form-hint">Go back to step 4 and tick the option(s) that should be marked correct.</p>
+      <% } else { %>
+        <ul class="mc-derived-mark-points">
+          <% derivedTexts.forEach(function (t) { %>
+            <li><%= t %></li>
+          <% }); %>
+        </ul>
+        <p class="form-hint">
+          For this widget the wizard derives one mark point per correct option ticked on step 4.
+          Edit step 4 to change them.
+        </p>
+      <% } %>
+    </fieldset>
+  <% } else { %>
+    <label class="stacked-field">
+      <span class="stacked-field__label">Mark points (one per line)</span>
+      <textarea name="mark_points" rows="6" required><%= mpLines %></textarea>
+      <span class="stacked-field__hint">
+        One idea per line; each line is worth one mark. To accept alternative
+        phrasings, separate them with a pipe (<code>|</code>), e.g.
+        <code>RAM | Random Access Memory | Random-Access Memory</code>.
+      </span>
+    </label>
+  <% } %>
 </fieldset>

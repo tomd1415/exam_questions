@@ -6,10 +6,34 @@
       "type": "multiple_choice",
       "marker": "deterministic",
       "displayName": "Multiple choice",
-      "description": "Pupil picks one option from a small list. Marked deterministically against the option flagged is_correct.",
-      "markPointGuidance": "One mark_point per correct option; mark_point.text is the option label.",
-      "configSchema": null,
-      "exampleConfig": null
+      "description": "Pupil picks one option from a small list (including distractors). Marked deterministically against the options flagged correct.",
+      "markPointGuidance": "The wizard derives mark_points from the options you flag correct; you do not need to enter them by hand.",
+      "configSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "title": "multiple_choice part_config",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "options"
+        ],
+        "properties": {
+          "options": {
+            "type": "array",
+            "minItems": 2,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      },
+      "exampleConfig": {
+        "options": [
+          "Option A",
+          "Option B"
+        ]
+      }
     },
     {
       "type": "tick_box",

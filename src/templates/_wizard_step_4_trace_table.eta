@@ -2,14 +2,24 @@
 const cfg = ((it.draft.payload || {}).parts?.[0]?.part_config) || {};
 const cols = Array.isArray(cfg.columns) ? cfg.columns : [];
 const colNames = cols.map(function (c) { return c && typeof c.name === 'string' ? c.name : ''; });
-const rows = typeof cfg.rows === 'number' ? cfg.rows : '';
+const rowsCount = typeof cfg.rows === 'number' ? cfg.rows : '';
 const prefill = (cfg.prefill && typeof cfg.prefill === 'object') ? cfg.prefill : {};
 const expected = (cfg.expected && typeof cfg.expected === 'object') ? cfg.expected : {};
-function formatCells(map) {
-  return Object.keys(map).sort().map(function (k) { return k + '=' + map[k]; }).join('\n');
+function cellMode(r, c) {
+  const key = r + ',' + c;
+  if (Object.prototype.hasOwnProperty.call(prefill, key)) return 'prefill';
+  if (Object.prototype.hasOwnProperty.call(expected, key)) return 'expected';
+  return 'decorative';
 }
-const mode = (cfg.marking && typeof cfg.marking.mode === 'string') ? cfg.marking.mode : 'perCell';
+function cellValue(r, c) {
+  const key = r + ',' + c;
+  if (Object.prototype.hasOwnProperty.call(prefill, key)) return String(prefill[key]);
+  if (Object.prototype.hasOwnProperty.call(expected, key)) return String(expected[key]);
+  return '';
+}
+const markMode = (cfg.marking && typeof cfg.marking.mode === 'string') ? cfg.marking.mode : 'perCell';
 const issueMap = it.issueMap || {};
+const showGrid = colNames.length > 0 && typeof rowsCount === 'number' && rowsCount > 0;
 %>
 <fieldset class="wizard-step wizard-step--4 wizard-step--trace">
   <legend>Trace / truth table</legend>
@@ -20,23 +30,64 @@ const issueMap = it.issueMap || {};
 
   <label for="rows">Number of rows</label>
   <input id="rows" name="rows" type="number" min="1" max="50" inputmode="numeric"
-         value="<%= rows %>" required />
+         value="<%= rowsCount %>" required />
   <% (issueMap.rows || []).forEach(function (m) { %><p class="form-error"><%= m %></p><% }); %>
 
-  <label for="prefill">Pre-filled cells (one per line, format <code>row,col=value</code>; row and col are 0-indexed)</label>
-  <textarea id="prefill" name="prefill" rows="4"><%= formatCells(prefill) %></textarea>
-  <p class="form-hint">Use this for the cells you give the pupil up front. Pupils see them as read-only.</p>
-  <% (issueMap.prefill || []).forEach(function (m) { %><p class="form-error"><%= m %></p><% }); %>
-
-  <label for="expected">Expected cells (one per line, format <code>row,col=value</code>)</label>
-  <textarea id="expected" name="expected" rows="6" required><%= formatCells(expected) %></textarea>
-  <p class="form-hint">List every cell the pupil must fill in. Cells not listed here will be marked decorative.</p>
-  <% (issueMap.expected || []).forEach(function (m) { %><p class="form-error"><%= m %></p><% }); %>
+  <% if (showGrid) { %>
+    <fieldset class="trace-grid-editor">
+      <legend>Fill in the cells pupils will see and the cells they must complete</legend>
+      <ul class="trace-grid-editor__legend">
+        <li><span class="trace-grid-editor__swatch trace-grid-editor__swatch--prefill"></span> Pre-filled (read-only for pupils)</li>
+        <li><span class="trace-grid-editor__swatch trace-grid-editor__swatch--expected"></span> Expected (pupil must fill in)</li>
+        <li><span class="trace-grid-editor__swatch trace-grid-editor__swatch--decorative"></span> Decorative (left blank, not marked)</li>
+      </ul>
+      <table class="trace-grid-editor__table">
+        <thead>
+          <tr>
+            <th scope="col">Row</th>
+            <% colNames.forEach(function (name) { %>
+              <th scope="col"><%= name %></th>
+            <% }); %>
+          </tr>
+        </thead>
+        <tbody>
+          <% for (let r = 0; r < rowsCount; r++) { %>
+            <tr>
+              <th scope="row"><%= r + 1 %></th>
+              <% for (let c = 0; c < colNames.length; c++) {
+                   const m = cellMode(r, c);
+                   const v = cellValue(r, c);
+                   const cellClass = 'trace-grid-editor__cell trace-grid-editor__cell--' + m;
+              %>
+                <td class="<%= cellClass %>">
+                  <label class="visually-hidden" for="mode_<%= r %>_<%= c %>">Row <%= r + 1 %>, <%= colNames[c] %> mode</label>
+                  <select id="mode_<%= r %>_<%= c %>" name="mode_<%= r %>_<%= c %>">
+                    <option value="decorative" <% if (m === 'decorative') { %>selected<% } %>>Decorative</option>
+                    <option value="prefill" <% if (m === 'prefill') { %>selected<% } %>>Pre-filled</option>
+                    <option value="expected" <% if (m === 'expected') { %>selected<% } %>>Expected</option>
+                  </select>
+                  <label class="visually-hidden" for="value_<%= r %>_<%= c %>">Row <%= r + 1 %>, <%= colNames[c] %> value</label>
+                  <input id="value_<%= r %>_<%= c %>" name="value_<%= r %>_<%= c %>"
+                         type="text" value="<%= v %>" />
+                  <% (issueMap['value_' + r + '_' + c] || []).forEach(function (msg) { %>
+                    <p class="form-error"><%= msg %></p>
+                  <% }); %>
+                </td>
+              <% } %>
+            </tr>
+          <% } %>
+        </tbody>
+      </table>
+      <% (issueMap.expected || []).forEach(function (m) { %><p class="form-error"><%= m %></p><% }); %>
+    </fieldset>
+  <% } else { %>
+    <p class="form-hint">Save the columns and row count first; you&rsquo;ll fill the grid next.</p>
+  <% } %>
 
   <label for="mode">Marking mode</label>
   <select id="mode" name="mode">
-    <option value="perCell" <% if (mode === 'perCell') { %>selected<% } %>>Per cell (each correct cell scores)</option>
-    <option value="perRow" <% if (mode === 'perRow') { %>selected<% } %>>Per row (whole row must be right)</option>
-    <option value="allOrNothing" <% if (mode === 'allOrNothing') { %>selected<% } %>>All or nothing (whole table must be right)</option>
+    <option value="perCell" <% if (markMode === 'perCell') { %>selected<% } %>>Per cell (each correct cell scores)</option>
+    <option value="perRow" <% if (markMode === 'perRow') { %>selected<% } %>>Per row (whole row must be right)</option>
+    <option value="allOrNothing" <% if (markMode === 'allOrNothing') { %>selected<% } %>>All or nothing (whole table must be right)</option>
   </select>
 </fieldset>
