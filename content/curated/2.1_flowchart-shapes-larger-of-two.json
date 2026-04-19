@@ -1,0 +1,94 @@
+{
+  "external_key": "j277-2-1-flowchart-shapes-larger-of-two",
+  "component_code": "J277/02",
+  "topic_code": "2.1",
+  "subtopic_code": "2.1.1",
+  "command_word_code": "complete",
+  "archetype_code": "explain",
+  "expected_response_type": "flowchart",
+  "stem": "The flowchart below is a program that reads two whole numbers A and B and outputs the larger of the two. Two of the shapes are blank.",
+  "model_answer": "The Yes branch outputs A (accept 'Output A' or 'Print A'); the No branch outputs B (accept 'Output B' or 'Print B'). Both outputs lead to Stop.",
+  "difficulty_band": 3,
+  "difficulty_step": 1,
+  "source_type": "imported_pattern",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Complete the two blank shapes so the flowchart outputs the larger of A and B.",
+      "marks": 2,
+      "expected_response_type": "flowchart",
+      "part_config": {
+        "variant": "shapes",
+        "canvas": { "width": 600, "height": 400 },
+        "shapes": [
+          {
+            "id": "start",
+            "type": "terminator",
+            "x": 220,
+            "y": 20,
+            "width": 160,
+            "height": 50,
+            "text": "Start"
+          },
+          {
+            "id": "input",
+            "type": "io",
+            "x": 200,
+            "y": 90,
+            "width": 200,
+            "height": 50,
+            "text": "Input A, B"
+          },
+          {
+            "id": "q1",
+            "type": "decision",
+            "x": 200,
+            "y": 160,
+            "width": 200,
+            "height": 80,
+            "text": "Is A > B?"
+          },
+          {
+            "id": "out_a",
+            "type": "io",
+            "x": 40,
+            "y": 270,
+            "width": 200,
+            "height": 50,
+            "accept": ["Output A", "Print A", "Display A"]
+          },
+          {
+            "id": "out_b",
+            "type": "io",
+            "x": 360,
+            "y": 270,
+            "width": 200,
+            "height": 50,
+            "accept": ["Output B", "Print B", "Display B"]
+          },
+          {
+            "id": "stop",
+            "type": "terminator",
+            "x": 220,
+            "y": 340,
+            "width": 160,
+            "height": 50,
+            "text": "Stop"
+          }
+        ],
+        "arrows": [
+          { "from": "start", "to": "input" },
+          { "from": "input", "to": "q1" },
+          { "from": "q1", "to": "out_a", "label": "Yes" },
+          { "from": "q1", "to": "out_b", "label": "No" },
+          { "from": "out_a", "to": "stop" },
+          { "from": "out_b", "to": "stop" }
+        ]
+      },
+      "mark_points": [
+        { "text": "out_a: Output A / Print A / Display A", "marks": 1 },
+        { "text": "out_b: Output B / Print B / Display B", "marks": 1 }
+      ]
+    }
+  ]
+}

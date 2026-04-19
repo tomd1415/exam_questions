@@ -11,6 +11,12 @@ import {
   serialiseDiagramLabelsAnswer,
 } from '../../lib/diagram-labels.js';
 import {
+  isFlowchartConfig,
+  markFlowchartShapes,
+  parseFlowchartShapesRawAnswer,
+  serialiseFlowchartShapesAnswer,
+} from '../../lib/flowchart.js';
+import {
   isMatchingConfig,
   markMatching,
   parseMatchingRawAnswer,
@@ -90,6 +96,13 @@ export function markAttemptPart(
   markPoints: readonly MarkingInputMarkPoint[],
 ): MarkingResult {
   const type = part.expected_response_type;
+
+  // Flowchart is variant-dispatched: the image variant is teacher_pending
+  // but the shapes variant marks deterministically. Checked before the
+  // generic OPEN_RESPONSE_TYPES path so the shapes variant isn't shortcut.
+  if (type === 'flowchart') {
+    return markFlowchartPart(part, rawAnswer, markPoints);
+  }
 
   if (OPEN_RESPONSE_TYPES.has(type)) {
     return { kind: 'teacher_pending', marks_possible: part.marks, reason: 'open_response' };
@@ -638,6 +651,47 @@ function markMatchingPart(
     marks_possible: part.marks,
     mark_point_outcomes: outcomes,
     normalised_answer: serialiseMatchingAnswer(pupilPairs),
+  };
+}
+
+// Flowchart marker. The image variant is open-response (teacher reviews
+// the PNG). The shapes variant is deterministic — one mark per
+// pupil-fill ("expected") shape, set-matched against its accept list,
+// mirroring diagram_labels. Prefilled shapes are ignored.
+function markFlowchartPart(
+  part: MarkingInputPart,
+  rawAnswer: string,
+  markPoints: readonly MarkingInputMarkPoint[],
+): MarkingResult {
+  const config = part.part_config;
+  // No config (or image variant) means the pupil drew on the canvas — the
+  // marker defers to teacher review. A malformed shapes config falls back to
+  // teacher_pending too rather than half-marking a broken fixture.
+  if (!isFlowchartConfig(config) || config.variant !== 'shapes') {
+    return { kind: 'teacher_pending', marks_possible: part.marks, reason: 'open_response' };
+  }
+
+  const pupilFills = parseFlowchartShapesRawAnswer(rawAnswer);
+  const result = markFlowchartShapes(config, pupilFills);
+
+  const outcomes: MarkPointOutcome[] = result.outcomes.map((row, i) => {
+    const mp = markPoints[i];
+    return {
+      text: mp ? mp.text : `Shape ${row.shapeId}`,
+      marks: mp ? mp.marks : 1,
+      is_required: mp ? mp.is_required : false,
+      hit: row.hit,
+    };
+  });
+
+  const hitMarks = outcomes.filter((o) => o.hit).reduce((sum, o) => sum + o.marks, 0);
+
+  return {
+    kind: 'awarded',
+    marks_awarded: clampMarks(enforceRequired(hitMarks, outcomes), part.marks),
+    marks_possible: part.marks,
+    mark_point_outcomes: outcomes,
+    normalised_answer: serialiseFlowchartShapesAnswer(config, pupilFills),
   };
 }
 

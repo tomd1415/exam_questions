@@ -22,6 +22,7 @@
 
 import type { StepIssue } from './wizard-steps.js';
 import { getWidget, validatePartConfig } from './widgets.js';
+import { FLOWCHART_SHAPE_TYPES, type FlowchartShapeType } from './flowchart.js';
 
 export interface DerivedMarkPoint {
   text: string;
@@ -422,7 +423,7 @@ function parseMatching(body: Record<string, unknown>): WidgetConfigParseResult {
 }
 
 // ---------------------------------------------------------------------------
-// logic_diagram, flowchart (canvas only)
+// logic_diagram, flowchart (canvas / shapes)
 // ---------------------------------------------------------------------------
 
 function buildCanvasParser(): WidgetConfigParser {
@@ -441,6 +442,193 @@ function buildCanvasParser(): WidgetConfigParser {
       issues: [],
     };
   };
+}
+
+interface FlowchartShapeForm {
+  id: string;
+  type: FlowchartShapeType;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  text?: string;
+  accept?: string[];
+}
+
+function parseFlowchartShapeLine(
+  line: string,
+  seen: Set<string>,
+  canvasW: number,
+  canvasH: number,
+  issues: StepIssue[],
+): FlowchartShapeForm | null {
+  // Format: id|type|x|y|w|h|TEXT|<content>  OR  id|type|x|y|w|h|EXPECTED|<accept1, accept2>
+  const parts = line.split('|').map((p) => p.trim());
+  if (parts.length < 8) {
+    issues.push({
+      path: 'shapes',
+      message: `Shape line '${line}' must look like "id|type|x|y|w|h|TEXT|content" or "id|type|x|y|w|h|EXPECTED|ans1, ans2".`,
+    });
+    return null;
+  }
+  const [id, type, xs, ys, ws, hs, kind, rest] = parts;
+  const body = parts.slice(7).join('|').trim();
+  void rest;
+  if (!/^[A-Za-z0-9_-]{1,40}$/.test(id!)) {
+    issues.push({
+      path: 'shapes',
+      message: `Shape id '${id}' must be 1–40 chars (letters, digits, _ or -).`,
+    });
+    return null;
+  }
+  if (seen.has(id!)) {
+    issues.push({ path: 'shapes', message: `Duplicate shape id '${id}'.` });
+    return null;
+  }
+  if (!FLOWCHART_SHAPE_TYPES.includes(type as FlowchartShapeType)) {
+    issues.push({
+      path: 'shapes',
+      message: `Shape '${id}' type '${type}' must be one of: ${FLOWCHART_SHAPE_TYPES.join(', ')}.`,
+    });
+    return null;
+  }
+  const x = intIn(xs, 0, canvasW);
+  const y = intIn(ys, 0, canvasH);
+  const w = intIn(ws, 40, canvasW);
+  const h = intIn(hs, 30, canvasH);
+  if (x === null || y === null || w === null || h === null) {
+    issues.push({
+      path: 'shapes',
+      message: `Shape '${id}': x/y must be ≥0; width ≥40; height ≥30; all must fit the canvas.`,
+    });
+    return null;
+  }
+  if (x + w > canvasW || y + h > canvasH) {
+    issues.push({
+      path: 'shapes',
+      message: `Shape '${id}' extends past the canvas (${canvasW}×${canvasH}).`,
+    });
+    return null;
+  }
+  const kindUpper = (kind ?? '').toUpperCase();
+  if (kindUpper !== 'TEXT' && kindUpper !== 'EXPECTED') {
+    issues.push({
+      path: 'shapes',
+      message: `Shape '${id}': 7th field must be TEXT (prefilled) or EXPECTED (pupil-fill).`,
+    });
+    return null;
+  }
+  seen.add(id!);
+  const shape: FlowchartShapeForm = {
+    id: id!,
+    type: type as FlowchartShapeType,
+    x,
+    y,
+    width: w,
+    height: h,
+  };
+  if (kindUpper === 'TEXT') {
+    if (body.length === 0) {
+      issues.push({ path: 'shapes', message: `Prefilled shape '${id}' needs text content.` });
+      return null;
+    }
+    shape.text = body;
+  } else {
+    const accept = body
+      .split(',')
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0);
+    if (accept.length === 0) {
+      issues.push({
+        path: 'shapes',
+        message: `Expected shape '${id}' needs at least one accepted answer.`,
+      });
+      return null;
+    }
+    shape.accept = accept;
+  }
+  return shape;
+}
+
+function parseFlowchart(body: Record<string, unknown>): WidgetConfigParseResult {
+  const issues: StepIssue[] = [];
+  const variantRaw = trimmed(body['variant']);
+  const variant = variantRaw === 'shapes' ? 'shapes' : 'image';
+
+  const width = intIn(body['canvas_width'], 100, 2000);
+  const height = intIn(body['canvas_height'], 100, 2000);
+  if (width === null)
+    issues.push({ path: 'canvas_width', message: 'Canvas width must be 100–2000.' });
+  if (height === null)
+    issues.push({ path: 'canvas_height', message: 'Canvas height must be 100–2000.' });
+
+  if (variant === 'image') {
+    if (issues.length > 0) return { ok: false, issues };
+    return {
+      ok: true,
+      config: { variant: 'image', canvas: { width: width!, height: height! } },
+      issues: [],
+    };
+  }
+
+  // variant === 'shapes'
+  if (width === null || height === null) return { ok: false, issues };
+
+  const shapeSeen = new Set<string>();
+  const shapes: FlowchartShapeForm[] = [];
+  for (const line of lines(body['shapes'])) {
+    const shape = parseFlowchartShapeLine(line, shapeSeen, width, height, issues);
+    if (shape) shapes.push(shape);
+  }
+  if (shapes.length === 0) {
+    issues.push({ path: 'shapes', message: 'List at least one shape, one per line.' });
+  }
+  const expected = shapes.filter((s) => s.accept !== undefined);
+  if (shapes.length > 0 && expected.length === 0) {
+    issues.push({
+      path: 'shapes',
+      message: 'At least one shape must be EXPECTED (a pupil-fill blank).',
+    });
+  }
+
+  const arrows: { from: string; to: string; label?: string }[] = [];
+  for (const line of lines(body['arrows'])) {
+    const parts = line.split('|').map((p) => p.trim());
+    if (parts.length < 2 || parts.length > 3) {
+      issues.push({
+        path: 'arrows',
+        message: `Arrow line '${line}' must look like "from|to" or "from|to|label".`,
+      });
+      continue;
+    }
+    const [from, to, label] = parts;
+    if (!shapeSeen.has(from!) || !shapeSeen.has(to!)) {
+      issues.push({
+        path: 'arrows',
+        message: `Arrow '${from}→${to}' references an unknown shape id.`,
+      });
+      continue;
+    }
+    const a: { from: string; to: string; label?: string } = { from: from!, to: to! };
+    if (label !== undefined && label.length > 0) a.label = label;
+    arrows.push(a);
+  }
+
+  if (issues.length > 0) return { ok: false, issues };
+
+  const config = {
+    variant: 'shapes',
+    canvas: { width, height },
+    shapes,
+    arrows,
+  };
+
+  const derivedMarkPoints: DerivedMarkPoint[] = expected.map((s) => ({
+    text: `${s.id}: ${(s.accept ?? []).join(' / ')}`,
+    marks: 1,
+  }));
+
+  return { ok: true, config, derivedMarkPoints, issues: [] };
 }
 
 // ---------------------------------------------------------------------------
@@ -552,7 +740,7 @@ const PARSERS: Readonly<Record<string, WidgetConfigParser>> = {
   cloze_with_bank: buildClozeParser({ requireBank: true }),
   matching: parseMatching,
   logic_diagram: buildCanvasParser(),
-  flowchart: buildCanvasParser(),
+  flowchart: parseFlowchart,
   diagram_labels: parseDiagramLabels,
 };
 

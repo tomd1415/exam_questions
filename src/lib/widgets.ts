@@ -304,21 +304,82 @@ const LOGIC_DIAGRAM_SCHEMA: WidgetConfigSchema = {
 const FLOWCHART_SCHEMA: WidgetConfigSchema = {
   $schema: SCHEMA_DRAFT,
   title: 'flowchart part_config',
-  type: 'object',
-  additionalProperties: false,
-  required: ['variant', 'canvas'],
-  properties: {
-    variant: { type: 'string', enum: ['image'] },
-    canvas: {
+  // oneOf handles the two authoring variants — image (freehand PNG) and
+  // shapes (teacher-placed flowchart shapes with per-blank pupil answers).
+  oneOf: [
+    {
       type: 'object',
       additionalProperties: false,
-      required: ['width', 'height'],
+      required: ['variant', 'canvas'],
       properties: {
-        width: { type: 'integer', minimum: 100, maximum: 2000 },
-        height: { type: 'integer', minimum: 100, maximum: 2000 },
+        variant: { type: 'string', enum: ['image'] },
+        canvas: {
+          type: 'object',
+          additionalProperties: false,
+          required: ['width', 'height'],
+          properties: {
+            width: { type: 'integer', minimum: 100, maximum: 2000 },
+            height: { type: 'integer', minimum: 100, maximum: 2000 },
+          },
+        },
       },
     },
-  },
+    {
+      type: 'object',
+      additionalProperties: false,
+      required: ['variant', 'canvas', 'shapes', 'arrows'],
+      properties: {
+        variant: { type: 'string', enum: ['shapes'] },
+        canvas: {
+          type: 'object',
+          additionalProperties: false,
+          required: ['width', 'height'],
+          properties: {
+            width: { type: 'integer', minimum: 100, maximum: 2000 },
+            height: { type: 'integer', minimum: 100, maximum: 2000 },
+          },
+        },
+        shapes: {
+          type: 'array',
+          minItems: 1,
+          items: {
+            type: 'object',
+            additionalProperties: false,
+            required: ['id', 'type', 'x', 'y', 'width', 'height'],
+            properties: {
+              id: { type: 'string', pattern: '^[A-Za-z0-9_-]{1,40}$' },
+              type: { type: 'string', enum: ['terminator', 'process', 'decision', 'io'] },
+              x: { type: 'integer', minimum: 0 },
+              y: { type: 'integer', minimum: 0 },
+              width: { type: 'integer', minimum: 40 },
+              height: { type: 'integer', minimum: 30 },
+              text: { type: 'string', minLength: 1 },
+              accept: {
+                type: 'array',
+                minItems: 1,
+                items: { type: 'string', minLength: 1 },
+              },
+              caseSensitive: { type: 'boolean' },
+              trimWhitespace: { type: 'boolean' },
+            },
+          },
+        },
+        arrows: {
+          type: 'array',
+          items: {
+            type: 'object',
+            additionalProperties: false,
+            required: ['from', 'to'],
+            properties: {
+              from: { type: 'string', pattern: '^[A-Za-z0-9_-]{1,40}$' },
+              to: { type: 'string', pattern: '^[A-Za-z0-9_-]{1,40}$' },
+              label: { type: 'string', minLength: 1 },
+            },
+          },
+        },
+      },
+    },
+  ],
 };
 
 const DIAGRAM_LABELS_SCHEMA: WidgetConfigSchema = {
@@ -602,11 +663,11 @@ const REGISTRATIONS: readonly WidgetRegistration[] = [
   {
     type: 'flowchart',
     marker: 'teacher_pending',
-    displayName: 'Flowchart (free draw)',
+    displayName: 'Flowchart',
     description:
-      'Pupil draws a flowchart on a canvas; the answer is sent to teacher review as a PNG. Phase-2.5 MVP: pen + clear only, no structured shape palette.',
+      'Two authoring variants: "image" lets pupils draw a flowchart freehand on a canvas (sent to teacher review as a PNG); "shapes" lets you place flowchart shapes (terminator / process / decision / io) with some shapes prefilled and others left blank for the pupil to fill in — auto-marked per blank.',
     markPointGuidance:
-      'List the assessable features the flowchart should show (e.g. "terminator Start", "decision IsEven? with Yes and No branches", "process Output N"). The teacher applies them while viewing the image.',
+      'For the image variant, list the assessable features the flowchart should show (e.g. "terminator Start", "decision IsEven? with Yes and No branches"). For the shapes variant, the wizard derives one mark per pupil-fill shape from the accept list; you do not need to add mark_points by hand.',
     configSchema: FLOWCHART_SCHEMA,
     exampleConfig: { variant: 'image', canvas: { width: 600, height: 500 } },
     validateConfig: (c) => validateFlowchartConfigShape(c).map((m) => ({ message: m })),

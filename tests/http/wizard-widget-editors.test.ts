@@ -495,6 +495,56 @@ describe('wizard widget editors (chunk 2.5j step 4)', () => {
     expect(bad.payload).toContain('/static/');
   });
 
+  it('flowchart shapes variant parses shapes and arrows', async () => {
+    const teacher = await createUser(pool(), { role: 'teacher' });
+    const jar = await loginAs(teacher);
+    const draftId = await startDraft(jar);
+    await pickWidget(jar, draftId, 'flowchart', 'draw');
+
+    const res = await postStep(jar, draftId, 5, {
+      variant: 'shapes',
+      canvas_width: '600',
+      canvas_height: '400',
+      shapes: [
+        'start|terminator|220|20|160|50|TEXT|Start',
+        'q1|decision|200|100|200|80|TEXT|Is A > B?',
+        'out_a|io|60|220|180|50|EXPECTED|Output A, Print A',
+        'out_b|io|360|220|180|50|EXPECTED|Output B',
+        'stop|terminator|220|310|160|50|TEXT|Stop',
+      ].join('\n'),
+      arrows: ['start|q1', 'q1|out_a|Yes', 'q1|out_b|No', 'out_a|stop', 'out_b|stop'].join('\n'),
+    });
+    expect(res.statusCode, `body=${res.payload.slice(0, 400)}`).toBe(302);
+
+    const reload = await app.inject({
+      method: 'GET',
+      url: `/admin/questions/wizard/${draftId}/step/5`,
+      headers: { cookie: cookieHeader(jar) },
+    });
+    expect(reload.statusCode).toBe(200);
+    expect(reload.payload).toContain('out_a|io|60|220|180|50|EXPECTED|Output A, Print A');
+    expect(reload.payload).toContain('q1|out_a|Yes');
+    // The variant radio should be set back to shapes.
+    expect(reload.payload).toMatch(/value="shapes"[^>]*checked/);
+  });
+
+  it('flowchart shapes variant rejects shapes with no pupil-fill blank', async () => {
+    const teacher = await createUser(pool(), { role: 'teacher' });
+    const jar = await loginAs(teacher);
+    const draftId = await startDraft(jar);
+    await pickWidget(jar, draftId, 'flowchart', 'draw');
+
+    const bad = await postStep(jar, draftId, 5, {
+      variant: 'shapes',
+      canvas_width: '600',
+      canvas_height: '400',
+      shapes: 'start|terminator|220|20|160|50|TEXT|Start',
+      arrows: '',
+    });
+    expect(bad.statusCode).toBe(400);
+    expect(bad.payload).toContain('EXPECTED');
+  });
+
   it('diagram_labels editor exposes the hotspot picker hooks', async () => {
     const teacher = await createUser(pool(), { role: 'teacher' });
     const jar = await loginAs(teacher);

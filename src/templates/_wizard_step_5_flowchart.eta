@@ -1,17 +1,57 @@
 <%
 const cfg = ((it.draft.payload || {}).parts?.[0]?.part_config) || {};
+const variant = cfg.variant === 'shapes' ? 'shapes' : 'image';
 const canvas = (cfg.canvas && typeof cfg.canvas === 'object') ? cfg.canvas : {};
 const width = typeof canvas.width === 'number' ? canvas.width : 600;
 const height = typeof canvas.height === 'number' ? canvas.height : 500;
 const issueMap = it.issueMap || {};
+
+// Re-serialise shapes/arrows back to the pipe-encoded textarea lines if the
+// draft round-trips (so the teacher doesn't lose their work on a validation
+// error). Format mirrors parseFlowchartShapeLine in wizard-widget-editors.ts.
+const shapeLines = [];
+if (Array.isArray(cfg.shapes)) {
+  for (const s of cfg.shapes) {
+    if (!s || typeof s !== 'object') continue;
+    const tail = Array.isArray(s.accept)
+      ? `EXPECTED|${s.accept.join(', ')}`
+      : `TEXT|${typeof s.text === 'string' ? s.text : ''}`;
+    shapeLines.push(`${s.id}|${s.type}|${s.x}|${s.y}|${s.width}|${s.height}|${tail}`);
+  }
+}
+const arrowLines = [];
+if (Array.isArray(cfg.arrows)) {
+  for (const a of cfg.arrows) {
+    if (!a || typeof a !== 'object') continue;
+    arrowLines.push(a.label ? `${a.from}|${a.to}|${a.label}` : `${a.from}|${a.to}`);
+  }
+}
+const shapesValue = shapeLines.join('\n');
+const arrowsValue = arrowLines.join('\n');
 %>
 <fieldset class="wizard-step wizard-step--5 wizard-step--canvas">
-  <legend>Flowchart canvas</legend>
+  <legend>Flowchart</legend>
 
   <p class="form-hint">
-    Pupils will draw their flowchart on a blank canvas of the size you set here. Phase&nbsp;2.5
-    ships pen-and-clear only; the flowchart is sent to teacher review as an image.
+    Pick how pupils will work on this flowchart. <strong>Image</strong> lets them
+    draw freehand on a blank canvas (sent for teacher review as a PNG).
+    <strong>Shapes</strong> lays out pre-drawn shapes — some prefilled, some
+    blank — and auto-marks each blank against your accept list.
   </p>
+
+  <div class="form-radio-group" role="radiogroup" aria-label="Flowchart variant">
+    <label class="form-radio">
+      <input type="radio" name="variant" value="image"
+             <%= variant === 'image' ? 'checked' : '' %> />
+      <span>Image — pupil draws freehand (teacher-marked)</span>
+    </label>
+    <label class="form-radio">
+      <input type="radio" name="variant" value="shapes"
+             <%= variant === 'shapes' ? 'checked' : '' %> />
+      <span>Shapes — prefilled + pupil-fill blanks (auto-marked)</span>
+    </label>
+  </div>
+  <% (issueMap.variant || []).forEach(function (m) { %><p class="form-error"><%= m %></p><% }); %>
 
   <label for="canvas_width">Canvas width (px)</label>
   <input id="canvas_width" name="canvas_width" type="number" min="100" max="2000"
@@ -22,4 +62,63 @@ const issueMap = it.issueMap || {};
   <input id="canvas_height" name="canvas_height" type="number" min="100" max="2000"
          inputmode="numeric" value="<%= height %>" required />
   <% (issueMap.canvas_height || []).forEach(function (m) { %><p class="form-error"><%= m %></p><% }); %>
+
+  <div class="wizard-flowchart__shapes-only"
+       data-visible-when-variant="shapes"
+       <%= variant === 'shapes' ? '' : 'hidden' %>>
+    <label for="shapes">Shapes (one per line)</label>
+    <p class="form-hint">
+      Format: <code>id|type|x|y|width|height|TEXT|content</code> for a prefilled
+      shape, or <code>id|type|x|y|width|height|EXPECTED|answer1, answer2</code>
+      for a pupil-fill blank. Types: <code>terminator</code> (start/stop),
+      <code>process</code>, <code>decision</code>, <code>io</code> (input/output).
+    </p>
+    <textarea id="shapes" name="shapes" rows="8"
+              placeholder="start|terminator|220|20|160|50|TEXT|Start&#10;q1|decision|200|100|200|80|TEXT|Is A &gt; B?&#10;out_a|io|60|220|180|50|EXPECTED|Output A, Print A&#10;out_b|io|360|220|180|50|EXPECTED|Output B, Print B&#10;stop|terminator|220|310|160|50|TEXT|Stop"><%= shapesValue %></textarea>
+    <% (issueMap.shapes || []).forEach(function (m) { %><p class="form-error"><%= m %></p><% }); %>
+
+    <label for="arrows">Arrows (one per line, optional)</label>
+    <p class="form-hint">
+      Format: <code>fromId|toId</code> or <code>fromId|toId|label</code>
+      (labels are handy for Yes/No branches on a decision).
+    </p>
+    <textarea id="arrows" name="arrows" rows="6"
+              placeholder="start|q1&#10;q1|out_a|Yes&#10;q1|out_b|No&#10;out_a|stop&#10;out_b|stop"><%= arrowsValue %></textarea>
+    <% (issueMap.arrows || []).forEach(function (m) { %><p class="form-error"><%= m %></p><% }); %>
+
+    <details class="wizard-flowchart__example">
+      <summary>Worked example: "print the larger of A and B"</summary>
+      <p>Copy into the boxes above (canvas 600 × 400):</p>
+      <pre>start|terminator|220|20|160|50|TEXT|Start
+q1|decision|200|100|200|80|TEXT|Is A &gt; B?
+out_a|io|60|220|180|50|EXPECTED|Output A, Print A, OUTPUT A
+out_b|io|360|220|180|50|EXPECTED|Output B, Print B, OUTPUT B
+stop|terminator|220|310|160|50|TEXT|Stop</pre>
+      <pre>start|q1
+q1|out_a|Yes
+q1|out_b|No
+out_a|stop
+out_b|stop</pre>
+    </details>
+  </div>
 </fieldset>
+
+<script>
+  // Progressive enhancement: toggle the shapes-only section when the variant
+  // radio changes. No-JS teachers just see both sections and can still submit.
+  (function () {
+    const root = document.currentScript.previousElementSibling;
+    if (!root) return;
+    const radios = root.querySelectorAll('input[name="variant"]');
+    const shapesOnly = root.querySelector('[data-visible-when-variant="shapes"]');
+    if (!shapesOnly) return;
+    function sync() {
+      const selected = Array.from(radios).find((r) => r.checked);
+      if (!selected) return;
+      if (selected.value === 'shapes') shapesOnly.removeAttribute('hidden');
+      else shapesOnly.setAttribute('hidden', '');
+    }
+    radios.forEach((r) => r.addEventListener('change', sync));
+    sync();
+  })();
+</script>

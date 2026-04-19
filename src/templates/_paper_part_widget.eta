@@ -573,44 +573,166 @@ const t = part.expected_response_type;
     const fcCanvas = (fcCfg.canvas && typeof fcCfg.canvas === 'object') ? fcCfg.canvas : {};
     const fcWidth = Number.isInteger(fcCanvas.width) ? fcCanvas.width : 600;
     const fcHeight = Number.isInteger(fcCanvas.height) ? fcCanvas.height : 500;
+    const fcShapes = Array.isArray(fcCfg.shapes) ? fcCfg.shapes : [];
+    const fcArrows = Array.isArray(fcCfg.arrows) ? fcCfg.arrows : [];
     let fcPriorImage = '';
+    const fcPriorFills = Object.create(null);
     priorLines.forEach(function(line) {
       const eq = line.indexOf('=');
       if (eq <= 0) return;
       const key = line.slice(0, eq).trim();
-      if (key === 'image') fcPriorImage = line.slice(eq + 1);
+      const value = line.slice(eq + 1);
+      if (key === 'image') {
+        fcPriorImage = value;
+      } else if (/^[A-Za-z0-9_-]+$/.test(key)) {
+        fcPriorFills[key] = value;
+      }
     });
+
+    // Shape geometry → SVG path. Called from the template below.
+    function fcShapePath(s) {
+      const x = s.x, y = s.y, w = s.width, h = s.height;
+      if (s.type === 'terminator') {
+        const r = Math.min(w, h) / 2;
+        return 'M ' + (x + r) + ' ' + y +
+               ' H ' + (x + w - r) +
+               ' A ' + r + ' ' + r + ' 0 0 1 ' + (x + w - r) + ' ' + (y + h) +
+               ' H ' + (x + r) +
+               ' A ' + r + ' ' + r + ' 0 0 1 ' + (x + r) + ' ' + y + ' Z';
+      }
+      if (s.type === 'decision') {
+        const mx = x + w / 2, my = y + h / 2;
+        return 'M ' + mx + ' ' + y +
+               ' L ' + (x + w) + ' ' + my +
+               ' L ' + mx + ' ' + (y + h) +
+               ' L ' + x + ' ' + my + ' Z';
+      }
+      if (s.type === 'io') {
+        const skew = Math.min(20, w / 6);
+        return 'M ' + (x + skew) + ' ' + y +
+               ' L ' + (x + w) + ' ' + y +
+               ' L ' + (x + w - skew) + ' ' + (y + h) +
+               ' L ' + x + ' ' + (y + h) + ' Z';
+      }
+      // process (default)
+      return 'M ' + x + ' ' + y +
+             ' H ' + (x + w) +
+             ' V ' + (y + h) +
+             ' H ' + x + ' Z';
+    }
+
+    function fcShapeCentre(s) {
+      return { x: s.x + s.width / 2, y: s.y + s.height / 2 };
+    }
   %>
-  <div class="widget widget--flowchart flowchart"
-       data-autosave-part-id="<%= part.id %>"
-       data-flowchart-variant="<%= fcVariant %>"
-       data-flowchart-width="<%= fcWidth %>"
-       data-flowchart-height="<%= fcHeight %>"
-       aria-describedby="marks-<%= part.id %>">
-    <div class="flowchart__toolbar" role="toolbar" aria-label="Drawing tools">
-      <button type="button" class="flowchart__tool" data-flowchart-tool="pen" aria-pressed="true">Pen</button>
-      <button type="button" class="flowchart__tool" data-flowchart-tool="eraser" aria-pressed="false">Eraser</button>
-      <button type="button" class="flowchart__clear" data-flowchart-clear>Clear</button>
-      <span class="flowchart__hint" data-flowchart-hint>
-        Draw your flowchart by hand. Use the Eraser to rub out mistakes; Clear wipes the whole canvas.
-      </span>
+  <% if (fcVariant === 'shapes') { %>
+    <div class="widget widget--flowchart widget--flowchart-shapes flowchart-shapes"
+         data-autosave-part-id="<%= part.id %>"
+         aria-describedby="marks-<%= part.id %>">
+      <svg class="flowchart-shapes__stage"
+           viewBox="0 0 <%= fcWidth %> <%= fcHeight %>"
+           width="<%= fcWidth %>"
+           height="<%= fcHeight %>"
+           role="img"
+           aria-label="Flowchart with <%= fcShapes.length %> shapes">
+        <defs>
+          <marker id="flowchart-arrowhead-<%= part.id %>" viewBox="0 0 10 10" refX="9" refY="5"
+                  markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 Z" fill="currentColor" />
+          </marker>
+        </defs>
+        <% fcArrows.forEach(function(a) {
+          const from = fcShapes.find(function(s) { return s && s.id === a.from; });
+          const to = fcShapes.find(function(s) { return s && s.id === a.to; });
+          if (!from || !to) return;
+          const p1 = fcShapeCentre(from);
+          const p2 = fcShapeCentre(to);
+        %>
+          <line class="flowchart-shapes__arrow"
+                x1="<%= p1.x %>" y1="<%= p1.y %>"
+                x2="<%= p2.x %>" y2="<%= p2.y %>"
+                marker-end="url(#flowchart-arrowhead-<%= part.id %>)" />
+          <% if (typeof a.label === 'string' && a.label.length > 0) {
+               const mx = (p1.x + p2.x) / 2;
+               const my = (p1.y + p2.y) / 2;
+          %>
+            <text class="flowchart-shapes__arrow-label" x="<%= mx %>" y="<%= my %>"
+                  text-anchor="middle" dy="-4"><%= a.label %></text>
+          <% } %>
+        <% }); %>
+        <% fcShapes.forEach(function(s) {
+          if (!s || typeof s !== 'object') return;
+          const isExpected = Array.isArray(s.accept);
+          const text = isExpected ? '' : (typeof s.text === 'string' ? s.text : '');
+        %>
+          <path class="flowchart-shapes__shape flowchart-shapes__shape--<%= s.type %><% if (isExpected) { %> flowchart-shapes__shape--blank<% } %>"
+                d="<%= fcShapePath(s) %>" />
+          <% if (!isExpected) { %>
+            <text class="flowchart-shapes__text"
+                  x="<%= s.x + s.width / 2 %>"
+                  y="<%= s.y + s.height / 2 %>"
+                  text-anchor="middle" dominant-baseline="middle"><%= text %></text>
+          <% } %>
+        <% }); %>
+      </svg>
+      <div class="flowchart-shapes__inputs">
+        <% fcShapes.forEach(function(s) {
+          if (!s || typeof s !== 'object') return;
+          if (!Array.isArray(s.accept)) return;
+          const fieldId = 'part-' + part.id + '-' + s.id;
+          const prior = fcPriorFills[s.id] || '';
+          const leftPct = (s.x / fcWidth * 100).toFixed(4);
+          const topPct = (s.y / fcHeight * 100).toFixed(4);
+          const wPct = (s.width / fcWidth * 100).toFixed(4);
+          const hPct = (s.height / fcHeight * 100).toFixed(4);
+        %>
+          <label class="flowchart-shapes__input"
+                 style="left:<%= leftPct %>%;top:<%= topPct %>%;width:<%= wPct %>%;height:<%= hPct %>%;"
+                 for="<%= fieldId %>">
+            <span class="visually-hidden">Shape <%= s.id %> (<%= s.type %>)</span>
+            <input id="<%= fieldId %>"
+                   name="<%= fieldName %>__<%= s.id %>"
+                   type="text"
+                   value="<%= prior %>"
+                   autocomplete="off"
+                   spellcheck="false"
+                   data-flowchart-shape-input />
+          </label>
+        <% }); %>
+      </div>
     </div>
-    <canvas class="flowchart__canvas"
-            data-flowchart-canvas
-            width="<%= fcWidth %>"
-            height="<%= fcHeight %>"
-            aria-label="Flowchart drawing area, <%= fcWidth %> by <%= fcHeight %> pixels"
-            tabindex="0"></canvas>
-    <input type="hidden"
-           name="<%= fieldName %>__image"
-           value="<%= fcPriorImage %>"
-           data-flowchart-image />
-    <noscript>
-      <p class="flowchart__noscript">
-        This widget needs JavaScript to draw. Without it, you cannot submit a flowchart.
-      </p>
-    </noscript>
-  </div>
+  <% } else { %>
+    <div class="widget widget--flowchart flowchart"
+         data-autosave-part-id="<%= part.id %>"
+         data-flowchart-variant="<%= fcVariant %>"
+         data-flowchart-width="<%= fcWidth %>"
+         data-flowchart-height="<%= fcHeight %>"
+         aria-describedby="marks-<%= part.id %>">
+      <div class="flowchart__toolbar" role="toolbar" aria-label="Drawing tools">
+        <button type="button" class="flowchart__tool" data-flowchart-tool="pen" aria-pressed="true">Pen</button>
+        <button type="button" class="flowchart__tool" data-flowchart-tool="eraser" aria-pressed="false">Eraser</button>
+        <button type="button" class="flowchart__clear" data-flowchart-clear>Clear</button>
+        <span class="flowchart__hint" data-flowchart-hint>
+          Draw your flowchart by hand. Use the Eraser to rub out mistakes; Clear wipes the whole canvas.
+        </span>
+      </div>
+      <canvas class="flowchart__canvas"
+              data-flowchart-canvas
+              width="<%= fcWidth %>"
+              height="<%= fcHeight %>"
+              aria-label="Flowchart drawing area, <%= fcWidth %> by <%= fcHeight %> pixels"
+              tabindex="0"></canvas>
+      <input type="hidden"
+             name="<%= fieldName %>__image"
+             value="<%= fcPriorImage %>"
+             data-flowchart-image />
+      <noscript>
+        <p class="flowchart__noscript">
+          This widget needs JavaScript to draw. Without it, you cannot submit a flowchart.
+        </p>
+      </noscript>
+    </div>
+  <% } %>
 <% } else { %>
   <textarea class="widget widget--fallback"
             name="<%= fieldName %>"
