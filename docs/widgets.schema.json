@@ -33,7 +33,8 @@
           "Option A",
           "Option B"
         ]
-      }
+      },
+      "thumbUrl": "/static/widget_thumbs/multiple_choice.svg"
     },
     {
       "type": "tick_box",
@@ -64,7 +65,8 @@
       },
       "exampleConfig": {
         "tickExactly": 2
-      }
+      },
+      "thumbUrl": "/static/widget_thumbs/tick_box.svg"
     },
     {
       "type": "short_text",
@@ -73,7 +75,8 @@
       "description": "A single-line free-text response (e.g. a term, name, or short phrase). Marked deterministically against mark_point.text and accepted_alternatives.",
       "markPointGuidance": "One mark_point covering the expected answer; list alternative spellings in accepted_alternatives.",
       "configSchema": null,
-      "exampleConfig": null
+      "exampleConfig": null,
+      "thumbUrl": "/static/widget_thumbs/short_text.svg"
     },
     {
       "type": "medium_text",
@@ -82,7 +85,8 @@
       "description": "A short paragraph (typically 2–4 sentences). Sent to the teacher review queue rather than auto-marked.",
       "markPointGuidance": "One mark_point per ideas-list bullet the answer should mention; pupils need not phrase them identically.",
       "configSchema": null,
-      "exampleConfig": null
+      "exampleConfig": null,
+      "thumbUrl": "/static/widget_thumbs/medium_text.svg"
     },
     {
       "type": "extended_response",
@@ -91,7 +95,8 @@
       "description": "A long-form response, typically banded against AO1/AO2/AO3. Sent to teacher review with a banded rubric.",
       "markPointGuidance": "List mark_points as the assessable indicators (definitions, examples, evaluations); the teacher applies a banded judgement on top.",
       "configSchema": null,
-      "exampleConfig": null
+      "exampleConfig": null,
+      "thumbUrl": "/static/widget_thumbs/extended_response.svg"
     },
     {
       "type": "code",
@@ -100,7 +105,8 @@
       "description": "Pupil writes a code or pseudocode snippet. Sent to teacher review (a static checker is out of scope for J277).",
       "markPointGuidance": "One mark_point per behaviour or construct the snippet must include.",
       "configSchema": null,
-      "exampleConfig": null
+      "exampleConfig": null,
+      "thumbUrl": "/static/widget_thumbs/code.svg"
     },
     {
       "type": "algorithm",
@@ -109,7 +115,8 @@
       "description": "Pupil describes an algorithm in prose, pseudocode, or numbered steps. Sent to teacher review.",
       "markPointGuidance": "One mark_point per discrete step or condition the algorithm must include.",
       "configSchema": null,
-      "exampleConfig": null
+      "exampleConfig": null,
+      "thumbUrl": "/static/widget_thumbs/algorithm.svg"
     },
     {
       "type": "trace_table",
@@ -226,7 +233,8 @@
         "marking": {
           "mode": "perCell"
         }
-      }
+      },
+      "thumbUrl": "/static/widget_thumbs/trace_table.svg"
     },
     {
       "type": "matrix_tick_single",
@@ -287,7 +295,8 @@
           "Searching"
         ],
         "allOrNothing": false
-      }
+      },
+      "thumbUrl": "/static/widget_thumbs/matrix_tick_single.svg"
     },
     {
       "type": "matrix_tick_multi",
@@ -358,7 +367,8 @@
           ]
         ],
         "partialCredit": true
-      }
+      },
+      "thumbUrl": "/static/widget_thumbs/matrix_tick_multi.svg"
     },
     {
       "type": "cloze_free",
@@ -431,7 +441,8 @@
             ]
           }
         ]
-      }
+      },
+      "thumbUrl": "/static/widget_thumbs/cloze_free.svg"
     },
     {
       "type": "cloze_with_bank",
@@ -512,7 +523,8 @@
           "router",
           "hub"
         ]
-      }
+      },
+      "thumbUrl": "/static/widget_thumbs/cloze_with_bank.svg"
     },
     {
       "type": "matching",
@@ -593,7 +605,8 @@
           ]
         ],
         "partialCredit": true
-      }
+      },
+      "thumbUrl": "/static/widget_thumbs/matching.svg"
     },
     {
       "type": "cloze_code",
@@ -672,7 +685,8 @@
             ]
           }
         ]
-      }
+      },
+      "thumbUrl": "/static/widget_thumbs/cloze_code.svg"
     },
     {
       "type": "diagram_labels",
@@ -795,7 +809,8 @@
             ]
           }
         ]
-      }
+      },
+      "thumbUrl": "/static/widget_thumbs/diagram_labels.svg"
     },
     {
       "type": "logic_diagram",
@@ -1244,7 +1259,8 @@
           "width": 600,
           "height": 400
         }
-      }
+      },
+      "thumbUrl": "/static/widget_thumbs/logic_diagram.svg"
     },
     {
       "type": "flowchart",
@@ -1428,7 +1444,8 @@
           "width": 600,
           "height": 500
         }
-      }
+      },
+      "thumbUrl": "/static/widget_thumbs/flowchart.svg"
     }
   ]
 }

@@ -1,0 +1,74 @@
+<%
+// Wizard v2 step 2 — "What does the question ask the pupil to do?"
+//
+// The v1 template was two selects. v2 switches the command word to a
+// radio-as-chip grid so teachers can see every option at a glance with
+// the matching expected-response shape as a sub-caption. Archetype stays
+// as a select (fewer options, less need for a chip grid) and the two
+// <details> definition blocks are preserved.
+//
+// Radios still submit as command_word_code / archetype_code to keep the
+// step parser untouched. With JS off, the form still works — radios are
+// native form controls.
+const p = it.draft.payload || {};
+const selectedCw = p.command_word_code || '';
+const selectedArch = p.archetype_code || '';
+%>
+<fieldset class="wizard-step wizard-step--2">
+  <legend class="visually-hidden">Command word and archetype</legend>
+
+  <div class="stacked-field wizard__chip-field" role="group" aria-labelledby="wizard-cw-legend">
+    <span class="stacked-field__label" id="wizard-cw-legend">Command word</span>
+    <div class="wizard__chip-grid" data-wizard-chip-grid>
+      <% (it.refs.commandWords || []).forEach(function (c) { %>
+        <label class="wizard__chip<% if (selectedCw === c.code) { %> is-selected<% } %>">
+          <input type="radio"
+                 name="command_word_code"
+                 value="<%= c.code %>"
+                 <% if (selectedCw === c.code) { %>checked<% } %>
+                 required />
+          <span class="wizard__chip-label"><%= c.code %></span>
+          <span class="wizard__chip-sub"><%= c.expected_response_shape %></span>
+        </label>
+      <% }); %>
+    </div>
+    <span class="stacked-field__hint">
+      The command word steers both the mark tariff and the shape of the answer.
+    </span>
+  </div>
+
+  <details class="admin-wizard__definitions">
+    <summary>What do these command words mean?</summary>
+    <dl>
+      <% (it.refs.commandWords || []).forEach(function (c) { %>
+        <dt><%= c.code %></dt>
+        <dd><%= c.definition %></dd>
+      <% }); %>
+    </dl>
+  </details>
+
+  <label class="stacked-field">
+    <span class="stacked-field__label">Question archetype</span>
+    <select name="archetype_code" required>
+      <option value="" <% if (!selectedArch) { %>selected<% } %>>&mdash; choose &mdash;</option>
+      <% (it.refs.archetypes || []).forEach(function (a) { %>
+        <option value="<%= a.code %>" <% if (selectedArch === a.code) { %>selected<% } %>>
+          <%= a.code %>
+        </option>
+      <% }); %>
+    </select>
+    <span class="stacked-field__hint">
+      The archetype groups questions with similar marking patterns together for progress dashboards.
+    </span>
+  </label>
+
+  <details class="admin-wizard__definitions">
+    <summary>What do these archetypes mean?</summary>
+    <dl>
+      <% (it.refs.archetypes || []).forEach(function (a) { %>
+        <dt><%= a.code %></dt>
+        <dd><%= a.description %></dd>
+      <% }); %>
+    </dl>
+  </details>
+</fieldset>

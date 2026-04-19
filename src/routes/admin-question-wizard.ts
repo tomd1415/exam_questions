@@ -198,9 +198,15 @@ async function renderStep(
   draft: QuestionDraftRow,
   n: number,
   refs: WizardRefs,
-  opts: { issues?: StepIssue[]; flash?: string | null; status?: number } = {},
+  opts: {
+    issues?: StepIssue[];
+    flash?: string | null;
+    status?: number;
+    recentWidgets?: string[];
+  } = {},
 ): Promise<FastifyReply> {
   const widgets = n === 3 ? widgetGroupsForDraft(draft.payload) : null;
+  const recentWidgets = n === 3 ? (opts.recentWidgets ?? []) : [];
   const missing = n === 9 ? missingFieldsForPublish(draft.payload) : [];
   const publishReady = n === 9 ? missing.length === 0 : false;
   if (opts.status) reply.code(opts.status);
@@ -216,6 +222,7 @@ async function renderStep(
     issues: opts.issues ?? [],
     refs,
     widgets,
+    recentWidgets,
     missingFields: missing,
     publishReady,
     autoDerivedMarkPointWidgets: AUTO_DERIVED_MARK_POINT_WIDGETS,
@@ -305,7 +312,11 @@ export function registerAdminQuestionWizardRoutes(app: FastifyInstance): void {
     }
 
     const refs = await loadRefs(app);
-    return renderStep(reply, req, draft, n, refs);
+    const recentWidgets =
+      n === 3 && isWizardV2Enabled()
+        ? await app.services.questionDrafts.recentWidgetsForActor(actor, 4)
+        : [];
+    return renderStep(reply, req, draft, n, refs, { recentWidgets });
   });
 
   // Advance a step. The per-step parser in src/lib/wizard-steps.ts turns the

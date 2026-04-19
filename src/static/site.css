@@ -2485,3 +2485,96 @@ input[type='number'].input {
   font-size: var(--type-micro);
   text-align: right;
 }
+
+/* ---- v2 step 1: curriculum filter ---- */
+.wizard__curriculum-filter {
+  margin-bottom: var(--space-4);
+}
+.wizard__curriculum-filter input[type='search'] {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: var(--type-body);
+  background: var(--color-surface-1);
+  color: var(--color-ink-1);
+}
+
+/* ---- v2 step 2: command-word chip grid ---- */
+.wizard__chip-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.wizard__chip-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: var(--space-2);
+}
+.wizard__chip {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-1);
+  cursor: pointer;
+  transition:
+    border-color 120ms ease,
+    background 120ms ease;
+}
+.wizard__chip:hover {
+  border-color: var(--color-brand-500);
+}
+.wizard__chip input[type='radio'] {
+  position: absolute;
+  opacity: 0;
+  inset: 0;
+  cursor: pointer;
+}
+.wizard__chip input[type='radio']:focus-visible + .wizard__chip-label {
+  outline: 2px solid var(--color-brand-500);
+  outline-offset: 2px;
+}
+.wizard__chip.is-selected,
+.wizard__chip:has(input:checked) {
+  border-color: var(--color-brand-500);
+  background: var(--color-surface-2);
+}
+.wizard__chip-label {
+  font-weight: 600;
+  color: var(--color-ink-1);
+  font-size: var(--type-body);
+}
+.wizard__chip-sub {
+  color: var(--color-ink-3);
+  font-size: var(--type-micro);
+  margin-top: var(--space-1);
+}
+
+/* ---- v2 step 3: widget tile upgrades ---- */
+.widget-tile-section {
+  margin-top: var(--space-4);
+}
+.widget-tile-section__heading {
+  font-size: var(--type-body);
+  font-weight: 600;
+  color: var(--color-ink-2);
+  margin: 0 0 var(--space-2) 0;
+}
+.widget-tile__thumb {
+  display: block;
+  width: 60px;
+  height: 60px;
+  margin-bottom: var(--space-2);
+  color: var(--color-ink-2);
+}
+.widget-tile.is-selected .widget-tile__thumb {
+  color: var(--color-brand-600);
+}
+.widget-tile__marking--deterministic small {
+  color: var(--color-success-600);
+}
+.widget-tile__marking--teacher_pending small {
+  color: var(--color-warn-700);
+}

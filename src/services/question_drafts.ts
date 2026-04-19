@@ -126,6 +126,11 @@ export class QuestionDraftService {
     return this.repo.listByAuthor(actor.id);
   }
 
+  async recentWidgetsForActor(actor: ActorForDraft, limit: number): Promise<string[]> {
+    if (!canAuthor(actor)) throw new DraftAccessError('not_teacher');
+    return this.repo.recentWidgetsByAuthor(actor.id, limit);
+  }
+
   // Records the teacher's answer for `step`, merges it into the payload,
   // and bumps current_step to max(current_step, step + 1) so the next
   // visit lands on the next unanswered step. Step 9's "advance" is

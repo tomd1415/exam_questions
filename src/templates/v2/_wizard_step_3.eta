@@ -1,0 +1,90 @@
+<%
+// Wizard v2 step 3 — "How should the pupil answer?"
+//
+// The v1 template rendered a flat tile grid; v2 upgrades each tile with:
+//   • a 60×60 SVG thumbnail from /static/widget_thumbs/<type>.svg
+//   • a marking badge (auto-marked / teacher review)
+//   • a small description
+// plus a "Your recent widgets" row promoted above the recommended section
+// if the current author has ever authored a draft with a chosen widget.
+const p = it.draft.payload || {};
+const cw = p.command_word_code || '';
+const selected = p.expected_response_type || '';
+const widgets = it.widgets || { recommended: [], other: [] };
+const byType = {};
+[...widgets.recommended, ...widgets.other].forEach(function (w) {
+  byType[w.type] = w;
+});
+const recentTypes = (it.recentWidgets || []).filter(function (t) {
+  return !!byType[t];
+});
+
+function renderTile(w, variant) {
+  %>
+  <label class="widget-tile<% if (selected === w.type) { %> is-selected<% } %><% if (variant === 'alt') { %> widget-tile--alt<% } %>">
+    <input type="radio" name="expected_response_type" value="<%= w.type %>"
+           <% if (selected === w.type) { %>checked<% } %> />
+    <img class="widget-tile__thumb"
+         src="<%= w.thumbUrl %>"
+         width="60" height="60"
+         alt="" aria-hidden="true" />
+    <span class="widget-tile__name"><%= w.displayName %></span>
+    <span class="widget-tile__desc"><%= w.description %></span>
+    <span class="widget-tile__marking widget-tile__marking--<%= w.marker %>">
+      <% if (w.marker === 'deterministic') { %>
+        <small>Auto-marked</small>
+      <% } else { %>
+        <small>Teacher review</small>
+      <% } %>
+    </span>
+  </label>
+  <%
+}
+%>
+<fieldset class="wizard-step wizard-step--3">
+  <legend class="visually-hidden">Pick the widget the pupil will use to answer</legend>
+
+  <% if (cw) { %>
+    <p class="admin-wizard__lede">
+      Command word <strong><%= cw %></strong>.
+      <% if (widgets.recommended.length > 0) { %>
+        Recommended widgets:
+      <% } else { %>
+        No specific recommendation &mdash; pick whichever fits the expected answer.
+      <% } %>
+    </p>
+  <% } else { %>
+    <p class="admin-wizard__lede">
+      Pick a widget. You&rsquo;ll need to go back to step 2 to set a command word first for tailored recommendations.
+    </p>
+  <% } %>
+
+  <% if (recentTypes.length > 0) { %>
+    <section class="widget-tile-section" data-section="recent">
+      <h2 class="widget-tile-section__heading">Your recent widgets</h2>
+      <div class="widget-tile-grid">
+        <% recentTypes.forEach(function (t) { renderTile(byType[t], 'recent'); }); %>
+      </div>
+    </section>
+  <% } %>
+
+  <% if (widgets.recommended.length > 0) { %>
+    <section class="widget-tile-section" data-section="recommended">
+      <% if (cw) { %>
+        <h2 class="widget-tile-section__heading">Recommended for &ldquo;<%= cw %>&rdquo;</h2>
+      <% } %>
+      <div class="widget-tile-grid">
+        <% widgets.recommended.forEach(function (w) { renderTile(w, 'recommended'); }); %>
+      </div>
+    </section>
+  <% } %>
+
+  <% if (widgets.other.length > 0) { %>
+    <details class="admin-wizard__more-widgets">
+      <summary>Other widgets (<%= widgets.other.length %>)</summary>
+      <div class="widget-tile-grid" data-section="other">
+        <% widgets.other.forEach(function (w) { renderTile(w, 'alt'); }); %>
+      </div>
+    </details>
+  <% } %>
+</fieldset>

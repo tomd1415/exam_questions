@@ -87,7 +87,11 @@ const railCtx = { ...it, stepTitles: STEP_TITLES };
             data-wizard-editor
             data-autosave-url="/admin/questions/wizard/<%= draftId %>/step/<%= stepN %>/autosave">
         <input type="hidden" name="_csrf" value="<%= it.csrfToken %>" />
-        <%~ include('../_wizard_step_' + stepN, { ...it, issueMap }) %>
+        <% if (stepN === 1 || stepN === 2 || stepN === 3) { %>
+          <%~ include('./_wizard_step_' + stepN, { ...it, issueMap }) %>
+        <% } else { %>
+          <%~ include('../_wizard_step_' + stepN, { ...it, issueMap }) %>
+        <% } %>
       </form>
 
       <%~ include('./_wizard_shortcut_help_dialog', it) %>

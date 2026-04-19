@@ -65,6 +65,15 @@ export interface WidgetRegistration {
   validateConfig(config: unknown): PartConfigIssue[];
 }
 
+/**
+ * Absolute URL path (under `/static/widget_thumbs/`) of the 60×60 glyph
+ * the wizard shows on the step-3 tile. Derived from `type` so every
+ * widget has a deterministic thumbnail without per-entry boilerplate.
+ */
+export function widgetThumbUrl(type: string): string {
+  return `/static/widget_thumbs/${type}.svg`;
+}
+
 function configMustBeNull(type: string): (config: unknown) => PartConfigIssue[] {
   return (config) => {
     if (config === null || config === undefined) return [];
@@ -1086,6 +1095,7 @@ export interface WidgetDescriptor {
   markPointGuidance: string;
   configSchema: WidgetConfigSchema | null;
   exampleConfig: unknown;
+  thumbUrl: string;
 }
 
 function toDescriptor(r: WidgetRegistration): WidgetDescriptor {
@@ -1097,6 +1107,7 @@ function toDescriptor(r: WidgetRegistration): WidgetDescriptor {
     markPointGuidance: r.markPointGuidance,
     configSchema: r.configSchema,
     exampleConfig: r.exampleConfig,
+    thumbUrl: widgetThumbUrl(r.type),
   };
 }
 

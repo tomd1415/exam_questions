@@ -1,0 +1,89 @@
+<%
+// Wizard v2 step 1 — "Where does this question live?"
+//
+// The v1 template ships three stacked <select>s. v2 keeps that accessible
+// base and layers a progressive-enhancement filter on top:
+//   • a "Filter options" search input narrows all three selects at once
+//   • the existing wizard_curriculum_chain.js still enforces parent/child
+//     cascades, so picking a component limits topics, picking a topic
+//     limits subtopics.
+//
+// Native selects remain functional with JS disabled.
+const p = it.draft.payload || {};
+const selectedComponent = p.component_code || '';
+const selectedTopic = p.topic_code || '';
+const selectedSubtopic = p.subtopic_code || '';
+const topicsByComponent = {};
+(it.refs.topics || []).forEach(function (t) {
+  if (!topicsByComponent[t.component_code]) topicsByComponent[t.component_code] = [];
+  topicsByComponent[t.component_code].push(t);
+});
+const subtopicsByTopic = {};
+(it.refs.subtopics || []).forEach(function (s) {
+  if (!subtopicsByTopic[s.topic_code]) subtopicsByTopic[s.topic_code] = [];
+  subtopicsByTopic[s.topic_code].push(s);
+});
+%>
+<fieldset class="wizard-step wizard-step--1" data-wizard-curriculum>
+  <legend class="visually-hidden">Where does this question live?</legend>
+
+  <label class="stacked-field wizard__curriculum-filter">
+    <span class="stacked-field__label">Filter options</span>
+    <input type="search"
+           data-wizard-curriculum-filter
+           placeholder="Type to narrow the lists below…"
+           autocomplete="off" />
+    <span class="stacked-field__hint">
+      Filters the three dropdowns live. Leave blank to see everything.
+    </span>
+  </label>
+
+  <label class="stacked-field">
+    <span class="stacked-field__label">Component</span>
+    <select name="component_code" required data-curriculum-level="component">
+      <option value="" <% if (!selectedComponent) { %>selected<% } %>>&mdash; choose &mdash;</option>
+      <% (it.refs.components || []).forEach(function (c) { %>
+        <option value="<%= c.code %>" <% if (selectedComponent === c.code) { %>selected<% } %>>
+          <%= c.code %> &middot; <%= c.title %>
+        </option>
+      <% }); %>
+    </select>
+  </label>
+
+  <label class="stacked-field">
+    <span class="stacked-field__label">Topic</span>
+    <select name="topic_code" required data-curriculum-level="topic">
+      <option value="" <% if (!selectedTopic) { %>selected<% } %>>&mdash; choose &mdash;</option>
+      <% Object.keys(topicsByComponent).sort().forEach(function (cc) { %>
+        <optgroup label="<%= cc %>">
+          <% topicsByComponent[cc].forEach(function (t) { %>
+            <option value="<%= t.code %>"
+                    data-component="<%= t.component_code %>"
+                    <% if (selectedTopic === t.code) { %>selected<% } %>>
+              <%= t.code %> &middot; <%= t.title %>
+            </option>
+          <% }); %>
+        </optgroup>
+      <% }); %>
+    </select>
+    <span class="stacked-field__hint">Only topics under the chosen component are shown.</span>
+  </label>
+
+  <label class="stacked-field">
+    <span class="stacked-field__label">Subtopic</span>
+    <select name="subtopic_code" required data-curriculum-level="subtopic">
+      <option value="" <% if (!selectedSubtopic) { %>selected<% } %>>&mdash; choose &mdash;</option>
+      <% Object.keys(subtopicsByTopic).sort().forEach(function (tc) { %>
+        <optgroup label="<%= tc %>">
+          <% subtopicsByTopic[tc].forEach(function (s) { %>
+            <option value="<%= s.code %>"
+                    data-topic="<%= s.topic_code %>"
+                    <% if (selectedSubtopic === s.code) { %>selected<% } %>>
+              <%= s.code %> &middot; <%= s.title %>
+            </option>
+          <% }); %>
+        </optgroup>
+      <% }); %>
+    </select>
+  </label>
+</fieldset>

@@ -74,6 +74,27 @@ export class QuestionDraftRepo {
     return rows[0] ?? null;
   }
 
+  // Ordered list of the widget types this author has most recently chosen on
+  // any of their drafts. Used by the wizard v2 step-3 tile grid to surface
+  // "your recently used" widgets above the recommended / other split.
+  async recentWidgetsByAuthor(authorUserId: string, limit: number): Promise<string[]> {
+    const { rows } = await this.pool.query<{ t: string }>(
+      `SELECT t FROM (
+         SELECT payload->>'expected_response_type' AS t,
+                MAX(updated_at) AS last_used
+           FROM question_drafts
+          WHERE author_user_id = $1::bigint
+            AND payload ? 'expected_response_type'
+            AND payload->>'expected_response_type' <> ''
+          GROUP BY payload->>'expected_response_type'
+       ) g
+       ORDER BY last_used DESC
+       LIMIT $2`,
+      [authorUserId, limit],
+    );
+    return rows.map((r) => r.t);
+  }
+
   async listByAuthor(authorUserId: string): Promise<QuestionDraftListRow[]> {
     const { rows } = await this.pool.query<QuestionDraftListRow>(
       `SELECT id::text, current_step, payload, published_question_id::text, created_at, updated_at
