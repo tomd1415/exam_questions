@@ -72,6 +72,7 @@ const themePref = (it.currentUser && it.currentUser.theme_preference) || 'auto';
       <script src="/static/v2/wizard_shortcuts.js" defer></script>
       <script src="/static/v2/wizard_curriculum_filter.js" defer></script>
       <script src="/static/v2/wizard_command_word_grid.js" defer></script>
+      <script src="/static/v2/wizard_step_enhancements.js" defer></script>
     <% } %>
     <script src="/static/nav.js" defer></script>
     <script src="/static/confirm.js" defer></script>

@@ -1,0 +1,32 @@
+<%
+// Wizard v2 step 4 — "Write the question."
+//
+// The v1 template is a single textarea with a maxlength. v2 layers a
+// live character counter + OCR-exam-style "words" estimate on top, and
+// swaps the plain hint for a friendlier guideline about stem length.
+const p = it.draft.payload || {};
+const stem = p.stem || '';
+%>
+<fieldset class="wizard-step wizard-step--4">
+  <legend class="visually-hidden">Write the question stem</legend>
+
+  <label class="stacked-field">
+    <span class="stacked-field__label">Stem</span>
+    <textarea
+      name="stem"
+      rows="6"
+      maxlength="4000"
+      data-wizard-char-counter="wizard-stem-counter"
+      required><%= stem %></textarea>
+    <span class="stacked-field__hint">
+      Type the text the pupil reads. Markdown is <em>not</em> processed yet &mdash;
+      what you type is what they see.
+    </span>
+    <span class="wizard__char-counter"
+          id="wizard-stem-counter"
+          data-wizard-char-counter-display
+          aria-live="polite">
+      <span data-char-count><%= stem.length %></span> / 4000 characters
+    </span>
+  </label>
+</fieldset>

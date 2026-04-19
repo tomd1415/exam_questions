@@ -87,7 +87,7 @@ const railCtx = { ...it, stepTitles: STEP_TITLES };
             data-wizard-editor
             data-autosave-url="/admin/questions/wizard/<%= draftId %>/step/<%= stepN %>/autosave">
         <input type="hidden" name="_csrf" value="<%= it.csrfToken %>" />
-        <% if (stepN === 1 || stepN === 2 || stepN === 3) { %>
+        <% if (stepN === 1 || stepN === 2 || stepN === 3 || stepN === 4 || stepN === 8) { %>
           <%~ include('./_wizard_step_' + stepN, { ...it, issueMap }) %>
         <% } else { %>
           <%~ include('../_wizard_step_' + stepN, { ...it, issueMap }) %>
@@ -99,12 +99,22 @@ const railCtx = { ...it, stepTitles: STEP_TITLES };
       <% if (isPublishStep) { %>
         <form method="post"
               action="/admin/questions/wizard/<%= draftId %>/publish"
-              class="wizard__publish stacked-form">
+              class="wizard__publish stacked-form"
+              data-wizard-publish-form>
           <input type="hidden" name="_csrf" value="<%= it.csrfToken %>" />
-          <button type="submit" class="btn btn--primary btn--lg wizard__publish-btn">Publish question</button>
+          <button type="submit"
+                  class="btn btn--primary btn--lg wizard__publish-btn"
+                  data-wizard-hold-confirm
+                  data-hold-duration="1200"
+                  data-hold-label-idle="Hold to publish"
+                  data-hold-label-progress="Keep holding&hellip;"
+                  data-hold-label-done="Publishing&hellip;">
+            Publish question
+          </button>
           <p class="wizard__publish-hint">
             Publishing creates the live question in <em>draft</em> approval state &mdash;
-            nothing reaches pupils until it&rsquo;s approved on the question page.
+            nothing reaches pupils until it&rsquo;s approved on the question page. Hold the
+            button for about a second to confirm.
           </p>
         </form>
       <% } %>

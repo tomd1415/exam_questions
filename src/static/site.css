@@ -2578,3 +2578,48 @@ input[type='number'].input {
 .widget-tile__marking--teacher_pending small {
   color: var(--color-warn-700);
 }
+
+/* ---- v2 step 4: char counter ---- */
+.wizard__char-counter {
+  display: block;
+  margin-top: var(--space-1);
+  color: var(--color-ink-3);
+  font-size: var(--type-micro);
+  text-align: right;
+}
+
+/* ---- v2 step 8: difficulty slider ---- */
+.wizard__slider-field input[type='range'] {
+  width: 100%;
+  accent-color: var(--color-brand-500);
+}
+
+/* ---- v2 step 9: hold-to-publish ---- */
+.wizard__publish-btn[data-wizard-hold-confirm] {
+  position: relative;
+  overflow: hidden;
+}
+.wizard__publish-btn[data-holding]::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 0;
+  background: rgba(0, 0, 0, 0.18);
+  animation: wizardHoldProgress 1200ms linear forwards;
+}
+@keyframes wizardHoldProgress {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .wizard__publish-btn[data-holding]::after {
+    animation: none;
+    width: 100%;
+  }
+}

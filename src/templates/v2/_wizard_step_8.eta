@@ -1,0 +1,72 @@
+<%
+// Wizard v2 step 8 — difficulty + source.
+//
+// The v1 template is two <select>s for band + step plus a radio group.
+// v2 swaps band for a slider (keeps the select behind it for a11y +
+// no-JS fallback — wizard_difficulty_slider.js mirrors values) and
+// keeps the step + source controls but promotes source from stacked
+// radios to a row of chips.
+const p = it.draft.payload || {};
+const band = p.difficulty_band || 3;
+const step = p.difficulty_step || 1;
+const source = p.source_type || 'teacher';
+%>
+<fieldset class="wizard-step wizard-step--8" data-wizard-difficulty>
+  <legend class="visually-hidden">Difficulty and tags</legend>
+
+  <div class="stacked-field wizard__slider-field">
+    <label class="stacked-field__label" for="wizard-difficulty-band-range">
+      Difficulty band &mdash; <span data-wizard-difficulty-current><%= band %></span> of 9
+    </label>
+    <input
+      type="range"
+      id="wizard-difficulty-band-range"
+      min="1" max="9" step="1"
+      value="<%= band %>"
+      data-wizard-difficulty-range
+      aria-describedby="wizard-difficulty-hint" />
+    <select name="difficulty_band" required data-wizard-difficulty-select class="visually-hidden">
+      <% for (let b = 1; b <= 9; b++) { %>
+        <option value="<%= b %>" <% if (Number(band) === b) { %>selected<% } %>><%= b %></option>
+      <% } %>
+    </select>
+    <span class="stacked-field__hint" id="wizard-difficulty-hint">
+      1 is the easiest, 9 the hardest. Pick the band you&rsquo;d give a pupil who just
+      learned this subtopic.
+    </span>
+  </div>
+
+  <label class="stacked-field">
+    <span class="stacked-field__label">Difficulty step within the band</span>
+    <select name="difficulty_step" required>
+      <% for (let s = 1; s <= 3; s++) { %>
+        <option value="<%= s %>" <% if (Number(step) === s) { %>selected<% } %>><%= s %></option>
+      <% } %>
+    </select>
+    <span class="stacked-field__hint">
+      1 = start of band, 3 = top of band. Used by the adaptive recap flow in pupil
+      mode.
+    </span>
+  </label>
+
+  <fieldset class="wizard-step__source wizard__chip-field">
+    <legend class="stacked-field__label">Source</legend>
+    <div class="wizard__chip-grid" data-wizard-chip-grid>
+      <label class="wizard__chip<% if (source === 'teacher') { %> is-selected<% } %>">
+        <input type="radio" name="source_type" value="teacher" <% if (source === 'teacher') { %>checked<% } %> />
+        <span class="wizard__chip-label">Teacher-authored</span>
+        <span class="wizard__chip-sub">Recommended</span>
+      </label>
+      <label class="wizard__chip<% if (source === 'imported_pattern') { %> is-selected<% } %>">
+        <input type="radio" name="source_type" value="imported_pattern" <% if (source === 'imported_pattern') { %>checked<% } %> />
+        <span class="wizard__chip-label">Imported</span>
+        <span class="wizard__chip-sub">From an OCR pattern</span>
+      </label>
+      <label class="wizard__chip<% if (source === 'ai_generated') { %> is-selected<% } %>">
+        <input type="radio" name="source_type" value="ai_generated" <% if (source === 'ai_generated') { %>checked<% } %> />
+        <span class="wizard__chip-label">AI-generated</span>
+        <span class="wizard__chip-sub">Must be reviewed before approval</span>
+      </label>
+    </div>
+  </fieldset>
+</fieldset>
