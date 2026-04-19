@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, beforeEach, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll, beforeEach, afterAll, afterEach } from 'vitest';
 import type { FastifyInstance } from 'fastify';
 import { buildTestApp } from '../helpers/app.js';
 import { cleanDb, getSharedPool } from '../helpers/db.js';
@@ -13,6 +13,14 @@ beforeAll(async () => {
 
 beforeEach(async () => {
   await cleanDb();
+  // Chunk 2.5t flipped WIZARD_V2_ENABLED to default-on. These tests still
+  // exercise the v1 template set while it's kept around during the grace
+  // window — pin them to v1 explicitly so the wizard-v2 tests own v2.
+  process.env['WIZARD_V2_ENABLED'] = '0';
+});
+
+afterEach(() => {
+  delete process.env['WIZARD_V2_ENABLED'];
 });
 
 afterAll(async () => {

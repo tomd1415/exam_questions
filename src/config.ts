@@ -19,13 +19,14 @@ const ConfigSchema = z.object({
   OPENAI_MODEL_EMBEDDING: z.string().default('text-embedding-3-small'),
   ADMIN_USERNAME: z.string().min(1).default('admin'),
   ADMIN_INITIAL_PASSWORD: z.string().min(8),
-  // Wizard redesign (chunks 2.5n–2.5t) lives behind this flag. While off,
-  // the v1 wizard at /admin/questions/wizard/* is unchanged; v2 templates
-  // live under src/templates/v2/ and src/static/v2/ and are only rendered
-  // when the flag is on. Flips to '1' after chunk 2.5t lands.
+  // Wizard redesign (chunks 2.5n–2.5t). The v2 wizard is now the default
+  // — the v1 templates are kept around for a short grace window so the
+  // flag can be flipped back if a regression surfaces in the first week
+  // of classroom use. Chunk 2.5t closed the redesign and flipped the
+  // default from 'false' to 'true' after the axe sweep went green.
   WIZARD_V2_ENABLED: z
     .enum(['true', 'false', '0', '1'])
-    .default('false')
+    .default('true')
     .transform((v) => v === 'true' || v === '1'),
 });
 
