@@ -17,6 +17,20 @@ let baseUrl: string;
 let browser: Browser;
 let teacherCtx: BrowserContext;
 let draftId: string;
+let teacherId: string;
+
+// Flip the teacher's theme_preference at the DB level rather than using
+// page.evaluate(setAttribute). Server-side `_chrome.eta` reads the value
+// at render-time, so the first byte of HTML already carries
+// `<html data-theme="dark">`. That guarantees every CSS custom-property
+// override resolves on the initial cascade — no flash of light styles, no
+// ambiguity about whether the attribute landed before axe scanned.
+async function setTheme(theme: 'light' | 'dark'): Promise<void> {
+  await getSharedPool().query(
+    `UPDATE users SET theme_preference = $1 WHERE id = $2::bigint`,
+    [theme, teacherId],
+  );
+}
 
 const SERIOUS_IMPACTS: readonly string[] = ['serious', 'critical'];
 
@@ -71,6 +85,7 @@ beforeAll(async () => {
 
   const pool = getSharedPool();
   const teacher = await createUser(pool, { role: 'teacher' });
+  teacherId = teacher.id;
 
   // Seed a draft whose payload contains every field the nine step templates
   // render. This lets axe hit all nine steps on a realistic DOM (context
@@ -121,7 +136,8 @@ afterAll(async () => {
   delete process.env['WIZARD_V2_ENABLED'];
 });
 
-async function check(path: string): Promise<void> {
+async function check(path: string, theme: 'light' | 'dark' = 'light'): Promise<void> {
+  await setTheme(theme);
   const p = await teacherCtx.newPage();
   try {
     const resp = await p.goto(`${baseUrl}${path}`);
@@ -131,7 +147,7 @@ async function check(path: string): Promise<void> {
         `expected 200 on ${path}, got ${resp?.status() ?? 'no-response'}. body head: ${body.slice(0, 300)}`,
       );
     }
-    await axeOn(p, path);
+    await axeOn(p, `${path} (${theme})`);
   } finally {
     await p.close();
   }
@@ -145,6 +161,21 @@ describe('axe-core pass over the wizard v2 surface (Chunk 2.5t)', () => {
   for (let n = 1; n <= 9; n++) {
     it(`/admin/questions/wizard/:id/step/${n} has no serious violations`, async () => {
       await check(`/admin/questions/wizard/${draftId}/step/${n}`);
+    }, 30_000);
+  }
+});
+
+// Dark-mode parallel pass (Chunk A4). Re-uses the seeded draft but flips
+// <html data-theme="dark"> before the axe scan so any contrast regression
+// in the dark variant fails CI alongside the light one.
+describe('axe-core pass over the wizard v2 surface in dark mode (Chunk A4)', () => {
+  it('/admin/questions/wizard (drafts list, dark) has no serious violations', async () => {
+    await check('/admin/questions/wizard', 'dark');
+  }, 30_000);
+
+  for (let n = 1; n <= 9; n++) {
+    it(`/admin/questions/wizard/:id/step/${n} (dark) has no serious violations`, async () => {
+      await check(`/admin/questions/wizard/${draftId}/step/${n}`, 'dark');
     }, 30_000);
   }
 });

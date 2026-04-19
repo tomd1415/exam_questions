@@ -38,10 +38,10 @@ html[data-font='dyslexic'] body {
 }
 
 a {
-  color: var(--color-brand-600);
+  color: var(--color-brand-text);
 }
 a:hover {
-  color: var(--color-brand-700);
+  text-decoration-thickness: 2px;
 }
 
 /* --- Site header / footer ------------------------------------------------- */
@@ -204,7 +204,7 @@ a:hover {
   text-decoration: none;
 }
 .breadcrumbs__item a:hover {
-  color: var(--color-brand-600);
+  color: var(--color-brand-text);
   text-decoration: underline;
 }
 .breadcrumbs__item [aria-current='page'] {
@@ -939,7 +939,7 @@ input[type='number'].input {
 }
 .admin-wizard__progress-item.is-done a {
   background: var(--color-brand-100);
-  color: var(--color-brand-700);
+  color: var(--color-brand-text);
 }
 .admin-wizard__progress-item.is-current a,
 .admin-wizard__progress-item.is-current > span {
@@ -1010,7 +1010,7 @@ input[type='number'].input {
 }
 .admin-wizard__more-widgets > summary {
   cursor: pointer;
-  color: var(--color-brand-600);
+  color: var(--color-brand-text);
   font-weight: 500;
   padding: var(--space-1) 0;
 }
@@ -1424,7 +1424,7 @@ input[type='number'].input {
 }
 .chip--accent {
   background: var(--color-brand-50);
-  color: var(--color-brand-700);
+  color: var(--color-brand-text);
   border-color: var(--color-brand-100);
 }
 .chip--warm {
@@ -1686,7 +1686,7 @@ input[type='number'].input {
   color: var(--color-ink-0);
 }
 .v2-tabs__tab.is-current {
-  color: var(--color-brand-700);
+  color: var(--color-brand-text);
   border-bottom-color: var(--color-brand-500);
   font-weight: 600;
 }
@@ -1701,7 +1701,7 @@ input[type='number'].input {
 }
 .v2-tabs__tab.is-current .v2-tabs__count {
   background: var(--color-brand-50);
-  color: var(--color-brand-700);
+  color: var(--color-brand-text);
 }
 
 .v2-filters {
@@ -1758,7 +1758,7 @@ input[type='number'].input {
 }
 .chip--toggle.is-selected {
   background: var(--color-brand-50);
-  color: var(--color-brand-700);
+  color: var(--color-brand-text);
   border-color: var(--color-brand-500);
   font-weight: 600;
 }
@@ -1855,7 +1855,7 @@ input[type='number'].input {
 .v2-draft-card__action {
   grid-column: 2;
   font-size: var(--type-small);
-  color: var(--color-brand-700);
+  color: var(--color-brand-text);
   font-weight: 600;
   opacity: 0;
   transition: opacity var(--duration-fast) var(--ease-standard);
@@ -1945,7 +1945,7 @@ input[type='number'].input {
   align-items: center;
 }
 .wizard__breadcrumbs a {
-  color: var(--color-brand-600);
+  color: var(--color-brand-text);
   text-decoration: none;
 }
 .wizard__breadcrumbs a:hover {
@@ -2150,7 +2150,7 @@ input[type='number'].input {
   white-space: nowrap;
 }
 .wizard__context-edit {
-  color: var(--color-brand-600);
+  color: var(--color-brand-text);
   font-size: var(--type-micro);
   text-decoration: none;
 }
@@ -2455,7 +2455,7 @@ input[type='number'].input {
   padding: var(--space-1) var(--space-2);
   font-size: var(--type-micro);
   background: transparent;
-  color: var(--color-brand-600);
+  color: var(--color-brand-text);
   border: 1px dashed var(--color-border-strong);
   border-radius: var(--radius-md);
   cursor: pointer;
@@ -2631,7 +2631,7 @@ input[type='number'].input {
   color: var(--color-ink-2);
 }
 .widget-tile.is-selected .widget-tile__thumb {
-  color: var(--color-brand-600);
+  color: var(--color-brand-text);
 }
 .widget-tile__marking--deterministic small {
   color: var(--color-success-600);
