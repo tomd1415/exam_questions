@@ -49,6 +49,9 @@ const fontPref = (it.currentUser && it.currentUser.font_preference) || 'system';
     <% if (it.wizardScriptsEnabled) { %>
       <script src="/static/wizard_curriculum_chain.js" defer></script>
     <% } %>
+    <% if (it.wizardAnswerPickerEnabled) { %>
+      <script src="/static/wizard_answer_picker.js" defer></script>
+    <% } %>
     <script src="/static/nav.js" defer></script>
     <script src="/static/confirm.js" defer></script>
   </body>

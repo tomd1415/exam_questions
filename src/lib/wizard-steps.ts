@@ -5,7 +5,7 @@
 //
 // Parsers take the current payload because some steps build on earlier ones:
 // step 3 needs to seed `parts[0]` with the right widget shell (and reset
-// part_config if the teacher swapped widgets), step 5 mirrors `stem` into
+// part_config if the teacher swapped widgets), step 4 mirrors `stem` into
 // `parts[0].prompt` for the single-part case, step 6 rewrites marks and
 // mark_points on `parts[0]`.
 //
@@ -261,10 +261,34 @@ export function parseStep3(body: unknown, ctx: StepParseContext): StepParseResul
 }
 
 // ---------------------------------------------------------------------------
-// Step 4 — widget-specific editor
+// Step 4 — stem
 // ---------------------------------------------------------------------------
 
+const MAX_STEM_LENGTH = 4000;
+
 export function parseStep4(body: unknown, ctx: StepParseContext): StepParseResult {
+  const record = (body ?? {}) as Record<string, unknown>;
+  const stem = trimmed(record['stem']);
+  const issues: StepIssue[] = [];
+
+  if (stem.length === 0) issues.push({ path: 'stem', message: 'The stem is required.' });
+  else if (stem.length > MAX_STEM_LENGTH)
+    issues.push({ path: 'stem', message: `The stem must be ≤${MAX_STEM_LENGTH} characters.` });
+
+  if (issues.length > 0) return { ok: false, issues };
+
+  const base = ensurePart(ctx.currentPayload);
+  // Single-part wizard: mirror the stem into parts[0].prompt so the invariant
+  // validator (which requires a non-empty prompt per part) is satisfied.
+  const part: PartDraft = { ...base, prompt: stem };
+  return { ok: true, patch: { stem, parts: [part] } };
+}
+
+// ---------------------------------------------------------------------------
+// Step 5 — widget-specific editor
+// ---------------------------------------------------------------------------
+
+export function parseStep5(body: unknown, ctx: StepParseContext): StepParseResult {
   const existing = ctx.currentPayload.parts?.[0];
   const widget = existing?.expected_response_type;
   if (!widget) {
@@ -295,30 +319,6 @@ export function parseStep4(body: unknown, ctx: StepParseContext): StepParseResul
     }));
   }
   return { ok: true, patch: { parts: [part] } };
-}
-
-// ---------------------------------------------------------------------------
-// Step 5 — stem
-// ---------------------------------------------------------------------------
-
-const MAX_STEM_LENGTH = 4000;
-
-export function parseStep5(body: unknown, ctx: StepParseContext): StepParseResult {
-  const record = (body ?? {}) as Record<string, unknown>;
-  const stem = trimmed(record['stem']);
-  const issues: StepIssue[] = [];
-
-  if (stem.length === 0) issues.push({ path: 'stem', message: 'The stem is required.' });
-  else if (stem.length > MAX_STEM_LENGTH)
-    issues.push({ path: 'stem', message: `The stem must be ≤${MAX_STEM_LENGTH} characters.` });
-
-  if (issues.length > 0) return { ok: false, issues };
-
-  const base = ensurePart(ctx.currentPayload);
-  // Single-part wizard: mirror the stem into parts[0].prompt so the invariant
-  // validator (which requires a non-empty prompt per part) is satisfied.
-  const part: PartDraft = { ...base, prompt: stem };
-  return { ok: true, patch: { stem, parts: [part] } };
 }
 
 // ---------------------------------------------------------------------------

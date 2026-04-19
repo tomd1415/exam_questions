@@ -1,0 +1,13 @@
+<%
+const stem = (it.draft.payload || {}).stem || '';
+const show = it.step > 4 && stem.length > 0;
+%>
+<% if (show) { %>
+  <aside class="admin-wizard__stem-banner" aria-label="Question stem">
+    <p class="admin-wizard__stem-banner-label">Question stem</p>
+    <p class="admin-wizard__stem-banner-text"><%= stem %></p>
+    <p class="admin-wizard__stem-banner-edit">
+      <a href="/admin/questions/wizard/<%= it.draft.id %>/step/4">Edit the stem</a>
+    </p>
+  </aside>
+<% } %>

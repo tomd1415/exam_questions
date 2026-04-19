@@ -3,8 +3,8 @@ const STEP_TITLES = {
   1: 'Where does this question live?',
   2: 'What does the question ask the pupil to do?',
   3: 'How should the pupil answer?',
-  4: 'Set up the answer area',
-  5: 'Write the question',
+  4: 'Write the question',
+  5: 'Set up the answer area',
   6: 'Marks and model answer',
   7: 'Common misconceptions',
   8: 'Difficulty and tags',
@@ -13,9 +13,9 @@ const STEP_TITLES = {
 const STEP_HINTS = {
   1: 'Pick the component, topic, and subtopic the question fits under. Pupils will see the question filed here.',
   2: 'The command word (&ldquo;describe&rdquo;, &ldquo;state&rdquo;, &ldquo;complete the table&rdquo;&hellip;) sets the tone and the typical mark tariff.',
-  3: 'Pick the answer widget that matches the shape of the answer. The next step will set up its details.',
-  4: 'Configure the widget you picked. Each widget asks a slightly different set of questions.',
-  5: 'Type the stem the pupil will read. The preview on the right shows what they&rsquo;ll see.',
+  3: 'Pick the answer widget that matches the shape of the answer. The next two steps will set up the question and its answer.',
+  4: 'Type the stem the pupil will read. It stays visible above each later step so you can keep referring to it.',
+  5: 'Configure the widget you picked. Each widget asks a slightly different set of questions.',
   6: 'Set the mark tariff and write the model answer. List one mark point per line.',
   7: 'Optional. Note any wrong-answer patterns you&rsquo;ve seen pupils make on this kind of question.',
   8: 'Pick the difficulty band and tag the question with paper section / source.',
@@ -61,6 +61,8 @@ const issueMap = {};
       </li>
     <% } %>
   </ol>
+
+  <%~ include('_wizard_stem_banner', it) %>
 
   <% if (it.flash) { %>
     <p class="flash" role="status"><%= it.flash %></p>

@@ -29,9 +29,9 @@ const derivedTexts = (part.mark_points || []).map(function (mp) { return mp.text
 
   <% if (autoDerived) { %>
     <fieldset class="stacked-field">
-      <span class="stacked-field__label">Mark points (set on step 4)</span>
+      <span class="stacked-field__label">Mark points (set on step 5)</span>
       <% if (derivedTexts.length === 0) { %>
-        <p class="form-hint">Go back to step 4 and tick the option(s) that should be marked correct.</p>
+        <p class="form-hint">Go back to step 5 and tick the option(s) that should be marked correct.</p>
       <% } else { %>
         <ul class="mc-derived-mark-points">
           <% derivedTexts.forEach(function (t) { %>
@@ -39,8 +39,8 @@ const derivedTexts = (part.mark_points || []).map(function (mp) { return mp.text
           <% }); %>
         </ul>
         <p class="form-hint">
-          For this widget the wizard derives one mark point per correct option ticked on step 4.
-          Edit step 4 to change them.
+          For this widget the wizard derives one mark point per correct option ticked on step 5.
+          Edit step 5 to change them.
         </p>
       <% } %>
     </fieldset>

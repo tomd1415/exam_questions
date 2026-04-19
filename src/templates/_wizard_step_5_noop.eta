@@ -1,7 +1,7 @@
 <%
 const widget = (it.draft.payload || {}).expected_response_type || '';
 %>
-<fieldset class="wizard-step wizard-step--4 wizard-step--noop">
+<fieldset class="wizard-step wizard-step--5 wizard-step--noop">
   <legend class="visually-hidden">No widget configuration needed</legend>
   <p>
     The <strong><%= widget %></strong> widget doesn&rsquo;t need any extra

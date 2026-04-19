@@ -78,8 +78,8 @@ const STEP_FIELDS: Record<number, Record<string, string>> = {
   1: { component_code: 'J277/01', topic_code: '1.1', subtopic_code: '1.1.1' },
   2: { command_word_code: 'state', archetype_code: 'recall' },
   3: { expected_response_type: 'short_text' },
-  4: {},
-  5: { stem: 'State one role of the CPU.' },
+  4: { stem: 'State one role of the CPU.' },
+  5: {},
   6: {
     marks: '1',
     model_answer: 'It fetches, decodes, and executes instructions.',
@@ -460,7 +460,7 @@ describe('wizard per-step validation (chunk 2.5j step 3)', () => {
     expect(res.statusCode).toBe(200);
     expect(res.payload).toContain('Not ready to publish');
     expect(res.payload).toContain('Step 2: command word');
-    expect(res.payload).toContain('Step 5: stem');
+    expect(res.payload).toContain('Step 4: stem');
     expect(res.payload).toContain('Step 6: model answer');
   });
 });

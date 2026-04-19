@@ -5,7 +5,7 @@ const width = typeof canvas.width === 'number' ? canvas.width : 600;
 const height = typeof canvas.height === 'number' ? canvas.height : 500;
 const issueMap = it.issueMap || {};
 %>
-<fieldset class="wizard-step wizard-step--4 wizard-step--canvas">
+<fieldset class="wizard-step wizard-step--5 wizard-step--canvas">
   <legend>Flowchart canvas</legend>
 
   <p class="form-hint">

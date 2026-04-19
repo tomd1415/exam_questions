@@ -136,7 +136,7 @@ function missingFieldsForPublish(payload: QuestionDraftPayload): string[] {
   if (!payload.command_word_code || !payload.archetype_code)
     missing.push('Step 2: command word and archetype');
   if (!payload.expected_response_type) missing.push('Step 3: widget choice');
-  if (!payload.stem) missing.push('Step 5: stem');
+  if (!payload.stem) missing.push('Step 4: stem');
   if (!payload.model_answer) missing.push('Step 6: model answer');
   const part = payload.parts?.[0];
   if (!part) missing.push('Step 6: mark points');
@@ -180,6 +180,10 @@ async function renderStep(
     // (the script no-ops when its selectors aren't on the page) but we
     // still gate it on step 1 so the network panel stays clean.
     wizardScriptsEnabled: n === 1,
+    // Loads /static/wizard_answer_picker.js so the per-widget editor's
+    // correct-answer UI rebuilds live as the teacher edits the source
+    // textareas. Only the widget-config step needs it.
+    wizardAnswerPickerEnabled: n === 5,
   });
 }
 

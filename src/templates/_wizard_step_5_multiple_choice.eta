@@ -6,7 +6,8 @@ const mpTexts = (part.mark_points || []).map(function (mp) { return mp.text; });
 const correctSet = new Set(mpTexts);
 const issueMap = it.issueMap || {};
 %>
-<fieldset class="wizard-step wizard-step--4 wizard-step--multiple-choice">
+<fieldset class="wizard-step wizard-step--5 wizard-step--multiple-choice"
+          data-widget-editor="multiple_choice">
   <legend>Multiple choice options</legend>
 
   <label for="options">Options (one per line, in the order pupils will see them)</label>
@@ -14,23 +15,25 @@ const issueMap = it.issueMap || {};
   <p class="form-hint">List every option pupils will see, including the wrong ones (distractors).</p>
   <% (issueMap.options || []).forEach(function (m) { %><p class="form-error"><%= m %></p><% }); %>
 
-  <% if (mcOpts.length > 0) { %>
-    <fieldset class="mc-correct">
-      <legend>Tick the option(s) that should be marked correct</legend>
+  <fieldset class="mc-correct">
+    <legend>Tick the option(s) that should be marked correct</legend>
+    <div data-picker="correct-options">
       <% mcOpts.forEach(function (opt, i) { %>
         <label class="form-checkbox">
           <input type="checkbox" name="correct_<%= i %>"
+                 data-option-text="<%= opt %>"
                  <% if (correctSet.has(opt)) { %>checked<% } %> />
           <span><%= opt %></span>
         </label>
       <% }); %>
-      <% (issueMap.correct || []).forEach(function (m) { %><p class="form-error"><%= m %></p><% }); %>
-      <p class="form-hint">
-        Most multiple-choice questions have exactly one correct option. Ticking more than one
-        means any of those answers earns the mark.
-      </p>
-    </fieldset>
-  <% } else { %>
-    <p class="form-hint">Save the options first; you&rsquo;ll tick the correct one(s) next.</p>
-  <% } %>
+    </div>
+    <p class="form-hint" data-picker-empty <% if (mcOpts.length > 0) { %>hidden<% } %>>
+      Type the options above; the tick boxes will appear here.
+    </p>
+    <% (issueMap.correct || []).forEach(function (m) { %><p class="form-error"><%= m %></p><% }); %>
+    <p class="form-hint">
+      Most multiple-choice questions have exactly one correct option. Ticking more than one
+      means any of those answers earns the mark.
+    </p>
+  </fieldset>
 </fieldset>

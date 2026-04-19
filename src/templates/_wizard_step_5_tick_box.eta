@@ -7,7 +7,8 @@ const mpTexts = (part.mark_points || []).map(function (mp) { return mp.text; });
 const correctSet = new Set(mpTexts);
 const issueMap = it.issueMap || {};
 %>
-<fieldset class="wizard-step wizard-step--4 wizard-step--tick-box">
+<fieldset class="wizard-step wizard-step--5 wizard-step--tick-box"
+          data-widget-editor="tick_box">
   <legend>Tick-box options</legend>
 
   <label for="options">Options (one per line, in the order pupils will see them)</label>
@@ -20,23 +21,25 @@ const issueMap = it.issueMap || {};
   <p class="form-hint">Leave blank to let pupils tick any number; set to e.g. 2 to require exactly that many.</p>
   <% (issueMap.tickExactly || []).forEach(function (m) { %><p class="form-error"><%= m %></p><% }); %>
 
-  <% if (tickOpts.length > 0) { %>
-    <fieldset class="mc-correct">
-      <legend>Tick the option(s) that should be marked correct</legend>
+  <fieldset class="mc-correct">
+    <legend>Tick the option(s) that should be marked correct</legend>
+    <div data-picker="correct-options">
       <% tickOpts.forEach(function (opt, i) { %>
         <label class="form-checkbox">
           <input type="checkbox" name="correct_<%= i %>"
+                 data-option-text="<%= opt %>"
                  <% if (correctSet.has(opt)) { %>checked<% } %> />
           <span><%= opt %></span>
         </label>
       <% }); %>
-      <% (issueMap.correct || []).forEach(function (m) { %><p class="form-error"><%= m %></p><% }); %>
-      <p class="form-hint">
-        Each ticked option becomes a 1-mark mark_point. If you set &ldquo;Tick exactly&rdquo;,
-        the number of correct options must match.
-      </p>
-    </fieldset>
-  <% } else { %>
-    <p class="form-hint">Save the options first; you&rsquo;ll tick the correct one(s) next.</p>
-  <% } %>
+    </div>
+    <p class="form-hint" data-picker-empty <% if (tickOpts.length > 0) { %>hidden<% } %>>
+      Type the options above; the tick boxes will appear here.
+    </p>
+    <% (issueMap.correct || []).forEach(function (m) { %><p class="form-error"><%= m %></p><% }); %>
+    <p class="form-hint">
+      Each ticked option becomes a 1-mark mark_point. If you set &ldquo;Tick exactly&rdquo;,
+      the number of correct options must match.
+    </p>
+  </fieldset>
 </fieldset>

@@ -120,16 +120,16 @@ describe('wizard widget editors (chunk 2.5j step 4)', () => {
 
     const get = await app.inject({
       method: 'GET',
-      url: `/admin/questions/wizard/${draftId}/step/4`,
+      url: `/admin/questions/wizard/${draftId}/step/5`,
       headers: { cookie: cookieHeader(jar) },
     });
     expect(get.statusCode).toBe(200);
     expect(get.payload).toContain('doesn');
     expect(get.payload).toContain('extra');
 
-    const res = await postStep(jar, draftId, 4, {});
+    const res = await postStep(jar, draftId, 5, {});
     expect(res.statusCode).toBe(302);
-    expect(res.headers.location).toBe(`/admin/questions/wizard/${draftId}/step/5`);
+    expect(res.headers.location).toBe(`/admin/questions/wizard/${draftId}/step/6`);
   });
 
   it('multiple_choice editor saves options + correct ticks and derives mark_points', async () => {
@@ -138,7 +138,7 @@ describe('wizard widget editors (chunk 2.5j step 4)', () => {
     const draftId = await startDraft(jar);
     await pickWidget(jar, draftId, 'multiple_choice', 'identify');
 
-    const res = await postStep(jar, draftId, 4, {
+    const res = await postStep(jar, draftId, 5, {
       options: 'CPU\nRAM\nGPU\nSSD',
       correct_1: 'on',
     });
@@ -146,7 +146,7 @@ describe('wizard widget editors (chunk 2.5j step 4)', () => {
 
     const reload = await app.inject({
       method: 'GET',
-      url: `/admin/questions/wizard/${draftId}/step/4`,
+      url: `/admin/questions/wizard/${draftId}/step/5`,
       headers: { cookie: cookieHeader(jar) },
     });
     expect(reload.statusCode).toBe(200);
@@ -162,7 +162,7 @@ describe('wizard widget editors (chunk 2.5j step 4)', () => {
       headers: { cookie: cookieHeader(jar) },
     });
     expect(step6.statusCode).toBe(200);
-    expect(step6.payload).toContain('Mark points (set on step 4)');
+    expect(step6.payload).toContain('Mark points (set on step 5)');
     expect(step6.payload).toContain('RAM');
     expect(step6.payload).not.toMatch(/name="mark_points"/);
   });
@@ -173,7 +173,7 @@ describe('wizard widget editors (chunk 2.5j step 4)', () => {
     const draftId = await startDraft(jar);
     await pickWidget(jar, draftId, 'multiple_choice', 'identify');
 
-    const res = await postStep(jar, draftId, 4, {
+    const res = await postStep(jar, draftId, 5, {
       options: 'CPU\nRAM\nGPU',
     });
     expect(res.statusCode).toBe(400);
@@ -186,7 +186,7 @@ describe('wizard widget editors (chunk 2.5j step 4)', () => {
     const draftId = await startDraft(jar);
     await pickWidget(jar, draftId, 'tick_box', 'tick');
 
-    const res = await postStep(jar, draftId, 4, {
+    const res = await postStep(jar, draftId, 5, {
       options: 'CPU\nRAM\nGPU\nSSD',
       tickExactly: '2',
       correct_0: 'on',
@@ -196,7 +196,7 @@ describe('wizard widget editors (chunk 2.5j step 4)', () => {
 
     const reload = await app.inject({
       method: 'GET',
-      url: `/admin/questions/wizard/${draftId}/step/4`,
+      url: `/admin/questions/wizard/${draftId}/step/5`,
       headers: { cookie: cookieHeader(jar) },
     });
     expect(reload.statusCode).toBe(200);
@@ -221,7 +221,7 @@ describe('wizard widget editors (chunk 2.5j step 4)', () => {
     const draftId = await startDraft(jar);
     await pickWidget(jar, draftId, 'tick_box', 'tick');
 
-    const res = await postStep(jar, draftId, 4, { options: '' });
+    const res = await postStep(jar, draftId, 5, { options: '' });
     expect(res.statusCode).toBe(400);
     expect(res.payload).toContain('at least one option');
   });
@@ -232,7 +232,7 @@ describe('wizard widget editors (chunk 2.5j step 4)', () => {
     const draftId = await startDraft(jar);
     await pickWidget(jar, draftId, 'tick_box', 'tick');
 
-    const res = await postStep(jar, draftId, 4, {
+    const res = await postStep(jar, draftId, 5, {
       options: 'CPU\nRAM\nGPU',
     });
     expect(res.statusCode).toBe(400);
@@ -245,7 +245,7 @@ describe('wizard widget editors (chunk 2.5j step 4)', () => {
     const draftId = await startDraft(jar);
     await pickWidget(jar, draftId, 'tick_box', 'tick');
 
-    const res = await postStep(jar, draftId, 4, {
+    const res = await postStep(jar, draftId, 5, {
       options: 'CPU\nRAM\nGPU\nSSD',
       tickExactly: '2',
       correct_0: 'on',
@@ -260,7 +260,7 @@ describe('wizard widget editors (chunk 2.5j step 4)', () => {
     const draftId = await startDraft(jar);
     await pickWidget(jar, draftId, 'matrix_tick_single', 'tick');
 
-    const res = await postStep(jar, draftId, 4, {
+    const res = await postStep(jar, draftId, 5, {
       rows: 'Bubble sort\nLinear search',
       columns: 'Sorting\nSearching',
       correct_0: 'Sorting',
@@ -270,14 +270,14 @@ describe('wizard widget editors (chunk 2.5j step 4)', () => {
 
     const reload = await app.inject({
       method: 'GET',
-      url: `/admin/questions/wizard/${draftId}/step/4`,
+      url: `/admin/questions/wizard/${draftId}/step/5`,
       headers: { cookie: cookieHeader(jar) },
     });
     expect(reload.statusCode).toBe(200);
     expect(reload.payload).toContain('Bubble sort');
     expect(reload.payload).toContain('Linear search');
     // The "Sorting" radio for row 0 should be checked.
-    expect(reload.payload).toMatch(/name="correct_0" value="Sorting"\s+checked/);
+    expect(reload.payload).toMatch(/name="correct_0"[\s\S]*?value="Sorting"[\s\S]*?checked/);
   });
 
   it('matrix_tick_single rejects a correct value that is not in the columns list', async () => {
@@ -286,7 +286,7 @@ describe('wizard widget editors (chunk 2.5j step 4)', () => {
     const draftId = await startDraft(jar);
     await pickWidget(jar, draftId, 'matrix_tick_single', 'tick');
 
-    const res = await postStep(jar, draftId, 4, {
+    const res = await postStep(jar, draftId, 5, {
       rows: 'Bubble sort',
       columns: 'Sorting\nSearching',
       correct_0: 'Compiling',
@@ -301,7 +301,7 @@ describe('wizard widget editors (chunk 2.5j step 4)', () => {
     const draftId = await startDraft(jar);
     await pickWidget(jar, draftId, 'cloze_free', 'complete');
 
-    const ok = await postStep(jar, draftId, 4, {
+    const ok = await postStep(jar, draftId, 5, {
       text: 'Eight bits make a {{u1}}.',
       gaps: 'u1|byte, octet',
     });
@@ -310,7 +310,7 @@ describe('wizard widget editors (chunk 2.5j step 4)', () => {
     // After save, re-render should show the passage and the gap line.
     const reload = await app.inject({
       method: 'GET',
-      url: `/admin/questions/wizard/${draftId}/step/4`,
+      url: `/admin/questions/wizard/${draftId}/step/5`,
       headers: { cookie: cookieHeader(jar) },
     });
     expect(reload.statusCode).toBe(200);
@@ -318,7 +318,7 @@ describe('wizard widget editors (chunk 2.5j step 4)', () => {
     expect(reload.payload).toContain('u1|byte, octet');
 
     // Now post a gap whose id is not referenced in {{...}} markers.
-    const bad = await postStep(jar, draftId, 4, {
+    const bad = await postStep(jar, draftId, 5, {
       text: 'Eight bits make a {{u1}}.',
       gaps: 'u1|byte\nu2|kilobyte',
     });
@@ -332,7 +332,7 @@ describe('wizard widget editors (chunk 2.5j step 4)', () => {
     const draftId = await startDraft(jar);
     await pickWidget(jar, draftId, 'cloze_with_bank', 'complete');
 
-    const res = await postStep(jar, draftId, 4, {
+    const res = await postStep(jar, draftId, 5, {
       text: 'A {{d1}} forwards within a LAN.',
       gaps: 'd1|switch',
       bank: '',
@@ -347,7 +347,7 @@ describe('wizard widget editors (chunk 2.5j step 4)', () => {
     const draftId = await startDraft(jar);
     await pickWidget(jar, draftId, 'matching', 'identify');
 
-    const res = await postStep(jar, draftId, 4, {
+    const res = await postStep(jar, draftId, 5, {
       left: 'HTTP\nSMTP',
       right: 'web pages\nemail\nfile transfer',
       right_for_0: '0',
@@ -357,13 +357,13 @@ describe('wizard widget editors (chunk 2.5j step 4)', () => {
 
     const reload = await app.inject({
       method: 'GET',
-      url: `/admin/questions/wizard/${draftId}/step/4`,
+      url: `/admin/questions/wizard/${draftId}/step/5`,
       headers: { cookie: cookieHeader(jar) },
     });
     expect(reload.statusCode).toBe(200);
     expect(reload.payload).toContain('HTTP');
     expect(reload.payload).toContain('email');
-    expect(reload.payload).toMatch(/name="right_for_0"[\s\S]*?value="0" selected/);
+    expect(reload.payload).toMatch(/name="right_for_0"[\s\S]*?value="0"[\s\S]*?selected/);
   });
 
   it('trace_table parses columns + rows + per-cell mode/value grid', async () => {
@@ -372,7 +372,7 @@ describe('wizard widget editors (chunk 2.5j step 4)', () => {
     const draftId = await startDraft(jar);
     await pickWidget(jar, draftId, 'trace_table', 'complete');
 
-    const res = await postStep(jar, draftId, 4, {
+    const res = await postStep(jar, draftId, 5, {
       columns: 'i\ntotal',
       rows: '2',
       mode_0_0: 'prefill',
@@ -389,7 +389,7 @@ describe('wizard widget editors (chunk 2.5j step 4)', () => {
 
     const reload = await app.inject({
       method: 'GET',
-      url: `/admin/questions/wizard/${draftId}/step/4`,
+      url: `/admin/questions/wizard/${draftId}/step/5`,
       headers: { cookie: cookieHeader(jar) },
     });
     expect(reload.statusCode).toBe(200);
@@ -406,7 +406,7 @@ describe('wizard widget editors (chunk 2.5j step 4)', () => {
     const draftId = await startDraft(jar);
     await pickWidget(jar, draftId, 'trace_table', 'complete');
 
-    const res = await postStep(jar, draftId, 4, {
+    const res = await postStep(jar, draftId, 5, {
       columns: 'i\ntotal',
       rows: '2',
       mode_0_0: 'prefill',
@@ -423,7 +423,7 @@ describe('wizard widget editors (chunk 2.5j step 4)', () => {
     const draftId = await startDraft(jar);
     await pickWidget(jar, draftId, 'matrix_tick_multi', 'tick');
 
-    const res = await postStep(jar, draftId, 4, {
+    const res = await postStep(jar, draftId, 5, {
       rows: 'TCP\nUDP',
       columns: 'Connection-oriented\nConnectionless\nReliable',
       cell_0_0: 'on',
@@ -435,7 +435,7 @@ describe('wizard widget editors (chunk 2.5j step 4)', () => {
 
     const reload = await app.inject({
       method: 'GET',
-      url: `/admin/questions/wizard/${draftId}/step/4`,
+      url: `/admin/questions/wizard/${draftId}/step/5`,
       headers: { cookie: cookieHeader(jar) },
     });
     expect(reload.statusCode).toBe(200);
@@ -453,7 +453,7 @@ describe('wizard widget editors (chunk 2.5j step 4)', () => {
     const draftId = await startDraft(jar);
     await pickWidget(jar, draftId, 'logic_diagram', 'draw');
 
-    const res = await postStep(jar, draftId, 4, {
+    const res = await postStep(jar, draftId, 5, {
       canvas_width: '800',
       canvas_height: '500',
     });
@@ -461,7 +461,7 @@ describe('wizard widget editors (chunk 2.5j step 4)', () => {
 
     const reload = await app.inject({
       method: 'GET',
-      url: `/admin/questions/wizard/${draftId}/step/4`,
+      url: `/admin/questions/wizard/${draftId}/step/5`,
       headers: { cookie: cookieHeader(jar) },
     });
     expect(reload.statusCode).toBe(200);
@@ -475,7 +475,7 @@ describe('wizard widget editors (chunk 2.5j step 4)', () => {
     const draftId = await startDraft(jar);
     await pickWidget(jar, draftId, 'diagram_labels', 'label');
 
-    const ok = await postStep(jar, draftId, 4, {
+    const ok = await postStep(jar, draftId, 5, {
       imageUrl: '/static/curated/network.svg',
       imageAlt: 'A small network diagram',
       width: '600',
@@ -484,7 +484,7 @@ describe('wizard widget editors (chunk 2.5j step 4)', () => {
     });
     expect(ok.statusCode, `body=${ok.payload.slice(0, 400)}`).toBe(302);
 
-    const bad = await postStep(jar, draftId, 4, {
+    const bad = await postStep(jar, draftId, 5, {
       imageUrl: 'http://insecure.example/network.svg',
       imageAlt: 'A network diagram',
       width: '600',

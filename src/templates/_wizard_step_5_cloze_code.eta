@@ -10,7 +10,7 @@ function formatGaps(list) {
 }
 const issueMap = it.issueMap || {};
 %>
-<fieldset class="wizard-step wizard-step--4 wizard-step--cloze wizard-step--cloze-code">
+<fieldset class="wizard-step wizard-step--5 wizard-step--cloze wizard-step--cloze-code">
   <legend>Cloze (code / pseudocode)</legend>
 
   <label for="text">Code or pseudocode (use <code>{{id}}</code> markers for each gap; whitespace is preserved)</label>

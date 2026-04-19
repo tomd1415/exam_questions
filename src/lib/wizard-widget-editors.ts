@@ -1,4 +1,4 @@
-// Per-widget config parsers for step 4 of the question-creation wizard.
+// Per-widget config parsers for step 5 of the question-creation wizard.
 //
 // Each parser reads a flat form body (everything is a string), turns it into
 // the JSON shape the widget registry expects in `part_config`, and finally

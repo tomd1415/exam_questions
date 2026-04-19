@@ -14,7 +14,7 @@ function formatHotspots(list) {
 }
 const issueMap = it.issueMap || {};
 %>
-<fieldset class="wizard-step wizard-step--4 wizard-step--diagram-labels">
+<fieldset class="wizard-step wizard-step--5 wizard-step--diagram-labels">
   <legend>Diagram with labelled hotspots</legend>
 
   <label for="imageUrl">Image URL (must start with <code>/static/</code> or <code>https://</code>)</label>

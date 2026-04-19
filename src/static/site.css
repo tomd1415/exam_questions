@@ -941,6 +941,35 @@ input[type='number'].input {
   outline: none;
   box-shadow: var(--focus-ring);
 }
+/* Sticky stem banner: appears above the form body on steps 5–9 so the
+   teacher can always see the question stem they are building around. */
+.admin-wizard__stem-banner {
+  position: sticky;
+  top: var(--space-2);
+  z-index: 1;
+  margin: var(--space-3) 0;
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-surface-2);
+  border-left: 4px solid var(--color-brand-500);
+  border-radius: var(--radius-sm);
+}
+.admin-wizard__stem-banner-label {
+  margin: 0 0 var(--space-1) 0;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: var(--type-micro);
+  color: var(--color-ink-3);
+  font-weight: 600;
+}
+.admin-wizard__stem-banner-text {
+  margin: 0;
+  white-space: pre-wrap;
+  color: var(--color-ink-1);
+}
+.admin-wizard__stem-banner-edit {
+  margin: var(--space-1) 0 0 0;
+  font-size: var(--type-sm);
+}
 .admin-wizard__form {
   display: grid;
   gap: var(--space-4);

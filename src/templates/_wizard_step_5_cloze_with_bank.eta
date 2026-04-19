@@ -11,7 +11,7 @@ function formatGaps(list) {
 }
 const issueMap = it.issueMap || {};
 %>
-<fieldset class="wizard-step wizard-step--4 wizard-step--cloze wizard-step--cloze-bank">
+<fieldset class="wizard-step wizard-step--5 wizard-step--cloze wizard-step--cloze-bank">
   <legend>Cloze with word bank</legend>
 
   <label for="text">Passage (use <code>{{id}}</code> markers for each gap)</label>
