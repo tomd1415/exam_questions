@@ -1124,6 +1124,132 @@
 }
 
 /* ---------------------------------------------------------------------
+   logic_diagram — guided_slots variant
+   --------------------------------------------------------------------- */
+.logic-slots__list {
+  list-style: decimal inside;
+  padding-left: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.logic-slots__item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+.logic-slots__label {
+  flex: 1 1 auto;
+}
+.logic-slots__select {
+  font: inherit;
+  padding: 0.25rem 0.4rem;
+  border: 1px solid var(--paper-rule);
+  background: #fff;
+}
+
+/* ---------------------------------------------------------------------
+   logic_diagram — boolean_expression variant
+   --------------------------------------------------------------------- */
+.logic-boolean__label {
+  display: block;
+  margin-bottom: 0.3rem;
+}
+.logic-boolean__input {
+  display: block;
+  width: 100%;
+  max-width: 36rem;
+  font: inherit;
+  font-family: var(--paper-mono, ui-monospace, Menlo, Consolas, monospace);
+  font-size: 1rem;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid var(--paper-rule);
+  resize: vertical;
+}
+.logic-boolean__palette {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-top: 0.35rem;
+}
+.logic-boolean__op {
+  font: inherit;
+  font-family: var(--paper-mono, ui-monospace, Menlo, Consolas, monospace);
+  padding: 0.15rem 0.5rem;
+  border: 1px solid var(--paper-rule);
+  background: #fff;
+  cursor: pointer;
+}
+.logic-boolean__op:hover,
+.logic-boolean__op:focus {
+  background: var(--paper-tip-bg, #f4f8ff);
+}
+
+/* ---------------------------------------------------------------------
+   logic_diagram — gate_palette variant
+   --------------------------------------------------------------------- */
+.logic-palette {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.logic-palette__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+.logic-palette__tool,
+.logic-palette__clear {
+  font: inherit;
+  padding: 0.2rem 0.6rem;
+  border: 1px solid var(--paper-rule);
+  background: #fff;
+  cursor: pointer;
+}
+.logic-palette__tool[aria-pressed='true'] {
+  background: var(--paper-accent, #1a4f8a);
+  color: #fff;
+}
+.logic-palette__stage {
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  border: 1px solid var(--paper-rule);
+  background: #fafafa;
+  touch-action: none;
+}
+.logic-palette__terminal {
+  fill: #fff;
+  stroke: var(--paper-accent, #1a4f8a);
+  stroke-width: 1.5;
+}
+.logic-palette__terminal--output {
+  fill: var(--paper-accent, #1a4f8a);
+}
+.logic-palette__terminal-label {
+  font-family: var(--paper-mono, ui-monospace, Menlo, Consolas, monospace);
+  font-size: 0.85rem;
+  fill: var(--paper-text, #1a1a1a);
+}
+.logic-palette__truth-table table {
+  border-collapse: collapse;
+  margin-top: 0.25rem;
+}
+.logic-palette__truth-table th,
+.logic-palette__truth-table td {
+  border: 1px solid var(--paper-rule);
+  padding: 0.15rem 0.5rem;
+  text-align: center;
+  font-family: var(--paper-mono, ui-monospace, Menlo, Consolas, monospace);
+}
+.logic-palette__noscript {
+  font-style: italic;
+  color: #8a1a1a;
+}
+
+/* ---------------------------------------------------------------------
    widget tips (Phase 2.5i Option B)
    --------------------------------------------------------------------- */
 .widget-tip {

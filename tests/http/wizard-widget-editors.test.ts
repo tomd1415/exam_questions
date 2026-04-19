@@ -600,6 +600,103 @@ describe('wizard widget editors (chunk 2.5j step 4)', () => {
     expect(bad.payload).toContain('BLANK');
   });
 
+  it('logic_diagram guided_slots variant parses slot lines', async () => {
+    const teacher = await createUser(pool(), { role: 'teacher' });
+    const jar = await loginAs(teacher);
+    const draftId = await startDraft(jar);
+    await pickWidget(jar, draftId, 'logic_diagram', 'draw');
+
+    const res = await postStep(jar, draftId, 5, {
+      variant: 'guided_slots',
+      slots: 's1|A and B|AND, OR, NOT|AND\ns2|Invert C|AND, OR, NOT|NOT',
+    });
+    expect(res.statusCode).toBe(302);
+    const reload = await app.inject({
+      method: 'GET',
+      url: `/admin/questions/wizard/${draftId}/step/5`,
+      headers: { cookie: cookieHeader(jar) },
+    });
+    expect(reload.payload).toMatch(/value="guided_slots"[^>]*checked/);
+    expect(reload.payload).toContain('s1|A and B|AND, OR, NOT|AND');
+  });
+
+  it('logic_diagram guided_slots rejects accept values outside the option list', async () => {
+    const teacher = await createUser(pool(), { role: 'teacher' });
+    const jar = await loginAs(teacher);
+    const draftId = await startDraft(jar);
+    await pickWidget(jar, draftId, 'logic_diagram', 'draw');
+
+    const bad = await postStep(jar, draftId, 5, {
+      variant: 'guided_slots',
+      slots: 's1|A and B|AND, OR|XOR',
+    });
+    expect(bad.statusCode).toBe(400);
+    expect(bad.payload).toMatch(/accept/);
+  });
+
+  it('logic_diagram boolean_expression parses accept lines and operators', async () => {
+    const teacher = await createUser(pool(), { role: 'teacher' });
+    const jar = await loginAs(teacher);
+    const draftId = await startDraft(jar);
+    await pickWidget(jar, draftId, 'logic_diagram', 'draw');
+
+    const res = await postStep(jar, draftId, 5, {
+      variant: 'boolean_expression',
+      accept: '(A AND B) OR NOT C\n(A AND B) OR (NOT C)',
+      allowed_operators: 'AND, OR, NOT',
+    });
+    expect(res.statusCode).toBe(302);
+    const reload = await app.inject({
+      method: 'GET',
+      url: `/admin/questions/wizard/${draftId}/step/5`,
+      headers: { cookie: cookieHeader(jar) },
+    });
+    expect(reload.payload).toMatch(/value="boolean_expression"[^>]*checked/);
+    expect(reload.payload).toContain('(A AND B) OR NOT C');
+  });
+
+  it('logic_diagram gate_palette parses terminals + truth table', async () => {
+    const teacher = await createUser(pool(), { role: 'teacher' });
+    const jar = await loginAs(teacher);
+    const draftId = await startDraft(jar);
+    await pickWidget(jar, draftId, 'logic_diagram', 'draw');
+
+    const res = await postStep(jar, draftId, 5, {
+      variant: 'gate_palette',
+      canvas_width: '600',
+      canvas_height: '400',
+      terminals: 'a|INPUT|A|40|80\nb|INPUT|B|40|160\np|OUTPUT|P|520|120',
+      palette: 'AND, OR, NOT',
+      truth_table: 'a=0, b=0 → 0\na=0, b=1 → 0\na=1, b=0 → 0\na=1, b=1 → 1',
+    });
+    expect(res.statusCode).toBe(302);
+    const reload = await app.inject({
+      method: 'GET',
+      url: `/admin/questions/wizard/${draftId}/step/5`,
+      headers: { cookie: cookieHeader(jar) },
+    });
+    expect(reload.payload).toMatch(/value="gate_palette"[^>]*checked/);
+    expect(reload.payload).toContain('a=0, b=0 → 0');
+  });
+
+  it('logic_diagram gate_palette rejects partial truth tables', async () => {
+    const teacher = await createUser(pool(), { role: 'teacher' });
+    const jar = await loginAs(teacher);
+    const draftId = await startDraft(jar);
+    await pickWidget(jar, draftId, 'logic_diagram', 'draw');
+
+    const bad = await postStep(jar, draftId, 5, {
+      variant: 'gate_palette',
+      canvas_width: '600',
+      canvas_height: '400',
+      terminals: 'a|INPUT|A|40|80\nb|INPUT|B|40|160\np|OUTPUT|P|520|120',
+      palette: 'AND',
+      truth_table: 'a=0, b=0 → 0\na=1, b=1 → 1',
+    });
+    expect(bad.statusCode).toBe(400);
+    expect(bad.payload).toMatch(/exactly 4/);
+  });
+
   it('diagram_labels editor exposes the hotspot picker hooks', async () => {
     const teacher = await createUser(pool(), { role: 'teacher' });
     const jar = await loginAs(teacher);

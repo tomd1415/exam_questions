@@ -1,0 +1,28 @@
+{
+  "external_key": "j277-2-4-logic-diagram-boolean-expression",
+  "component_code": "J277/02",
+  "topic_code": "2.4",
+  "subtopic_code": "2.4.1",
+  "command_word_code": "write",
+  "archetype_code": "define",
+  "expected_response_type": "logic_diagram",
+  "stem": "Write a Boolean expression for P so that P is TRUE when A and B are both TRUE, or when C is FALSE.",
+  "model_answer": "P = (A AND B) OR NOT C. Symbol forms are accepted: (A.B)+/C or (A∧B)∨¬C etc.",
+  "difficulty_band": 3,
+  "difficulty_step": 1,
+  "source_type": "imported_pattern",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Write the Boolean expression for P.",
+      "marks": 1,
+      "expected_response_type": "logic_diagram",
+      "part_config": {
+        "variant": "boolean_expression",
+        "accept": ["(A AND B) OR NOT C", "(A AND B) OR (NOT C)", "NOT C OR (A AND B)"],
+        "allowedOperators": ["AND", "OR", "NOT"]
+      },
+      "mark_points": [{ "text": "Expression matches one of the accepted forms", "marks": 1 }]
+    }
+  ]
+}

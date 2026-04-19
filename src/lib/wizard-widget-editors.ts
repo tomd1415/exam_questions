@@ -615,7 +615,8 @@ function parseFlowchart(body: Record<string, unknown>): WidgetConfigParseResult 
 }
 
 // ---------------------------------------------------------------------------
-// logic_diagram (variant dispatch: image | gate_in_box)
+// logic_diagram (variant dispatch: image | gate_in_box | guided_slots |
+// boolean_expression | gate_palette)
 // ---------------------------------------------------------------------------
 
 interface LogicGateForm {
@@ -782,10 +783,276 @@ function parseLogicTerminalLine(
   };
 }
 
+const LOGIC_DIAGRAM_VARIANTS = new Set([
+  'image',
+  'gate_in_box',
+  'guided_slots',
+  'boolean_expression',
+  'gate_palette',
+]);
+
+function parseLogicDiagramGuidedSlots(body: Record<string, unknown>): WidgetConfigParseResult {
+  const issues: StepIssue[] = [];
+  const slots: { id: string; prompt: string; options: string[]; accept: string }[] = [];
+  const seen = new Set<string>();
+  for (const line of lines(body['slots'])) {
+    // Format: id|prompt|opt1, opt2, opt3|accept
+    const parts = line.split('|').map((p) => p.trim());
+    if (parts.length !== 4) {
+      issues.push({
+        path: 'slots',
+        message: `Slot line '${line}' must look like "id|prompt|opt1, opt2|accept".`,
+      });
+      continue;
+    }
+    const [id, prompt, optsRaw, accept] = parts as [string, string, string, string];
+    if (!/^[A-Za-z0-9_-]{1,40}$/.test(id)) {
+      issues.push({
+        path: 'slots',
+        message: `Slot id '${id}' must be 1–40 chars (letters, digits, _ or -).`,
+      });
+      continue;
+    }
+    if (seen.has(id)) {
+      issues.push({ path: 'slots', message: `Duplicate slot id '${id}'.` });
+      continue;
+    }
+    if (prompt.length === 0 || prompt.length > 200) {
+      issues.push({ path: 'slots', message: `Slot '${id}': prompt must be 1–200 characters.` });
+      continue;
+    }
+    const options = optsRaw
+      .split(',')
+      .map((o) => o.trim())
+      .filter((o) => o.length > 0);
+    if (options.length < 2) {
+      issues.push({
+        path: 'slots',
+        message: `Slot '${id}': list at least two comma-separated options.`,
+      });
+      continue;
+    }
+    if (new Set(options).size !== options.length) {
+      issues.push({ path: 'slots', message: `Slot '${id}': options must be unique.` });
+      continue;
+    }
+    if (!options.includes(accept)) {
+      issues.push({
+        path: 'slots',
+        message: `Slot '${id}': accept '${accept}' must be one of its options.`,
+      });
+      continue;
+    }
+    seen.add(id);
+    slots.push({ id, prompt, options, accept });
+  }
+  if (slots.length === 0) {
+    issues.push({ path: 'slots', message: 'List at least one slot, one per line.' });
+  }
+  if (issues.length > 0) return { ok: false, issues };
+  const derivedMarkPoints: DerivedMarkPoint[] = slots.map((s) => ({
+    text: `${s.id}: ${s.accept}`,
+    marks: 1,
+  }));
+  return {
+    ok: true,
+    config: { variant: 'guided_slots', slots },
+    derivedMarkPoints,
+    issues: [],
+  };
+}
+
+function parseLogicDiagramBooleanExpression(
+  body: Record<string, unknown>,
+): WidgetConfigParseResult {
+  const issues: StepIssue[] = [];
+  const accept = lines(body['accept']);
+  if (accept.length === 0) {
+    issues.push({
+      path: 'accept',
+      message: 'List at least one accepted expression, one per line.',
+    });
+  }
+  for (const expr of accept) {
+    if (expr.length > 200) {
+      issues.push({
+        path: 'accept',
+        message: `Expression '${expr.slice(0, 30)}…' is longer than 200 characters.`,
+      });
+    }
+  }
+  const allowedRaw = trimmed(body['allowed_operators']);
+  const allowedOperators =
+    allowedRaw.length > 0
+      ? allowedRaw
+          .split(',')
+          .map((o) => o.trim().toUpperCase())
+          .filter((o) => o.length > 0)
+      : [];
+  const validOps = ['AND', 'OR', 'NOT', 'XOR'];
+  for (const op of allowedOperators) {
+    if (!validOps.includes(op)) {
+      issues.push({
+        path: 'allowed_operators',
+        message: `Unknown operator '${op}' (use AND, OR, NOT, XOR).`,
+      });
+    }
+  }
+  const caseSensitive = trimmed(body['case_sensitive']) === 'on';
+  const normaliseSymbols = trimmed(body['normalise_symbols']) !== 'off';
+
+  if (issues.length > 0) return { ok: false, issues };
+
+  const config: Record<string, unknown> = { variant: 'boolean_expression', accept };
+  if (allowedOperators.length > 0) config['allowedOperators'] = allowedOperators;
+  if (caseSensitive) config['caseSensitive'] = true;
+  if (!normaliseSymbols) config['normaliseSymbols'] = false;
+
+  return {
+    ok: true,
+    config,
+    derivedMarkPoints: [{ text: `Expression: ${accept[0]}`, marks: 1 }],
+    issues: [],
+  };
+}
+
+function parseLogicDiagramGatePalette(body: Record<string, unknown>): WidgetConfigParseResult {
+  const issues: StepIssue[] = [];
+  const width = intIn(body['canvas_width'], 100, 2000);
+  const height = intIn(body['canvas_height'], 100, 2000);
+  if (width === null)
+    issues.push({ path: 'canvas_width', message: 'Canvas width must be 100–2000.' });
+  if (height === null)
+    issues.push({ path: 'canvas_height', message: 'Canvas height must be 100–2000.' });
+  if (width === null || height === null) return { ok: false, issues };
+
+  const seen = new Set<string>();
+  const terminals: LogicTerminalForm[] = [];
+  for (const line of lines(body['terminals'])) {
+    const t = parseLogicTerminalLine(line, seen, width, height, issues);
+    if (t) terminals.push(t);
+  }
+  const inputs = terminals.filter((t) => t.kind === 'input');
+  const outputs = terminals.filter((t) => t.kind === 'output');
+  if (inputs.length === 0) {
+    issues.push({ path: 'terminals', message: 'Add at least one INPUT terminal.' });
+  }
+  if (outputs.length !== 1) {
+    issues.push({ path: 'terminals', message: 'Add exactly one OUTPUT terminal.' });
+  }
+
+  const paletteRaw = trimmed(body['palette']);
+  const palette =
+    paletteRaw.length > 0
+      ? paletteRaw
+          .split(',')
+          .map((o) => o.trim().toUpperCase())
+          .filter((o) => o.length > 0)
+      : [];
+  if (palette.length === 0) {
+    issues.push({ path: 'palette', message: 'List at least one gate type (comma-separated).' });
+  }
+  for (const p of palette) {
+    if (!LOGIC_GATE_TYPES.includes(p as LogicGateType)) {
+      issues.push({ path: 'palette', message: `Unknown gate type '${p}' (use AND, OR, NOT).` });
+    }
+  }
+  if (new Set(palette).size !== palette.length) {
+    issues.push({ path: 'palette', message: 'Palette entries must be unique.' });
+  }
+
+  const maxGates = intIn(body['max_gates'], 1, 20);
+  if (trimmed(body['max_gates']).length > 0 && maxGates === null) {
+    issues.push({ path: 'max_gates', message: 'Max gates must be an integer 1–20.' });
+  }
+
+  // Truth table: one row per line, format `a=0, b=1 → 1` (or `=>`, `->`).
+  const truthTable: { inputs: Record<string, 0 | 1>; output: 0 | 1 }[] = [];
+  for (const line of lines(body['truth_table'])) {
+    const arrowMatch = /^(.*?)\s*(?:→|=>|->)\s*([01])\s*$/.exec(line);
+    if (!arrowMatch) {
+      issues.push({
+        path: 'truth_table',
+        message: `Row '${line}' must look like "a=0, b=1 → 1".`,
+      });
+      continue;
+    }
+    const [, inputsPart, outRaw] = arrowMatch;
+    const rowInputs: Record<string, 0 | 1> = {};
+    let rowOk = true;
+    for (const pair of inputsPart!.split(',')) {
+      const p = pair.trim();
+      if (p.length === 0) continue;
+      const eq = p.indexOf('=');
+      if (eq <= 0) {
+        issues.push({
+          path: 'truth_table',
+          message: `Row '${line}': '${p}' must be 'id=0' or 'id=1'.`,
+        });
+        rowOk = false;
+        break;
+      }
+      const key = p.slice(0, eq).trim();
+      const val = p.slice(eq + 1).trim();
+      if (val !== '0' && val !== '1') {
+        issues.push({
+          path: 'truth_table',
+          message: `Row '${line}': '${key}' value must be 0 or 1.`,
+        });
+        rowOk = false;
+        break;
+      }
+      rowInputs[key] = val === '1' ? 1 : 0;
+    }
+    if (!rowOk) continue;
+    for (const inp of inputs) {
+      if (rowInputs[inp.id] !== 0 && rowInputs[inp.id] !== 1) {
+        issues.push({
+          path: 'truth_table',
+          message: `Row '${line}' is missing input '${inp.id}'.`,
+        });
+        rowOk = false;
+        break;
+      }
+    }
+    if (!rowOk) continue;
+    truthTable.push({ inputs: rowInputs, output: outRaw === '1' ? 1 : 0 });
+  }
+  const expectedRows = 1 << inputs.length;
+  if (inputs.length > 0 && truthTable.length !== expectedRows) {
+    issues.push({
+      path: 'truth_table',
+      message: `Truth table must have exactly ${expectedRows} rows (got ${truthTable.length}).`,
+    });
+  }
+
+  if (issues.length > 0) return { ok: false, issues };
+
+  const config: Record<string, unknown> = {
+    variant: 'gate_palette',
+    canvas: { width, height },
+    terminals,
+    palette,
+    expected: { truthTable },
+  };
+  if (maxGates !== null) config['maxGates'] = maxGates;
+
+  return {
+    ok: true,
+    config,
+    derivedMarkPoints: [{ text: 'Circuit matches truth table', marks: 1 }],
+    issues: [],
+  };
+}
+
 function parseLogicDiagram(body: Record<string, unknown>): WidgetConfigParseResult {
   const issues: StepIssue[] = [];
   const variantRaw = trimmed(body['variant']);
-  const variant = variantRaw === 'gate_in_box' ? 'gate_in_box' : 'image';
+  const variant = LOGIC_DIAGRAM_VARIANTS.has(variantRaw) ? variantRaw : 'image';
+
+  if (variant === 'guided_slots') return parseLogicDiagramGuidedSlots(body);
+  if (variant === 'boolean_expression') return parseLogicDiagramBooleanExpression(body);
+  if (variant === 'gate_palette') return parseLogicDiagramGatePalette(body);
 
   const width = intIn(body['canvas_width'], 100, 2000);
   const height = intIn(body['canvas_height'], 100, 2000);

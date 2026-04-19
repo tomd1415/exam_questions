@@ -284,8 +284,11 @@ const MATCHING_SCHEMA: WidgetConfigSchema = {
 const LOGIC_DIAGRAM_SCHEMA: WidgetConfigSchema = {
   $schema: SCHEMA_DRAFT,
   title: 'logic_diagram part_config',
-  // oneOf handles the two authoring variants — image (freehand PNG) and
-  // gate_in_box (teacher-placed gates + pupil-fill blanks).
+  // oneOf handles the five authoring variants: image (freehand PNG),
+  // gate_in_box (teacher-placed gates + pupil-fill blanks), guided_slots
+  // (dropdowns over a fixed option pool), boolean_expression (pupil
+  // types an expression, marker tokenises + matches) and gate_palette
+  // (pupil drags gates from a palette; marker runs the truth table).
   oneOf: [
     {
       type: 'object',
@@ -367,6 +370,117 @@ const LOGIC_DIAGRAM_SCHEMA: WidgetConfigSchema = {
             properties: {
               from: { type: 'string', pattern: '^[A-Za-z0-9_-]{1,40}$' },
               to: { type: 'string', pattern: '^[A-Za-z0-9_-]{1,40}$' },
+            },
+          },
+        },
+      },
+    },
+    {
+      type: 'object',
+      additionalProperties: false,
+      required: ['variant', 'slots'],
+      properties: {
+        variant: { type: 'string', enum: ['guided_slots'] },
+        slots: {
+          type: 'array',
+          minItems: 1,
+          items: {
+            type: 'object',
+            additionalProperties: false,
+            required: ['id', 'prompt', 'options', 'accept'],
+            properties: {
+              id: { type: 'string', pattern: '^[A-Za-z0-9_-]{1,40}$' },
+              prompt: { type: 'string', minLength: 1, maxLength: 200 },
+              options: {
+                type: 'array',
+                minItems: 2,
+                uniqueItems: true,
+                items: { type: 'string', minLength: 1, maxLength: 40 },
+              },
+              accept: { type: 'string', minLength: 1, maxLength: 40 },
+            },
+          },
+        },
+      },
+    },
+    {
+      type: 'object',
+      additionalProperties: false,
+      required: ['variant', 'accept'],
+      properties: {
+        variant: { type: 'string', enum: ['boolean_expression'] },
+        accept: {
+          type: 'array',
+          minItems: 1,
+          items: { type: 'string', minLength: 1, maxLength: 200 },
+        },
+        allowedOperators: {
+          type: 'array',
+          minItems: 1,
+          items: { type: 'string', enum: ['AND', 'OR', 'NOT', 'XOR'] },
+        },
+        caseSensitive: { type: 'boolean' },
+        normaliseSymbols: { type: 'boolean' },
+      },
+    },
+    {
+      type: 'object',
+      additionalProperties: false,
+      required: ['variant', 'canvas', 'terminals', 'palette', 'expected'],
+      properties: {
+        variant: { type: 'string', enum: ['gate_palette'] },
+        canvas: {
+          type: 'object',
+          additionalProperties: false,
+          required: ['width', 'height'],
+          properties: {
+            width: { type: 'integer', minimum: 100, maximum: 2000 },
+            height: { type: 'integer', minimum: 100, maximum: 2000 },
+          },
+        },
+        terminals: {
+          type: 'array',
+          minItems: 1,
+          items: {
+            type: 'object',
+            additionalProperties: false,
+            required: ['id', 'kind', 'label', 'x', 'y'],
+            properties: {
+              id: { type: 'string', pattern: '^[A-Za-z0-9_-]{1,40}$' },
+              kind: { type: 'string', enum: ['input', 'output'] },
+              label: { type: 'string', minLength: 1, maxLength: 8 },
+              x: { type: 'integer', minimum: 0 },
+              y: { type: 'integer', minimum: 0 },
+            },
+          },
+        },
+        palette: {
+          type: 'array',
+          minItems: 1,
+          uniqueItems: true,
+          items: { type: 'string', enum: ['AND', 'OR', 'NOT'] },
+        },
+        maxGates: { type: 'integer', minimum: 1, maximum: 20 },
+        expected: {
+          type: 'object',
+          additionalProperties: false,
+          required: ['truthTable'],
+          properties: {
+            truthTable: {
+              type: 'array',
+              minItems: 1,
+              items: {
+                type: 'object',
+                additionalProperties: false,
+                required: ['inputs', 'output'],
+                properties: {
+                  inputs: {
+                    type: 'object',
+                    additionalProperties: { type: 'integer', minimum: 0, maximum: 1 },
+                  },
+                  output: { type: 'integer', minimum: 0, maximum: 1 },
+                },
+              },
             },
           },
         },

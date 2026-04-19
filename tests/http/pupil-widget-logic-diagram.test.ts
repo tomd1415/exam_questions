@@ -187,4 +187,209 @@ describe('Pupil widget — logic_diagram', () => {
     // repaint it on enhancement.
     expect(reopen.payload).toContain(`value="${STUB_PNG}"`);
   });
+
+  it('guided_slots: renders dropdowns and marks each slot', async () => {
+    const teacher = await createUser(pool(), { role: 'teacher' });
+    const pupil = await createUser(pool(), { role: 'pupil' });
+    await seedClassWithTopic({ teacher, pupil, topicCode: '2.4' });
+    await createQuestion(pool(), teacher.id, {
+      componentCode: 'J277/02',
+      topicCode: '2.4',
+      subtopicCode: '2.4.1',
+      active: true,
+      approvalStatus: 'approved',
+      stem: 'Pick gates for P.',
+      expectedResponseType: 'logic_diagram',
+      parts: [
+        {
+          label: '(a)',
+          prompt: 'Pick each gate.',
+          marks: 2,
+          expectedResponseType: 'logic_diagram',
+          partConfig: {
+            variant: 'guided_slots',
+            slots: [
+              { id: 'ab', prompt: 'A and B', options: ['AND', 'OR'], accept: 'AND' },
+              { id: 'notc', prompt: 'Invert C', options: ['AND', 'OR', 'NOT'], accept: 'NOT' },
+            ],
+          },
+          markPoints: [
+            { text: 'ab: AND', marks: 1 },
+            { text: 'notc: NOT', marks: 1 },
+          ],
+        },
+      ],
+    });
+
+    const jar = await loginAs(pupil);
+    const attemptUrl = await startTopicAttempt(jar, '2.4');
+    const editPage = await app.inject({
+      method: 'GET',
+      url: attemptUrl,
+      headers: { cookie: cookieHeader(jar) },
+    });
+    updateJar(jar, editPage);
+    const html = editPage.payload;
+    expect(html).toMatch(/widget--logic-diagram-slots/);
+    expect(html).toMatch(/name="part_\d+__ab"/);
+    expect(html).toMatch(/name="part_\d+__notc"/);
+
+    const partMatch = /name="part_(\d+)__ab"/.exec(html);
+    const partId = partMatch![1]!;
+    const csrf = extractCsrfToken(html);
+    const payload = form({ _csrf: csrf }) + `&part_${partId}__ab=AND&part_${partId}__notc=OR`;
+    const saveRes = await app.inject({
+      method: 'POST',
+      url: `${attemptUrl}/save`,
+      headers: { 'content-type': 'application/x-www-form-urlencoded', cookie: cookieHeader(jar) },
+      payload,
+    });
+    expect(saveRes.statusCode).toBe(302);
+    updateJar(jar, saveRes);
+
+    const { rows } = await pool().query<{ raw_answer: string }>(
+      `SELECT raw_answer FROM attempt_parts WHERE id = $1::bigint`,
+      [partId],
+    );
+    expect(rows[0]?.raw_answer.split('\n').sort()).toEqual(['ab=AND', 'notc=OR']);
+  });
+
+  it('boolean_expression: round-trips the expression and matches symbol forms', async () => {
+    const teacher = await createUser(pool(), { role: 'teacher' });
+    const pupil = await createUser(pool(), { role: 'pupil' });
+    await seedClassWithTopic({ teacher, pupil, topicCode: '2.4' });
+    await createQuestion(pool(), teacher.id, {
+      componentCode: 'J277/02',
+      topicCode: '2.4',
+      subtopicCode: '2.4.1',
+      active: true,
+      approvalStatus: 'approved',
+      stem: 'Write the expression.',
+      expectedResponseType: 'logic_diagram',
+      parts: [
+        {
+          label: '(a)',
+          prompt: 'Write P.',
+          marks: 1,
+          expectedResponseType: 'logic_diagram',
+          partConfig: {
+            variant: 'boolean_expression',
+            accept: ['(A AND B) OR NOT C'],
+          },
+          markPoints: [{ text: 'Expression matches', marks: 1 }],
+        },
+      ],
+    });
+
+    const jar = await loginAs(pupil);
+    const attemptUrl = await startTopicAttempt(jar, '2.4');
+    const editPage = await app.inject({
+      method: 'GET',
+      url: attemptUrl,
+      headers: { cookie: cookieHeader(jar) },
+    });
+    updateJar(jar, editPage);
+    const html = editPage.payload;
+    expect(html).toMatch(/widget--logic-diagram-boolean/);
+    const partMatch = /name="part_(\d+)__expression"/.exec(html);
+    const partId = partMatch![1]!;
+    const csrf = extractCsrfToken(html);
+    const payload =
+      form({ _csrf: csrf }) + `&part_${partId}__expression=${encodeURIComponent('(A.B)+/C')}`;
+    const saveRes = await app.inject({
+      method: 'POST',
+      url: `${attemptUrl}/save`,
+      headers: { 'content-type': 'application/x-www-form-urlencoded', cookie: cookieHeader(jar) },
+      payload,
+    });
+    expect(saveRes.statusCode).toBe(302);
+
+    const { rows } = await pool().query<{ raw_answer: string }>(
+      `SELECT raw_answer FROM attempt_parts WHERE id = $1::bigint`,
+      [partId],
+    );
+    expect(rows[0]?.raw_answer).toBe('expression=(A.B)+/C');
+  });
+
+  it('gate_palette: renders the palette and stores the circuit JSON', async () => {
+    const teacher = await createUser(pool(), { role: 'teacher' });
+    const pupil = await createUser(pool(), { role: 'pupil' });
+    await seedClassWithTopic({ teacher, pupil, topicCode: '2.4' });
+    await createQuestion(pool(), teacher.id, {
+      componentCode: 'J277/02',
+      topicCode: '2.4',
+      subtopicCode: '2.4.1',
+      active: true,
+      approvalStatus: 'approved',
+      stem: 'Build P = A AND B.',
+      expectedResponseType: 'logic_diagram',
+      parts: [
+        {
+          label: '(a)',
+          prompt: 'Drag gates.',
+          marks: 1,
+          expectedResponseType: 'logic_diagram',
+          partConfig: {
+            variant: 'gate_palette',
+            canvas: { width: 600, height: 400 },
+            terminals: [
+              { id: 'a', kind: 'input', label: 'A', x: 40, y: 80 },
+              { id: 'b', kind: 'input', label: 'B', x: 40, y: 160 },
+              { id: 'p', kind: 'output', label: 'P', x: 520, y: 120 },
+            ],
+            palette: ['AND', 'OR', 'NOT'],
+            expected: {
+              truthTable: [
+                { inputs: { a: 0, b: 0 }, output: 0 },
+                { inputs: { a: 0, b: 1 }, output: 0 },
+                { inputs: { a: 1, b: 0 }, output: 0 },
+                { inputs: { a: 1, b: 1 }, output: 1 },
+              ],
+            },
+          },
+          markPoints: [{ text: 'Circuit matches truth table', marks: 1 }],
+        },
+      ],
+    });
+
+    const jar = await loginAs(pupil);
+    const attemptUrl = await startTopicAttempt(jar, '2.4');
+    const editPage = await app.inject({
+      method: 'GET',
+      url: attemptUrl,
+      headers: { cookie: cookieHeader(jar) },
+    });
+    updateJar(jar, editPage);
+    const html = editPage.payload;
+    expect(html).toMatch(/widget--logic-diagram-palette/);
+    expect(html).toMatch(/data-logic-palette-gate="AND"/);
+    expect(html).toMatch(/data-logic-palette-terminal-id="a"/);
+
+    const partMatch = /name="part_(\d+)__circuit"/.exec(html);
+    const partId = partMatch![1]!;
+    const csrf = extractCsrfToken(html);
+    const circuit = JSON.stringify({
+      gates: [{ id: 'g1', type: 'AND' }],
+      wires: [
+        { from: 'a', to: 'g1' },
+        { from: 'b', to: 'g1' },
+        { from: 'g1', to: 'p' },
+      ],
+    });
+    const payload =
+      form({ _csrf: csrf }) + `&part_${partId}__circuit=${encodeURIComponent(circuit)}`;
+    const saveRes = await app.inject({
+      method: 'POST',
+      url: `${attemptUrl}/save`,
+      headers: { 'content-type': 'application/x-www-form-urlencoded', cookie: cookieHeader(jar) },
+      payload,
+    });
+    expect(saveRes.statusCode).toBe(302);
+
+    const { rows } = await pool().query<{ raw_answer: string }>(
+      `SELECT raw_answer FROM attempt_parts WHERE id = $1::bigint`,
+      [partId],
+    );
+    expect(rows[0]?.raw_answer).toBe(`circuit=${circuit}`);
+  });
 });

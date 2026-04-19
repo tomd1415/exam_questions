@@ -18,9 +18,18 @@ import {
 } from '../../lib/flowchart.js';
 import {
   isLogicDiagramConfig,
+  markLogicDiagramBooleanExpression,
   markLogicDiagramGates,
+  markLogicDiagramPalette,
+  markLogicDiagramSlots,
+  parseLogicDiagramBooleanRawAnswer,
   parseLogicDiagramGatesRawAnswer,
+  parseLogicDiagramPaletteRawAnswer,
+  parseLogicDiagramSlotsRawAnswer,
+  serialiseLogicDiagramBooleanAnswer,
   serialiseLogicDiagramGatesAnswer,
+  serialiseLogicDiagramPaletteAnswer,
+  serialiseLogicDiagramSlotsAnswer,
 } from '../../lib/logic-diagram.js';
 import {
   isMatchingConfig,
@@ -706,41 +715,104 @@ function markFlowchartPart(
   };
 }
 
-// Logic-diagram marker. Same shape as markFlowchartPart: the image
-// variant is open-response (teacher reviews the PNG); the gate_in_box
-// variant is deterministic — one mark per blank the pupil named
-// correctly, set-matched against the gate's accept list.
+// Logic-diagram marker. The image variant is open-response (teacher
+// reviews the PNG); gate_in_box/guided_slots mark per-blank, one mark
+// each; boolean_expression is all-or-nothing via tokenised match;
+// gate_palette is all-or-nothing via truth-table equivalence.
 function markLogicDiagramPart(
   part: MarkingInputPart,
   rawAnswer: string,
   markPoints: readonly MarkingInputMarkPoint[],
 ): MarkingResult {
   const config = part.part_config;
-  if (!isLogicDiagramConfig(config) || config.variant !== 'gate_in_box') {
+  // Missing/invalid config falls back to teacher marking, same as the
+  // freehand `image` variant — we can't run a deterministic pass
+  // without knowing which auto-marked variant the teacher chose.
+  if (!isLogicDiagramConfig(config) || config.variant === 'image') {
     return { kind: 'teacher_pending', marks_possible: part.marks, reason: 'open_response' };
   }
 
-  const pupilFills = parseLogicDiagramGatesRawAnswer(rawAnswer);
-  const result = markLogicDiagramGates(config, pupilFills);
-
-  const outcomes: MarkPointOutcome[] = result.outcomes.map((row, i) => {
-    const mp = markPoints[i];
+  if (config.variant === 'gate_in_box') {
+    const pupilFills = parseLogicDiagramGatesRawAnswer(rawAnswer);
+    const result = markLogicDiagramGates(config, pupilFills);
+    const outcomes: MarkPointOutcome[] = result.outcomes.map((row, i) => {
+      const mp = markPoints[i];
+      return {
+        text: mp ? mp.text : `Gate ${row.gateId}`,
+        marks: mp ? mp.marks : 1,
+        is_required: mp ? mp.is_required : false,
+        hit: row.hit,
+      };
+    });
+    const hitMarks = outcomes.filter((o) => o.hit).reduce((sum, o) => sum + o.marks, 0);
     return {
-      text: mp ? mp.text : `Gate ${row.gateId}`,
-      marks: mp ? mp.marks : 1,
-      is_required: mp ? mp.is_required : false,
-      hit: row.hit,
+      kind: 'awarded',
+      marks_awarded: clampMarks(enforceRequired(hitMarks, outcomes), part.marks),
+      marks_possible: part.marks,
+      mark_point_outcomes: outcomes,
+      normalised_answer: serialiseLogicDiagramGatesAnswer(config, pupilFills),
     };
-  });
+  }
 
-  const hitMarks = outcomes.filter((o) => o.hit).reduce((sum, o) => sum + o.marks, 0);
+  if (config.variant === 'guided_slots') {
+    const pupilFills = parseLogicDiagramSlotsRawAnswer(rawAnswer);
+    const result = markLogicDiagramSlots(config, pupilFills);
+    const outcomes: MarkPointOutcome[] = result.outcomes.map((row, i) => {
+      const mp = markPoints[i];
+      return {
+        text: mp ? mp.text : `Slot ${row.slotId}`,
+        marks: mp ? mp.marks : 1,
+        is_required: mp ? mp.is_required : false,
+        hit: row.hit,
+      };
+    });
+    const hitMarks = outcomes.filter((o) => o.hit).reduce((sum, o) => sum + o.marks, 0);
+    return {
+      kind: 'awarded',
+      marks_awarded: clampMarks(enforceRequired(hitMarks, outcomes), part.marks),
+      marks_possible: part.marks,
+      mark_point_outcomes: outcomes,
+      normalised_answer: serialiseLogicDiagramSlotsAnswer(config, pupilFills),
+    };
+  }
 
+  if (config.variant === 'boolean_expression') {
+    const parsed = parseLogicDiagramBooleanRawAnswer(rawAnswer);
+    const result = markLogicDiagramBooleanExpression(config, parsed.expression);
+    const mp = markPoints[0];
+    const outcome: MarkPointOutcome = {
+      text: mp ? mp.text : 'Boolean expression',
+      marks: mp ? mp.marks : part.marks,
+      is_required: mp ? mp.is_required : false,
+      hit: result.hit,
+    };
+    const hitMarks = result.hit ? outcome.marks : 0;
+    return {
+      kind: 'awarded',
+      marks_awarded: clampMarks(enforceRequired(hitMarks, [outcome]), part.marks),
+      marks_possible: part.marks,
+      mark_point_outcomes: [outcome],
+      normalised_answer: serialiseLogicDiagramBooleanAnswer(parsed.expression),
+    };
+  }
+
+  // gate_palette
+  const parsed = parseLogicDiagramPaletteRawAnswer(rawAnswer);
+  const result = markLogicDiagramPalette(config, parsed.circuit);
+  const mp = markPoints[0];
+  const outcome: MarkPointOutcome = {
+    text: mp ? mp.text : 'Circuit matches truth table',
+    marks: mp ? mp.marks : part.marks,
+    is_required: mp ? mp.is_required : false,
+    hit: result.hit,
+  };
+  const hitMarks = result.hit ? outcome.marks : 0;
   return {
     kind: 'awarded',
-    marks_awarded: clampMarks(enforceRequired(hitMarks, outcomes), part.marks),
+    marks_awarded: clampMarks(enforceRequired(hitMarks, [outcome]), part.marks),
     marks_possible: part.marks,
-    mark_point_outcomes: outcomes,
-    normalised_answer: serialiseLogicDiagramGatesAnswer(config, pupilFills),
+    mark_point_outcomes: [outcome],
+    normalised_answer: serialiseLogicDiagramPaletteAnswer(parsed.circuit),
   };
 }
 

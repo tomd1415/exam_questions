@@ -1,15 +1,16 @@
 <%
 const cfg = ((it.draft.payload || {}).parts?.[0]?.part_config) || {};
-const variant = cfg.variant === 'gate_in_box' ? 'gate_in_box' : 'image';
+const KNOWN = ['image', 'gate_in_box', 'guided_slots', 'boolean_expression', 'gate_palette'];
+const variant = KNOWN.includes(cfg.variant) ? cfg.variant : 'image';
 const canvas = (cfg.canvas && typeof cfg.canvas === 'object') ? cfg.canvas : {};
 const width = typeof canvas.width === 'number' ? canvas.width : 600;
 const height = typeof canvas.height === 'number' ? canvas.height : 400;
 const issueMap = it.issueMap || {};
 
-// Re-serialise gates/terminals/wires back to pipe-encoded textarea lines if
-// the draft round-trips (so the teacher doesn't lose their work on a
-// validation error). Format mirrors parseLogicGateLine/parseLogicTerminalLine
-// in wizard-widget-editors.ts.
+// Re-serialise existing config back into pipe-encoded textarea lines so
+// the teacher doesn't lose their work on a validation error. Formats mirror
+// parseLogicGateLine / parseLogicTerminalLine / parseLogicDiagramGuidedSlots
+// / parseLogicDiagramBooleanExpression / parseLogicDiagramGatePalette.
 const gateLines = [];
 if (Array.isArray(cfg.gates)) {
   for (const g of cfg.gates) {
@@ -35,43 +36,87 @@ if (Array.isArray(cfg.wires)) {
     wireLines.push(`${w.from}|${w.to}`);
   }
 }
+const slotLines = [];
+if (Array.isArray(cfg.slots)) {
+  for (const s of cfg.slots) {
+    if (!s || typeof s !== 'object') continue;
+    const opts = Array.isArray(s.options) ? s.options.join(', ') : '';
+    slotLines.push(`${s.id}|${s.prompt}|${opts}|${s.accept}`);
+  }
+}
+const acceptLines = Array.isArray(cfg.accept) ? cfg.accept : [];
+const allowedOpsValue = Array.isArray(cfg.allowedOperators) ? cfg.allowedOperators.join(', ') : '';
+const caseSensitive = cfg.caseSensitive === true;
+const normaliseSymbols = cfg.normaliseSymbols !== false;
+const paletteValue = Array.isArray(cfg.palette) ? cfg.palette.join(', ') : '';
+const maxGatesValue = Number.isInteger(cfg.maxGates) ? cfg.maxGates : '';
+const truthTableLines = [];
+if (cfg.expected && Array.isArray(cfg.expected.truthTable) && Array.isArray(cfg.terminals)) {
+  const inputIds = cfg.terminals.filter((t) => t && t.kind === 'input').map((t) => t.id);
+  for (const row of cfg.expected.truthTable) {
+    if (!row || typeof row !== 'object') continue;
+    const ins = row.inputs || {};
+    const pairs = inputIds.map((id) => `${id}=${ins[id]}`).join(', ');
+    truthTableLines.push(`${pairs} → ${row.output}`);
+  }
+}
+
 const gatesValue = gateLines.join('\n');
 const terminalsValue = terminalLines.join('\n');
 const wiresValue = wireLines.join('\n');
+const slotsValue = slotLines.join('\n');
+const acceptValue = acceptLines.join('\n');
+const truthTableValue = truthTableLines.join('\n');
 %>
 <fieldset class="wizard-step wizard-step--5 wizard-step--canvas">
   <legend>Logic diagram</legend>
 
   <p class="form-hint">
-    Pick how pupils will work on this diagram. <strong>Image</strong> gives
-    them a blank canvas to draw on (teacher-marked). <strong>Gate in box</strong>
-    lays out labelled input/output terminals plus a mix of prefilled gates
-    and blank boxes pupils must name (auto-marked).
+    Pick how pupils will work on this diagram. Five formats are supported:
+    <strong>Image</strong> (freehand, teacher-marked),
+    <strong>Gate in box</strong> (type the blank gate's name),
+    <strong>Guided slots</strong> (dropdowns over fixed options),
+    <strong>Boolean expression</strong> (type an expression),
+    <strong>Gate palette</strong> (drag gates, marker runs the truth table).
   </p>
 
   <div class="form-radio-group" role="radiogroup" aria-label="Logic-diagram variant">
     <label class="form-radio">
-      <input type="radio" name="variant" value="image"
-             <%= variant === 'image' ? 'checked' : '' %> />
+      <input type="radio" name="variant" value="image" <%= variant === 'image' ? 'checked' : '' %> />
       <span>Image — pupil draws freehand (teacher-marked)</span>
     </label>
     <label class="form-radio">
-      <input type="radio" name="variant" value="gate_in_box"
-             <%= variant === 'gate_in_box' ? 'checked' : '' %> />
+      <input type="radio" name="variant" value="gate_in_box" <%= variant === 'gate_in_box' ? 'checked' : '' %> />
       <span>Gate in box — prefilled + pupil-fill blanks (auto-marked)</span>
+    </label>
+    <label class="form-radio">
+      <input type="radio" name="variant" value="guided_slots" <%= variant === 'guided_slots' ? 'checked' : '' %> />
+      <span>Guided slots — dropdowns with teacher-set options (auto-marked)</span>
+    </label>
+    <label class="form-radio">
+      <input type="radio" name="variant" value="boolean_expression" <%= variant === 'boolean_expression' ? 'checked' : '' %> />
+      <span>Boolean expression — pupil types an expression (auto-marked)</span>
+    </label>
+    <label class="form-radio">
+      <input type="radio" name="variant" value="gate_palette" <%= variant === 'gate_palette' ? 'checked' : '' %> />
+      <span>Gate palette — pupil drags gates, marker runs the truth table (auto-marked)</span>
     </label>
   </div>
   <% (issueMap.variant || []).forEach(function (m) { %><p class="form-error"><%= m %></p><% }); %>
 
-  <label for="canvas_width">Canvas width (px)</label>
-  <input id="canvas_width" name="canvas_width" type="number" min="100" max="2000"
-         inputmode="numeric" value="<%= width %>" required />
-  <% (issueMap.canvas_width || []).forEach(function (m) { %><p class="form-error"><%= m %></p><% }); %>
+  <div class="wizard-logic-diagram__canvas-only"
+       data-visible-when-variant="image,gate_in_box,gate_palette"
+       <%= (variant === 'image' || variant === 'gate_in_box' || variant === 'gate_palette') ? '' : 'hidden' %>>
+    <label for="canvas_width">Canvas width (px)</label>
+    <input id="canvas_width" name="canvas_width" type="number" min="100" max="2000"
+           inputmode="numeric" value="<%= width %>" />
+    <% (issueMap.canvas_width || []).forEach(function (m) { %><p class="form-error"><%= m %></p><% }); %>
 
-  <label for="canvas_height">Canvas height (px)</label>
-  <input id="canvas_height" name="canvas_height" type="number" min="100" max="2000"
-         inputmode="numeric" value="<%= height %>" required />
-  <% (issueMap.canvas_height || []).forEach(function (m) { %><p class="form-error"><%= m %></p><% }); %>
+    <label for="canvas_height">Canvas height (px)</label>
+    <input id="canvas_height" name="canvas_height" type="number" min="100" max="2000"
+           inputmode="numeric" value="<%= height %>" />
+    <% (issueMap.canvas_height || []).forEach(function (m) { %><p class="form-error"><%= m %></p><% }); %>
+  </div>
 
   <div class="wizard-logic-diagram__gib-only"
        data-visible-when-variant="gate_in_box"
@@ -86,13 +131,13 @@ const wiresValue = wireLines.join('\n');
               placeholder="g1|80|60|80|50|GATE|AND&#10;g2|80|180|80|50|GATE|NOT&#10;gout|300|120|80|50|BLANK|OR"><%= gatesValue %></textarea>
     <% (issueMap.gates || []).forEach(function (m) { %><p class="form-error"><%= m %></p><% }); %>
 
-    <label for="terminals">Terminals (one per line)</label>
+    <label for="terminals_gib">Terminals (one per line)</label>
     <p class="form-hint">
       Format: <code>id|INPUT|A|x|y</code> or <code>id|OUTPUT|P|x|y</code>
       (labels are 1–8 chars, rendered next to a small dot).
     </p>
-    <textarea id="terminals" name="terminals" rows="5"
-              placeholder="a|INPUT|A|20|85&#10;b|INPUT|B|20|140&#10;c|INPUT|C|20|205&#10;p|OUTPUT|P|400|145"><%= terminalsValue %></textarea>
+    <textarea id="terminals_gib" name="terminals" rows="5"
+              placeholder="a|INPUT|A|20|85&#10;b|INPUT|B|20|140&#10;c|INPUT|C|20|205&#10;p|OUTPUT|P|400|145"><%= variant === 'gate_in_box' ? terminalsValue : '' %></textarea>
     <% (issueMap.terminals || []).forEach(function (m) { %><p class="form-error"><%= m %></p><% }); %>
 
     <label for="wires">Wires (one per line, optional)</label>
@@ -103,42 +148,99 @@ const wiresValue = wireLines.join('\n');
     <textarea id="wires" name="wires" rows="6"
               placeholder="a|g1&#10;b|g1&#10;c|g2&#10;g1|gout&#10;g2|gout&#10;gout|p"><%= wiresValue %></textarea>
     <% (issueMap.wires || []).forEach(function (m) { %><p class="form-error"><%= m %></p><% }); %>
+  </div>
 
-    <details class="wizard-logic-diagram__example">
-      <summary>Worked example: P = (A AND B) OR NOT C</summary>
-      <p>Copy into the boxes above (canvas 600 × 400):</p>
-      <pre>g1|140|60|80|50|GATE|AND
-g2|140|180|80|50|GATE|NOT
-gout|360|110|80|50|BLANK|OR</pre>
-      <pre>a|INPUT|A|40|75
-b|INPUT|B|40|125
-c|INPUT|C|40|205
-p|OUTPUT|P|520|135</pre>
-      <pre>a|g1
-b|g1
-c|g2
-g1|gout
-g2|gout
-gout|p</pre>
-    </details>
+  <div class="wizard-logic-diagram__slots-only"
+       data-visible-when-variant="guided_slots"
+       <%= variant === 'guided_slots' ? '' : 'hidden' %>>
+    <label for="slots">Slots (one per line)</label>
+    <p class="form-hint">
+      Format: <code>id|prompt|opt1, opt2, opt3|accept</code>. The
+      <code>accept</code> value must be one of the listed options.
+    </p>
+    <textarea id="slots" name="slots" rows="6"
+              placeholder="s1|Gate combining A and B|AND, OR, NOT|AND&#10;s2|Gate inverting C|AND, OR, NOT|NOT"><%= slotsValue %></textarea>
+    <% (issueMap.slots || []).forEach(function (m) { %><p class="form-error"><%= m %></p><% }); %>
+  </div>
+
+  <div class="wizard-logic-diagram__boolean-only"
+       data-visible-when-variant="boolean_expression"
+       <%= variant === 'boolean_expression' ? '' : 'hidden' %>>
+    <label for="accept">Accepted expressions (one per line)</label>
+    <p class="form-hint">
+      Each line is a canonical phrasing you'll accept. Marking is a
+      tokenised comparison — spaces and case don't matter by default, and
+      symbol forms (<code>.</code>, <code>+</code>, <code>~</code>,
+      <code>⊕</code>) are normalised to <code>AND/OR/NOT/XOR</code>.
+    </p>
+    <textarea id="accept" name="accept" rows="4"
+              placeholder="(A AND B) OR NOT C&#10;(A AND B) OR (NOT C)"><%= acceptValue %></textarea>
+    <% (issueMap.accept || []).forEach(function (m) { %><p class="form-error"><%= m %></p><% }); %>
+
+    <label for="allowed_operators">Allowed operators (comma-separated, optional)</label>
+    <input id="allowed_operators" name="allowed_operators" type="text"
+           value="<%= allowedOpsValue %>" placeholder="AND, OR, NOT" />
+    <% (issueMap.allowed_operators || []).forEach(function (m) { %><p class="form-error"><%= m %></p><% }); %>
+
+    <label class="form-check">
+      <input type="checkbox" name="case_sensitive" <%= caseSensitive ? 'checked' : '' %> />
+      <span>Case-sensitive identifiers</span>
+    </label>
+    <label class="form-check">
+      <input type="checkbox" name="normalise_symbols" value="on" <%= normaliseSymbols ? 'checked' : '' %> />
+      <span>Normalise <code>.</code>/<code>+</code>/<code>~</code> to keywords</span>
+    </label>
+  </div>
+
+  <div class="wizard-logic-diagram__palette-only"
+       data-visible-when-variant="gate_palette"
+       <%= variant === 'gate_palette' ? '' : 'hidden' %>>
+    <label for="terminals_palette">Terminals (one per line)</label>
+    <p class="form-hint">
+      Add one or more INPUTs and exactly one OUTPUT. Format:
+      <code>id|INPUT|A|x|y</code>.
+    </p>
+    <textarea id="terminals_palette" name="terminals" rows="4"
+              placeholder="a|INPUT|A|40|80&#10;b|INPUT|B|40|160&#10;p|OUTPUT|P|520|120"><%= variant === 'gate_palette' ? terminalsValue : '' %></textarea>
+    <% (issueMap.terminals || []).forEach(function (m) { %><p class="form-error"><%= m %></p><% }); %>
+
+    <label for="palette">Palette (comma-separated gate types)</label>
+    <input id="palette" name="palette" type="text"
+           value="<%= paletteValue %>" placeholder="AND, OR, NOT" />
+    <% (issueMap.palette || []).forEach(function (m) { %><p class="form-error"><%= m %></p><% }); %>
+
+    <label for="max_gates">Max gates (optional, 1–20)</label>
+    <input id="max_gates" name="max_gates" type="number" min="1" max="20"
+           inputmode="numeric" value="<%= maxGatesValue %>" />
+    <% (issueMap.max_gates || []).forEach(function (m) { %><p class="form-error"><%= m %></p><% }); %>
+
+    <label for="truth_table">Truth table (one row per line)</label>
+    <p class="form-hint">
+      Format: <code>a=0, b=1 → 1</code>. Include every input combination
+      (2<sup>n</sup> rows).
+    </p>
+    <textarea id="truth_table" name="truth_table" rows="6"
+              placeholder="a=0, b=0 → 0&#10;a=0, b=1 → 0&#10;a=1, b=0 → 0&#10;a=1, b=1 → 1"><%= truthTableValue %></textarea>
+    <% (issueMap.truth_table || []).forEach(function (m) { %><p class="form-error"><%= m %></p><% }); %>
   </div>
 </fieldset>
 
 <script>
-  // Progressive enhancement: toggle the gate_in_box-only section when the
-  // variant radio changes. No-JS teachers see both sections and can still
-  // submit.
+  // Progressive enhancement: show/hide variant-specific sections when the
+  // radio changes. No-JS teachers see every section and can still submit.
   (function () {
     const root = document.currentScript.previousElementSibling;
     if (!root) return;
     const radios = root.querySelectorAll('input[name="variant"]');
-    const gibOnly = root.querySelector('[data-visible-when-variant="gate_in_box"]');
-    if (!gibOnly) return;
+    const sections = root.querySelectorAll('[data-visible-when-variant]');
     function sync() {
       const selected = Array.from(radios).find((r) => r.checked);
       if (!selected) return;
-      if (selected.value === 'gate_in_box') gibOnly.removeAttribute('hidden');
-      else gibOnly.setAttribute('hidden', '');
+      sections.forEach((sec) => {
+        const allowed = (sec.getAttribute('data-visible-when-variant') || '').split(',');
+        if (allowed.includes(selected.value)) sec.removeAttribute('hidden');
+        else sec.setAttribute('hidden', '');
+      });
     }
     radios.forEach((r) => r.addEventListener('change', sync));
     sync();

@@ -1,0 +1,50 @@
+{
+  "external_key": "j277-2-4-logic-diagram-guided-slots",
+  "component_code": "J277/02",
+  "topic_code": "2.4",
+  "subtopic_code": "2.4.1",
+  "command_word_code": "complete",
+  "archetype_code": "define",
+  "expected_response_type": "logic_diagram",
+  "stem": "Pick the correct gate for each part of the expression P = (A AND B) OR NOT C.",
+  "model_answer": "The gate combining A and B is AND; the gate inverting C is NOT; the gate combining those two outputs is OR.",
+  "difficulty_band": 2,
+  "difficulty_step": 1,
+  "source_type": "imported_pattern",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Choose each gate from the dropdown.",
+      "marks": 3,
+      "expected_response_type": "logic_diagram",
+      "part_config": {
+        "variant": "guided_slots",
+        "slots": [
+          {
+            "id": "ab",
+            "prompt": "Gate combining A and B",
+            "options": ["AND", "OR", "NOT"],
+            "accept": "AND"
+          },
+          {
+            "id": "notc",
+            "prompt": "Gate inverting C",
+            "options": ["AND", "OR", "NOT"],
+            "accept": "NOT"
+          },
+          {
+            "id": "out",
+            "prompt": "Gate combining (A AND B) with NOT C",
+            "options": ["AND", "OR", "NOT"],
+            "accept": "OR"
+          }
+        ]
+      },
+      "mark_points": [
+        { "text": "ab: AND", "marks": 1 },
+        { "text": "notc: NOT", "marks": 1 },
+        { "text": "out: OR", "marks": 1 }
+      ]
+    }
+  ]
+}

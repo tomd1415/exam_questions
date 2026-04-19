@@ -528,11 +528,12 @@ const t = part.expected_response_type;
     const ldGates = Array.isArray(ldCfg.gates) ? ldCfg.gates : [];
     const ldTerminals = Array.isArray(ldCfg.terminals) ? ldCfg.terminals : [];
     const ldWires = Array.isArray(ldCfg.wires) ? ldCfg.wires : [];
-    // Pull the prior PNG out of the `image=…` line (image variant) and any
-    // per-gate fills (gate_in_box variant). We deliberately accept whatever
-    // shape the DB holds so a malformed payload renders as empty rather than
-    // a server error.
+    // Pull the prior answer for every variant out of the stored lines.
+    // A malformed payload silently renders as empty rather than a server
+    // error.
     let ldPriorImage = '';
+    let ldPriorExpression = '';
+    let ldPriorCircuit = '';
     const ldPriorFills = Object.create(null);
     priorLines.forEach(function(line) {
       const eq = line.indexOf('=');
@@ -541,10 +542,20 @@ const t = part.expected_response_type;
       const value = line.slice(eq + 1);
       if (key === 'image') {
         ldPriorImage = value;
+      } else if (key === 'expression') {
+        ldPriorExpression = value;
+      } else if (key === 'circuit') {
+        ldPriorCircuit = value;
       } else if (/^[A-Za-z0-9_-]+$/.test(key)) {
         ldPriorFills[key] = value;
       }
     });
+    const ldSlots = Array.isArray(ldCfg.slots) ? ldCfg.slots : [];
+    const ldAccept = Array.isArray(ldCfg.accept) ? ldCfg.accept : [];
+    const ldAllowedOps = Array.isArray(ldCfg.allowedOperators) ? ldCfg.allowedOperators : ['AND', 'OR', 'NOT'];
+    const ldPalette = Array.isArray(ldCfg.palette) ? ldCfg.palette : [];
+    const ldMaxGates = Number.isInteger(ldCfg.maxGates) ? ldCfg.maxGates : 8;
+    const ldTruthTable = (ldCfg.expected && Array.isArray(ldCfg.expected.truthTable)) ? ldCfg.expected.truthTable : [];
 
     // Gate centre (SVG coords) — used to anchor decorative wires.
     function ldGateCentre(g) {
@@ -663,6 +674,130 @@ const t = part.expected_response_type;
           </label>
         <% }); %>
       </div>
+    </div>
+  <% } else if (ldVariant === 'guided_slots') { %>
+    <div class="widget widget--logic-diagram widget--logic-diagram-slots logic-slots"
+         data-autosave-part-id="<%= part.id %>"
+         aria-describedby="marks-<%= part.id %>">
+      <ol class="logic-slots__list">
+        <% ldSlots.forEach(function(slot) {
+          if (!slot || typeof slot !== 'object') return;
+          const fieldId = 'part-' + part.id + '-' + slot.id;
+          const prior = ldPriorFills[slot.id] || '';
+          const options = Array.isArray(slot.options) ? slot.options : [];
+        %>
+          <li class="logic-slots__item">
+            <label class="logic-slots__label" for="<%= fieldId %>"><%= slot.prompt %></label>
+            <select id="<%= fieldId %>"
+                    name="<%= fieldName %>__<%= slot.id %>"
+                    class="logic-slots__select">
+              <option value=""<%= prior === '' ? ' selected' : '' %>>— choose —</option>
+              <% options.forEach(function(opt) { %>
+                <option value="<%= opt %>"<%= prior === opt ? ' selected' : '' %>><%= opt %></option>
+              <% }); %>
+            </select>
+          </li>
+        <% }); %>
+      </ol>
+    </div>
+  <% } else if (ldVariant === 'boolean_expression') { %>
+    <div class="widget widget--logic-diagram widget--logic-diagram-boolean logic-boolean"
+         data-autosave-part-id="<%= part.id %>"
+         aria-describedby="marks-<%= part.id %>">
+      <label class="logic-boolean__label" for="part-<%= part.id %>-expression">
+        Type your boolean expression. Allowed operators:
+        <%= ldAllowedOps.join(', ') %>. Use brackets to show precedence.
+      </label>
+      <textarea id="part-<%= part.id %>-expression"
+                class="logic-boolean__input"
+                name="<%= fieldName %>__expression"
+                rows="2"
+                autocomplete="off"
+                spellcheck="false"
+                maxlength="200"
+                data-logic-boolean-input><%= ldPriorExpression %></textarea>
+      <div class="logic-boolean__palette" aria-label="Quick-insert operators">
+        <% ldAllowedOps.forEach(function(op) { %>
+          <button type="button" class="logic-boolean__op" data-logic-boolean-op="<%= op %>"><%= op %></button>
+        <% }); %>
+        <button type="button" class="logic-boolean__op" data-logic-boolean-op="(">(</button>
+        <button type="button" class="logic-boolean__op" data-logic-boolean-op=")">)</button>
+      </div>
+    </div>
+  <% } else if (ldVariant === 'gate_palette') { %>
+    <div class="widget widget--logic-diagram widget--logic-diagram-palette logic-palette"
+         data-autosave-part-id="<%= part.id %>"
+         data-logic-palette-width="<%= ldWidth %>"
+         data-logic-palette-height="<%= ldHeight %>"
+         data-logic-palette-max-gates="<%= ldMaxGates %>"
+         aria-describedby="marks-<%= part.id %>">
+      <div class="logic-palette__toolbar" role="toolbar" aria-label="Gate palette">
+        <% ldPalette.forEach(function(gt) { %>
+          <button type="button" class="logic-palette__tool" data-logic-palette-gate="<%= gt %>"><%= gt %></button>
+        <% }); %>
+        <button type="button" class="logic-palette__tool logic-palette__tool--wire" data-logic-palette-tool="wire">Wire</button>
+        <button type="button" class="logic-palette__tool logic-palette__tool--delete" data-logic-palette-tool="delete">Delete</button>
+        <button type="button" class="logic-palette__clear" data-logic-palette-clear>Clear</button>
+      </div>
+      <svg class="logic-palette__stage"
+           data-logic-palette-stage
+           viewBox="0 0 <%= ldWidth %> <%= ldHeight %>"
+           width="<%= ldWidth %>"
+           height="<%= ldHeight %>"
+           role="img"
+           aria-label="Gate palette canvas, <%= ldWidth %> by <%= ldHeight %> pixels"
+           tabindex="0">
+        <% ldTerminals.forEach(function(tm) {
+          if (!tm || typeof tm !== 'object') return;
+          const labelDx = tm.kind === 'input' ? -10 : 10;
+          const anchor = tm.kind === 'input' ? 'end' : 'start';
+        %>
+          <circle class="logic-palette__terminal logic-palette__terminal--<%= tm.kind %>"
+                  data-logic-palette-terminal-id="<%= tm.id %>"
+                  data-logic-palette-terminal-kind="<%= tm.kind %>"
+                  cx="<%= tm.x %>" cy="<%= tm.y %>" r="6" />
+          <text class="logic-palette__terminal-label"
+                x="<%= tm.x + labelDx %>" y="<%= tm.y %>"
+                text-anchor="<%= anchor %>" dominant-baseline="middle"><%= tm.label %></text>
+        <% }); %>
+      </svg>
+      <input type="hidden"
+             name="<%= fieldName %>__circuit"
+             value="<%= ldPriorCircuit %>"
+             data-logic-palette-circuit />
+      <details class="logic-palette__truth-table">
+        <summary>Target truth table</summary>
+        <table>
+          <thead>
+            <tr>
+              <% ldTerminals.forEach(function(tm) { if (tm && tm.kind === 'input') { %>
+                <th><%= tm.label %></th>
+              <% } }); %>
+              <% ldTerminals.forEach(function(tm) { if (tm && tm.kind === 'output') { %>
+                <th><%= tm.label %></th>
+              <% } }); %>
+            </tr>
+          </thead>
+          <tbody>
+            <% ldTruthTable.forEach(function(row) {
+              if (!row || typeof row !== 'object') return;
+              const ins = row.inputs || {};
+            %>
+              <tr>
+                <% ldTerminals.forEach(function(tm) { if (tm && tm.kind === 'input') { %>
+                  <td><%= ins[tm.id] %></td>
+                <% } }); %>
+                <td><%= row.output %></td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </details>
+      <noscript>
+        <p class="logic-palette__noscript">
+          This widget needs JavaScript to drag gates. Without it, you cannot submit a circuit.
+        </p>
+      </noscript>
     </div>
   <% } else { %>
     <div class="widget widget--logic-diagram logic-diagram"
