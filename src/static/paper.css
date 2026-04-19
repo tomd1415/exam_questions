@@ -648,28 +648,35 @@
   border-radius: 0.25rem;
   border: 1px solid var(--paper-rule);
 }
+/* Mark-points grid sits outside .paper-root (pupil review page uses the
+   body surface), so these rules must use the theme-aware success/danger
+   ramps from design-tokens.css — on dark mode the hardcoded pastels
+   left inherited ink-1 light text sitting on a light green/pink tile. */
 .mark-points-grid .mp--hit,
 .mark-points-grid li.mp--hit {
-  background: #e6f7ea;
-  border-color: #3c9a5a;
+  background: var(--color-success-50);
+  border-color: var(--color-success-500);
+  color: var(--color-success-700);
 }
 .mark-points-grid .mp--miss,
 .mark-points-grid li.mp--miss {
-  background: #fdecec;
-  border-color: #c33;
+  background: var(--color-danger-50);
+  border-color: var(--color-danger-500);
+  color: var(--color-danger-700);
 }
 .mark-points-grid .mp__status {
   font-weight: 700;
   text-align: center;
 }
 .mark-points-grid .mp--hit .mp__status {
-  color: #1f7a3a;
+  color: var(--color-success-700);
 }
 .mark-points-grid .mp--miss .mp__status {
-  color: #a00;
+  color: var(--color-danger-700);
 }
 .mark-points-grid .mp__marks {
-  color: var(--paper-ink-muted);
+  color: inherit;
+  opacity: 0.85;
   font-size: 0.9rem;
   white-space: nowrap;
 }
