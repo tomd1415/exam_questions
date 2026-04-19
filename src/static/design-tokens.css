@@ -34,6 +34,10 @@
   --color-brand-600: #1a44c0;
   --color-brand-700: #163aa1;
   --color-brand-ink: #ffffff;
+  /* Brand used as text colour on body-surface backgrounds. Resolves to a
+     darker brand shade in light mode and to a pale brand tint in dark
+     mode so accented labels keep AA contrast either way. */
+  --color-brand-text: var(--color-brand-700);
 
   --color-accent-500: #0f766e;
   --color-accent-ink: #ffffff;
@@ -185,10 +189,14 @@
   --color-border: #2e2e3c;
   --color-border-strong: #45455a;
 
-  /* brand-500/600/700 stay anchored; the tinted 50/100 ramps move into
-     the near-black band so chips sit on dark surfaces without glare. */
+  /* brand-500/600/700 stay anchored (used as button fills where they
+     pair with white ink); the tinted 50/100 ramps move into the
+     near-black band so chips sit on dark surfaces without glare. For
+     accented text on body surfaces, --color-brand-text resolves to a
+     pale brand tint so AA contrast holds. */
   --color-brand-50: #16224a;
   --color-brand-100: #1e2e68;
+  --color-brand-text: #c8d6ff;
 
   --color-accent-warm-50: #3a2c10;
   --color-accent-warm-100: #553f16;
@@ -242,6 +250,7 @@
 
     --color-brand-50: #16224a;
     --color-brand-100: #1e2e68;
+    --color-brand-text: #c8d6ff;
 
     --color-accent-warm-50: #3a2c10;
     --color-accent-warm-100: #553f16;

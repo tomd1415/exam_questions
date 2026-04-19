@@ -154,6 +154,29 @@ async function check(ctx: BrowserContext, path: string): Promise<void> {
   }
 }
 
+// Variant of `check` that forces a theme on <html> before scanning, so
+// Chunk A3's contrast fix for login + form inputs is locked in for both
+// light and dark modes.
+async function checkWithTheme(
+  ctx: BrowserContext,
+  path: string,
+  theme: 'light' | 'dark',
+): Promise<void> {
+  const p = await ctx.newPage();
+  try {
+    const resp = await p.goto(`${baseUrl}${path}`);
+    if (resp?.status() !== 200) {
+      throw new Error(`expected 200 on ${path}, got ${resp?.status() ?? 'no-response'}`);
+    }
+    await p.evaluate((t) => {
+      document.documentElement.setAttribute('data-theme', t);
+    }, theme);
+    await axeOn(p, `${path} (${theme})`);
+  } finally {
+    await p.close();
+  }
+}
+
 describe('axe-core pass (Chunk 7)', () => {
   it('/login has no serious violations', async () => {
     await check(anonCtx, '/login');
@@ -181,6 +204,18 @@ describe('axe-core pass (Chunk 7)', () => {
 
   it('/ (teacher home dashboard) has no serious violations', async () => {
     await check(teacherCtx, '/');
+  }, 30_000);
+
+  it('/login in light mode has no serious violations', async () => {
+    await checkWithTheme(anonCtx, '/login', 'light');
+  }, 30_000);
+
+  it('/login in dark mode has no serious violations', async () => {
+    await checkWithTheme(anonCtx, '/login', 'dark');
+  }, 30_000);
+
+  it('/attempts/:id (pupil review) in dark mode has no serious violations', async () => {
+    await checkWithTheme(pupilCtx, `/attempts/${attemptId}`, 'dark');
   }, 30_000);
 
   it('suite attemptId is defined', () => {
