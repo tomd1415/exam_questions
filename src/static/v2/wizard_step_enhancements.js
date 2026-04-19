@@ -40,8 +40,11 @@
     const label = root.querySelector('[data-wizard-difficulty-current]');
     if (!range || !select) return;
     // Reveal the range control to sighted users; the select stays in the
-    // DOM for the no-JS path but is visually hidden when JS is live.
+    // DOM for the no-JS path but is visually hidden and taken out of the
+    // tab order when JS is live. tabindex=-1 keeps axe's aria-hidden-focus
+    // rule happy — a hidden element must not be focusable.
     select.setAttribute('aria-hidden', 'true');
+    select.setAttribute('tabindex', '-1');
     range.addEventListener('input', function () {
       select.value = range.value;
       if (label) label.textContent = range.value;

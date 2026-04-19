@@ -1950,7 +1950,7 @@ input[type='number'].input {
 .wizard__step-subtitle {
   text-transform: none;
   letter-spacing: normal;
-  color: var(--color-ink-4);
+  color: var(--color-ink-2);
   margin-left: var(--space-1);
 }
 .wizard__title {
@@ -2140,9 +2140,13 @@ input[type='number'].input {
   padding-top: var(--space-4);
 }
 .wizard__publish-btn {
-  background: var(--color-accent-warm-500);
+  /* Warm-700 on white ink hits 8:1 contrast; warm-500 (#c2892a) was only
+     3:1 which fails WCAG AA for 12pt text. The darker amber reads as
+     "published / done" while staying legible on the sticky action bar. */
+  background: var(--color-accent-warm-700);
   color: var(--color-accent-warm-ink);
-  border-color: var(--color-accent-warm-600);
+  border-color: var(--color-accent-warm-700);
+  font-weight: 600;
 }
 .wizard__publish-btn:hover {
   background: var(--color-accent-warm-600);
