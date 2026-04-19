@@ -204,7 +204,9 @@ async function renderStep(
   const missing = n === 9 ? missingFieldsForPublish(draft.payload) : [];
   const publishReady = n === 9 ? missing.length === 0 : false;
   if (opts.status) reply.code(opts.status);
-  return reply.view('admin_wizard_step.eta', {
+  const v2 = isWizardV2Enabled();
+  const template = v2 ? 'v2/admin_wizard_step.eta' : 'admin_wizard_step.eta';
+  return reply.view(template, {
     title: `Step ${n} of 9`,
     currentUser: req.currentUser,
     csrfToken: reply.generateCsrf(),
@@ -229,9 +231,15 @@ async function renderStep(
     wizardAnswerPickerEnabled: n === 5,
     // Loads the pupil-widget runtime scripts so the step-9 preview pane
     // is interactive (cloze bank drag-drop, matching, logic_diagram,
-    // flowchart, trace_grid, widget counters). Only the publish step
-    // renders the preview, so only that step needs them.
-    wizardPreviewEnabled: n === 9,
+    // flowchart, trace_grid, widget counters). On v1 only step 9 renders
+    // the preview; on v2 it's mounted on steps 5–9, so any of those steps
+    // needs the runtime. Steps 1–4 don't render a preview on either flag.
+    wizardPreviewEnabled: v2 ? n >= 5 : n === 9,
+    // Loads /static/v2/wizard_shell.js for the 3-pane shell's responsive
+    // collapse behaviour (preview drawer below 1024 px). Only the v2
+    // wizard-step template renders the toggle the script binds to, so we
+    // gate the script on the flag.
+    wizardV2ShellEnabled: v2,
   });
 }
 

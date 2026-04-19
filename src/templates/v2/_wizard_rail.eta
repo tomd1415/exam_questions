@@ -1,0 +1,76 @@
+<%
+// Step rail: replaces the pill strip on every v2 wizard step.
+// Each item renders number, title, a status dot, and (where the payload has
+// enough signal) a one-line preview of what the teacher filled in. Already-
+// visited steps are links; not-yet-started steps are non-interactive.
+const STEP_TITLES = it.stepTitles;
+const currentStep = it.step;
+const draftId = it.draft.id;
+const maxReached = it.draft.current_step;
+const payload = it.draft.payload || {};
+
+function railPreview(n) {
+  if (n === 1) {
+    const bits = [];
+    if (typeof payload.component_code === 'string') bits.push(payload.component_code);
+    if (typeof payload.topic_code === 'string') bits.push(payload.topic_code);
+    if (typeof payload.subtopic_code === 'string') bits.push(payload.subtopic_code);
+    return bits.join(' \u203a ');
+  }
+  if (n === 2) {
+    return payload.command_word_code || '';
+  }
+  if (n === 3) {
+    return payload.expected_response_type || '';
+  }
+  if (n === 4) {
+    const stem = typeof payload.stem === 'string' ? payload.stem : '';
+    if (!stem) return '';
+    return stem.length > 40 ? stem.slice(0, 39) + '\u2026' : stem;
+  }
+  if (n === 6) {
+    const part = (payload.parts && payload.parts[0]) || {};
+    return typeof part.marks === 'number' ? part.marks + ' marks' : '';
+  }
+  if (n === 8) {
+    return payload.difficulty_band ? String(payload.difficulty_band) : '';
+  }
+  return '';
+}
+
+function railStatus(n) {
+  if (n === currentStep) return 'current';
+  if (n <= maxReached) return 'done';
+  return 'todo';
+}
+%>
+<nav class="wizard__rail" aria-label="Wizard steps" data-wizard-rail>
+  <p class="wizard__rail-eyebrow">9 steps</p>
+  <ol class="wizard__rail-list">
+    <% for (let i = 1; i <= 9; i++) {
+         const status = railStatus(i);
+         const preview = railPreview(i);
+    %>
+      <li class="wizard__rail-item is-<%= status %>" data-step="<%= i %>">
+        <% if (status !== 'todo') { %>
+          <a class="wizard__rail-link"
+             href="/admin/questions/wizard/<%= draftId %>/step/<%= i %>"
+             <% if (status === 'current') { %>aria-current="step"<% } %>>
+            <span class="wizard__rail-dot status-dot status-dot--<%= status %>" aria-hidden="true"></span>
+            <span class="wizard__rail-num">Step <%= i %></span>
+            <span class="wizard__rail-title"><%= STEP_TITLES[i] %></span>
+            <% if (preview) { %>
+              <span class="wizard__rail-preview"><%= preview %></span>
+            <% } %>
+          </a>
+        <% } else { %>
+          <span class="wizard__rail-link wizard__rail-link--disabled" aria-disabled="true">
+            <span class="wizard__rail-dot status-dot status-dot--todo" aria-hidden="true"></span>
+            <span class="wizard__rail-num">Step <%= i %></span>
+            <span class="wizard__rail-title"><%= STEP_TITLES[i] %></span>
+          </span>
+        <% } %>
+      </li>
+    <% } %>
+  </ol>
+</nav>

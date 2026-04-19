@@ -1,0 +1,52 @@
+<%
+// Sticky 5-chip strip above the editor on steps 5–9. Each chip links back to
+// the step that owns that field. Renders nothing on steps 1–4 — the editor
+// is still filling in these values at that point.
+const stepN = it.step;
+if (stepN < 5) return;
+
+const payload = it.draft.payload || {};
+const draftId = it.draft.id;
+const part = (payload.parts && payload.parts[0]) || {};
+
+const topicChain = [
+  payload.component_code,
+  payload.topic_code,
+  payload.subtopic_code,
+].filter(function (b) { return typeof b === 'string' && b.length > 0; }).join(' \u203a ');
+
+const command = typeof payload.command_word_code === 'string' ? payload.command_word_code : '';
+const widget = typeof payload.expected_response_type === 'string' ? payload.expected_response_type : '';
+const marks = typeof part.marks === 'number' ? part.marks : null;
+const stemRaw = typeof payload.stem === 'string' ? payload.stem : '';
+const stem = stemRaw.length > 60 ? stemRaw.slice(0, 59) + '\u2026' : stemRaw;
+%>
+<aside class="wizard__context" aria-label="Question so far" data-wizard-context>
+  <ul class="wizard__context-chips">
+    <li class="wizard__context-chip" data-chip="topic">
+      <span class="wizard__context-label">Topic</span>
+      <span class="wizard__context-value"><%= topicChain || '\u2014' %></span>
+      <a class="wizard__context-edit" href="/admin/questions/wizard/<%= draftId %>/step/1" aria-label="Edit topic (step 1)">Edit</a>
+    </li>
+    <li class="wizard__context-chip" data-chip="command">
+      <span class="wizard__context-label">Command</span>
+      <span class="wizard__context-value"><%= command || '\u2014' %></span>
+      <a class="wizard__context-edit" href="/admin/questions/wizard/<%= draftId %>/step/2" aria-label="Edit command word (step 2)">Edit</a>
+    </li>
+    <li class="wizard__context-chip" data-chip="widget">
+      <span class="wizard__context-label">Widget</span>
+      <span class="wizard__context-value"><%= widget || '\u2014' %></span>
+      <a class="wizard__context-edit" href="/admin/questions/wizard/<%= draftId %>/step/3" aria-label="Change widget (step 3)">Edit</a>
+    </li>
+    <li class="wizard__context-chip" data-chip="marks">
+      <span class="wizard__context-label">Marks</span>
+      <span class="wizard__context-value"><%= marks === null ? '\u2014' : marks %></span>
+      <a class="wizard__context-edit" href="/admin/questions/wizard/<%= draftId %>/step/6" aria-label="Edit marks (step 6)">Edit</a>
+    </li>
+    <li class="wizard__context-chip wizard__context-chip--stem" data-chip="stem">
+      <span class="wizard__context-label">Stem</span>
+      <span class="wizard__context-value"><%= stem || '\u2014' %></span>
+      <a class="wizard__context-edit" href="/admin/questions/wizard/<%= draftId %>/step/4" aria-label="Edit stem (step 4)">Edit</a>
+    </li>
+  </ul>
+</aside>

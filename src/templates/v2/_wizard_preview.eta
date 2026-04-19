@@ -1,0 +1,47 @@
+<%
+// Live pupil preview lifted from step 9 to steps 5–9 in v2. On earlier steps
+// (1–4) we render nothing since the payload can't possibly be preview-ready.
+// The actual widget render re-uses the same _paper_part_widget dispatcher as
+// the step-9 v1 preview, so behaviour stays identical.
+const stepN = it.step;
+if (stepN < 5) return;
+
+const payload = it.draft.payload || {};
+const part = (payload.parts && payload.parts[0]) || {};
+const widget = part.expected_response_type || payload.expected_response_type || '';
+const cfg = part.part_config || null;
+const stem = typeof payload.stem === 'string' ? payload.stem : '';
+const stubPart = {
+  id: 'preview',
+  expected_response_type: widget,
+  part_config: cfg,
+  raw_answer: null,
+  marks: typeof part.marks === 'number' ? part.marks : 1,
+};
+const canPreview = widget && stem;
+%>
+<aside class="wizard__preview" aria-label="Pupil preview" data-wizard-preview>
+  <header class="wizard__preview-header">
+    <p class="wizard__preview-eyebrow">Pupil preview</p>
+    <h2 class="wizard__preview-title">What the pupil sees</h2>
+    <p class="wizard__preview-hint">
+      Live render. Click around to test &mdash; nothing is saved or marked.
+    </p>
+  </header>
+  <% if (canPreview) { %>
+    <div class="wizard__preview-stage">
+      <p class="wizard__preview-stem"><%= stem %></p>
+      <div class="wizard__preview-widget">
+        <%~ include('../_paper_part_widget', { part: stubPart, markPoints: [] }) %>
+      </div>
+    </div>
+  <% } else { %>
+    <div class="wizard__preview-empty">
+      <p class="wizard__preview-empty-title">Preview appears when ready</p>
+      <p class="wizard__preview-empty-hint">
+        Once the stem (step 4) and widget (step 3) are filled in, you&rsquo;ll
+        see a live pupil render here.
+      </p>
+    </div>
+  <% } %>
+</aside>

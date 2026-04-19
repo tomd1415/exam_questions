@@ -1,0 +1,121 @@
+<%
+// Wizard v2 step shell — three panes at ≥1024 px.
+//
+//   ┌──────────────┬─────────────────────────────┬──────────────┐
+//   │  rail (20%)  │  editor (main)              │  preview     │
+//   └──────────────┴─────────────────────────────┴──────────────┘
+//                  ┌─────────────────────────────┐
+//                  │  sticky actions             │
+//                  └─────────────────────────────┘
+//
+// Below 1024 px the preview collapses to a slide-in panel behind a toggle.
+// Below 720 px the rail collapses to a horizontal status strip. The shape
+// lift from the v1 template is done in this file; per-step editors (the
+// _wizard_step_<n> partials) still render inside .wizard__editor so chunk
+// 2.5r/2.5s can replace them one at a time without touching the shell.
+const STEP_TITLES = {
+  1: 'Where does this question live?',
+  2: 'What does the question ask the pupil to do?',
+  3: 'How should the pupil answer?',
+  4: 'Write the question',
+  5: 'Set up the answer area',
+  6: 'Marks and model answer',
+  7: 'Common misconceptions',
+  8: 'Difficulty and tags',
+  9: 'Review and publish',
+};
+const STEP_HINTS = {
+  1: 'Pick the component, topic, and subtopic the question fits under. Pupils will see the question filed here.',
+  2: 'The command word (&ldquo;describe&rdquo;, &ldquo;state&rdquo;, &ldquo;complete the table&rdquo;&hellip;) sets the tone and the typical mark tariff.',
+  3: 'Pick the answer widget that matches the shape of the answer. The next two steps will set up the question and its answer.',
+  4: 'Type the stem the pupil will read. It stays visible above each later step so you can keep referring to it.',
+  5: 'Configure the widget you picked. Each widget asks a slightly different set of questions.',
+  6: 'Set the mark tariff and write the model answer. List one mark point per line.',
+  7: 'Optional. Note any wrong-answer patterns you&rsquo;ve seen pupils make on this kind of question.',
+  8: 'Pick the difficulty band and tag the question with paper section / source.',
+  9: 'Try the question yourself. If it works the way you intended, publish it from here.',
+};
+const stepN = it.step;
+const draftId = it.draft.id;
+const isPublishStep = stepN === 9;
+const showPreview = stepN >= 5;
+const issueMap = {};
+(it.issues || []).forEach(function (i) {
+  if (!issueMap[i.path]) issueMap[i.path] = [];
+  issueMap[i.path].push(i.message);
+});
+const railCtx = { ...it, stepTitles: STEP_TITLES };
+%>
+<section class="admin-card wizard" data-wizard-shell data-step="<%= stepN %>">
+  <nav class="wizard__breadcrumbs" aria-label="Breadcrumb">
+    <a href="/admin/questions/wizard">Your drafts</a>
+    <span aria-hidden="true">&rsaquo;</span>
+    <span>Draft #<%= draftId %></span>
+  </nav>
+
+  <div class="wizard__shell<% if (showPreview) { %> wizard__shell--with-preview<% } %>">
+    <%~ include('./_wizard_rail', railCtx) %>
+
+    <div class="wizard__main">
+      <header class="wizard__header">
+        <p class="wizard__step-counter">Step <%= stepN %> of 9</p>
+        <h1 class="wizard__title"><%= STEP_TITLES[stepN] %></h1>
+        <p class="wizard__hint"><%~ STEP_HINTS[stepN] %></p>
+      </header>
+
+      <%~ include('./_wizard_context_banner', it) %>
+
+      <% if (it.flash) { %>
+        <p class="flash" role="status"><%= it.flash %></p>
+      <% } %>
+
+      <% if ((it.issues || []).length > 0) { %>
+        <div class="alert alert--error" role="alert" data-wizard-error-summary>
+          <p><strong>Please fix the following:</strong></p>
+          <ul>
+            <% it.issues.forEach(function (i) { %>
+              <li><%= i.message %></li>
+            <% }); %>
+          </ul>
+        </div>
+      <% } %>
+
+      <form method="post"
+            action="/admin/questions/wizard/<%= draftId %>/step/<%= stepN %>"
+            id="wizard-step-form"
+            class="wizard__editor stacked-form"
+            data-wizard-editor>
+        <input type="hidden" name="_csrf" value="<%= it.csrfToken %>" />
+        <%~ include('../_wizard_step_' + stepN, { ...it, issueMap }) %>
+      </form>
+
+      <% if (isPublishStep) { %>
+        <form method="post"
+              action="/admin/questions/wizard/<%= draftId %>/publish"
+              class="wizard__publish stacked-form">
+          <input type="hidden" name="_csrf" value="<%= it.csrfToken %>" />
+          <button type="submit" class="btn btn--primary btn--lg wizard__publish-btn">Publish question</button>
+          <p class="wizard__publish-hint">
+            Publishing creates the live question in <em>draft</em> approval state &mdash;
+            nothing reaches pupils until it&rsquo;s approved on the question page.
+          </p>
+        </form>
+      <% } %>
+    </div>
+
+    <% if (showPreview) { %>
+      <button type="button"
+              class="wizard__preview-toggle"
+              data-wizard-preview-toggle
+              aria-expanded="false"
+              aria-controls="wizard-preview-pane">
+        Preview
+      </button>
+      <div class="wizard__preview-pane" id="wizard-preview-pane" data-wizard-preview-pane>
+        <%~ include('./_wizard_preview', it) %>
+      </div>
+    <% } %>
+  </div>
+
+  <%~ include('./_wizard_actions', { ...it, stepTitles: STEP_TITLES }) %>
+</section>

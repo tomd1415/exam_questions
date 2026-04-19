@@ -1,0 +1,58 @@
+<%
+// Sticky action bar: Back (ghost) · autosave chip (live region) · Save + continue.
+// Step 9 swaps the primary button for a warm-amber "Publish question" with a
+// 2-second confirm-hold (wired up in chunk 2.5s). The chip is populated by
+// wizard_autosave.js (chunk 2.5q) — the initial state is "Saved" since the
+// route just rendered the persisted draft.
+const stepN = it.step;
+const STEP_TITLES = it.stepTitles;
+const draftId = it.draft.id;
+const prevStep = stepN > 1 ? stepN - 1 : null;
+const nextStep = stepN < 9 ? stepN + 1 : null;
+const isPublishStep = stepN === 9;
+%>
+<div class="wizard__actions" data-wizard-actions>
+  <div class="wizard__actions-left">
+    <% if (prevStep !== null) { %>
+      <a class="btn btn--ghost" href="/admin/questions/wizard/<%= draftId %>/step/<%= prevStep %>">
+        <span aria-hidden="true">&larr;</span>
+        Back to step <%= prevStep %>: <%= STEP_TITLES[prevStep] %>
+      </a>
+    <% } else { %>
+      <a class="btn btn--ghost" href="/admin/questions/wizard">
+        <span aria-hidden="true">&larr;</span>
+        Back to drafts
+      </a>
+    <% } %>
+  </div>
+
+  <div class="wizard__actions-centre">
+    <span class="wizard__autosave-chip"
+          data-autosave-chip
+          data-state="saved"
+          aria-live="polite">
+      <span class="wizard__autosave-dot" aria-hidden="true"></span>
+      <span class="wizard__autosave-label">Saved</span>
+    </span>
+  </div>
+
+  <div class="wizard__actions-right">
+    <% if (isPublishStep) { %>
+      <button type="submit"
+              form="wizard-step-form"
+              class="btn btn--secondary">Save review notes</button>
+    <% } else { %>
+      <button type="submit"
+              form="wizard-step-form"
+              class="btn btn--primary btn--lg"
+              data-wizard-save-continue>
+        Save &amp; continue
+        <% if (nextStep !== null) { %>
+          <span class="wizard__actions-next-title">
+            &rarr; step <%= nextStep %>: <%= STEP_TITLES[nextStep] %>
+          </span>
+        <% } %>
+      </button>
+    <% } %>
+  </div>
+</div>
