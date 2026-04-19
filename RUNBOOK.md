@@ -131,6 +131,25 @@ curl -sf https://revision.<school>.internal/healthz
 
 Roll back: re-point `current` at the previous release directory and `systemctl restart exam-questions`. Migrations are forward-only — a rollback that requires a schema change is a restore-from-backup operation (§6).
 
+### 5.1 Resetting question content (dev / test-only)
+
+Only relevant while the DB contains throwaway test content — both the Gentoo dev box and the school LAN VM during the pre-launch phase. **Do not run this on a tenant that is holding pupil submissions worth keeping.**
+
+```bash
+# Wipe attempts + drafts + questions, then reseed from content/curated/
+npm run content:reset -- --yes
+
+# Wipe only, skip reseed (leaves the questions table empty)
+npm run content:reset -- --yes --no-seed
+
+# Custom curated folder
+npm run content:reset -- --yes --dir path/to/content
+```
+
+Internals: [src/scripts/reset-questions.ts](src/scripts/reset-questions.ts) runs three deletes in a single transaction, relying on the FK cascade rules in [migrations/0005_attempts.sql](migrations/0005_attempts.sql): `attempts` cascades to `attempt_questions` and `attempt_question_parts`; `questions` cascades to `question_parts`, `question_mark_points`, and `question_misconceptions`. `question_drafts.published_question_id` is `ON DELETE SET NULL`, so drafts survive but their `published_question_id` clears — which is why drafts are deleted in the same transaction.
+
+The first pre-launch use was 2026-04-19 to pick up the chunk-B2 model-answer shape fix; on a tenant with real submissions this path would instead be a surgical `DELETE FROM attempts WHERE ...` scoped to the affected class.
+
 ## 6. Backup and restore drill
 
 The school's existing backup regime captures the VM. **In addition**, this project requires a DB-level dump so that a restore can be exercised without the full VM-restore path.

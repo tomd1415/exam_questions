@@ -30,6 +30,7 @@
     "db:restore-drill": "BACKUP_DIR=${BACKUP_DIR:-./tmp/backups} PG_RESTORE='docker compose exec -T postgres pg_restore -U exam' PSQL='docker compose exec -T postgres psql -U exam' PGDATABASE=exam_dev bash scripts/restore-drill.sh",
     "user:create": "tsx src/scripts/create-user.ts",
     "content:seed": "tsx src/scripts/seed-curated-content.ts",
+    "content:reset": "tsx src/scripts/reset-questions.ts",
     "setup:lesson": "tsx src/scripts/setup-lesson.ts",
     "gen:widgets-schema": "tsx scripts/gen-widgets-schema.ts",
     "test:human:phase0": "bash scripts/human-test-phase0.sh",
