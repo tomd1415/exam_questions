@@ -841,17 +841,32 @@
 }
 .logic-diagram__tool,
 .logic-diagram__clear {
-  padding: 0.3rem 0.7rem;
-  border: 1px solid var(--paper-rule);
-  border-radius: 0.2rem;
+  padding: 0.35rem 0.85rem;
+  border: 1px solid var(--paper-ink);
+  border-radius: 0.25rem;
   background: #fff;
+  color: var(--paper-ink);
   cursor: pointer;
   font: inherit;
+  font-weight: 600;
+}
+.logic-diagram__tool:hover,
+.logic-diagram__clear:hover {
+  background: var(--paper-rule);
+}
+.logic-diagram__tool:focus-visible,
+.logic-diagram__clear:focus-visible {
+  outline: 2px solid var(--paper-accent, #1d4ed8);
+  outline-offset: 2px;
 }
 .logic-diagram__tool[aria-pressed='true'] {
-  background: var(--paper-accent, #1a4f8a);
+  background: var(--paper-accent, #1d4ed8);
   color: #fff;
-  border-color: transparent;
+  border-color: var(--paper-accent, #1d4ed8);
+}
+.logic-diagram__tool[aria-pressed='true']:hover {
+  background: var(--paper-accent, #1d4ed8);
+  filter: brightness(0.92);
 }
 .logic-diagram__hint {
   font-size: 0.85rem;
