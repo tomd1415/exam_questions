@@ -161,6 +161,32 @@ export class QuestionDraftService {
     };
   }
 
+  // Merges the step's patch into the payload without advancing
+  // current_step and without emitting an audit event. Used by the v2
+  // wizard's loud-autosave loop: the teacher's idle-typing pulse or
+  // blur/change event triggers this via POST
+  // /admin/questions/wizard/:draftId/step/:n/autosave, which returns
+  // 204 on success. We deliberately skip the audit write because
+  // autosave fires every few seconds and would drown the audit log.
+  // The "real" advance keeps emitting question.draft.advanced as before.
+  async autosave(
+    actor: ActorForDraft,
+    draftId: string,
+    step: number,
+    patch: QuestionDraftPayload,
+  ): Promise<QuestionDraftRow> {
+    if (step < MIN_STEP || step > MAX_STEP || !Number.isInteger(step)) {
+      throw new DraftStateError('invalid_step');
+    }
+    const row = await this.findForActor(actor, draftId);
+    if (row.published_question_id !== null) {
+      throw new DraftStateError('already_published');
+    }
+    const merged = mergePayload(row.payload, patch);
+    await this.repo.update(draftId, { current_step: row.current_step, payload: merged });
+    return { ...row, payload: merged };
+  }
+
   // Hands the accumulated payload to QuestionService.createDraft so the
   // wizard shares the exact insert path the seeder uses (and the existing
   // /admin/questions form). On success the draft row is locked and the

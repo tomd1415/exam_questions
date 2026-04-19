@@ -1,0 +1,39 @@
+<%
+// Shortcut-help dialog. Populated from a shared JSON table in
+// wizard_shortcuts.js so this template and the key dispatcher cannot
+// drift apart. The rendered list is fallback-visible content for
+// no-JS and screen readers; wizard_shortcuts.js opens it via
+// showModal() on `?`.
+const SHORTCUTS = [
+  { keys: ['Ctrl', 'Enter'], label: 'Save this step and continue to the next' },
+  { keys: ['Ctrl', 'S'],     label: 'Save in place (autosave pulse)' },
+  { keys: ['['],             label: 'Previous step' },
+  { keys: [']'],             label: 'Next step' },
+  { keys: ['/'],             label: 'Jump to the nearest search / combobox' },
+  { keys: ['?'],             label: 'Open this help dialog' },
+  { keys: ['.'],             label: 'Focus the first field with an error' },
+  { keys: ['Esc'],           label: 'Close this dialog or go back to the drafts list' },
+];
+%>
+<dialog class="wizard__shortcut-help" data-wizard-shortcut-help aria-label="Keyboard shortcuts">
+  <form method="dialog" class="wizard__shortcut-help-form">
+    <header class="wizard__shortcut-help-header">
+      <h2 class="wizard__shortcut-help-title">Keyboard shortcuts</h2>
+      <button type="submit" class="btn btn--ghost btn--sm" value="close" aria-label="Close shortcuts help">&times;</button>
+    </header>
+    <ul class="wizard__shortcut-help-list">
+      <% SHORTCUTS.forEach(function (s) { %>
+        <li class="wizard__shortcut-help-row">
+          <span class="wizard__shortcut-help-keys">
+            <% s.keys.forEach(function (k, i) { %>
+              <% if (i > 0) { %><span class="wizard__shortcut-plus" aria-hidden="true">+</span><% } %>
+              <kbd class="kbd"><%= k %></kbd>
+            <% }); %>
+          </span>
+          <span class="wizard__shortcut-help-label"><%= s.label %></span>
+        </li>
+      <% }); %>
+    </ul>
+    <p class="wizard__shortcut-help-foot">Press <kbd class="kbd">Esc</kbd> to close.</p>
+  </form>
+</dialog>

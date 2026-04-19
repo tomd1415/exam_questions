@@ -360,6 +360,49 @@ export function registerAdminQuestionWizardRoutes(app: FastifyInstance): void {
     },
   );
 
+  // Autosave: merge the step patch into payload without advancing
+  // current_step, without emitting an audit event, and return 204 on
+  // success. The route re-uses parseWizardStep so validation is
+  // identical to the advance POST — malformed bodies get a 422 with
+  // the same StepIssue[] shape the v2 inline-errors JS expects. Only
+  // reachable on the v2 wizard since the v1 template doesn't ship the
+  // autosave client.
+  app.post(
+    '/admin/questions/wizard/:draftId/step/:n/autosave',
+    { preValidation: csrfPreValidation },
+    async (req, reply) => {
+      const actor = requireTeacherOrAdmin(req, reply);
+      if (!actor) return reply;
+      const params = StepParams.safeParse(req.params);
+      if (!params.success) return reply.code(404).send('Not found');
+      const csrf = CsrfOnly.safeParse(req.body);
+      if (!csrf.success) return reply.code(400).send('Bad request');
+      const { draftId, n } = params.data;
+      const draftIdStr = String(draftId);
+
+      let draft: QuestionDraftRow;
+      try {
+        draft = await app.services.questionDrafts.findForActor(actor, draftIdStr);
+      } catch (err) {
+        return handleDraftError(err, reply, draftIdStr);
+      }
+
+      const refs = await loadRefs(app);
+      const ctx = buildStepContext(refs, draft.payload);
+      const parsed = parseWizardStep(n, req.body, ctx);
+      if (!parsed.ok) {
+        return reply.code(422).send({ ok: false, issues: parsed.issues });
+      }
+
+      try {
+        await app.services.questionDrafts.autosave(actor, draftIdStr, n, parsed.patch);
+        return reply.code(204).send();
+      } catch (err) {
+        return handleDraftError(err, reply, draftIdStr);
+      }
+    },
+  );
+
   // Publish the draft. Only step 9 calls this; the route guards on its own
   // because curl-style direct POSTs from anywhere else would otherwise sneak
   // through.

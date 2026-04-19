@@ -2406,3 +2406,82 @@ input[type='number'].input {
     animation: none;
   }
 }
+
+/* ------------------------------------------------------------------ */
+/* Wizard v2 — autosave revert + shortcut-help dialog (Chunk 2.5q)    */
+/* ------------------------------------------------------------------ */
+
+.wizard__revert-btn {
+  margin-left: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--type-micro);
+  background: transparent;
+  color: var(--color-brand-600);
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+.wizard__revert-btn:hover {
+  background: var(--color-brand-50);
+}
+
+.wizard__shortcut-help {
+  border: none;
+  border-radius: var(--radius-lg);
+  padding: 0;
+  background: var(--color-surface-0);
+  color: var(--color-ink-1);
+  max-width: min(520px, 92vw);
+  box-shadow: var(--shadow-floating);
+}
+.wizard__shortcut-help::backdrop {
+  background: rgba(15, 15, 26, 0.35);
+}
+.wizard__shortcut-help-form {
+  padding: var(--space-4);
+}
+.wizard__shortcut-help-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+.wizard__shortcut-help-title {
+  margin: 0;
+  font-size: var(--type-h2);
+}
+.wizard__shortcut-help-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.wizard__shortcut-help-row {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: var(--space-3);
+  align-items: baseline;
+}
+.wizard__shortcut-help-keys {
+  display: inline-flex;
+  gap: var(--space-1);
+  align-items: center;
+}
+.wizard__shortcut-plus {
+  color: var(--color-ink-3);
+  font-size: var(--type-small);
+}
+.wizard__shortcut-help-label {
+  color: var(--color-ink-2);
+  font-size: var(--type-small);
+  line-height: var(--leading-body);
+}
+.wizard__shortcut-help-foot {
+  margin: var(--space-4) 0 0 0;
+  color: var(--color-ink-3);
+  font-size: var(--type-micro);
+  text-align: right;
+}

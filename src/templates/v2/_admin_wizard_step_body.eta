@@ -84,10 +84,13 @@ const railCtx = { ...it, stepTitles: STEP_TITLES };
             action="/admin/questions/wizard/<%= draftId %>/step/<%= stepN %>"
             id="wizard-step-form"
             class="wizard__editor stacked-form"
-            data-wizard-editor>
+            data-wizard-editor
+            data-autosave-url="/admin/questions/wizard/<%= draftId %>/step/<%= stepN %>/autosave">
         <input type="hidden" name="_csrf" value="<%= it.csrfToken %>" />
         <%~ include('../_wizard_step_' + stepN, { ...it, issueMap }) %>
       </form>
+
+      <%~ include('./_wizard_shortcut_help_dialog', it) %>
 
       <% if (isPublishStep) { %>
         <form method="post"
