@@ -53,6 +53,7 @@ const themePref = (it.currentUser && it.currentUser.theme_preference) || 'auto';
     <% if (it.wizardAnswerPickerEnabled) { %>
       <script src="/static/wizard_answer_picker.js" defer></script>
       <script src="/static/wizard_hotspot_picker.js" defer></script>
+      <script src="/static/wizard_flowchart_picker.js" defer></script>
     <% } %>
     <% if (it.wizardPreviewEnabled) { %>
       <script src="/static/widget_counters.js" defer></script>

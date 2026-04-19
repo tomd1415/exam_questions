@@ -713,4 +713,40 @@ describe('wizard widget editors (chunk 2.5j step 4)', () => {
     expect(reload.payload).toContain('data-picker="hotspot-stage"');
     expect(reload.payload).toContain('/static/wizard_hotspot_picker.js');
   });
+
+  it('flowchart editor exposes the visual picker hooks when the shapes variant is saved', async () => {
+    const teacher = await createUser(pool(), { role: 'teacher' });
+    const jar = await loginAs(teacher);
+    const draftId = await startDraft(jar);
+    await pickWidget(jar, draftId, 'flowchart', 'draw');
+
+    const saved = await postStep(jar, draftId, 5, {
+      variant: 'shapes',
+      canvas_width: '600',
+      canvas_height: '400',
+      shapes: [
+        'start|terminator|220|20|160|50|TEXT|Start',
+        'q1|decision|200|100|200|80|TEXT|Is A > B?',
+        'out_a|io|60|220|180|50|EXPECTED|Output A, Print A',
+        'stop|terminator|220|310|160|50|TEXT|Stop',
+      ].join('\n'),
+      arrows: 'start|q1\nq1|out_a|Yes\nout_a|stop',
+    });
+    expect(saved.statusCode).toBe(302);
+
+    const reload = await app.inject({
+      method: 'GET',
+      url: `/admin/questions/wizard/${draftId}/step/5`,
+      headers: { cookie: cookieHeader(jar) },
+    });
+    expect(reload.statusCode).toBe(200);
+    expect(reload.payload).toContain('data-widget-editor="flowchart"');
+    expect(reload.payload).toContain('data-flowchart-picker');
+    expect(reload.payload).toContain('data-flowchart-stage');
+    expect(reload.payload).toContain('data-flowchart-tool="add:terminator"');
+    expect(reload.payload).toContain('data-flowchart-tool="add:arrow"');
+    expect(reload.payload).toContain('/static/wizard_flowchart_picker.js');
+    // The textarea echo keeps the pipe-encoded source-of-truth lines.
+    expect(reload.payload).toContain('start|terminator|220|20|160|50|TEXT|Start');
+  });
 });

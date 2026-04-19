@@ -36,7 +36,8 @@ if (Array.isArray(cfg.arrows)) {
 const shapesValue = echoStr('shapes') !== null ? echoStr('shapes') : shapeLines.join('\n');
 const arrowsValue = echoStr('arrows') !== null ? echoStr('arrows') : arrowLines.join('\n');
 %>
-<fieldset class="wizard-step wizard-step--5 wizard-step--canvas">
+<fieldset class="wizard-step wizard-step--5 wizard-step--canvas"
+          data-widget-editor="flowchart">
   <legend>Flowchart</legend>
 
   <p class="form-hint">
@@ -73,6 +74,30 @@ const arrowsValue = echoStr('arrows') !== null ? echoStr('arrows') : arrowLines.
   <div class="wizard-flowchart__shapes-only"
        data-visible-when-variant="shapes"
        <%= variant === 'shapes' ? '' : 'hidden' %>>
+
+    <div class="wizard-flowchart-editor" data-flowchart-picker>
+      <div class="wizard-flowchart-editor__toolbar" data-flowchart-toolbar role="toolbar" aria-label="Flowchart tools">
+        <button type="button" data-flowchart-tool="select" aria-pressed="true">Select</button>
+        <button type="button" data-flowchart-tool="add:terminator">+ Terminator</button>
+        <button type="button" data-flowchart-tool="add:process">+ Process</button>
+        <button type="button" data-flowchart-tool="add:decision">+ Decision</button>
+        <button type="button" data-flowchart-tool="add:io">+ Input/Output</button>
+        <button type="button" data-flowchart-tool="add:arrow">+ Arrow</button>
+        <span class="wizard-flowchart-editor__hint" data-flowchart-hint></span>
+      </div>
+      <div class="wizard-flowchart-editor__workspace">
+        <svg class="wizard-flowchart-editor__stage" data-flowchart-stage
+             viewBox="0 0 <%= width %> <%= height %>"
+             width="<%= width %>" height="<%= height %>"
+             role="img" aria-label="Flowchart editor stage"></svg>
+        <aside class="wizard-flowchart-editor__inspector" data-flowchart-inspector hidden></aside>
+      </div>
+      <p class="form-hint">
+        The textareas below stay the source of truth — the stage above is a
+        visual shortcut. Teachers without JavaScript can still edit them directly.
+      </p>
+    </div>
+
     <label for="shapes">Shapes (one per line)</label>
     <p class="form-hint">
       Format: <code>id|type|x|y|width|height|TEXT|content</code> for a prefilled
