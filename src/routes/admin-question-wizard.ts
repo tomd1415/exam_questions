@@ -1,5 +1,6 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { z } from 'zod';
+import { config } from '../config.js';
 import { canManageClasses } from '../services/classes.js';
 import {
   DraftAccessError,
@@ -59,6 +60,47 @@ function requireTeacherOrAdmin(req: FastifyRequest, reply: FastifyReply): ActorF
     return null;
   }
   return { id: req.currentUser.id, role: req.currentUser.role };
+}
+
+// Flag is read at call time so a test can flip process.env between
+// requests without reloading the config module. Config.ts still validates
+// the env at startup; this helper is strictly a runtime read. The
+// production flag row in app_settings lands in chunk 2.5t alongside the
+// flag flip.
+function isWizardV2Enabled(): boolean {
+  const raw = process.env['WIZARD_V2_ENABLED'];
+  if (raw === '1' || raw === 'true') return true;
+  if (raw === '0' || raw === 'false') return false;
+  return config.WIZARD_V2_ENABLED;
+}
+
+export interface DraftsListFilters {
+  tab: 'in-progress' | 'published' | 'all';
+  q?: string;
+  widget?: string;
+  topic?: string;
+  stale?: 'all' | 'fresh' | 'aging' | 'stale';
+}
+
+const DRAFTS_FILTER_TABS = ['in-progress', 'published', 'all'] as const;
+const DRAFTS_STALE_BUCKETS = ['all', 'fresh', 'aging', 'stale'] as const;
+
+function parseDraftsListFilters(query: unknown): DraftsListFilters {
+  const q = (query ?? {}) as Record<string, unknown>;
+  const read = (key: string): string => (typeof q[key] === 'string' ? q[key] : '');
+  const tabRaw = read('tab');
+  const staleRaw = read('stale');
+  return {
+    tab: (DRAFTS_FILTER_TABS as readonly string[]).includes(tabRaw)
+      ? (tabRaw as DraftsListFilters['tab'])
+      : 'in-progress',
+    q: read('q').slice(0, 200),
+    widget: read('widget').slice(0, 80),
+    topic: read('topic').slice(0, 80),
+    stale: (DRAFTS_STALE_BUCKETS as readonly string[]).includes(staleRaw)
+      ? (staleRaw as NonNullable<DraftsListFilters['stale']>)
+      : 'all',
+  };
 }
 
 function readQueryFlash(req: FastifyRequest): string | null {
@@ -209,12 +251,17 @@ export function registerAdminQuestionWizardRoutes(app: FastifyInstance): void {
     const actor = requireTeacherOrAdmin(req, reply);
     if (!actor) return reply;
     const drafts = await app.services.questionDrafts.listForActor(actor);
-    return reply.view('admin_drafts_list.eta', {
-      title: 'My question drafts',
+    const v2 = isWizardV2Enabled();
+    const template = v2 ? 'v2/admin_drafts_list.eta' : 'admin_drafts_list.eta';
+    const filters = v2 ? parseDraftsListFilters(req.query) : undefined;
+    return reply.view(template, {
+      title: v2 ? 'Your question drafts' : 'My question drafts',
       currentUser: req.currentUser,
       csrfToken: reply.generateCsrf(),
       drafts,
+      filters,
       flash: readQueryFlash(req),
+      wizardV2DraftsEnabled: v2,
     });
   });
 

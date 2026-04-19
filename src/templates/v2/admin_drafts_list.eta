@@ -1,0 +1,3 @@
+<%
+const body = include('./_admin_drafts_list_body', it);
+%><%~ include('../_admin_chrome', { ...it, body, activeNav: 'questions' }) %>

@@ -1,0 +1,321 @@
+<%
+// Wizard v2 drafts list — card grid with filters and tab switcher.
+// Filters are applied server-side from the URL query so the view is
+// shareable, and drafts_filter.js narrows the visible cards on the
+// client for snappier keystroke feedback.
+
+function payloadSummary(p) {
+  if (!p || typeof p !== 'object') return '';
+  if (typeof p.stem === 'string' && p.stem.length > 0) {
+    return p.stem.length > 120 ? p.stem.slice(0, 119) + '\u2026' : p.stem;
+  }
+  return '(no stem yet)';
+}
+
+function topicChain(p) {
+  if (!p || typeof p !== 'object') return '';
+  const bits = [];
+  if (typeof p.component_code === 'string') bits.push(p.component_code);
+  if (typeof p.topic_code === 'string') bits.push(p.topic_code);
+  if (typeof p.subtopic_code === 'string') bits.push(p.subtopic_code);
+  return bits.join(' \u203a ');
+}
+
+function widgetLabel(p) {
+  if (!p || typeof p !== 'object') return '';
+  return typeof p.expected_response_type === 'string' ? p.expected_response_type : '';
+}
+
+function commandWord(p) {
+  if (!p || typeof p !== 'object') return '';
+  return typeof p.command_word_code === 'string' ? p.command_word_code : '';
+}
+
+function relTime(d) {
+  if (!d) return '';
+  const then = d instanceof Date ? d.getTime() : new Date(String(d)).getTime();
+  const now = Date.now();
+  const dt = Math.max(0, now - then);
+  const min = Math.floor(dt / 60000);
+  if (min < 1) return 'just now';
+  if (min < 60) return min + ' min ago';
+  const hr = Math.floor(min / 60);
+  if (hr < 24) return hr + (hr === 1 ? ' hour ago' : ' hours ago');
+  const day = Math.floor(hr / 24);
+  if (day < 7) return day + (day === 1 ? ' day ago' : ' days ago');
+  const wk = Math.floor(day / 7);
+  return wk + (wk === 1 ? ' week ago' : ' weeks ago');
+}
+
+function stalenessBucket(d) {
+  if (!d) return 'fresh';
+  const then = d instanceof Date ? d.getTime() : new Date(String(d)).getTime();
+  const dt = Date.now() - then;
+  if (dt < 24 * 3600 * 1000) return 'fresh';
+  if (dt < 7 * 24 * 3600 * 1000) return 'aging';
+  return 'stale';
+}
+
+const STALENESS_LABELS = { fresh: 'Fresh', aging: 'This week', stale: 'Over a week' };
+
+function matchesFilters(d, f) {
+  if (f.q && f.q.length > 0) {
+    const hay = [
+      payloadSummary(d.payload),
+      topicChain(d.payload),
+      widgetLabel(d.payload),
+      commandWord(d.payload),
+    ]
+      .join(' ')
+      .toLowerCase();
+    if (hay.indexOf(f.q.toLowerCase()) === -1) return false;
+  }
+  if (f.widget && widgetLabel(d.payload) !== f.widget) return false;
+  if (f.topic && topicChain(d.payload).indexOf(f.topic) === -1) return false;
+  if (f.stale && f.stale !== 'all' && stalenessBucket(d.updated_at) !== f.stale) return false;
+  return true;
+}
+
+const filters = it.filters || {};
+const tab = (filters.tab === 'published' || filters.tab === 'all') ? filters.tab : 'in-progress';
+
+const drafts = it.drafts || [];
+const inProgress = drafts.filter(function (d) { return d.published_question_id === null; });
+const published  = drafts.filter(function (d) { return d.published_question_id !== null; });
+
+const base =
+  tab === 'published' ? published : tab === 'all' ? drafts : inProgress;
+const visible = base.filter(function (d) { return matchesFilters(d, filters); });
+
+// Build the widget-filter chip list from the drafts actually present.
+// This avoids a second query; it's a cheap heuristic for "widgets this
+// teacher has touched lately".
+const widgetSet = new Set();
+drafts.forEach(function (d) {
+  const w = widgetLabel(d.payload);
+  if (w) widgetSet.add(w);
+});
+const widgetOptions = Array.from(widgetSet).sort();
+
+function qs(overrides) {
+  const next = Object.assign({ tab: tab }, filters, overrides);
+  const parts = [];
+  Object.keys(next).forEach(function (k) {
+    const v = next[k];
+    if (v === '' || v === null || v === undefined || v === 'all') return;
+    parts.push(encodeURIComponent(k) + '=' + encodeURIComponent(String(v)));
+  });
+  return parts.length > 0 ? '?' + parts.join('&') : '';
+}
+%>
+<section class="admin-card v2-drafts" data-drafts-root>
+  <header class="admin-card__header v2-drafts__header">
+    <div class="v2-drafts__hero">
+      <p class="eyebrow">J277 · Teacher wizard</p>
+      <h1 class="v2-drafts__title">Your question drafts</h1>
+      <p class="v2-drafts__lede">
+        Nine short steps to a finished question. Stop any time &mdash; we save
+        as you go.
+      </p>
+      <p class="v2-drafts__counts">
+        <strong><%= inProgress.length %></strong> in progress<% if (published.length > 0) { %>
+        <span class="v2-drafts__count-sep">&middot;</span>
+        <strong><%= published.length %></strong> published<% } %>
+      </p>
+    </div>
+    <form method="post" action="/admin/questions/wizard/new" class="v2-drafts__cta">
+      <input type="hidden" name="_csrf" value="<%= it.csrfToken %>" />
+      <button type="submit" class="btn btn--primary btn--lg" data-new-draft>
+        Start a new question
+        <kbd class="kbd kbd--on-accent">N</kbd>
+      </button>
+    </form>
+  </header>
+
+  <% if (it.flash) { %>
+    <p class="flash" role="status"><%= it.flash %></p>
+  <% } %>
+
+  <nav class="v2-tabs" aria-label="Drafts view">
+    <ul class="v2-tabs__list">
+      <li>
+        <a class="v2-tabs__tab<% if (tab === 'in-progress') { %> is-current<% } %>"
+           href="/admin/questions/wizard<%= qs({ tab: 'in-progress' }) %>"
+           <% if (tab === 'in-progress') { %>aria-current="page"<% } %>>
+          In progress <span class="v2-tabs__count"><%= inProgress.length %></span>
+        </a>
+      </li>
+      <li>
+        <a class="v2-tabs__tab<% if (tab === 'published') { %> is-current<% } %>"
+           href="/admin/questions/wizard<%= qs({ tab: 'published' }) %>"
+           <% if (tab === 'published') { %>aria-current="page"<% } %>>
+          Recently published <span class="v2-tabs__count"><%= published.length %></span>
+        </a>
+      </li>
+      <li>
+        <a class="v2-tabs__tab<% if (tab === 'all') { %> is-current<% } %>"
+           href="/admin/questions/wizard<%= qs({ tab: 'all' }) %>"
+           <% if (tab === 'all') { %>aria-current="page"<% } %>>
+          All drafts <span class="v2-tabs__count"><%= drafts.length %></span>
+        </a>
+      </li>
+    </ul>
+  </nav>
+
+  <form method="get" action="/admin/questions/wizard" class="v2-filters"
+        data-drafts-filter role="search" aria-label="Filter drafts">
+    <input type="hidden" name="tab" value="<%= tab %>" />
+    <label class="v2-filters__search">
+      <span class="visually-hidden">Search drafts</span>
+      <input type="search" name="q" value="<%= filters.q || '' %>"
+             placeholder="Search by stem, topic, or command word"
+             data-drafts-q autocomplete="off" />
+      <kbd class="kbd kbd--in-input">F</kbd>
+    </label>
+
+    <% if (widgetOptions.length > 0) { %>
+      <fieldset class="v2-filters__chips" data-filter-group="widget">
+        <legend class="visually-hidden">Widget</legend>
+        <label class="chip chip--toggle<% if (!filters.widget) { %> is-selected<% } %>">
+          <input type="radio" name="widget" value="" <% if (!filters.widget) { %>checked<% } %> />
+          <span>All widgets</span>
+        </label>
+        <% widgetOptions.forEach(function (w) { %>
+          <label class="chip chip--toggle<% if (filters.widget === w) { %> is-selected<% } %>">
+            <input type="radio" name="widget" value="<%= w %>" <% if (filters.widget === w) { %>checked<% } %> />
+            <span><%= w %></span>
+          </label>
+        <% }); %>
+      </fieldset>
+    <% } %>
+
+    <fieldset class="v2-filters__chips" data-filter-group="stale">
+      <legend class="visually-hidden">Freshness</legend>
+      <% const stale = filters.stale || 'all'; %>
+      <% ['all', 'fresh', 'aging', 'stale'].forEach(function (s) { %>
+        <label class="chip chip--toggle<% if (stale === s) { %> is-selected<% } %>">
+          <input type="radio" name="stale" value="<%= s %>" <% if (stale === s) { %>checked<% } %> />
+          <span>
+            <% if (s === 'all') { %>Any time<% } %>
+            <% if (s === 'fresh') { %><span class="status-dot status-dot--success" aria-hidden="true"></span>Fresh<% } %>
+            <% if (s === 'aging') { %><span class="status-dot status-dot--warn" aria-hidden="true"></span>This week<% } %>
+            <% if (s === 'stale') { %><span class="status-dot status-dot--danger" aria-hidden="true"></span>Older<% } %>
+          </span>
+        </label>
+      <% }); %>
+    </fieldset>
+
+    <noscript>
+      <button type="submit" class="btn btn--secondary btn--sm">Apply filters</button>
+    </noscript>
+  </form>
+
+  <% if (visible.length === 0) { %>
+    <div class="v2-empty" data-drafts-empty>
+      <div class="v2-empty__illustration" aria-hidden="true">
+        <svg viewBox="0 0 120 80" width="120" height="80">
+          <rect x="10" y="14" width="70" height="54" rx="6" fill="var(--color-accent-warm-50)" stroke="var(--color-accent-warm-500)" stroke-width="2" />
+          <rect x="28" y="6" width="70" height="54" rx="6" fill="var(--color-surface-0)" stroke="var(--color-brand-500)" stroke-width="2" />
+          <line x1="36" y1="22" x2="86" y2="22" stroke="var(--color-ink-3)" stroke-width="2" stroke-linecap="round" />
+          <line x1="36" y1="32" x2="76" y2="32" stroke="var(--color-ink-3)" stroke-width="2" stroke-linecap="round" />
+          <line x1="36" y1="42" x2="82" y2="42" stroke="var(--color-ink-3)" stroke-width="2" stroke-linecap="round" />
+        </svg>
+      </div>
+      <% if (drafts.length === 0) { %>
+        <h2 class="v2-empty__title">No drafts yet</h2>
+        <p class="v2-empty__lede">
+          The wizard walks you through one OCR J277 question at a time:
+          topic, command word, widget, stem, answer, marks, misconceptions,
+          difficulty, publish. Takes about 10 minutes end-to-end.
+        </p>
+        <form method="post" action="/admin/questions/wizard/new" class="v2-empty__cta">
+          <input type="hidden" name="_csrf" value="<%= it.csrfToken %>" />
+          <button type="submit" class="btn btn--primary">Start your first question</button>
+        </form>
+      <% } else { %>
+        <h2 class="v2-empty__title">Nothing matches those filters</h2>
+        <p class="v2-empty__lede">
+          Try removing a chip or clearing the search.
+        </p>
+        <a class="btn btn--secondary" href="/admin/questions/wizard?tab=<%= tab %>">Clear filters</a>
+      <% } %>
+    </div>
+  <% } else { %>
+    <ul class="v2-drafts__grid" data-drafts-grid>
+      <% visible.forEach(function (d) {
+           const pct = Math.round(((d.current_step || 1) / 9) * 100);
+           const bucket = stalenessBucket(d.updated_at);
+           const staleLabel = STALENESS_LABELS[bucket] || '';
+      %>
+        <li class="v2-draft-card"
+            data-draft-card
+            data-widget="<%= widgetLabel(d.payload) %>"
+            data-topic="<%= topicChain(d.payload) %>"
+            data-stale="<%= bucket %>"
+            data-search="<%= (payloadSummary(d.payload) + ' ' + topicChain(d.payload) + ' ' + widgetLabel(d.payload) + ' ' + commandWord(d.payload)).toLowerCase() %>">
+          <% if (d.published_question_id === null) { %>
+            <a class="v2-draft-card__link"
+               href="/admin/questions/wizard/<%= d.id %>/step/<%= d.current_step %>">
+              <div class="v2-draft-card__progress" aria-hidden="true">
+                <div class="progress-ring" style="--ring-progress:<%= pct %>">
+                  <div class="progress-ring__track"></div>
+                  <div class="progress-ring__fill"></div>
+                  <span class="progress-ring__label"><%= d.current_step %>/9</span>
+                </div>
+              </div>
+              <div class="v2-draft-card__body">
+                <p class="v2-draft-card__chain"><%= topicChain(d.payload) || 'No topic yet' %></p>
+                <p class="v2-draft-card__stem"><%= payloadSummary(d.payload) %></p>
+                <div class="v2-draft-card__meta">
+                  <% if (widgetLabel(d.payload)) { %>
+                    <span class="chip chip--info"><%= widgetLabel(d.payload) %></span>
+                  <% } %>
+                  <% if (commandWord(d.payload)) { %>
+                    <span class="chip"><%= commandWord(d.payload) %></span>
+                  <% } %>
+                  <span class="chip chip--<%= bucket === 'fresh' ? 'success' : (bucket === 'aging' ? 'warn' : 'danger') %>">
+                    <span class="status-dot status-dot--<%= bucket === 'fresh' ? 'success' : (bucket === 'aging' ? 'warn' : 'danger') %>" aria-hidden="true"></span>
+                    <%= relTime(d.updated_at) %>
+                  </span>
+                </div>
+              </div>
+              <span class="v2-draft-card__action">Resume &rarr;</span>
+            </a>
+          <% } else { %>
+            <a class="v2-draft-card__link v2-draft-card__link--published"
+               href="/admin/questions/<%= d.published_question_id %>">
+              <div class="v2-draft-card__progress" aria-hidden="true">
+                <div class="progress-ring progress-ring--done" style="--ring-progress:100">
+                  <div class="progress-ring__track"></div>
+                  <div class="progress-ring__fill"></div>
+                  <span class="progress-ring__label">&#10003;</span>
+                </div>
+              </div>
+              <div class="v2-draft-card__body">
+                <p class="v2-draft-card__chain"><%= topicChain(d.payload) || '\u2014' %></p>
+                <p class="v2-draft-card__stem"><%= payloadSummary(d.payload) %></p>
+                <div class="v2-draft-card__meta">
+                  <span class="chip chip--accent">Published #<%= d.published_question_id %></span>
+                  <% if (widgetLabel(d.payload)) { %>
+                    <span class="chip chip--info"><%= widgetLabel(d.payload) %></span>
+                  <% } %>
+                  <span class="chip">
+                    <span class="status-dot" aria-hidden="true"></span>
+                    <%= relTime(d.updated_at) %>
+                  </span>
+                </div>
+              </div>
+              <span class="v2-draft-card__action">Open &rarr;</span>
+            </a>
+          <% } %>
+        </li>
+      <% }); %>
+    </ul>
+  <% } %>
+
+  <p class="v2-drafts__foot-help">
+    Press <kbd class="kbd">?</kbd> for keyboard shortcuts,
+    <kbd class="kbd">N</kbd> to start a new question, or
+    <kbd class="kbd">F</kbd> to focus the filter.
+  </p>
+</section>

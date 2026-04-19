@@ -62,6 +62,10 @@ const themePref = (it.currentUser && it.currentUser.theme_preference) || 'auto';
       <script src="/static/flowchart.js" defer></script>
       <script src="/static/trace_grid.js" defer></script>
     <% } %>
+    <% if (it.wizardV2DraftsEnabled) { %>
+      <script src="/static/v2/drafts_filter.js" defer></script>
+      <script src="/static/v2/drafts_shortcuts.js" defer></script>
+    <% } %>
     <script src="/static/nav.js" defer></script>
     <script src="/static/confirm.js" defer></script>
   </body>
