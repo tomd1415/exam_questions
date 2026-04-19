@@ -150,6 +150,28 @@ Internals: [src/scripts/reset-questions.ts](src/scripts/reset-questions.ts) runs
 
 The first pre-launch use was 2026-04-19 to pick up the chunk-B2 model-answer shape fix; on a tenant with real submissions this path would instead be a surgical `DELETE FROM attempts WHERE ...` scoped to the affected class.
 
+### 5.2 Seeding widget test questions (dev only)
+
+For hand-testing every widget variant end-to-end without polluting the random-draw pool that real pupils use:
+
+```bash
+# Create test_pupil + test_teacher + Widget Test Harness class,
+# seed 2 questions per response type (34 total), and pre-load them
+# into an open topic-set attempt owned by test_pupil.
+npm run test-questions:seed
+
+# Validate all 34 without writing anything
+npm run test-questions:seed -- --dry-run
+
+# Purge previous 'test:%' questions (and attempts that reference them)
+# before re-seeding.
+npm run test-questions:seed -- --reset
+```
+
+The seeded questions are marked `active=false + approval_status=approved`, so `createTopicSetAttempt` never draws them for other classes; the pupil just continues the pre-built attempt. Sign in as `test_pupil` (password printed on first run) and work through each widget in order.
+
+Internals: [src/scripts/seed-test-questions.ts](src/scripts/seed-test-questions.ts). Similarity hashes are `test:<type>-<n>` so re-runs upsert rather than duplicate.
+
 ## 6. Backup and restore drill
 
 The school's existing backup regime captures the VM. **In addition**, this project requires a DB-level dump so that a restore can be exercised without the full VM-restore path.

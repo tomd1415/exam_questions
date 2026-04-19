@@ -31,6 +31,7 @@
     "user:create": "tsx src/scripts/create-user.ts",
     "content:seed": "tsx src/scripts/seed-curated-content.ts",
     "content:reset": "tsx src/scripts/reset-questions.ts",
+    "test-questions:seed": "tsx src/scripts/seed-test-questions.ts",
     "setup:lesson": "tsx src/scripts/setup-lesson.ts",
     "gen:widgets-schema": "tsx scripts/gen-widgets-schema.ts",
     "test:human:phase0": "bash scripts/human-test-phase0.sh",
