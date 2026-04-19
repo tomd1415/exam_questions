@@ -218,6 +218,29 @@ describe('axe-core pass (Chunk 7)', () => {
     await checkWithTheme(pupilCtx, `/attempts/${attemptId}`, 'dark');
   }, 30_000);
 
+  // Dark-theme variants of the core admin and pupil surfaces. These catch
+  // regressions where bare <input>/<select>/<textarea>, ink-4 body text, or
+  // other low-contrast treatments leak into dark mode.
+  it('/topics (pupil) in dark mode has no serious violations', async () => {
+    await checkWithTheme(pupilCtx, '/topics', 'dark');
+  }, 30_000);
+
+  it('/admin/classes (teacher) in dark mode has no serious violations', async () => {
+    await checkWithTheme(teacherCtx, '/admin/classes', 'dark');
+  }, 30_000);
+
+  it('/admin/questions (teacher) in dark mode has no serious violations', async () => {
+    await checkWithTheme(teacherCtx, '/admin/questions', 'dark');
+  }, 30_000);
+
+  it('/admin/attempts/:id (teacher) in dark mode has no serious violations', async () => {
+    await checkWithTheme(teacherCtx, `/admin/attempts/${attemptId}`, 'dark');
+  }, 30_000);
+
+  it('/ (teacher home) in dark mode has no serious violations', async () => {
+    await checkWithTheme(teacherCtx, '/', 'dark');
+  }, 30_000);
+
   it('suite attemptId is defined', () => {
     expect(attemptId).toMatch(/^\d+$/);
   });

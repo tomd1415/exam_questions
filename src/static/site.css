@@ -459,6 +459,32 @@ button.btn {
 
 /* --- Form controls -------------------------------------------------------- */
 
+/* Global safety net: any <input>, <select>, <textarea> that falls outside a
+   scoped rule (.input, .auth-form, .stacked-form, paper widgets) still
+   resolves to theme-aware ink/surface tokens. Without this, a bare <input>
+   inherits browser defaults — unreadable under `color-scheme: dark`. */
+input,
+select,
+textarea {
+  color: var(--color-ink-1);
+  background-color: var(--color-surface-0);
+}
+
+/* Chrome/WebKit autofill forces a yellow background and near-black text,
+   which collides with dark theme and mutes the paper look on light theme.
+   -webkit-text-fill-color overrides the forced ink; the enormous inset
+   box-shadow paints over the forced background with a theme token. */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+select:-webkit-autofill {
+  -webkit-text-fill-color: var(--color-ink-1);
+  -webkit-box-shadow: 0 0 0 1000px var(--color-surface-1) inset;
+  caret-color: var(--color-ink-1);
+  transition: background-color 9999s ease-in-out 0s;
+}
+
 .input,
 .select,
 .textarea,
@@ -2050,7 +2076,7 @@ input[type='number'].input {
   outline-offset: -2px;
 }
 .wizard__rail-link--disabled {
-  color: var(--color-ink-4);
+  color: var(--color-ink-3);
   cursor: not-allowed;
 }
 .wizard__rail-dot {

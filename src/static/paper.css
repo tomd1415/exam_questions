@@ -20,6 +20,26 @@
   color: var(--paper-ink);
 }
 
+/* Paper is always light. Inputs inside a paper surface must use paper-ink
+   regardless of the active theme so dark-mode pupils don't end up with
+   light text on white paper. Wrapped in :where() so specificity stays at
+   0,0,1 — any widget-scoped rule (.trace-grid__input,
+   .flowchart-shapes__input input, etc.) still wins and can keep its
+   transparent background when it wants the SVG underneath to show. */
+:where(.paper-root) input,
+:where(.paper-root) select,
+:where(.paper-root) textarea {
+  color: var(--paper-ink);
+  background-color: var(--paper-bg);
+}
+:where(.paper-root) input:-webkit-autofill,
+:where(.paper-root) textarea:-webkit-autofill,
+:where(.paper-root) select:-webkit-autofill {
+  -webkit-text-fill-color: var(--paper-ink);
+  -webkit-box-shadow: 0 0 0 1000px var(--paper-bg) inset;
+  caret-color: var(--paper-ink);
+}
+
 /* --- Header block -------------------------------------------------------- */
 
 .paper-header {
