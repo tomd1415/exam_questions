@@ -789,4 +789,25 @@ describe('wizard widget editors (chunk 2.5j step 4)', () => {
     expect(reload.payload).toContain('/static/wizard_logic_diagram_picker.js');
     expect(reload.payload).toContain('gout|360|110|80|50|BLANK|OR, or gate');
   });
+
+  it('cloze editors expose the select-to-gap picker hooks on all three variants', async () => {
+    const teacher = await createUser(pool(), { role: 'teacher' });
+    const jar = await loginAs(teacher);
+
+    for (const widget of ['cloze_free', 'cloze_with_bank', 'cloze_code'] as const) {
+      const draftId = await startDraft(jar);
+      await pickWidget(jar, draftId, widget, 'complete');
+
+      const reload = await app.inject({
+        method: 'GET',
+        url: `/admin/questions/wizard/${draftId}/step/5`,
+        headers: { cookie: cookieHeader(jar) },
+      });
+      expect(reload.statusCode, `widget=${widget}`).toBe(200);
+      expect(reload.payload).toContain('data-widget-editor="cloze"');
+      expect(reload.payload).toContain('data-cloze-picker');
+      expect(reload.payload).toContain('data-cloze-tool="make-gap"');
+      expect(reload.payload).toContain('/static/wizard_cloze_picker.js');
+    }
+  });
 });

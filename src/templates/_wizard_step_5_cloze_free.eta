@@ -14,8 +14,18 @@ function formatGaps(list) {
 const gapsValue = echoStr('gaps') !== null ? echoStr('gaps') : formatGaps(gaps);
 const issueMap = it.issueMap || {};
 %>
-<fieldset class="wizard-step wizard-step--5 wizard-step--cloze">
+<fieldset class="wizard-step wizard-step--5 wizard-step--cloze"
+          data-widget-editor="cloze" data-cloze-picker>
   <legend>Cloze (free typing)</legend>
+
+  <div class="wizard-cloze-picker__toolbar" data-cloze-toolbar role="toolbar" aria-label="Cloze tools">
+    <button type="button" data-cloze-tool="make-gap">Make gap from selection</button>
+    <span class="wizard-cloze-picker__hint" data-cloze-hint></span>
+  </div>
+  <p class="form-hint">
+    Select a word in the passage and click <strong>Make gap from selection</strong>
+    to wrap it in <code>{{id}}</code> and pre-fill a matching row in the gaps box.
+  </p>
 
   <label for="text">Passage (use <code>{{id}}</code> markers for each gap)</label>
   <textarea id="text" name="text" rows="6" required><%= text %></textarea>

@@ -55,6 +55,7 @@ const themePref = (it.currentUser && it.currentUser.theme_preference) || 'auto';
       <script src="/static/wizard_hotspot_picker.js" defer></script>
       <script src="/static/wizard_flowchart_picker.js" defer></script>
       <script src="/static/wizard_logic_diagram_picker.js" defer></script>
+      <script src="/static/wizard_cloze_picker.js" defer></script>
     <% } %>
     <% if (it.wizardPreviewEnabled) { %>
       <script src="/static/widget_counters.js" defer></script>
