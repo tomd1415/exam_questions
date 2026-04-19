@@ -107,6 +107,265 @@ const MAX_MARK_POINT_TEXT = 1000;
 const MAX_LABEL_LENGTH = 20;
 const MAX_REVIEW_NOTES = 2000;
 
+// ---------------------------------------------------------------------------
+// Model-answer shape invariant (Chunk B1)
+//
+// Many widgets expect a structured pupil response — a matching pair, a
+// cloze-gap map, a ticked row. When a teacher pastes prose into the model
+// answer for one of those widgets, later pipeline steps (the paper-view
+// dispatcher, the marking service, the teacher-review UI) have no way of
+// comparing it to the pupil's submission. The result is the bug listed in
+// my_notes.md §6 + §9.
+//
+// This invariant enforces the shape per response type. The deterministic
+// widgets require the model answer to parse as JSON and to cover every
+// slot defined by part_config; the teacher-review widgets accept any
+// non-empty prose (since the teacher marks by eye). Shape checks are
+// deliberately structural, not content — matching *which* pair is correct
+// is a question-authoring concern, not an invariant.
+// ---------------------------------------------------------------------------
+
+function tryParseJson(raw: string): unknown {
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return undefined;
+  }
+}
+
+function asStringMap(v: unknown): Record<string, string> | null {
+  if (v === null || typeof v !== 'object' || Array.isArray(v)) return null;
+  const out: Record<string, string> = {};
+  for (const [k, val] of Object.entries(v as Record<string, unknown>)) {
+    if (typeof val !== 'string') return null;
+    out[k] = val;
+  }
+  return out;
+}
+
+function readStringArray(cfg: unknown, key: string): string[] | null {
+  if (cfg === null || typeof cfg !== 'object') return null;
+  const v = (cfg as Record<string, unknown>)[key];
+  if (!Array.isArray(v)) return null;
+  if (!v.every((x): x is string => typeof x === 'string')) return null;
+  return v;
+}
+
+function readGapIds(cfg: unknown): string[] | null {
+  if (cfg === null || typeof cfg !== 'object') return null;
+  const gaps = (cfg as Record<string, unknown>)['gaps'];
+  if (!Array.isArray(gaps)) return null;
+  const ids: string[] = [];
+  for (const g of gaps) {
+    if (g === null || typeof g !== 'object') return null;
+    const id = (g as Record<string, unknown>)['id'];
+    if (typeof id !== 'string') return null;
+    ids.push(id);
+  }
+  return ids;
+}
+
+function readHotspotIds(cfg: unknown): string[] | null {
+  if (cfg === null || typeof cfg !== 'object') return null;
+  const hotspots = (cfg as Record<string, unknown>)['hotspots'];
+  if (!Array.isArray(hotspots)) return null;
+  const ids: string[] = [];
+  for (const h of hotspots) {
+    if (h === null || typeof h !== 'object') return null;
+    const id = (h as Record<string, unknown>)['id'];
+    if (typeof id !== 'string') return null;
+    ids.push(id);
+  }
+  return ids;
+}
+
+function sameSet(a: readonly string[], b: readonly string[]): boolean {
+  if (a.length !== b.length) return false;
+  const sa = new Set(a);
+  for (const x of b) if (!sa.has(x)) return false;
+  return true;
+}
+
+export function validateModelAnswerShape(
+  responseType: string,
+  modelAnswer: string,
+  partConfig: unknown,
+): string[] {
+  const text = modelAnswer.trim();
+  if (text.length === 0) return [];
+
+  switch (responseType) {
+    case 'short_text':
+    case 'medium_text':
+    case 'extended_response':
+    case 'code':
+    case 'algorithm':
+      return [];
+
+    case 'multiple_choice': {
+      const options = readStringArray(partConfig, 'options');
+      if (options === null) return [];
+      if (!options.includes(text)) {
+        return [
+          'Model answer for multiple_choice must equal one of part_config.options verbatim.',
+        ];
+      }
+      return [];
+    }
+
+    case 'tick_box': {
+      const parsed = tryParseJson(text);
+      if (!Array.isArray(parsed) || !parsed.every((v) => typeof v === 'string')) {
+        return ['Model answer for tick_box must be a JSON array of option strings.'];
+      }
+      const options = readStringArray(partConfig, 'options');
+      if (options !== null) {
+        const bad = (parsed as string[]).filter((v) => !options.includes(v));
+        if (bad.length > 0) {
+          return [
+            `Model answer for tick_box lists options not in part_config.options: ${bad.join(', ')}.`,
+          ];
+        }
+      }
+      return [];
+    }
+
+    case 'matching': {
+      const parsed = tryParseJson(text);
+      if (!Array.isArray(parsed)) {
+        return ['Model answer for matching must be a JSON array of [leftIdx, rightIdx] pairs.'];
+      }
+      const ok = parsed.every(
+        (p) =>
+          Array.isArray(p) &&
+          p.length === 2 &&
+          typeof p[0] === 'number' &&
+          typeof p[1] === 'number' &&
+          Number.isInteger(p[0]) &&
+          Number.isInteger(p[1]),
+      );
+      if (!ok) {
+        return [
+          'Model answer for matching: each entry must be a [leftIdx, rightIdx] pair of integers.',
+        ];
+      }
+      return [];
+    }
+
+    case 'cloze_free':
+    case 'cloze_with_bank':
+    case 'cloze_code': {
+      const parsed = tryParseJson(text);
+      const map = asStringMap(parsed);
+      if (map === null) {
+        return ['Model answer for cloze must be a JSON object mapping gap id → string.'];
+      }
+      const gaps = readGapIds(partConfig);
+      if (gaps !== null && !sameSet(Object.keys(map), gaps)) {
+        return [
+          `Model answer for cloze must have one entry per gap (ids: ${gaps.join(', ')}).`,
+        ];
+      }
+      return [];
+    }
+
+    case 'matrix_tick_single': {
+      const parsed = tryParseJson(text);
+      const map = asStringMap(parsed);
+      if (map === null) {
+        return [
+          'Model answer for matrix_tick_single must be a JSON object mapping row → column.',
+        ];
+      }
+      const rows = readStringArray(partConfig, 'rows');
+      if (rows !== null && !sameSet(Object.keys(map), rows)) {
+        return [
+          `Model answer for matrix_tick_single must have one entry per row (rows: ${rows.join(', ')}).`,
+        ];
+      }
+      const columns = readStringArray(partConfig, 'columns');
+      if (columns !== null) {
+        const bad = Object.values(map).filter((v) => !columns.includes(v));
+        if (bad.length > 0) {
+          return [
+            `Model answer for matrix_tick_single uses column(s) not in part_config.columns: ${bad.join(', ')}.`,
+          ];
+        }
+      }
+      return [];
+    }
+
+    case 'matrix_tick_multi': {
+      const parsed = tryParseJson(text);
+      if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
+        return [
+          'Model answer for matrix_tick_multi must be a JSON object mapping row → [columns].',
+        ];
+      }
+      const obj = parsed as Record<string, unknown>;
+      for (const [k, v] of Object.entries(obj)) {
+        if (!Array.isArray(v) || !v.every((c) => typeof c === 'string')) {
+          return [
+            `Model answer for matrix_tick_multi row '${k}' must be an array of column strings.`,
+          ];
+        }
+      }
+      const rows = readStringArray(partConfig, 'rows');
+      if (rows !== null && !sameSet(Object.keys(obj), rows)) {
+        return [
+          `Model answer for matrix_tick_multi must have one entry per row (rows: ${rows.join(', ')}).`,
+        ];
+      }
+      return [];
+    }
+
+    case 'trace_table': {
+      const parsed = tryParseJson(text);
+      const map = asStringMap(parsed);
+      if (map === null) {
+        return ['Model answer for trace_table must be a JSON object mapping "r,c" → value.'];
+      }
+      for (const k of Object.keys(map)) {
+        if (!/^\d+,\d+$/.test(k)) {
+          return [
+            `Model answer for trace_table key '${k}' must match the "row,col" pattern.`,
+          ];
+        }
+      }
+      return [];
+    }
+
+    case 'diagram_labels': {
+      const parsed = tryParseJson(text);
+      const map = asStringMap(parsed);
+      if (map === null) {
+        return [
+          'Model answer for diagram_labels must be a JSON object mapping hotspot id → label.',
+        ];
+      }
+      const ids = readHotspotIds(partConfig);
+      if (ids !== null && !sameSet(Object.keys(map), ids)) {
+        return [
+          `Model answer for diagram_labels must cover all hotspots (ids: ${ids.join(', ')}).`,
+        ];
+      }
+      return [];
+    }
+
+    case 'logic_diagram':
+    case 'flowchart':
+      // Both widgets offer an image variant where the pupil's response is a
+      // drawn PNG; and structured variants where per-blank answers could
+      // live in a JSON map. For B1 we only require non-empty content — the
+      // teacher-review queue marks by eye in either case. A variant-aware
+      // shape check lives in the VISUAL_EDITORS_PLAN follow-up.
+      return [];
+
+    default:
+      return [`Unknown response type '${responseType}' — cannot validate model answer shape.`];
+  }
+}
+
 export function validateQuestionDraft(
   input: QuestionDraft,
   refs: QuestionDraftReferenceData,
@@ -126,6 +385,19 @@ export function validateQuestionDraft(
       path: 'model_answer',
       message: `Model answer must be ≤${MAX_MODEL_ANSWER_LENGTH} characters.`,
     });
+  else if (input.parts.length === 1 && input.parts[0]!.expected_response_type === input.expected_response_type) {
+    // Only apply the shape invariant to single-part questions whose
+    // part response type matches the question's. Multi-part or mixed-type
+    // questions store one prose blob covering all parts, so a per-type
+    // structural check would misfire.
+    for (const m of validateModelAnswerShape(
+      input.expected_response_type,
+      modelAnswer,
+      input.parts[0]!.part_config,
+    )) {
+      issues.push({ path: 'model_answer', message: m });
+    }
+  }
 
   if (!EXPECTED_RESPONSE_TYPES.includes(input.expected_response_type))
     issues.push({
