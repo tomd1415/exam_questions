@@ -1,6 +1,9 @@
 <%
 const cfg = ((it.draft.payload || {}).parts?.[0]?.part_config) || {};
-const text = typeof cfg.text === 'string' ? cfg.text : '';
+const echo = (it.formEcho && typeof it.formEcho === 'object') ? it.formEcho : null;
+function echoStr(k) { return echo && typeof echo[k] === 'string' ? echo[k] : null; }
+const text = echoStr('text') !== null ? echoStr('text')
+  : (typeof cfg.text === 'string' ? cfg.text : '');
 const gaps = Array.isArray(cfg.gaps) ? cfg.gaps : [];
 function formatGaps(list) {
   return list.map(function (g) {
@@ -8,6 +11,7 @@ function formatGaps(list) {
     return (g && typeof g.id === 'string' ? g.id : '') + '|' + accept;
   }).join('\n');
 }
+const gapsValue = echoStr('gaps') !== null ? echoStr('gaps') : formatGaps(gaps);
 const issueMap = it.issueMap || {};
 %>
 <fieldset class="wizard-step wizard-step--5 wizard-step--cloze wizard-step--cloze-code">
@@ -35,6 +39,6 @@ operator|+</code></pre>
   </details>
 
   <label for="gaps">Gaps (one per line, format <code>id|answer1, answer2</code>)</label>
-  <textarea id="gaps" name="gaps" rows="5" required><%= formatGaps(gaps) %></textarea>
+  <textarea id="gaps" name="gaps" rows="5" required><%= gapsValue %></textarea>
   <% (issueMap.gaps || []).forEach(function (m) { %><p class="form-error"><%= m %></p><% }); %>
 </fieldset>

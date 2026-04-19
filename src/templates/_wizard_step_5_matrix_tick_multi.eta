@@ -1,10 +1,17 @@
 <%
 const cfg = ((it.draft.payload || {}).parts?.[0]?.part_config) || {};
-const rows = Array.isArray(cfg.rows) ? cfg.rows : [];
-const cols = Array.isArray(cfg.columns) ? cfg.columns : [];
+const echo = (it.formEcho && typeof it.formEcho === 'object') ? it.formEcho : null;
+function echoStr(k) { return echo && typeof echo[k] === 'string' ? echo[k] : null; }
+const rowsValue = echoStr('rows') !== null ? echoStr('rows')
+  : (Array.isArray(cfg.rows) ? cfg.rows.join('\n') : '');
+const columnsValue = echoStr('columns') !== null ? echoStr('columns')
+  : (Array.isArray(cfg.columns) ? cfg.columns.join('\n') : '');
+const rows = rowsValue.split(/\r?\n/).map(function (s) { return s.trim(); }).filter(function (s) { return s.length > 0; });
+const cols = columnsValue.split(/\r?\n/).map(function (s) { return s.trim(); }).filter(function (s) { return s.length > 0; });
 const correctByRow = Array.isArray(cfg.correctByRow) ? cfg.correctByRow : [];
-const partialCredit = cfg.partialCredit !== false;
-function isChecked(rowIdx, colName) {
+const partialCredit = echo ? !!echo.partialCredit : (cfg.partialCredit !== false);
+function isChecked(rowIdx, colIdx, colName) {
+  if (echo) return !!echo['cell_' + rowIdx + '_' + colIdx];
   const row = correctByRow[rowIdx];
   return Array.isArray(row) && row.indexOf(colName) >= 0;
 }
@@ -15,11 +22,11 @@ const issueMap = it.issueMap || {};
   <legend>Matrix &mdash; multiple ticks per row</legend>
 
   <label for="rows">Row labels (one per line)</label>
-  <textarea id="rows" name="rows" rows="4" required><%= rows.join('\n') %></textarea>
+  <textarea id="rows" name="rows" rows="4" required><%= rowsValue %></textarea>
   <% (issueMap.rows || []).forEach(function (m) { %><p class="form-error"><%= m %></p><% }); %>
 
   <label for="columns">Column labels (one per line, at least two)</label>
-  <textarea id="columns" name="columns" rows="3" required><%= cols.join('\n') %></textarea>
+  <textarea id="columns" name="columns" rows="3" required><%= columnsValue %></textarea>
   <% (issueMap.columns || []).forEach(function (m) { %><p class="form-error"><%= m %></p><% }); %>
 
   <fieldset class="matrix-multi-editor">
@@ -44,7 +51,7 @@ const issueMap = it.issueMap || {};
                     <label class="visually-hidden" for="cell_<%= i %>_<%= j %>"><%= row %> &mdash; <%= col %></label>
                     <input type="checkbox" id="cell_<%= i %>_<%= j %>" name="cell_<%= i %>_<%= j %>"
                            data-cell-key="<%= row %>|<%= col %>"
-                           <% if (isChecked(i, col)) { %>checked<% } %> />
+                           <% if (isChecked(i, j, col)) { %>checked<% } %> />
                   </td>
                 <% }); %>
               </tr>

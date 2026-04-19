@@ -1,23 +1,42 @@
 <%
 const cfg = ((it.draft.payload || {}).parts?.[0]?.part_config) || {};
+const echo = (it.formEcho && typeof it.formEcho === 'object') ? it.formEcho : null;
+function echoStr(k) { return echo && typeof echo[k] === 'string' ? echo[k] : null; }
 const cols = Array.isArray(cfg.columns) ? cfg.columns : [];
-const colNames = cols.map(function (c) { return c && typeof c.name === 'string' ? c.name : ''; });
-const rowsCount = typeof cfg.rows === 'number' ? cfg.rows : '';
+const colNamesFromCfg = cols.map(function (c) { return c && typeof c.name === 'string' ? c.name : ''; });
+const columnsValue = echoStr('columns') !== null ? echoStr('columns') : colNamesFromCfg.join('\n');
+const colNames = columnsValue.split(/\r?\n/).map(function (s) { return s.trim(); }).filter(function (s) { return s.length > 0; });
+const rowsValueStr = echoStr('rows') !== null ? echoStr('rows')
+  : (typeof cfg.rows === 'number' ? String(cfg.rows) : '');
+const rowsCount = (function () {
+  const n = parseInt(rowsValueStr, 10);
+  return Number.isFinite(n) && n > 0 ? n : '';
+})();
 const prefill = (cfg.prefill && typeof cfg.prefill === 'object') ? cfg.prefill : {};
 const expected = (cfg.expected && typeof cfg.expected === 'object') ? cfg.expected : {};
 function cellMode(r, c) {
+  if (echo) {
+    const v = echo['mode_' + r + '_' + c];
+    if (typeof v === 'string' && (v === 'prefill' || v === 'expected' || v === 'decorative')) return v;
+    return 'decorative';
+  }
   const key = r + ',' + c;
   if (Object.prototype.hasOwnProperty.call(prefill, key)) return 'prefill';
   if (Object.prototype.hasOwnProperty.call(expected, key)) return 'expected';
   return 'decorative';
 }
 function cellValue(r, c) {
+  if (echo) {
+    const v = echo['value_' + r + '_' + c];
+    return typeof v === 'string' ? v : '';
+  }
   const key = r + ',' + c;
   if (Object.prototype.hasOwnProperty.call(prefill, key)) return String(prefill[key]);
   if (Object.prototype.hasOwnProperty.call(expected, key)) return String(expected[key]);
   return '';
 }
-const markMode = (cfg.marking && typeof cfg.marking.mode === 'string') ? cfg.marking.mode : 'perCell';
+const markMode = echoStr('mode') !== null ? echoStr('mode')
+  : ((cfg.marking && typeof cfg.marking.mode === 'string') ? cfg.marking.mode : 'perCell');
 const issueMap = it.issueMap || {};
 const showGrid = colNames.length > 0 && typeof rowsCount === 'number' && rowsCount > 0;
 %>
@@ -26,7 +45,7 @@ const showGrid = colNames.length > 0 && typeof rowsCount === 'number' && rowsCou
   <legend>Trace / truth table</legend>
 
   <label for="columns">Column names (one per line, in display order)</label>
-  <textarea id="columns" name="columns" rows="3" required><%= colNames.join('\n') %></textarea>
+  <textarea id="columns" name="columns" rows="3" required><%= columnsValue %></textarea>
   <% (issueMap.columns || []).forEach(function (m) { %><p class="form-error"><%= m %></p><% }); %>
 
   <label for="rows">Number of rows</label>

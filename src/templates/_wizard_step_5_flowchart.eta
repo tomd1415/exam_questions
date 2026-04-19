@@ -1,14 +1,21 @@
 <%
 const cfg = ((it.draft.payload || {}).parts?.[0]?.part_config) || {};
-const variant = cfg.variant === 'shapes' ? 'shapes' : 'image';
+const echo = (it.formEcho && typeof it.formEcho === 'object') ? it.formEcho : null;
+function echoStr(k) { return echo && typeof echo[k] === 'string' ? echo[k] : null; }
+const echoVariant = echoStr('variant');
+const variant = echoVariant === 'shapes' || echoVariant === 'image'
+  ? echoVariant
+  : (cfg.variant === 'shapes' ? 'shapes' : 'image');
 const canvas = (cfg.canvas && typeof cfg.canvas === 'object') ? cfg.canvas : {};
-const width = typeof canvas.width === 'number' ? canvas.width : 600;
-const height = typeof canvas.height === 'number' ? canvas.height : 500;
+const width = echoStr('canvas_width') !== null ? echoStr('canvas_width')
+  : (typeof canvas.width === 'number' ? canvas.width : 600);
+const height = echoStr('canvas_height') !== null ? echoStr('canvas_height')
+  : (typeof canvas.height === 'number' ? canvas.height : 500);
 const issueMap = it.issueMap || {};
 
-// Re-serialise shapes/arrows back to the pipe-encoded textarea lines if the
-// draft round-trips (so the teacher doesn't lose their work on a validation
-// error). Format mirrors parseFlowchartShapeLine in wizard-widget-editors.ts.
+// Re-serialise saved shapes/arrows back to pipe-encoded textarea lines for
+// display. Format mirrors parseFlowchartShapeLine in wizard-widget-editors.ts.
+// On validation error, echoStr('shapes'/'arrows') supersedes this.
 const shapeLines = [];
 if (Array.isArray(cfg.shapes)) {
   for (const s of cfg.shapes) {
@@ -26,8 +33,8 @@ if (Array.isArray(cfg.arrows)) {
     arrowLines.push(a.label ? `${a.from}|${a.to}|${a.label}` : `${a.from}|${a.to}`);
   }
 }
-const shapesValue = shapeLines.join('\n');
-const arrowsValue = arrowLines.join('\n');
+const shapesValue = echoStr('shapes') !== null ? echoStr('shapes') : shapeLines.join('\n');
+const arrowsValue = echoStr('arrows') !== null ? echoStr('arrows') : arrowLines.join('\n');
 %>
 <fieldset class="wizard-step wizard-step--5 wizard-step--canvas">
   <legend>Flowchart</legend>

@@ -1,6 +1,9 @@
 <%
 const cfg = ((it.draft.payload || {}).parts?.[0]?.part_config) || {};
-const text = typeof cfg.text === 'string' ? cfg.text : '';
+const echo = (it.formEcho && typeof it.formEcho === 'object') ? it.formEcho : null;
+function echoStr(k) { return echo && typeof echo[k] === 'string' ? echo[k] : null; }
+const text = echoStr('text') !== null ? echoStr('text')
+  : (typeof cfg.text === 'string' ? cfg.text : '');
 const gaps = Array.isArray(cfg.gaps) ? cfg.gaps : [];
 const bank = Array.isArray(cfg.bank) ? cfg.bank : [];
 function formatGaps(list) {
@@ -9,6 +12,8 @@ function formatGaps(list) {
     return (g && typeof g.id === 'string' ? g.id : '') + '|' + accept;
   }).join('\n');
 }
+const gapsValue = echoStr('gaps') !== null ? echoStr('gaps') : formatGaps(gaps);
+const bankValue = echoStr('bank') !== null ? echoStr('bank') : bank.join('\n');
 const issueMap = it.issueMap || {};
 %>
 <fieldset class="wizard-step wizard-step--5 wizard-step--cloze wizard-step--cloze-bank">
@@ -38,11 +43,11 @@ cache</code></pre>
   </details>
 
   <label for="gaps">Gaps (one per line, format <code>id|answer1, answer2</code>)</label>
-  <textarea id="gaps" name="gaps" rows="5" required><%= formatGaps(gaps) %></textarea>
+  <textarea id="gaps" name="gaps" rows="5" required><%= gapsValue %></textarea>
   <% (issueMap.gaps || []).forEach(function (m) { %><p class="form-error"><%= m %></p><% }); %>
 
   <label for="bank">Word bank (one per line, include distractors)</label>
-  <textarea id="bank" name="bank" rows="4" required><%= bank.join('\n') %></textarea>
+  <textarea id="bank" name="bank" rows="4" required><%= bankValue %></textarea>
   <p class="form-hint">Pupils pick from this list. Add a few distractors so the answer isn&rsquo;t given away.</p>
   <% (issueMap.bank || []).forEach(function (m) { %><p class="form-error"><%= m %></p><% }); %>
 </fieldset>

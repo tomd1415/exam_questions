@@ -1,10 +1,22 @@
 <%
 const cfg = ((it.draft.payload || {}).parts?.[0]?.part_config) || {};
 const KNOWN = ['image', 'gate_in_box', 'guided_slots', 'boolean_expression', 'gate_palette'];
-const variant = KNOWN.includes(cfg.variant) ? cfg.variant : 'image';
+// formEcho is the raw POST body when the last save failed. Prefer these
+// strings over the cfg-derived values so teachers don't lose their typing.
+const echo = (it.formEcho && typeof it.formEcho === 'object') ? it.formEcho : null;
+function echoStr(k) { return echo && typeof echo[k] === 'string' ? echo[k] : null; }
+function echoBool(k) { return !!(echo && echo[k]); }
+const echoVariant = echoStr('variant');
+const variant = (echoVariant && KNOWN.includes(echoVariant))
+  ? echoVariant
+  : (KNOWN.includes(cfg.variant) ? cfg.variant : 'image');
 const canvas = (cfg.canvas && typeof cfg.canvas === 'object') ? cfg.canvas : {};
-const width = typeof canvas.width === 'number' ? canvas.width : 600;
-const height = typeof canvas.height === 'number' ? canvas.height : 400;
+const width = echoStr('canvas_width') !== null
+  ? echoStr('canvas_width')
+  : (typeof canvas.width === 'number' ? canvas.width : 600);
+const height = echoStr('canvas_height') !== null
+  ? echoStr('canvas_height')
+  : (typeof canvas.height === 'number' ? canvas.height : 400);
 const issueMap = it.issueMap || {};
 
 // Re-serialise existing config back into pipe-encoded textarea lines so
@@ -45,11 +57,20 @@ if (Array.isArray(cfg.slots)) {
   }
 }
 const acceptLines = Array.isArray(cfg.accept) ? cfg.accept : [];
-const allowedOpsValue = Array.isArray(cfg.allowedOperators) ? cfg.allowedOperators.join(', ') : '';
-const caseSensitive = cfg.caseSensitive === true;
-const normaliseSymbols = cfg.normaliseSymbols !== false;
-const paletteValue = Array.isArray(cfg.palette) ? cfg.palette.join(', ') : '';
-const maxGatesValue = Number.isInteger(cfg.maxGates) ? cfg.maxGates : '';
+const allowedOpsValue = echoStr('allowed_operators') !== null
+  ? echoStr('allowed_operators')
+  : (Array.isArray(cfg.allowedOperators) ? cfg.allowedOperators.join(', ') : '');
+// Checkboxes: when echoing (failed POST), only the ticked boxes appear in
+// the body, so "absent key" == "unchecked". Without an echo, fall back to
+// the saved config's boolean.
+const caseSensitive = echo ? echoBool('case_sensitive') : (cfg.caseSensitive === true);
+const normaliseSymbols = echo ? echoBool('normalise_symbols') : (cfg.normaliseSymbols !== false);
+const paletteValue = echoStr('palette') !== null
+  ? echoStr('palette')
+  : (Array.isArray(cfg.palette) ? cfg.palette.join(', ') : '');
+const maxGatesValue = echoStr('max_gates') !== null
+  ? echoStr('max_gates')
+  : (Number.isInteger(cfg.maxGates) ? cfg.maxGates : '');
 const truthTableLines = [];
 if (cfg.expected && Array.isArray(cfg.expected.truthTable) && Array.isArray(cfg.terminals)) {
   const inputIds = cfg.terminals.filter((t) => t && t.kind === 'input').map((t) => t.id);
@@ -61,12 +82,12 @@ if (cfg.expected && Array.isArray(cfg.expected.truthTable) && Array.isArray(cfg.
   }
 }
 
-const gatesValue = gateLines.join('\n');
-const terminalsValue = terminalLines.join('\n');
-const wiresValue = wireLines.join('\n');
-const slotsValue = slotLines.join('\n');
-const acceptValue = acceptLines.join('\n');
-const truthTableValue = truthTableLines.join('\n');
+const gatesValue = echoStr('gates') !== null ? echoStr('gates') : gateLines.join('\n');
+const terminalsValue = echoStr('terminals') !== null ? echoStr('terminals') : terminalLines.join('\n');
+const wiresValue = echoStr('wires') !== null ? echoStr('wires') : wireLines.join('\n');
+const slotsValue = echoStr('slots') !== null ? echoStr('slots') : slotLines.join('\n');
+const acceptValue = echoStr('accept') !== null ? echoStr('accept') : acceptLines.join('\n');
+const truthTableValue = echoStr('truth_table') !== null ? echoStr('truth_table') : truthTableLines.join('\n');
 %>
 <fieldset class="wizard-step wizard-step--5 wizard-step--canvas">
   <legend>Logic diagram</legend>

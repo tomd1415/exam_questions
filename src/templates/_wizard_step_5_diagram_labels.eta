@@ -1,9 +1,15 @@
 <%
 const cfg = ((it.draft.payload || {}).parts?.[0]?.part_config) || {};
-const imageUrl = typeof cfg.imageUrl === 'string' ? cfg.imageUrl : '';
-const imageAlt = typeof cfg.imageAlt === 'string' ? cfg.imageAlt : '';
-const width = typeof cfg.width === 'number' ? cfg.width : '';
-const height = typeof cfg.height === 'number' ? cfg.height : '';
+const echo = (it.formEcho && typeof it.formEcho === 'object') ? it.formEcho : null;
+function echoStr(k) { return echo && typeof echo[k] === 'string' ? echo[k] : null; }
+const imageUrl = echoStr('imageUrl') !== null ? echoStr('imageUrl')
+  : (typeof cfg.imageUrl === 'string' ? cfg.imageUrl : '');
+const imageAlt = echoStr('imageAlt') !== null ? echoStr('imageAlt')
+  : (typeof cfg.imageAlt === 'string' ? cfg.imageAlt : '');
+const width = echoStr('width') !== null ? echoStr('width')
+  : (typeof cfg.width === 'number' ? cfg.width : '');
+const height = echoStr('height') !== null ? echoStr('height')
+  : (typeof cfg.height === 'number' ? cfg.height : '');
 const hotspots = Array.isArray(cfg.hotspots) ? cfg.hotspots : [];
 function formatHotspots(list) {
   return list.map(function (h) {
@@ -12,6 +18,7 @@ function formatHotspots(list) {
     return [h.id, h.x, h.y, h.width, h.height, accept].join('|');
   }).join('\n');
 }
+const hotspotsValue = echoStr('hotspots') !== null ? echoStr('hotspots') : formatHotspots(hotspots);
 const issueMap = it.issueMap || {};
 %>
 <fieldset class="wizard-step wizard-step--5 wizard-step--diagram-labels"
@@ -63,7 +70,7 @@ reg|400|60|160|80|registers, register file</code></pre>
   </div>
 
   <label for="hotspots">Hotspots (one per line, format <code>id|x|y|width|height|answer1, answer2</code>)</label>
-  <textarea id="hotspots" name="hotspots" rows="6" required><%= formatHotspots(hotspots) %></textarea>
+  <textarea id="hotspots" name="hotspots" rows="6" required><%= hotspotsValue %></textarea>
   <p class="form-hint">x, y are the top-left corner of the hotspot in pixels relative to the image.</p>
   <% (issueMap.hotspots || []).forEach(function (m) { %><p class="form-error"><%= m %></p><% }); %>
 </fieldset>

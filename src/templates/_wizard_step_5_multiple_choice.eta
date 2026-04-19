@@ -1,9 +1,21 @@
 <%
 const cfg = ((it.draft.payload || {}).parts?.[0]?.part_config) || {};
 const part = ((it.draft.payload || {}).parts?.[0]) || {};
-const mcOpts = Array.isArray(cfg.options) ? cfg.options : [];
-const mpTexts = (part.mark_points || []).map(function (mp) { return mp.text; });
-const correctSet = new Set(mpTexts);
+// Echo the raw form body on a failed save so teachers don't lose typing.
+const echo = (it.formEcho && typeof it.formEcho === 'object') ? it.formEcho : null;
+function echoStr(k) { return echo && typeof echo[k] === 'string' ? echo[k] : null; }
+const optionsValue = echoStr('options') !== null
+  ? echoStr('options')
+  : (Array.isArray(cfg.options) ? cfg.options.join('\n') : '');
+const mcOpts = optionsValue.split(/\r?\n/).map(function (s) { return s.trim(); }).filter(function (s) { return s.length > 0; });
+// When echoing, the saved mark_points likely refer to different options
+// than the teacher just typed, so read "correct_N" straight from the body.
+const correctSet = new Set();
+if (echo) {
+  mcOpts.forEach(function (_, i) { if (echo['correct_' + i]) correctSet.add(mcOpts[i]); });
+} else {
+  (part.mark_points || []).forEach(function (mp) { correctSet.add(mp.text); });
+}
 const issueMap = it.issueMap || {};
 %>
 <fieldset class="wizard-step wizard-step--5 wizard-step--multiple-choice"
@@ -11,7 +23,7 @@ const issueMap = it.issueMap || {};
   <legend>Multiple choice options</legend>
 
   <label for="options">Options (one per line, in the order pupils will see them)</label>
-  <textarea id="options" name="options" rows="6" required><%= mcOpts.join('\n') %></textarea>
+  <textarea id="options" name="options" rows="6" required><%= optionsValue %></textarea>
   <p class="form-hint">List every option pupils will see, including the wrong ones (distractors).</p>
   <% (issueMap.options || []).forEach(function (m) { %><p class="form-error"><%= m %></p><% }); %>
 

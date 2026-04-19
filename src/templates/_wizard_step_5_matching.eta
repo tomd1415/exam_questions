@@ -1,10 +1,24 @@
 <%
 const cfg = ((it.draft.payload || {}).parts?.[0]?.part_config) || {};
-const left = Array.isArray(cfg.left) ? cfg.left : [];
-const right = Array.isArray(cfg.right) ? cfg.right : [];
+const echo = (it.formEcho && typeof it.formEcho === 'object') ? it.formEcho : null;
+function echoStr(k) { return echo && typeof echo[k] === 'string' ? echo[k] : null; }
+const leftValue = echoStr('left') !== null ? echoStr('left')
+  : (Array.isArray(cfg.left) ? cfg.left.join('\n') : '');
+const rightValue = echoStr('right') !== null ? echoStr('right')
+  : (Array.isArray(cfg.right) ? cfg.right.join('\n') : '');
+const left = leftValue.split(/\r?\n/).map(function (s) { return s.trim(); }).filter(function (s) { return s.length > 0; });
+const right = rightValue.split(/\r?\n/).map(function (s) { return s.trim(); }).filter(function (s) { return s.length > 0; });
 const correctPairs = Array.isArray(cfg.correctPairs) ? cfg.correctPairs : [];
-const partialCredit = cfg.partialCredit !== false;
+const partialCredit = echo ? !!echo.partialCredit : (cfg.partialCredit !== false);
 function rightFor(leftIdx) {
+  if (echo) {
+    const v = echo['right_for_' + leftIdx];
+    if (typeof v === 'string' && v.length > 0) {
+      const n = parseInt(v, 10);
+      return Number.isFinite(n) ? n : null;
+    }
+    return null;
+  }
   for (const pair of correctPairs) {
     if (Array.isArray(pair) && pair[0] === leftIdx) return pair[1];
   }
@@ -17,11 +31,11 @@ const issueMap = it.issueMap || {};
   <legend>Matching prompts to options</legend>
 
   <label for="left">Prompts (one per line, in display order)</label>
-  <textarea id="left" name="left" rows="4" required><%= left.join('\n') %></textarea>
+  <textarea id="left" name="left" rows="4" required><%= leftValue %></textarea>
   <% (issueMap.left || []).forEach(function (m) { %><p class="form-error"><%= m %></p><% }); %>
 
   <label for="right">Options (one per line, may include distractors)</label>
-  <textarea id="right" name="right" rows="5" required><%= right.join('\n') %></textarea>
+  <textarea id="right" name="right" rows="5" required><%= rightValue %></textarea>
   <% (issueMap.right || []).forEach(function (m) { %><p class="form-error"><%= m %></p><% }); %>
 
   <fieldset class="matching-pairs">

@@ -1,9 +1,19 @@
 <%
 const cfg = ((it.draft.payload || {}).parts?.[0]?.part_config) || {};
-const rows = Array.isArray(cfg.rows) ? cfg.rows : [];
-const columns = Array.isArray(cfg.columns) ? cfg.columns : [];
-const correctByRow = Array.isArray(cfg.correctByRow) ? cfg.correctByRow : [];
-const allOrNothing = !!cfg.allOrNothing;
+const echo = (it.formEcho && typeof it.formEcho === 'object') ? it.formEcho : null;
+function echoStr(k) { return echo && typeof echo[k] === 'string' ? echo[k] : null; }
+const rowsValue = echoStr('rows') !== null ? echoStr('rows')
+  : (Array.isArray(cfg.rows) ? cfg.rows.join('\n') : '');
+const columnsValue = echoStr('columns') !== null ? echoStr('columns')
+  : (Array.isArray(cfg.columns) ? cfg.columns.join('\n') : '');
+const rows = rowsValue.split(/\r?\n/).map(function (s) { return s.trim(); }).filter(function (s) { return s.length > 0; });
+const columns = columnsValue.split(/\r?\n/).map(function (s) { return s.trim(); }).filter(function (s) { return s.length > 0; });
+// Per-row correct column: prefer echoed `correct_N` strings; fall back to saved cfg.
+function correctForRow(i) {
+  if (echo) return typeof echo['correct_' + i] === 'string' ? echo['correct_' + i] : null;
+  return (Array.isArray(cfg.correctByRow) && cfg.correctByRow[i]) || null;
+}
+const allOrNothing = echo ? !!echo.allOrNothing : !!cfg.allOrNothing;
 const issueMap = it.issueMap || {};
 %>
 <fieldset class="wizard-step wizard-step--5 wizard-step--matrix"
@@ -11,11 +21,11 @@ const issueMap = it.issueMap || {};
   <legend>Matrix &mdash; one tick per row</legend>
 
   <label for="rows">Row labels (one per line)</label>
-  <textarea id="rows" name="rows" rows="4" required><%= rows.join('\n') %></textarea>
+  <textarea id="rows" name="rows" rows="4" required><%= rowsValue %></textarea>
   <% (issueMap.rows || []).forEach(function (m) { %><p class="form-error"><%= m %></p><% }); %>
 
   <label for="columns">Column labels (one per line, at least two)</label>
-  <textarea id="columns" name="columns" rows="3" required><%= columns.join('\n') %></textarea>
+  <textarea id="columns" name="columns" rows="3" required><%= columnsValue %></textarea>
   <% (issueMap.columns || []).forEach(function (m) { %><p class="form-error"><%= m %></p><% }); %>
 
   <fieldset class="matrix-correct">
@@ -28,7 +38,7 @@ const issueMap = it.issueMap || {};
             <label class="matrix-correct__choice">
               <input type="radio" name="correct_<%= i %>" value="<%= col %>"
                      data-row-text="<%= row %>"
-                     <% if (correctByRow[i] === col) { %>checked<% } %> />
+                     <% if (correctForRow(i) === col) { %>checked<% } %> />
               <span><%= col %></span>
             </label>
           <% }); %>

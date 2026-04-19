@@ -203,6 +203,11 @@ async function renderStep(
     flash?: string | null;
     status?: number;
     recentWidgets?: string[];
+    // Raw form body from the failed POST. When present, step-5 templates
+    // echo these values back into their textareas/inputs instead of
+    // re-deriving them from the saved part_config — otherwise the teacher
+    // loses everything they typed the moment a validation error fires.
+    formEcho?: unknown;
   } = {},
 ): Promise<FastifyReply> {
   const widgets = n === 3 ? widgetGroupsForDraft(draft.payload) : null;
@@ -226,6 +231,7 @@ async function renderStep(
     missingFields: missing,
     publishReady,
     autoDerivedMarkPointWidgets: AUTO_DERIVED_MARK_POINT_WIDGETS,
+    formEcho: opts.formEcho ?? null,
     // Loads /static/wizard_curriculum_chain.js for the topic/subtopic
     // dependent-select enhancement on step 1. Cheap to ship on every step
     // (the script no-ops when its selectors aren't on the page) but we
@@ -352,6 +358,10 @@ export function registerAdminQuestionWizardRoutes(app: FastifyInstance): void {
           issues: parsed.issues,
           flash: 'Please fix the highlighted fields.',
           status: 400,
+          // Pass the raw form body through so step-5 widget editors can
+          // echo it into their textareas/inputs instead of reverting to
+          // the last-saved part_config.
+          formEcho: req.body,
         });
       }
 

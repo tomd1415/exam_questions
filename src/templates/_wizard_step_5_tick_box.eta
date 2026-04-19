@@ -1,10 +1,21 @@
 <%
 const cfg = ((it.draft.payload || {}).parts?.[0]?.part_config) || {};
 const part = ((it.draft.payload || {}).parts?.[0]) || {};
-const tickOpts = Array.isArray(cfg.options) ? cfg.options : [];
-const tickExactly = typeof cfg.tickExactly === 'number' ? cfg.tickExactly : '';
-const mpTexts = (part.mark_points || []).map(function (mp) { return mp.text; });
-const correctSet = new Set(mpTexts);
+const echo = (it.formEcho && typeof it.formEcho === 'object') ? it.formEcho : null;
+function echoStr(k) { return echo && typeof echo[k] === 'string' ? echo[k] : null; }
+const optionsValue = echoStr('options') !== null
+  ? echoStr('options')
+  : (Array.isArray(cfg.options) ? cfg.options.join('\n') : '');
+const tickOpts = optionsValue.split(/\r?\n/).map(function (s) { return s.trim(); }).filter(function (s) { return s.length > 0; });
+const tickExactly = echoStr('tickExactly') !== null
+  ? echoStr('tickExactly')
+  : (typeof cfg.tickExactly === 'number' ? cfg.tickExactly : '');
+const correctSet = new Set();
+if (echo) {
+  tickOpts.forEach(function (_, i) { if (echo['correct_' + i]) correctSet.add(tickOpts[i]); });
+} else {
+  (part.mark_points || []).forEach(function (mp) { correctSet.add(mp.text); });
+}
 const issueMap = it.issueMap || {};
 %>
 <fieldset class="wizard-step wizard-step--5 wizard-step--tick-box"
@@ -12,7 +23,7 @@ const issueMap = it.issueMap || {};
   <legend>Tick-box options</legend>
 
   <label for="options">Options (one per line, in the order pupils will see them)</label>
-  <textarea id="options" name="options" rows="6" required><%= tickOpts.join('\n') %></textarea>
+  <textarea id="options" name="options" rows="6" required><%= optionsValue %></textarea>
   <% (issueMap.options || []).forEach(function (m) { %><p class="form-error"><%= m %></p><% }); %>
 
   <label for="tickExactly">Tick exactly (optional)</label>
