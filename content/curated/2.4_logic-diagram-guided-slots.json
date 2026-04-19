@@ -4,7 +4,7 @@
   "topic_code": "2.4",
   "subtopic_code": "2.4.1",
   "command_word_code": "complete",
-  "archetype_code": "define",
+  "archetype_code": "recall",
   "expected_response_type": "logic_diagram",
   "stem": "Pick the correct gate for each part of the expression P = (A AND B) OR NOT C.",
   "model_answer": "The gate combining A and B is AND; the gate inverting C is NOT; the gate combining those two outputs is OR.",
@@ -23,27 +23,48 @@
           {
             "id": "ab",
             "prompt": "Gate combining A and B",
-            "options": ["AND", "OR", "NOT"],
+            "options": [
+              "AND",
+              "OR",
+              "NOT"
+            ],
             "accept": "AND"
           },
           {
             "id": "notc",
             "prompt": "Gate inverting C",
-            "options": ["AND", "OR", "NOT"],
+            "options": [
+              "AND",
+              "OR",
+              "NOT"
+            ],
             "accept": "NOT"
           },
           {
             "id": "out",
             "prompt": "Gate combining (A AND B) with NOT C",
-            "options": ["AND", "OR", "NOT"],
+            "options": [
+              "AND",
+              "OR",
+              "NOT"
+            ],
             "accept": "OR"
           }
         ]
       },
       "mark_points": [
-        { "text": "ab: AND", "marks": 1 },
-        { "text": "notc: NOT", "marks": 1 },
-        { "text": "out: OR", "marks": 1 }
+        {
+          "text": "ab: AND",
+          "marks": 1
+        },
+        {
+          "text": "notc: NOT",
+          "marks": 1
+        },
+        {
+          "text": "out: OR",
+          "marks": 1
+        }
       ]
     }
   ]

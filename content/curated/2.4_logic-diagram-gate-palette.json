@@ -4,7 +4,7 @@
   "topic_code": "2.4",
   "subtopic_code": "2.4.1",
   "command_word_code": "draw",
-  "archetype_code": "define",
+  "archetype_code": "recall",
   "expected_response_type": "logic_diagram",
   "stem": "Build a circuit with output P = A AND B by dragging gates from the palette and wiring them to the input terminals.",
   "model_answer": "One 2-input AND gate with A and B as inputs and P as the output. The truth table must match the target exactly.",
@@ -19,24 +19,78 @@
       "expected_response_type": "logic_diagram",
       "part_config": {
         "variant": "gate_palette",
-        "canvas": { "width": 600, "height": 400 },
+        "canvas": {
+          "width": 600,
+          "height": 400
+        },
         "terminals": [
-          { "id": "a", "kind": "input", "label": "A", "x": 40, "y": 80 },
-          { "id": "b", "kind": "input", "label": "B", "x": 40, "y": 160 },
-          { "id": "p", "kind": "output", "label": "P", "x": 520, "y": 120 }
+          {
+            "id": "a",
+            "kind": "input",
+            "label": "A",
+            "x": 40,
+            "y": 80
+          },
+          {
+            "id": "b",
+            "kind": "input",
+            "label": "B",
+            "x": 40,
+            "y": 160
+          },
+          {
+            "id": "p",
+            "kind": "output",
+            "label": "P",
+            "x": 520,
+            "y": 120
+          }
         ],
-        "palette": ["AND", "OR", "NOT"],
+        "palette": [
+          "AND",
+          "OR",
+          "NOT"
+        ],
         "maxGates": 4,
         "expected": {
           "truthTable": [
-            { "inputs": { "a": 0, "b": 0 }, "output": 0 },
-            { "inputs": { "a": 0, "b": 1 }, "output": 0 },
-            { "inputs": { "a": 1, "b": 0 }, "output": 0 },
-            { "inputs": { "a": 1, "b": 1 }, "output": 1 }
+            {
+              "inputs": {
+                "a": 0,
+                "b": 0
+              },
+              "output": 0
+            },
+            {
+              "inputs": {
+                "a": 0,
+                "b": 1
+              },
+              "output": 0
+            },
+            {
+              "inputs": {
+                "a": 1,
+                "b": 0
+              },
+              "output": 0
+            },
+            {
+              "inputs": {
+                "a": 1,
+                "b": 1
+              },
+              "output": 1
+            }
           ]
         }
       },
-      "mark_points": [{ "text": "Circuit matches truth table", "marks": 1 }]
+      "mark_points": [
+        {
+          "text": "Circuit matches truth table",
+          "marks": 1
+        }
+      ]
     }
   ]
 }

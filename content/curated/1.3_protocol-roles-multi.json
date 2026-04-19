@@ -7,7 +7,7 @@
   "archetype_code": "recall",
   "expected_response_type": "matrix_tick_multi",
   "stem": "Several common application-layer protocols are listed in the table below. For each protocol, tick every box that describes a typical use of that protocol. Some protocols may have more than one tick.",
-  "model_answer": "HTTP and HTTPS both transfer web pages, but only HTTPS encrypts the traffic. SMTP sends email between mail servers; IMAP retrieves email from a server while leaving the original on the server. FTP transfers files between client and server.",
+  "model_answer": "{\"HTTPS\": [\"Transfers web pages\", \"Encrypts the traffic\"], \"SMTP\": [\"Sends email\"], \"IMAP\": [\"Retrieves email\"], \"FTP\": [\"Transfers files\"]}",
   "difficulty_band": 4,
   "difficulty_step": 2,
   "source_type": "imported_pattern",
@@ -18,7 +18,12 @@
       "marks": 5,
       "expected_response_type": "matrix_tick_multi",
       "part_config": {
-        "rows": ["HTTPS", "SMTP", "IMAP", "FTP"],
+        "rows": [
+          "HTTPS",
+          "SMTP",
+          "IMAP",
+          "FTP"
+        ],
         "columns": [
           "Transfers web pages",
           "Encrypts the traffic",
@@ -27,19 +32,43 @@
           "Transfers files"
         ],
         "correctByRow": [
-          ["Transfers web pages", "Encrypts the traffic"],
-          ["Sends email"],
-          ["Retrieves email"],
-          ["Transfers files"]
+          [
+            "Transfers web pages",
+            "Encrypts the traffic"
+          ],
+          [
+            "Sends email"
+          ],
+          [
+            "Retrieves email"
+          ],
+          [
+            "Transfers files"
+          ]
         ],
         "partialCredit": true
       },
       "mark_points": [
-        { "text": "HTTPS transfers web pages.", "marks": 1 },
-        { "text": "HTTPS encrypts the traffic.", "marks": 1 },
-        { "text": "SMTP sends email.", "marks": 1 },
-        { "text": "IMAP retrieves email.", "marks": 1 },
-        { "text": "FTP transfers files.", "marks": 1 }
+        {
+          "text": "HTTPS transfers web pages.",
+          "marks": 1
+        },
+        {
+          "text": "HTTPS encrypts the traffic.",
+          "marks": 1
+        },
+        {
+          "text": "SMTP sends email.",
+          "marks": 1
+        },
+        {
+          "text": "IMAP retrieves email.",
+          "marks": 1
+        },
+        {
+          "text": "FTP transfers files.",
+          "marks": 1
+        }
       ]
     }
   ]

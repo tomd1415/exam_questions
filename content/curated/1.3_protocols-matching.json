@@ -7,7 +7,7 @@
   "archetype_code": "recall",
   "expected_response_type": "matching",
   "stem": "Match each network protocol to the role it performs.",
-  "model_answer": "HTTP transfers web pages. SMTP sends email between mail servers. FTP transfers files between hosts. POP3 retrieves email from a mailbox to a local client.",
+  "model_answer": "[[0, 0], [1, 1], [2, 2], [3, 3]]",
   "difficulty_band": 3,
   "difficulty_step": 2,
   "source_type": "imported_pattern",
@@ -18,7 +18,12 @@
       "marks": 4,
       "expected_response_type": "matching",
       "part_config": {
-        "left": ["HTTP", "SMTP", "FTP", "POP3"],
+        "left": [
+          "HTTP",
+          "SMTP",
+          "FTP",
+          "POP3"
+        ],
         "right": [
           "Transfers web pages",
           "Sends email between servers",
@@ -27,18 +32,42 @@
           "Assigns IP addresses to devices"
         ],
         "correctPairs": [
-          [0, 0],
-          [1, 1],
-          [2, 2],
-          [3, 3]
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            2,
+            2
+          ],
+          [
+            3,
+            3
+          ]
         ],
         "partialCredit": true
       },
       "mark_points": [
-        { "text": "HTTP — transfers web pages", "marks": 1 },
-        { "text": "SMTP — sends email between servers", "marks": 1 },
-        { "text": "FTP — transfers files between hosts", "marks": 1 },
-        { "text": "POP3 — retrieves email to a local client", "marks": 1 }
+        {
+          "text": "HTTP — transfers web pages",
+          "marks": 1
+        },
+        {
+          "text": "SMTP — sends email between servers",
+          "marks": 1
+        },
+        {
+          "text": "FTP — transfers files between hosts",
+          "marks": 1
+        },
+        {
+          "text": "POP3 — retrieves email to a local client",
+          "marks": 1
+        }
       ]
     }
   ]

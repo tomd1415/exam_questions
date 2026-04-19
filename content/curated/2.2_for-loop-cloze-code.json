@@ -4,10 +4,10 @@
   "topic_code": "2.2",
   "subtopic_code": "2.2.1",
   "command_word_code": "complete",
-  "archetype_code": "trace",
+  "archetype_code": "algorithm_completion",
   "expected_response_type": "cloze_code",
   "stem": "A pupil is writing OCR Exam Reference Language pseudocode that prints the integers 1 to 5 inclusive on separate lines. Two parts of the loop are missing.",
-  "model_answer": "A `for` loop with `1 TO 5` runs the body once for `i = 1, 2, 3, 4, 5`. The body prints the loop counter. `next i` closes the loop block.",
+  "model_answer": "{\"stop\": \"5\", \"counter\": \"i\"}",
   "difficulty_band": 3,
   "difficulty_step": 1,
   "source_type": "imported_pattern",
@@ -20,13 +20,32 @@
       "part_config": {
         "text": "for i = 1 to {{stop}}\n  print({{counter}})\nnext i",
         "gaps": [
-          { "id": "stop", "accept": ["5"], "trimWhitespace": true },
-          { "id": "counter", "accept": ["i"], "caseSensitive": false, "trimWhitespace": true }
+          {
+            "id": "stop",
+            "accept": [
+              "5"
+            ],
+            "trimWhitespace": true
+          },
+          {
+            "id": "counter",
+            "accept": [
+              "i"
+            ],
+            "caseSensitive": false,
+            "trimWhitespace": true
+          }
         ]
       },
       "mark_points": [
-        { "text": "Loop ends at 5 (inclusive).", "marks": 1 },
-        { "text": "Print the loop counter `i` inside the body.", "marks": 1 }
+        {
+          "text": "Loop ends at 5 (inclusive).",
+          "marks": 1
+        },
+        {
+          "text": "Print the loop counter `i` inside the body.",
+          "marks": 1
+        }
       ]
     }
   ]

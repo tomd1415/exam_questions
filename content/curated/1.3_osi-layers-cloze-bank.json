@@ -7,7 +7,7 @@
   "archetype_code": "recall",
   "expected_response_type": "cloze_with_bank",
   "stem": "Complete the description of common networking hardware. Each gap takes one term from the bank above; each term is used at most once.",
-  "model_answer": "A switch forwards frames to the device named in the destination MAC address; a router forwards packets between networks using IP addresses; a wireless access point provides Wi-Fi access to a wired LAN.",
+  "model_answer": "{\"d1\": \"switch\", \"d2\": \"router\", \"d3\": \"wireless access point\"}",
   "difficulty_band": 3,
   "difficulty_step": 1,
   "source_type": "imported_pattern",
@@ -20,16 +20,48 @@
       "part_config": {
         "text": "A {{d1}} forwards frames inside a single LAN by reading the destination MAC address. A {{d2}} forwards packets between networks by reading the destination IP address. A {{d3}} lets wireless devices join a wired network using radio signals.",
         "gaps": [
-          { "id": "d1", "accept": ["switch"] },
-          { "id": "d2", "accept": ["router"] },
-          { "id": "d3", "accept": ["wireless access point", "access point", "WAP"] }
+          {
+            "id": "d1",
+            "accept": [
+              "switch"
+            ]
+          },
+          {
+            "id": "d2",
+            "accept": [
+              "router"
+            ]
+          },
+          {
+            "id": "d3",
+            "accept": [
+              "wireless access point",
+              "access point",
+              "WAP"
+            ]
+          }
         ],
-        "bank": ["switch", "router", "wireless access point", "hub", "modem"]
+        "bank": [
+          "switch",
+          "router",
+          "wireless access point",
+          "hub",
+          "modem"
+        ]
       },
       "mark_points": [
-        { "text": "switch (forwards frames within the LAN)", "marks": 1 },
-        { "text": "router (forwards packets between networks)", "marks": 1 },
-        { "text": "wireless access point (joins wireless devices to the LAN)", "marks": 1 }
+        {
+          "text": "switch (forwards frames within the LAN)",
+          "marks": 1
+        },
+        {
+          "text": "router (forwards packets between networks)",
+          "marks": 1
+        },
+        {
+          "text": "wireless access point (joins wireless devices to the LAN)",
+          "marks": 1
+        }
       ]
     }
   ]
