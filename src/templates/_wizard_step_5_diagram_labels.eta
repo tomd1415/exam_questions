@@ -14,7 +14,8 @@ function formatHotspots(list) {
 }
 const issueMap = it.issueMap || {};
 %>
-<fieldset class="wizard-step wizard-step--5 wizard-step--diagram-labels">
+<fieldset class="wizard-step wizard-step--5 wizard-step--diagram-labels"
+          data-widget-editor="diagram_labels">
   <legend>Diagram with labelled hotspots</legend>
 
   <label for="imageUrl">Image URL (must start with <code>/static/</code> or <code>https://</code>)</label>
@@ -34,6 +35,32 @@ const issueMap = it.issueMap || {};
   <input id="height" name="height" type="number" min="50" max="4000" inputmode="numeric"
          value="<%= height %>" required />
   <% (issueMap.height || []).forEach(function (m) { %><p class="form-error"><%= m %></p><% }); %>
+
+  <details class="form-hint admin-wizard__worked-example">
+    <summary>Show me a worked example</summary>
+    <p>Image URL: <code>/static/diagrams/cpu.png</code> (alt: &ldquo;Block diagram of a CPU&rdquo;)</p>
+    <p>Width &times; height: <code>600 &times; 400</code></p>
+    <p>Hotspots:</p>
+    <pre><code>alu|40|60|140|80|ALU, arithmetic logic unit
+cu|220|60|140|80|CU, control unit
+reg|400|60|160|80|registers, register file</code></pre>
+    <p>
+      Each line is one labelled box on the image. <code>x</code> and <code>y</code>
+      are the top-left corner of the box in pixels, measured from the top-left of the image.
+      The picker below lets you click and drag on the image instead of working out coordinates by hand.
+    </p>
+  </details>
+
+  <div class="diagram-hotspot-editor" data-picker="hotspot-stage" hidden>
+    <p class="form-hint diagram-hotspot-editor__instructions">
+      Click and drag on the image to draw a new hotspot. Click an existing hotspot to select it,
+      then press <kbd>Delete</kbd> to remove it. The textarea below stays in sync.
+    </p>
+    <div class="diagram-hotspot-editor__stage" data-picker-stage>
+      <img alt="" data-picker-image hidden />
+      <div class="diagram-hotspot-editor__overlay" data-picker-overlay></div>
+    </div>
+  </div>
 
   <label for="hotspots">Hotspots (one per line, format <code>id|x|y|width|height|answer1, answer2</code>)</label>
   <textarea id="hotspots" name="hotspots" rows="6" required><%= formatHotspots(hotspots) %></textarea>

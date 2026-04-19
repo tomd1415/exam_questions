@@ -18,6 +18,25 @@ const issueMap = it.issueMap || {};
   <textarea id="text" name="text" rows="6" required><%= text %></textarea>
   <% (issueMap.text || []).forEach(function (m) { %><p class="form-error"><%= m %></p><% }); %>
 
+  <details class="form-hint admin-wizard__worked-example">
+    <summary>Show me a worked example</summary>
+    <p>Passage:</p>
+    <pre><code>The CPU&rsquo;s {{alu}} performs arithmetic. The {{cu}} fetches and decodes instructions.</code></pre>
+    <p>Gaps:</p>
+    <pre><code>alu|ALU, arithmetic logic unit
+cu|CU, control unit</code></pre>
+    <p>Word bank:</p>
+    <pre><code>ALU
+CU
+RAM
+cache</code></pre>
+    <p>
+      Pupils drag words from the bank into the gaps, so include a couple of distractors
+      (here <code>RAM</code> and <code>cache</code>) to keep them thinking.
+      Each gap&rsquo;s <code>accept</code> list is matched against the word the pupil drops in.
+    </p>
+  </details>
+
   <label for="gaps">Gaps (one per line, format <code>id|answer1, answer2</code>)</label>
   <textarea id="gaps" name="gaps" rows="5" required><%= formatGaps(gaps) %></textarea>
   <% (issueMap.gaps || []).forEach(function (m) { %><p class="form-error"><%= m %></p><% }); %>

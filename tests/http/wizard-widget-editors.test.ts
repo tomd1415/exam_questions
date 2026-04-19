@@ -494,4 +494,21 @@ describe('wizard widget editors (chunk 2.5j step 4)', () => {
     expect(bad.statusCode).toBe(400);
     expect(bad.payload).toContain('/static/');
   });
+
+  it('diagram_labels editor exposes the hotspot picker hooks', async () => {
+    const teacher = await createUser(pool(), { role: 'teacher' });
+    const jar = await loginAs(teacher);
+    const draftId = await startDraft(jar);
+    await pickWidget(jar, draftId, 'diagram_labels', 'label');
+
+    const reload = await app.inject({
+      method: 'GET',
+      url: `/admin/questions/wizard/${draftId}/step/5`,
+      headers: { cookie: cookieHeader(jar) },
+    });
+    expect(reload.statusCode).toBe(200);
+    expect(reload.payload).toContain('data-widget-editor="diagram_labels"');
+    expect(reload.payload).toContain('data-picker="hotspot-stage"');
+    expect(reload.payload).toContain('/static/wizard_hotspot_picker.js');
+  });
 });

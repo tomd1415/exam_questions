@@ -51,6 +51,15 @@ const fontPref = (it.currentUser && it.currentUser.font_preference) || 'system';
     <% } %>
     <% if (it.wizardAnswerPickerEnabled) { %>
       <script src="/static/wizard_answer_picker.js" defer></script>
+      <script src="/static/wizard_hotspot_picker.js" defer></script>
+    <% } %>
+    <% if (it.wizardPreviewEnabled) { %>
+      <script src="/static/widget_counters.js" defer></script>
+      <script src="/static/cloze_bank.js" defer></script>
+      <script src="/static/matching.js" defer></script>
+      <script src="/static/logic_diagram.js" defer></script>
+      <script src="/static/flowchart.js" defer></script>
+      <script src="/static/trace_grid.js" defer></script>
     <% } %>
     <script src="/static/nav.js" defer></script>
     <script src="/static/confirm.js" defer></script>

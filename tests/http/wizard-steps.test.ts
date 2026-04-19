@@ -215,6 +215,8 @@ describe('wizard scaffolding (chunk 2.5j step 2)', () => {
     expect(last.statusCode).toBe(200);
     expect(last.payload).toContain('Step 9 of 9');
     expect(last.payload).toContain('Publish question');
+    expect(last.payload).toContain('What the pupil will see');
+    expect(last.payload).toContain('admin-wizard__preview-stage');
   });
 
   it('refuses step POST without CSRF', async () => {

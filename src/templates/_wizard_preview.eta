@@ -1,0 +1,43 @@
+<%
+const payload = it.draft.payload || {};
+const part = (payload.parts && payload.parts[0]) || {};
+const widget = part.expected_response_type || payload.expected_response_type || '';
+const cfg = part.part_config || null;
+const stem = typeof payload.stem === 'string' ? payload.stem : '';
+const stubPart = {
+  id: 'preview',
+  expected_response_type: widget,
+  part_config: cfg,
+  raw_answer: null,
+  marks: typeof part.marks === 'number' ? part.marks : 1,
+};
+const canPreview = widget && stem;
+%>
+<% if (canPreview) { %>
+  <aside class="admin-wizard__preview" aria-label="Pupil preview">
+    <header class="admin-wizard__preview-header">
+      <h2>What the pupil will see</h2>
+      <p class="form-hint">
+        Live render of the stem and widget exactly as a pupil would see them.
+        Click and type to test &mdash; nothing is saved or marked.
+        Refresh the page to clear.
+      </p>
+    </header>
+    <div class="admin-wizard__preview-stage">
+      <p class="admin-wizard__preview-stem"><%= stem %></p>
+      <div class="admin-wizard__preview-widget">
+        <%~ include('_paper_part_widget', { part: stubPart, markPoints: [] }) %>
+      </div>
+    </div>
+  </aside>
+<% } else { %>
+  <aside class="admin-wizard__preview admin-wizard__preview--empty" aria-label="Pupil preview">
+    <header class="admin-wizard__preview-header">
+      <h2>What the pupil will see</h2>
+      <p class="form-hint">
+        Preview will appear once the stem and widget configuration are filled in
+        on the earlier steps.
+      </p>
+    </header>
+  </aside>
+<% } %>

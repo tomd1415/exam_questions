@@ -180,10 +180,16 @@ async function renderStep(
     // (the script no-ops when its selectors aren't on the page) but we
     // still gate it on step 1 so the network panel stays clean.
     wizardScriptsEnabled: n === 1,
-    // Loads /static/wizard_answer_picker.js so the per-widget editor's
-    // correct-answer UI rebuilds live as the teacher edits the source
-    // textareas. Only the widget-config step needs it.
+    // Loads /static/wizard_answer_picker.js (and the diagram_labels
+    // hotspot picker) so the per-widget editor's correct-answer UI
+    // rebuilds live as the teacher edits the source textareas. Only
+    // the widget-config step needs them.
     wizardAnswerPickerEnabled: n === 5,
+    // Loads the pupil-widget runtime scripts so the step-9 preview pane
+    // is interactive (cloze bank drag-drop, matching, logic_diagram,
+    // flowchart, trace_grid, widget counters). Only the publish step
+    // renders the preview, so only that step needs them.
+    wizardPreviewEnabled: n === 9,
   });
 }
 

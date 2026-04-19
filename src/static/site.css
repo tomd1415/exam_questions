@@ -1017,6 +1017,119 @@ input[type='number'].input {
   font-size: var(--type-small);
 }
 
+.admin-wizard__preview {
+  margin-top: var(--space-4);
+  border: 2px solid var(--color-brand-500);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  background: var(--color-surface-1);
+  display: grid;
+  gap: var(--space-3);
+}
+.admin-wizard__preview--empty {
+  border-style: dashed;
+  border-color: var(--color-border);
+}
+.admin-wizard__preview-header h2 {
+  margin: 0 0 var(--space-1);
+  font-size: var(--type-h3, 1.1rem);
+}
+.admin-wizard__preview-header p {
+  margin: 0;
+}
+.admin-wizard__preview-stage {
+  background: var(--color-surface-0);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3);
+  display: grid;
+  gap: var(--space-2);
+}
+.admin-wizard__preview-stem {
+  margin: 0 0 var(--space-2);
+  font-weight: 500;
+}
+
+.admin-wizard__worked-example {
+  background: var(--color-surface-1);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-3);
+}
+.admin-wizard__worked-example > summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.admin-wizard__worked-example pre {
+  background: var(--color-surface-0);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2);
+  overflow-x: auto;
+}
+
+/* --- Diagram hotspot picker (step 5, diagram_labels) ---------------------- */
+.diagram-hotspot-editor {
+  display: grid;
+  gap: var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-2);
+  background: var(--color-surface-1);
+}
+.diagram-hotspot-editor__instructions {
+  margin: 0;
+}
+.diagram-hotspot-editor__stage {
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+}
+.diagram-hotspot-editor__stage img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-user-drag: none;
+  user-drag: none;
+}
+.diagram-hotspot-editor__overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.diagram-hotspot-editor__hotspot {
+  position: absolute;
+  margin: 0;
+  padding: 0;
+  background: rgb(0 100 200 / 0.18);
+  border: 2px solid rgb(0 100 200 / 0.8);
+  pointer-events: auto;
+  cursor: pointer;
+}
+.diagram-hotspot-editor__hotspot.is-selected {
+  background: rgb(220 80 0 / 0.2);
+  border-color: rgb(220 80 0 / 0.9);
+}
+.diagram-hotspot-editor__hotspot-label {
+  position: absolute;
+  top: -1.4em;
+  left: 0;
+  font-size: var(--type-micro);
+  background: var(--color-surface-0);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 0 var(--space-1);
+  white-space: nowrap;
+}
+.diagram-hotspot-editor__ghost {
+  position: absolute;
+  background: rgb(0 100 200 / 0.1);
+  border: 1px dashed rgb(0 100 200 / 0.6);
+  pointer-events: none;
+}
+
 /* --- Widget tile picker (step 3) ------------------------------------------ */
 .widget-tile-grid {
   display: grid;

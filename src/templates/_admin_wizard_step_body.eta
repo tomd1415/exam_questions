@@ -102,6 +102,8 @@ const issueMap = {};
   </form>
 
   <% if (isPublishStep) { %>
+    <%~ include('_wizard_preview', it) %>
+
     <form method="post"
           action="/admin/questions/wizard/<%= draftId %>/publish"
           class="admin-wizard__publish stacked-form">

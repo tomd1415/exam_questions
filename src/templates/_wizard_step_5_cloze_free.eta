@@ -17,6 +17,20 @@ const issueMap = it.issueMap || {};
   <textarea id="text" name="text" rows="6" required><%= text %></textarea>
   <% (issueMap.text || []).forEach(function (m) { %><p class="form-error"><%= m %></p><% }); %>
 
+  <details class="form-hint admin-wizard__worked-example">
+    <summary>Show me a worked example</summary>
+    <p>Passage:</p>
+    <pre><code>RAM is {{volatile}} memory. ROM is {{nonvolatile}} memory.</code></pre>
+    <p>Gaps:</p>
+    <pre><code>volatile|volatile
+nonvolatile|non-volatile, nonvolatile</code></pre>
+    <p>
+      Each gap&rsquo;s <code>id</code> is the short key after <code>{{</code> in the passage.
+      After the pipe you list every spelling you&rsquo;ll accept, comma-separated.
+      Pupils earn one mark per gap they answer correctly.
+    </p>
+  </details>
+
   <label for="gaps">Gaps (one per line, format <code>id|answer1, answer2</code>)</label>
   <textarea id="gaps" name="gaps" rows="5" required><%= formatGaps(gaps) %></textarea>
   <p class="form-hint">Each id must appear in the passage as <code>{{id}}</code>. List acceptable spellings as a comma-separated list.</p>

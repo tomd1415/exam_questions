@@ -17,6 +17,23 @@ const issueMap = it.issueMap || {};
   <textarea id="text" name="text" rows="8" required class="font-mono"><%= text %></textarea>
   <% (issueMap.text || []).forEach(function (m) { %><p class="form-error"><%= m %></p><% }); %>
 
+  <details class="form-hint admin-wizard__worked-example">
+    <summary>Show me a worked example</summary>
+    <p>Code:</p>
+    <pre><code>total = 0
+for i in range({{limit}}):
+    total = total {{operator}} i
+print(total)</code></pre>
+    <p>Gaps:</p>
+    <pre><code>limit|10
+operator|+</code></pre>
+    <p>
+      Indentation matters &mdash; pupils see the code in a monospace box exactly as you write it.
+      Each <code>{{id}}</code> becomes a small input box; the answers after the pipe are accepted
+      verbatim, so list every spelling/casing you&rsquo;ll allow.
+    </p>
+  </details>
+
   <label for="gaps">Gaps (one per line, format <code>id|answer1, answer2</code>)</label>
   <textarea id="gaps" name="gaps" rows="5" required><%= formatGaps(gaps) %></textarea>
   <% (issueMap.gaps || []).forEach(function (m) { %><p class="form-error"><%= m %></p><% }); %>
