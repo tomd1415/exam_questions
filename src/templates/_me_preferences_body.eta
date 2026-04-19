@@ -47,4 +47,27 @@
       <button type="submit" class="btn btn--primary btn--sm">Save font</button>
     </fieldset>
   </form>
+
+  <form method="post" action="/me/preferences/theme" class="inline-form">
+    <input type="hidden" name="_csrf" value="<%= it.csrfToken %>" />
+    <fieldset>
+      <legend>Appearance</legend>
+      <label>
+        <input type="radio" name="theme" value="auto"
+          <%= (it.themePreference || 'auto') === 'auto' ? 'checked' : '' %> />
+        Match my device (default)
+      </label>
+      <label>
+        <input type="radio" name="theme" value="light"
+          <%= it.themePreference === 'light' ? 'checked' : '' %> />
+        Light
+      </label>
+      <label>
+        <input type="radio" name="theme" value="dark"
+          <%= it.themePreference === 'dark' ? 'checked' : '' %> />
+        Dark
+      </label>
+      <button type="submit" class="btn btn--primary btn--sm">Save appearance</button>
+    </fieldset>
+  </form>
 </section>

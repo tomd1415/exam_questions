@@ -4,7 +4,11 @@
    rule can resolve these custom properties. Legacy tokens (--bg, --fg,
    --accent, etc.) are kept as aliases so Chunk 1–6 styles keep rendering
    pixel-identically until their rules are rewritten to reference the new
-   names directly. */
+   names directly.
+
+   Chunk 2.5n — extended with a warm-amber secondary ramp, a wider type
+   scale (display + lede), motion tokens, elevation aliases, and a
+   [data-theme="dark"] override block for the opt-in dark theme. */
 
 :root {
   /* ------------------------------------------------------------------ */
@@ -33,6 +37,15 @@
 
   --color-accent-500: #0f766e;
   --color-accent-ink: #ffffff;
+
+  /* Warm-amber secondary (Chunk 2.5n). Reserved for "complete",
+     "published", "just saved" moments in the teacher wizard. */
+  --color-accent-warm-50: #fdf4e3;
+  --color-accent-warm-100: #f7e3b8;
+  --color-accent-warm-500: #c2892a;
+  --color-accent-warm-600: #a3711f;
+  --color-accent-warm-700: #7a5414;
+  --color-accent-warm-ink: #ffffff;
 
   --color-danger-50: #fdecec;
   --color-danger-100: #fbd4d4;
@@ -78,32 +91,63 @@
   --radius-sm: 0.25rem;
   --radius-md: 0.4rem;
   --radius-lg: 0.625rem;
+  --radius-xl: 0.9rem;
   --radius-pill: 999px;
 
   /* ------------------------------------------------------------------ */
-  /* Shadow                                                             */
+  /* Shadow + elevation                                                  */
   /* ------------------------------------------------------------------ */
   --shadow-sm: 0 1px 2px rgba(15, 15, 26, 0.06);
   --shadow-md: 0 2px 6px rgba(15, 15, 26, 0.08);
   --shadow-lg: 0 8px 24px rgba(15, 15, 26, 0.12);
 
+  /* Semantic elevation aliases (Chunk 2.5n). Use these in new code so
+     dark-mode overrides can tune shadow alpha without touching every
+     call site. */
+  --shadow-resting: var(--shadow-sm);
+  --shadow-raised: var(--shadow-md);
+  --shadow-floating: var(--shadow-lg);
+
   /* ------------------------------------------------------------------ */
-  /* Typography                                                         */
+  /* Typography                                                          */
   /* ------------------------------------------------------------------ */
   --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
+  /* Warm display face (Chunk 2.5n). System-serif stack ships zero bytes;
+     teachers on macOS get New York, Windows users get Cambria, Linux
+     users get DejaVu Serif. If a specific face lands later, drop the
+     woff2 into /static/fonts/ and prepend here. */
+  --font-display:
+    ui-serif, 'Source Serif 4', 'Source Serif Pro', Cambria, 'New York', Georgia, 'Times New Roman',
+    serif;
 
-  --type-display: 1.75rem; /* big dashboard heroes  */
-  --type-h1: 1.4rem; /* page H1               */
-  --type-h2: 1.15rem; /* section H2            */
+  --type-display: 2rem; /* drafts-list hero, big review pages */
+  --type-h1: 1.75rem; /* page H1 (was 1.4rem)              */
+  --type-h2: 1.25rem; /* section H2 (was 1.15rem)          */
+  --type-lede: 1.05rem; /* per-step lede copy                 */
   --type-body: 1rem;
   --type-small: 0.85rem;
   --type-micro: 0.78rem;
+
+  /* Line heights for the writing-canvas treatment on step 4 etc. */
+  --leading-tight: 1.3;
+  --leading-body: 1.55;
+  --leading-prose: 1.7;
 
   /* ------------------------------------------------------------------ */
   /* Focus ring — single, deliberate, non-default                       */
   /* ------------------------------------------------------------------ */
   --focus-ring: 0 0 0 3px rgba(29, 78, 216, 0.35);
+
+  /* ------------------------------------------------------------------ */
+  /* Motion                                                              */
+  /* ------------------------------------------------------------------ */
+  --duration-fast: 120ms;
+  --duration-mid: 200ms;
+  --duration-slow: 320ms;
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-entrance: cubic-bezier(0, 0, 0.2, 1);
+  --ease-exit: cubic-bezier(0.4, 0, 1, 1);
 
   /* ------------------------------------------------------------------ */
   /* Legacy aliases — existing Chunk 1–6 CSS references these           */
@@ -117,4 +161,127 @@
   --error-fg: var(--color-danger-700);
   --border: var(--color-border);
   --card-bg: var(--color-surface-0);
+}
+
+/* -------------------------------------------------------------------- */
+/* Dark theme (Chunk 2.5n)                                               */
+/* -------------------------------------------------------------------- */
+/* Token-only override. Components use var(--color-surface-0) etc. and so
+   get dark-ified without any component-level CSS changes. Applied via
+   <html data-theme="dark">; auto mode honours prefers-color-scheme. */
+
+[data-theme='dark'] {
+  --color-surface-0: #14141c;
+  --color-surface-1: #1b1b24;
+  --color-surface-2: #242430;
+  --color-surface-3: #2e2e3c;
+
+  --color-ink-0: #ffffff;
+  --color-ink-1: #f2f2f6;
+  --color-ink-2: #cacad6;
+  --color-ink-3: #9a9aac;
+  --color-ink-4: #6c6c7c;
+
+  --color-border: #2e2e3c;
+  --color-border-strong: #45455a;
+
+  /* brand-500/600/700 stay anchored; the tinted 50/100 ramps move into
+     the near-black band so chips sit on dark surfaces without glare. */
+  --color-brand-50: #16224a;
+  --color-brand-100: #1e2e68;
+
+  --color-accent-warm-50: #3a2c10;
+  --color-accent-warm-100: #553f16;
+
+  --color-danger-50: #3a1414;
+  --color-danger-100: #5a1e1e;
+
+  --color-success-50: #102a18;
+  --color-success-100: #1a4226;
+
+  --color-warn-50: #3a2a10;
+  --color-warn-100: #5a401a;
+
+  --color-info-50: #122546;
+
+  /* Shadows carry more alpha on dark so cards read as elevated. */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 4px 10px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.55);
+
+  /* Legacy aliases re-resolve to the dark surface. */
+  --bg: var(--color-surface-1);
+  --fg: var(--color-ink-1);
+  --muted: var(--color-ink-3);
+  --border: var(--color-border);
+  --card-bg: var(--color-surface-0);
+
+  /* Focus ring holds up on dark surface (lighter blue glow). */
+  --focus-ring: 0 0 0 3px rgba(120, 160, 255, 0.55);
+
+  color-scheme: dark;
+}
+
+/* Auto mode — fall through to dark when the OS prefers it. The explicit
+   data-theme="light" / data-theme="dark" values on <html> override this. */
+@media (prefers-color-scheme: dark) {
+  [data-theme='auto'] {
+    --color-surface-0: #14141c;
+    --color-surface-1: #1b1b24;
+    --color-surface-2: #242430;
+    --color-surface-3: #2e2e3c;
+
+    --color-ink-0: #ffffff;
+    --color-ink-1: #f2f2f6;
+    --color-ink-2: #cacad6;
+    --color-ink-3: #9a9aac;
+    --color-ink-4: #6c6c7c;
+
+    --color-border: #2e2e3c;
+    --color-border-strong: #45455a;
+
+    --color-brand-50: #16224a;
+    --color-brand-100: #1e2e68;
+
+    --color-accent-warm-50: #3a2c10;
+    --color-accent-warm-100: #553f16;
+
+    --color-danger-50: #3a1414;
+    --color-danger-100: #5a1e1e;
+
+    --color-success-50: #102a18;
+    --color-success-100: #1a4226;
+
+    --color-warn-50: #3a2a10;
+    --color-warn-100: #5a401a;
+
+    --color-info-50: #122546;
+
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
+    --shadow-md: 0 4px 10px rgba(0, 0, 0, 0.5);
+    --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.55);
+
+    --bg: var(--color-surface-1);
+    --fg: var(--color-ink-1);
+    --muted: var(--color-ink-3);
+    --border: var(--color-border);
+    --card-bg: var(--color-surface-0);
+
+    --focus-ring: 0 0 0 3px rgba(120, 160, 255, 0.55);
+
+    color-scheme: dark;
+  }
+}
+
+/* Reduced motion — strip transitions and animations. Applies globally;
+   components don't need to opt in. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
 }

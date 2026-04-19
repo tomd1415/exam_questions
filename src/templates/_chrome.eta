@@ -1,8 +1,9 @@
 <%
 const fontPref = (it.currentUser && it.currentUser.font_preference) || 'system';
+const themePref = (it.currentUser && it.currentUser.theme_preference) || 'auto';
 %>
 <!DOCTYPE html>
-<html lang="en" data-font="<%= fontPref %>">
+<html lang="en" data-font="<%= fontPref %>" data-theme="<%= themePref %>">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />

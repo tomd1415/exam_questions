@@ -41,7 +41,7 @@ async function loginAs(user: CreatedUser): Promise<ReturnType<typeof newJar>> {
   return jar;
 }
 
-describe('POST /me/preferences/font (Chunk 7)', () => {
+describe('POST /me/preferences/theme (Chunk 2.5n)', () => {
   it('unauthenticated POST redirects to /login', async () => {
     const jar = newJar();
     const getLogin = await app.inject({ method: 'GET', url: '/login' });
@@ -49,33 +49,41 @@ describe('POST /me/preferences/font (Chunk 7)', () => {
     const token = extractCsrfToken(getLogin.payload);
     const res = await app.inject({
       method: 'POST',
-      url: '/me/preferences/font',
+      url: '/me/preferences/theme',
       headers: { 'content-type': 'application/x-www-form-urlencoded', cookie: cookieHeader(jar) },
-      payload: form({ _csrf: token, font: 'dyslexic' }),
+      payload: form({ _csrf: token, theme: 'dark' }),
     });
     expect(res.statusCode).toBe(302);
     expect(res.headers.location).toBe('/login');
   });
 
-  it('toggles data-font on next render', async () => {
+  it('new users render with data-theme="auto" by default', async () => {
     const pupil = await createUser(getSharedPool(), { role: 'pupil' });
     const jar = await loginAs(pupil);
-
-    const before = await app.inject({
+    const res = await app.inject({
       method: 'GET',
       url: '/me/preferences',
       headers: { cookie: cookieHeader(jar) },
     });
-    updateJar(jar, before);
-    expect(before.statusCode).toBe(200);
-    expect(before.payload).toContain('data-font="system"');
-    const csrf = extractCsrfToken(before.payload);
+    expect(res.statusCode).toBe(200);
+    expect(res.payload).toContain('data-theme="auto"');
+  });
 
+  it('toggling to dark updates data-theme on next render', async () => {
+    const pupil = await createUser(getSharedPool(), { role: 'pupil' });
+    const jar = await loginAs(pupil);
+    const prefs = await app.inject({
+      method: 'GET',
+      url: '/me/preferences',
+      headers: { cookie: cookieHeader(jar) },
+    });
+    updateJar(jar, prefs);
+    const csrf = extractCsrfToken(prefs.payload);
     const post = await app.inject({
       method: 'POST',
-      url: '/me/preferences/font',
+      url: '/me/preferences/theme',
       headers: { 'content-type': 'application/x-www-form-urlencoded', cookie: cookieHeader(jar) },
-      payload: form({ _csrf: csrf, font: 'dyslexic' }),
+      payload: form({ _csrf: csrf, theme: 'dark' }),
     });
     expect(post.statusCode).toBe(302);
     expect(post.headers.location).toMatch(/^\/me\/preferences\?flash=/);
@@ -87,10 +95,10 @@ describe('POST /me/preferences/font (Chunk 7)', () => {
       headers: { cookie: cookieHeader(jar) },
     });
     expect(after.statusCode).toBe(200);
-    expect(after.payload).toContain('data-font="dyslexic"');
+    expect(after.payload).toContain('data-theme="dark"');
   });
 
-  it('teachers can also toggle their font preference', async () => {
+  it('teachers can also toggle their theme preference', async () => {
     const teacher = await createUser(getSharedPool(), { role: 'teacher' });
     const jar = await loginAs(teacher);
     const prefs = await app.inject({
@@ -99,18 +107,17 @@ describe('POST /me/preferences/font (Chunk 7)', () => {
       headers: { cookie: cookieHeader(jar) },
     });
     updateJar(jar, prefs);
-    expect(prefs.statusCode).toBe(200);
     const csrf = extractCsrfToken(prefs.payload);
     const post = await app.inject({
       method: 'POST',
-      url: '/me/preferences/font',
+      url: '/me/preferences/theme',
       headers: { 'content-type': 'application/x-www-form-urlencoded', cookie: cookieHeader(jar) },
-      payload: form({ _csrf: csrf, font: 'dyslexic' }),
+      payload: form({ _csrf: csrf, theme: 'light' }),
     });
     expect(post.statusCode).toBe(302);
   });
 
-  it('rejects an invalid font value with 400', async () => {
+  it('rejects an invalid theme value with 400', async () => {
     const pupil = await createUser(getSharedPool(), { role: 'pupil' });
     const jar = await loginAs(pupil);
     const prefs = await app.inject({
@@ -122,22 +129,47 @@ describe('POST /me/preferences/font (Chunk 7)', () => {
     const csrf = extractCsrfToken(prefs.payload);
     const res = await app.inject({
       method: 'POST',
-      url: '/me/preferences/font',
+      url: '/me/preferences/theme',
       headers: { 'content-type': 'application/x-www-form-urlencoded', cookie: cookieHeader(jar) },
-      payload: form({ _csrf: csrf, font: 'comic-sans' }),
+      payload: form({ _csrf: csrf, theme: 'sepia' }),
     });
     expect(res.statusCode).toBe(400);
   });
 
-  it('site.css declares @font-face for OpenDyslexic and a data-font branch', async () => {
-    const css = await app.inject({ method: 'GET', url: '/static/site.css' });
+  it('design-tokens.css declares the dark override block and warm-amber ramp', async () => {
+    const css = await app.inject({ method: 'GET', url: '/static/design-tokens.css' });
     expect(css.statusCode).toBe(200);
-    expect(css.payload).toContain("font-family: 'OpenDyslexic'");
-    expect(css.payload).toContain("html[data-font='dyslexic']");
-    const woff = await app.inject({
+    expect(css.payload).toContain("[data-theme='dark']");
+    expect(css.payload).toContain('--color-accent-warm-500');
+    expect(css.payload).toContain('--font-display');
+    expect(css.payload).toContain('--duration-fast');
+    expect(css.payload).toMatch(/@media \(prefers-color-scheme: dark\)/);
+    expect(css.payload).toMatch(/@media \(prefers-reduced-motion: reduce\)/);
+  });
+
+  it('writes an audit row on theme change', async () => {
+    const teacher = await createUser(getSharedPool(), { role: 'teacher' });
+    const jar = await loginAs(teacher);
+    const prefs = await app.inject({
       method: 'GET',
-      url: '/static/fonts/opendyslexic-latin-400-normal.woff2',
+      url: '/me/preferences',
+      headers: { cookie: cookieHeader(jar) },
     });
-    expect(woff.statusCode).toBe(200);
+    updateJar(jar, prefs);
+    const csrf = extractCsrfToken(prefs.payload);
+    await app.inject({
+      method: 'POST',
+      url: '/me/preferences/theme',
+      headers: { 'content-type': 'application/x-www-form-urlencoded', cookie: cookieHeader(jar) },
+      payload: form({ _csrf: csrf, theme: 'dark' }),
+    });
+    const pool = getSharedPool();
+    const { rows } = await pool.query<{ event_type: string; details: { theme: string } }>(
+      `SELECT event_type, details FROM audit_events
+         WHERE event_type = 'user.theme_preference.set'
+         ORDER BY id DESC LIMIT 1`,
+    );
+    expect(rows[0]?.event_type).toBe('user.theme_preference.set');
+    expect(rows[0]?.details?.theme).toBe('dark');
   });
 });

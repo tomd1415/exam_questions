@@ -10,6 +10,10 @@ export type FontPreference = 'system' | 'dyslexic';
 
 export const FONT_PREFERENCES: readonly FontPreference[] = ['system', 'dyslexic'] as const;
 
+export type ThemePreference = 'light' | 'dark' | 'auto';
+
+export const THEME_PREFERENCES: readonly ThemePreference[] = ['light', 'dark', 'auto'] as const;
+
 export interface UserRow {
   id: string;
   role: UserRole;
@@ -24,6 +28,7 @@ export interface UserRow {
   pseudonym: string;
   reveal_mode: RevealMode;
   font_preference: FontPreference;
+  theme_preference: ThemePreference;
   widget_tips_dismissed: Record<string, string>;
   created_at: Date;
   updated_at: Date;
@@ -37,7 +42,7 @@ export class UserRepo {
       `SELECT id::text, role, display_name, username, password_hash,
               must_change_password, failed_login_count, locked_until,
               last_login_at, active, pseudonym, reveal_mode, font_preference,
-              widget_tips_dismissed, created_at, updated_at
+              theme_preference, widget_tips_dismissed, created_at, updated_at
          FROM users
         WHERE username = $1`,
       [username],
@@ -50,7 +55,7 @@ export class UserRepo {
       `SELECT id::text, role, display_name, username, password_hash,
               must_change_password, failed_login_count, locked_until,
               last_login_at, active, pseudonym, reveal_mode, font_preference,
-              widget_tips_dismissed, created_at, updated_at
+              theme_preference, widget_tips_dismissed, created_at, updated_at
          FROM users
         WHERE username = $1
           AND role = 'pupil'
@@ -65,7 +70,7 @@ export class UserRepo {
       `SELECT id::text, role, display_name, username, password_hash,
               must_change_password, failed_login_count, locked_until,
               last_login_at, active, pseudonym, reveal_mode, font_preference,
-              widget_tips_dismissed, created_at, updated_at
+              theme_preference, widget_tips_dismissed, created_at, updated_at
          FROM users
         WHERE id = $1`,
       [id],
@@ -96,6 +101,13 @@ export class UserRepo {
     await this.db.query(
       `UPDATE users SET font_preference = $2, updated_at = now() WHERE id = $1::bigint`,
       [userId, font],
+    );
+  }
+
+  async setThemePreference(userId: string, theme: ThemePreference): Promise<void> {
+    await this.db.query(
+      `UPDATE users SET theme_preference = $2, updated_at = now() WHERE id = $1::bigint`,
+      [userId, theme],
     );
   }
 

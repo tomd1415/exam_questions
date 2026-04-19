@@ -9,7 +9,13 @@ import type {
   TopicPreviewBundle,
 } from '../repos/attempts.js';
 import type { ClassRepo } from '../repos/classes.js';
-import type { FontPreference, RevealMode, UserRepo, UserRow } from '../repos/users.js';
+import type {
+  FontPreference,
+  RevealMode,
+  ThemePreference,
+  UserRepo,
+  UserRow,
+} from '../repos/users.js';
 import {
   markAttemptPart,
   type MarkingInputMarkPoint,
@@ -80,6 +86,17 @@ export class AttemptService {
       { userId: actor.id, role: actor.role },
       'user.font_preference.set',
       { font },
+      actor.id,
+    );
+  }
+
+  async setThemePreferenceForUser(actor: ActorForAttempt, theme: ThemePreference): Promise<void> {
+    if (!this.userRepo) throw new Error('UserRepo not configured');
+    await this.userRepo.setThemePreference(actor.id, theme);
+    await this.audit.record(
+      { userId: actor.id, role: actor.role },
+      'user.theme_preference.set',
+      { theme },
       actor.id,
     );
   }

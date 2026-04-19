@@ -1,7 +1,7 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { z } from 'zod';
 import { AttemptAccessError } from '../services/attempts.js';
-import { FONT_PREFERENCES, REVEAL_MODES } from '../repos/users.js';
+import { FONT_PREFERENCES, REVEAL_MODES, THEME_PREFERENCES } from '../repos/users.js';
 import { isWidgetTipKey, WIDGET_TIPS } from '../lib/widget-tips.js';
 
 const StartBody = z.object({ _csrf: z.string().min(1) });
@@ -28,6 +28,11 @@ const RevealModeBody = z.object({
 const FontPreferenceBody = z.object({
   _csrf: z.string().min(1),
   font: z.enum(FONT_PREFERENCES as readonly ['system', 'dyslexic']),
+});
+
+const ThemePreferenceBody = z.object({
+  _csrf: z.string().min(1),
+  theme: z.enum(THEME_PREFERENCES as readonly ['light', 'dark', 'auto']),
 });
 
 const WidgetTipDismissBody = z.object({
@@ -123,6 +128,7 @@ export function registerAttemptRoutes(app: FastifyInstance): void {
       csrfToken: reply.generateCsrf(),
       revealMode: req.currentUser.reveal_mode ?? 'per_question',
       fontPreference: req.currentUser.font_preference ?? 'system',
+      themePreference: req.currentUser.theme_preference ?? 'auto',
       flash: readQueryFlash(req),
     });
   });
@@ -158,6 +164,23 @@ export function registerAttemptRoutes(app: FastifyInstance): void {
     if (!parsed.success) return reply.code(400).send('Bad request');
     await app.services.attempts.setFontPreferenceForUser(actor, parsed.data.font);
     const label = parsed.data.font === 'dyslexic' ? 'OpenDyslexic font' : 'the default font';
+    return reply.redirect(
+      `/me/preferences?flash=${encodeURIComponent(`Preference saved: using ${label}.`)}`,
+    );
+  });
+
+  app.post('/me/preferences/theme', { preValidation: csrfPreValidation }, async (req, reply) => {
+    const actor = requireAnyActor(req, reply);
+    if (!actor) return reply;
+    const parsed = ThemePreferenceBody.safeParse(req.body);
+    if (!parsed.success) return reply.code(400).send('Bad request');
+    await app.services.attempts.setThemePreferenceForUser(actor, parsed.data.theme);
+    const label =
+      parsed.data.theme === 'dark'
+        ? 'dark theme'
+        : parsed.data.theme === 'light'
+          ? 'light theme'
+          : 'whatever your device prefers';
     return reply.redirect(
       `/me/preferences?flash=${encodeURIComponent(`Preference saved: using ${label}.`)}`,
     );

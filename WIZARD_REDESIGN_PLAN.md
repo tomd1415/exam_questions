@@ -30,12 +30,14 @@ and enjoy using it — without changing what questions it can produce.
 ## 2. Personas (who we're optimising for)
 
 ### Thursday teacher (primary)
+
 Just finished period 5. Has a past-paper printout. 20-minute window before a
 departmental meeting. Wants to stamp out one question, stop partway, pick up
 tomorrow morning in the car park. Needs: trust that work is saved, minimum
 chrome, one-keystroke progression, clear "where was I?" on resume.
 
 ### Sunday-night teacher (secondary)
+
 Quieter. Batch-authoring three questions for next week's topic. Cares about
 previewing the pupil experience, tagging correctly, spotting typos. Needs:
 always-on pupil preview, a publish-readiness checklist, a way to clone a
@@ -47,14 +49,14 @@ Both use the same UI. When the two personas conflict, **Thursday wins**.
 
 ## 3. Decisions recorded (from the 2026-04-19 discussion)
 
-| # | Decision | Rationale |
-|---|---|---|
-| 1 | **Warm serif display face.** Source Serif 4 for step titles / review headings / pupil-preview framing. Body stays `--font-sans`. | Gives the wizard character without making it less legible for a tired teacher; signals "this is a writing environment, not a CRUD form". |
-| 2 | **Warm secondary accent: muted amber.** Specifically `--color-accent-warm-500: #c2892a` with 50/100/700 ramps. Used for "complete / published / this-just-saved" moments. Blue stays the primary brand; amber is reserved for celebratory and "done" states. | Amber reads as "school-paper warm" without being childish, holds up in dark mode, and is colour-blind-distinguishable from the brand blue and the success green. |
-| 3 | **Dark mode in scope (chunk 2.5n).** `[data-theme="dark"]` token overrides only — no component rewrites. Toggle lives next to the OpenDyslexic font toggle. | Staff-room fluorescents are hostile; several teachers have asked. Token-only keeps the cost small. |
-| 4 | **Split-pane preview from step 5.** The live pupil preview pane (today lifted out of `_wizard_preview.eta` and mounted on step 9) moves to steps 5–8 too. On ≤1024 px it collapses to a slide-in panel. | Single biggest usability win — removes "authoring blind" across four steps. Teachers fiddling more is a feature, not a bug. |
-| 5 | **Loud autosave.** A chip in the sticky action bar: "Saved 3s ago" / "Saving…" / "Offline — will retry". Announced to screen readers via `aria-live="polite"`. | Thursday teacher has to trust state immediately. Noise is fine — invisibility is not. |
-| 6 | **7 chunks (2.5n – 2.5t). Not live until complete.** A new chrome flag `WIZARD_V2_ENABLED` gates every template and route path; while off, the existing wizard is untouched. Flag flips on after chunk 2.5t lands and PHASE2.5_PLAN.md gets a sign-off row. | Each chunk can ship in isolation without disrupting teachers currently using the v1 wizard. |
+| #   | Decision                                                                                                                                                                                                                                                     | Rationale                                                                                                                                                        |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | **Warm serif display face.** Source Serif 4 for step titles / review headings / pupil-preview framing. Body stays `--font-sans`.                                                                                                                             | Gives the wizard character without making it less legible for a tired teacher; signals "this is a writing environment, not a CRUD form".                         |
+| 2   | **Warm secondary accent: muted amber.** Specifically `--color-accent-warm-500: #c2892a` with 50/100/700 ramps. Used for "complete / published / this-just-saved" moments. Blue stays the primary brand; amber is reserved for celebratory and "done" states. | Amber reads as "school-paper warm" without being childish, holds up in dark mode, and is colour-blind-distinguishable from the brand blue and the success green. |
+| 3   | **Dark mode in scope (chunk 2.5n).** `[data-theme="dark"]` token overrides only — no component rewrites. Toggle lives next to the OpenDyslexic font toggle.                                                                                                  | Staff-room fluorescents are hostile; several teachers have asked. Token-only keeps the cost small.                                                               |
+| 4   | **Split-pane preview from step 5.** The live pupil preview pane (today lifted out of `_wizard_preview.eta` and mounted on step 9) moves to steps 5–8 too. On ≤1024 px it collapses to a slide-in panel.                                                      | Single biggest usability win — removes "authoring blind" across four steps. Teachers fiddling more is a feature, not a bug.                                      |
+| 5   | **Loud autosave.** A chip in the sticky action bar: "Saved 3s ago" / "Saving…" / "Offline — will retry". Announced to screen readers via `aria-live="polite"`.                                                                                               | Thursday teacher has to trust state immediately. Noise is fine — invisibility is not.                                                                            |
+| 6   | **7 chunks (2.5n – 2.5t). Not live until complete.** A new chrome flag `WIZARD_V2_ENABLED` gates every template and route path; while off, the existing wizard is untouched. Flag flips on after chunk 2.5t lands and PHASE2.5_PLAN.md gets a sign-off row.  | Each chunk can ship in isolation without disrupting teachers currently using the v1 wizard.                                                                      |
 
 ---
 
@@ -84,31 +86,31 @@ Add, without removing:
 
 ```css
 /* Warm secondary ramp (amber) */
---color-accent-warm-50:  #fdf4e3;
+--color-accent-warm-50: #fdf4e3;
 --color-accent-warm-100: #f7e3b8;
 --color-accent-warm-500: #c2892a;
 --color-accent-warm-700: #7a5414;
 --color-accent-warm-ink: #ffffff;
 
 /* Display type */
---type-display:  2rem;     /* drafts-list hero         */
---type-h1:       1.75rem;  /* (was 1.4rem)             */
---type-h2:       1.25rem;  /* (was 1.15rem)            */
---type-lede:     1.05rem;  /* per-step lede copy       */
+--type-display: 2rem; /* drafts-list hero         */
+--type-h1: 1.75rem; /* (was 1.4rem)             */
+--type-h2: 1.25rem; /* (was 1.15rem)            */
+--type-lede: 1.05rem; /* per-step lede copy       */
 
 /* Writing-surface leading */
---leading-tight:  1.3;
---leading-body:   1.55;
---leading-prose:  1.7;
+--leading-tight: 1.3;
+--leading-body: 1.55;
+--leading-prose: 1.7;
 
 /* Elevation scale */
 --shadow-resting: var(--shadow-sm);
---shadow-raised:  var(--shadow-md);
+--shadow-raised: var(--shadow-md);
 --shadow-floating: var(--shadow-lg);
 
 /* Motion */
 --duration-fast: 120ms;
---duration-mid:  200ms;
+--duration-mid: 200ms;
 --ease-standard: cubic-bezier(0.2, 0, 0, 1);
 
 /* Dark-mode overrides (applied via [data-theme="dark"]) */
@@ -127,10 +129,10 @@ Dark-mode override block — full palette inversion with tuned contrast:
   --color-ink-3: #9a9aac;
   --color-border: #2e2e3c;
   --color-border-strong: #45455a;
-  --color-brand-50:  #16224a;
+  --color-brand-50: #16224a;
   --color-brand-100: #1e2e68;
   /* brand-500/600/700 unchanged — they're anchors */
-  --color-accent-warm-50:  #3a2c10;
+  --color-accent-warm-50: #3a2c10;
   --color-accent-warm-100: #553f16;
 }
 ```
@@ -217,6 +219,7 @@ summary chip on narrow viewports.
 ## 7. Per-step redesigns
 
 ### Step 1 — Where does this question live?
+
 - Replace stacked selects with a **cascading combobox**: one search input that
   narrows the whole component→topic→subtopic tree on type. Native selects remain
   as the no-JS baseline.
@@ -225,6 +228,7 @@ summary chip on narrow viewports.
   existing `wizard_curriculum_chain.js` remains as fallback.
 
 ### Step 2 — What does the question ask the pupil to do?
+
 - Command word **chip grid** (replaces `<select>`). Each chip: word + 4-word
   gloss.
 - Hovering / focusing a chip reveals the recommended widgets for step 3 in the
@@ -232,6 +236,7 @@ summary chip on narrow viewports.
 - Touch-points: `_wizard_step_2.eta`, new `wizard_command_word_grid.js`.
 
 ### Step 3 — How should the pupil answer?
+
 - Each widget tile gains a **60×60 SVG thumbnail** of the pupil UI.
 - Tile shows: thumbnail, display name, one-line description, typical marks
   (1 / 2–4 / 5+), typical authoring time (~2 min / ~5 min), marker chip.
@@ -241,6 +246,7 @@ summary chip on narrow viewports.
   registry `widget.thumbUrl` property, `wizard-widget-editors.ts` untouched.
 
 ### Step 4 — Write the question
+
 - Full writing-canvas treatment: 800 px max width, `--leading-prose`, auto-expanding textarea, subtle lined-paper background (SVG data URL).
 - Word / character counter in the action bar.
 - Quick-insert row: "Paste from past paper" (opens dialog, strips paper
@@ -250,6 +256,7 @@ summary chip on narrow viewports.
 - Touch-points: `_wizard_step_4.eta`, new `wizard_stem_editor.js`.
 
 ### Step 5 — Set up the answer area
+
 - Split-pane becomes canonical: live pupil preview on the right. Re-uses
   `_paper_part_widget.eta` (same dispatcher as step 9 today).
 - Above the editor: a **"Change widget ▾"** slash-menu-style affordance.
@@ -263,9 +270,10 @@ summary chip on narrow viewports.
 - Press `.` to jump focus to the first erroring field.
 - Touch-points: every `_wizard_step_5_<widget>.eta`, new `wizard_widget_swap.js`,
   new `wizard_inline_errors.js`, `admin-question-wizard.ts` route (new autosave
-  + widget-swap endpoints).
+  - widget-swap endpoints).
 
 ### Step 6 — Marks and model answer
+
 - Two-column layout ≥1024 px: left = marks + model answer; right = mark-point
   list.
 - Mark-point list upgrades to a **chip list**: one row per mark point with a
@@ -277,6 +285,7 @@ summary chip on narrow viewports.
   `wizard-widget-editors.ts` pipe-parser unchanged.
 
 ### Step 7 — Common misconceptions
+
 - Collapsed by default: "Skip for now — add later."
 - When expanded: 3 AI-free example misconceptions derived deterministically
   from the chosen `command_word × widget` combination (lookup table in
@@ -284,6 +293,7 @@ summary chip on narrow viewports.
 - Touch-points: `_wizard_step_7.eta`, new misconception-examples table.
 
 ### Step 8 — Difficulty and tags
+
 - Difficulty band: horizontal 1–9 slider with coloured stops (green → amber →
   red). Step-within-band: 3-dot chooser next to it.
 - Source: chip group, not radio list.
@@ -294,6 +304,7 @@ summary chip on narrow viewports.
   `question_drafts` schema — **no migration needed** (`payload` is JSONB).
 
 ### Step 9 — Review and publish
+
 - Kill the `<dl>`. Replace with **paper-preview card** (pupil view) + **answer-key card** (model answer + mark points + misconceptions) side by side.
 - Below: **publish-readiness checklist** — green ticks for satisfied rows, red
   for missing, each linking back to its owning step.
@@ -323,6 +334,7 @@ summary chip on narrow viewports.
 ### 8.2 Keyboard shortcuts
 
 Global, wizard-scoped:
+
 - `⌘/Ctrl + Enter` — save and continue
 - `⌘/Ctrl + S` — save in place
 - `[` / `]` — prev / next step
@@ -332,6 +344,7 @@ Global, wizard-scoped:
 - `Esc` — back to drafts list (with unsaved-changes guard)
 
 Drafts list:
+
 - `N` — start new draft
 - `F` — focus filter search
 - `J` / `K` — move selection down / up
@@ -362,6 +375,7 @@ re-POSTs the prior payload. No schema change required (the data is there).
 
 Pass through every template and replace functional strings with one human
 voice. Representative changes:
+
 - "Save review notes" → "Looks good — next step"
 - "Not ready to publish" → "Almost there — 2 things to finish first"
 - "Step 1 of 9" → "Step 1 of 9 · Home for the question"
@@ -412,6 +426,7 @@ Each chunk is self-contained: ships with tests, regenerates
 PHASE2.5_PLAN.md. The v1 wizard keeps working throughout.
 
 ### Chunk 2.5n — Visual tokens + dark mode
+
 - Add warm-amber ramp, display type scale, motion tokens to `design-tokens.css`.
 - Add `[data-theme="dark"]` override block.
 - Self-host Source Serif 4 Variable; wire via `_chrome.eta`.
@@ -423,6 +438,7 @@ PHASE2.5_PLAN.md. The v1 wizard keeps working throughout.
   contrast spot-check.
 
 ### Chunk 2.5o — Drafts list redesign (v2 only)
+
 - `src/templates/v2/admin_drafts_list.eta` + body partial.
 - Card grid, hero CTA with `<kbd>N</kbd>`, tab switcher, filter row, empty
   state, staleness chip.
@@ -431,6 +447,7 @@ PHASE2.5_PLAN.md. The v1 wizard keeps working throughout.
   renders CTA, keyboard shortcuts fire the expected actions.
 
 ### Chunk 2.5p — 3-pane shell + rail + action bar + live preview on 5–8
+
 - `src/templates/v2/admin_wizard_step.eta` + `_admin_wizard_step_body.eta`.
 - Replace pill strip with `.wizard__rail`.
 - `.wizard__actions` sticky bar component.
@@ -440,6 +457,7 @@ PHASE2.5_PLAN.md. The v1 wizard keeps working throughout.
   behaviour at narrow viewports, keyboard tab order.
 
 ### Chunk 2.5q — Autosave + keyboard shortcuts + undo
+
 - New route: `POST /admin/questions/wizard/:draftId/step/:n/autosave`
   (returns 204, reuses step parser, does not advance).
 - `src/static/v2/wizard_autosave.js` with offline queue.
@@ -449,6 +467,7 @@ PHASE2.5_PLAN.md. The v1 wizard keeps working throughout.
   states; shortcut dispatch; revert restores prior payload.
 
 ### Chunk 2.5r — Steps 1–3 per-step upgrades
+
 - Step 1 cascading combobox.
 - Step 2 command-word chip grid with widget-preview link-through.
 - Step 3 widget tiles with thumbnails, tariff, authoring-time, recent-widgets
@@ -460,6 +479,7 @@ PHASE2.5_PLAN.md. The v1 wizard keeps working throughout.
   `parseStep2`; tile thumbnails are referenced; recent-widgets sort is stable.
 
 ### Chunk 2.5s — Steps 4–9 per-step upgrades
+
 - Step 4 writing canvas + quick-insert row + silent preview card.
 - Step 5 slash-menu widget-swap + per-field inline errors + "Use this example"
   buttons on every editor.
@@ -473,6 +493,7 @@ PHASE2.5_PLAN.md. The v1 wizard keeps working throughout.
   round-trips; step-9 confirm dialog blocks publish until fired.
 
 ### Chunk 2.5t — Motion, copy, a11y pass, flag flip
+
 - Copy diff applied across all 9 step templates, drafts list, preview pane,
   action bar.
 - Motion tokens wired into every transition.
@@ -490,6 +511,7 @@ PHASE2.5_PLAN.md. The v1 wizard keeps working throughout.
 Files expected to change or be added by chunk. Exhaustive list; tracking aid.
 
 **2.5n**
+
 - `src/static/design-tokens.css` (additions + dark block)
 - `src/static/site.css` (new primitives only; no existing-class edits)
 - `src/static/fonts/source-serif-4-*.woff2` (new)
@@ -499,6 +521,7 @@ Files expected to change or be added by chunk. Exhaustive list; tracking aid.
 - `tests/http/chrome-theme.test.ts` (new)
 
 **2.5o**
+
 - `src/templates/v2/admin_drafts_list.eta` + body (new)
 - `src/static/v2/drafts_filter.js` (new)
 - `src/static/v2/drafts_shortcuts.js` (new)
@@ -506,6 +529,7 @@ Files expected to change or be added by chunk. Exhaustive list; tracking aid.
 - `tests/http/wizard-v2/drafts-list.test.ts` (new)
 
 **2.5p**
+
 - `src/templates/v2/admin_wizard_step.eta` + body (new)
 - `src/templates/v2/_wizard_rail.eta` (new)
 - `src/templates/v2/_wizard_actions.eta` (new)
@@ -516,6 +540,7 @@ Files expected to change or be added by chunk. Exhaustive list; tracking aid.
 - `tests/http/wizard-v2/shell.test.ts` (new)
 
 **2.5q**
+
 - `src/routes/admin-question-wizard.ts` (new autosave endpoint)
 - `src/services/question_drafts.ts` (new `autosave(step, patch)` method)
 - `src/repos/question_drafts.ts` (reuse `update`)
@@ -527,6 +552,7 @@ Files expected to change or be added by chunk. Exhaustive list; tracking aid.
 - `tests/http/wizard-v2/shortcuts.test.ts` (new)
 
 **2.5r**
+
 - `src/templates/v2/_wizard_step_1.eta` (new)
 - `src/templates/v2/_wizard_step_2.eta` (new)
 - `src/templates/v2/_wizard_step_3.eta` (new)
@@ -540,6 +566,7 @@ Files expected to change or be added by chunk. Exhaustive list; tracking aid.
 - `tests/unit/widgets-thumbs.test.ts` (new)
 
 **2.5s**
+
 - `src/templates/v2/_wizard_step_4.eta` through `_wizard_step_9.eta` (new or
   updated)
 - All `src/templates/v2/_wizard_step_5_<widget>.eta` partials (new)
@@ -555,6 +582,7 @@ Files expected to change or be added by chunk. Exhaustive list; tracking aid.
 - `tests/http/wizard-v2/step-4-9.test.ts` (new)
 
 **2.5t**
+
 - Copy diff across every `src/templates/v2/*.eta`
 - Motion classes applied across CSS
 - `src/static/v2/*` all respect `prefers-reduced-motion`
@@ -583,14 +611,14 @@ Files expected to change or be added by chunk. Exhaustive list; tracking aid.
 
 ## 14. Risks and mitigations
 
-| Risk | Mitigation |
-|---|---|
-| v2 templates drift from v1 parsing contract | Contract tests (§13) ensure byte-identical payload JSONB. |
-| Autosave clobbers concurrent tab edits | `question_drafts.updated_at` used as optimistic-lock token; autosave POST fails with 409 on mismatch; client shows "Someone else edited this — reload". (Single-teacher-per-draft is the norm, but defensive.) |
-| Dark-mode contrast regressions | axe-core + manual 10-page spot check in both themes during 2.5t. |
-| New font face adds 50 KB | Subsetted to Latin; `font-display: swap`; loaded from same origin. One-off cost; cached after first visit. |
-| 7 chunks is too many | Each chunk is independently useful on v2 templates; worst case we stop at 2.5p (shell only) and still have a nicer wizard. Flag stays off until 2.5t signals done. |
-| "Old wizard still there" confusion | The v2 trees (`templates/v2/`, `static/v2/`) are isolated; route-level flag makes which-is-which unambiguous in dev. |
+| Risk                                        | Mitigation                                                                                                                                                                                                     |
+| ------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| v2 templates drift from v1 parsing contract | Contract tests (§13) ensure byte-identical payload JSONB.                                                                                                                                                      |
+| Autosave clobbers concurrent tab edits      | `question_drafts.updated_at` used as optimistic-lock token; autosave POST fails with 409 on mismatch; client shows "Someone else edited this — reload". (Single-teacher-per-draft is the norm, but defensive.) |
+| Dark-mode contrast regressions              | axe-core + manual 10-page spot check in both themes during 2.5t.                                                                                                                                               |
+| New font face adds 50 KB                    | Subsetted to Latin; `font-display: swap`; loaded from same origin. One-off cost; cached after first visit.                                                                                                     |
+| 7 chunks is too many                        | Each chunk is independently useful on v2 templates; worst case we stop at 2.5p (shell only) and still have a nicer wizard. Flag stays off until 2.5t signals done.                                             |
+| "Old wizard still there" confusion          | The v2 trees (`templates/v2/`, `static/v2/`) are isolated; route-level flag makes which-is-which unambiguous in dev.                                                                                           |
 
 ---
 
@@ -615,6 +643,6 @@ mode), which is the lowest-risk unblock for everything else.
 
 ## Appendix — Revision history
 
-| Date | Author | Change |
-|---|---|---|
-| 2026-04-19 | TD | First draft. Six decisions captured (serif display face, amber secondary, dark mode in scope, split-pane preview from step 5, loud autosave, 7 chunks with flag gate). 7 chunks scoped 2.5n–2.5t, each independently shippable behind `WIZARD_V2_ENABLED`. No schema changes; `expected_time_seconds` lives in existing JSONB payload. |
+| Date       | Author | Change                                                                                                                                                                                                                                                                                                                                 |
+| ---------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-04-19 | TD     | First draft. Six decisions captured (serif display face, amber secondary, dark mode in scope, split-pane preview from step 5, loud autosave, 7 chunks with flag gate). 7 chunks scoped 2.5n–2.5t, each independently shippable behind `WIZARD_V2_ENABLED`. No schema changes; `expected_time_seconds` lives in existing JSONB payload. |
