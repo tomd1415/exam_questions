@@ -17,6 +17,12 @@ import {
   serialiseFlowchartShapesAnswer,
 } from '../../lib/flowchart.js';
 import {
+  isLogicDiagramConfig,
+  markLogicDiagramGates,
+  parseLogicDiagramGatesRawAnswer,
+  serialiseLogicDiagramGatesAnswer,
+} from '../../lib/logic-diagram.js';
+import {
   isMatchingConfig,
   markMatching,
   parseMatchingRawAnswer,
@@ -97,11 +103,16 @@ export function markAttemptPart(
 ): MarkingResult {
   const type = part.expected_response_type;
 
-  // Flowchart is variant-dispatched: the image variant is teacher_pending
-  // but the shapes variant marks deterministically. Checked before the
-  // generic OPEN_RESPONSE_TYPES path so the shapes variant isn't shortcut.
+  // Flowchart and logic_diagram are variant-dispatched: the image variant
+  // is teacher_pending but the structured variants (flowchart shapes,
+  // logic_diagram gate_in_box) mark deterministically. Checked before the
+  // generic OPEN_RESPONSE_TYPES path so the structured variants aren't
+  // shortcut.
   if (type === 'flowchart') {
     return markFlowchartPart(part, rawAnswer, markPoints);
+  }
+  if (type === 'logic_diagram') {
+    return markLogicDiagramPart(part, rawAnswer, markPoints);
   }
 
   if (OPEN_RESPONSE_TYPES.has(type)) {
@@ -692,6 +703,44 @@ function markFlowchartPart(
     marks_possible: part.marks,
     mark_point_outcomes: outcomes,
     normalised_answer: serialiseFlowchartShapesAnswer(config, pupilFills),
+  };
+}
+
+// Logic-diagram marker. Same shape as markFlowchartPart: the image
+// variant is open-response (teacher reviews the PNG); the gate_in_box
+// variant is deterministic — one mark per blank the pupil named
+// correctly, set-matched against the gate's accept list.
+function markLogicDiagramPart(
+  part: MarkingInputPart,
+  rawAnswer: string,
+  markPoints: readonly MarkingInputMarkPoint[],
+): MarkingResult {
+  const config = part.part_config;
+  if (!isLogicDiagramConfig(config) || config.variant !== 'gate_in_box') {
+    return { kind: 'teacher_pending', marks_possible: part.marks, reason: 'open_response' };
+  }
+
+  const pupilFills = parseLogicDiagramGatesRawAnswer(rawAnswer);
+  const result = markLogicDiagramGates(config, pupilFills);
+
+  const outcomes: MarkPointOutcome[] = result.outcomes.map((row, i) => {
+    const mp = markPoints[i];
+    return {
+      text: mp ? mp.text : `Gate ${row.gateId}`,
+      marks: mp ? mp.marks : 1,
+      is_required: mp ? mp.is_required : false,
+      hit: row.hit,
+    };
+  });
+
+  const hitMarks = outcomes.filter((o) => o.hit).reduce((sum, o) => sum + o.marks, 0);
+
+  return {
+    kind: 'awarded',
+    marks_awarded: clampMarks(enforceRequired(hitMarks, outcomes), part.marks),
+    marks_possible: part.marks,
+    mark_point_outcomes: outcomes,
+    normalised_answer: serialiseLogicDiagramGatesAnswer(config, pupilFills),
   };
 }
 

@@ -1039,6 +1039,91 @@
 }
 
 /* ---------------------------------------------------------------------
+   logic_diagram gate_in_box variant (Phase 2.5l)
+   --------------------------------------------------------------------- */
+.logic-gates {
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+}
+.logic-gates__stage {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  background: #fff;
+  border: 1px solid var(--paper-rule);
+  border-radius: 0.25rem;
+  color: var(--paper-ink, #111);
+}
+.logic-gates__wire {
+  stroke: currentColor;
+  stroke-width: 1.5;
+  fill: none;
+}
+.logic-gates__gate {
+  fill: #f6f6f6;
+  stroke: currentColor;
+  stroke-width: 1.5;
+}
+.logic-gates__bubble {
+  fill: #fff;
+  stroke: currentColor;
+  stroke-width: 1.2;
+}
+.logic-gates__gate-label {
+  font-size: 12px;
+  font-family: inherit;
+  fill: currentColor;
+  pointer-events: none;
+}
+.logic-gates__blank {
+  fill: #fffbe6;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-dasharray: 4 3;
+}
+.logic-gates__terminal {
+  fill: currentColor;
+  stroke: none;
+}
+.logic-gates__terminal-label {
+  font-size: 12px;
+  font-family: inherit;
+  fill: currentColor;
+}
+.logic-gates__inputs {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.logic-gates__input {
+  position: absolute;
+  margin: 0;
+  padding: 0.25rem;
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.logic-gates__input input {
+  width: 100%;
+  height: 100%;
+  padding: 0.1rem 0.25rem;
+  border: none;
+  background: transparent;
+  font: inherit;
+  font-size: 0.9rem;
+  text-align: center;
+  outline: none;
+  color: inherit;
+}
+.logic-gates__input input:focus {
+  outline: 2px solid var(--paper-accent, #1a4f8a);
+  outline-offset: 2px;
+  background: #fff;
+}
+
+/* ---------------------------------------------------------------------
    widget tips (Phase 2.5i Option B)
    --------------------------------------------------------------------- */
 .widget-tip {

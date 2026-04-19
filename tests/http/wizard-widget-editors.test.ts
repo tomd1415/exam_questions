@@ -545,6 +545,61 @@ describe('wizard widget editors (chunk 2.5j step 4)', () => {
     expect(bad.payload).toContain('EXPECTED');
   });
 
+  it('logic_diagram gate_in_box variant parses gates, terminals and wires', async () => {
+    const teacher = await createUser(pool(), { role: 'teacher' });
+    const jar = await loginAs(teacher);
+    const draftId = await startDraft(jar);
+    await pickWidget(jar, draftId, 'logic_diagram', 'draw');
+
+    const res = await postStep(jar, draftId, 5, {
+      variant: 'gate_in_box',
+      canvas_width: '600',
+      canvas_height: '400',
+      gates: [
+        'g1|140|60|80|50|GATE|AND',
+        'g2|140|180|80|50|GATE|NOT',
+        'gout|360|110|80|50|BLANK|OR, or gate',
+      ].join('\n'),
+      terminals: [
+        'a|INPUT|A|40|75',
+        'b|INPUT|B|40|125',
+        'c|INPUT|C|40|205',
+        'p|OUTPUT|P|520|135',
+      ].join('\n'),
+      wires: ['a|g1', 'b|g1', 'c|g2', 'g1|gout', 'g2|gout', 'gout|p'].join('\n'),
+    });
+    expect(res.statusCode, `body=${res.payload.slice(0, 400)}`).toBe(302);
+
+    const reload = await app.inject({
+      method: 'GET',
+      url: `/admin/questions/wizard/${draftId}/step/5`,
+      headers: { cookie: cookieHeader(jar) },
+    });
+    expect(reload.statusCode).toBe(200);
+    expect(reload.payload).toContain('gout|360|110|80|50|BLANK|OR, or gate');
+    expect(reload.payload).toContain('a|INPUT|A|40|75');
+    expect(reload.payload).toContain('gout|p');
+    expect(reload.payload).toMatch(/value="gate_in_box"[^>]*checked/);
+  });
+
+  it('logic_diagram gate_in_box variant rejects gates with no pupil-fill blank', async () => {
+    const teacher = await createUser(pool(), { role: 'teacher' });
+    const jar = await loginAs(teacher);
+    const draftId = await startDraft(jar);
+    await pickWidget(jar, draftId, 'logic_diagram', 'draw');
+
+    const bad = await postStep(jar, draftId, 5, {
+      variant: 'gate_in_box',
+      canvas_width: '600',
+      canvas_height: '400',
+      gates: 'g1|140|60|80|50|GATE|AND',
+      terminals: 'a|INPUT|A|40|75',
+      wires: '',
+    });
+    expect(bad.statusCode).toBe(400);
+    expect(bad.payload).toContain('BLANK');
+  });
+
   it('diagram_labels editor exposes the hotspot picker hooks', async () => {
     const teacher = await createUser(pool(), { role: 'teacher' });
     const jar = await loginAs(teacher);

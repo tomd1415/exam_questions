@@ -3,9 +3,13 @@ import {
   LOGIC_DIAGRAM_DATA_URL_PREFIX,
   MAX_LOGIC_DIAGRAM_DATA_URL_LENGTH,
   isLogicDiagramConfig,
+  markLogicDiagramGates,
+  parseLogicDiagramGatesRawAnswer,
   parseLogicDiagramRawAnswer,
   serialiseLogicDiagramAnswer,
+  serialiseLogicDiagramGatesAnswer,
   validateLogicDiagramConfigShape,
+  type LogicDiagramGateInBoxConfig,
 } from '../../src/lib/logic-diagram.js';
 
 const VALID_PNG = `${LOGIC_DIAGRAM_DATA_URL_PREFIX}iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=`;
@@ -23,13 +27,13 @@ describe('validateLogicDiagramConfigShape', () => {
     );
   });
 
-  it('rejects unsupported variants (Phase 3 placeholders not yet enabled)', () => {
+  it('rejects unsupported variants (Phase 3 placeholder structured_free not yet enabled)', () => {
     const issues = validateLogicDiagramConfigShape({
-      variant: 'gate_in_box',
+      variant: 'structured_free',
       canvas: { width: 600, height: 400 },
     });
     expect(issues).toEqual(
-      expect.arrayContaining([expect.stringContaining("variant 'gate_in_box'")]),
+      expect.arrayContaining([expect.stringContaining("variant 'structured_free'")]),
     );
   });
 
@@ -131,5 +135,176 @@ describe('serialiseLogicDiagramAnswer', () => {
     const out = serialiseLogicDiagramAnswer(VALID_PNG);
     expect(out).toBe(`image=${VALID_PNG}`);
     expect(parseLogicDiagramRawAnswer(out).image).toBe(VALID_PNG);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Gate_in_box variant (chunk 2.5l)
+// ---------------------------------------------------------------------------
+
+const GIB_CFG: LogicDiagramGateInBoxConfig = {
+  variant: 'gate_in_box',
+  canvas: { width: 600, height: 400 },
+  gates: [
+    { id: 'g1', type: 'AND', x: 140, y: 60, width: 80, height: 50 },
+    { id: 'g2', type: 'NOT', x: 140, y: 180, width: 80, height: 50 },
+    { id: 'gout', x: 360, y: 110, width: 80, height: 50, accept: ['OR', 'or gate'] },
+  ],
+  terminals: [
+    { id: 'a', kind: 'input', label: 'A', x: 40, y: 75 },
+    { id: 'b', kind: 'input', label: 'B', x: 40, y: 125 },
+    { id: 'c', kind: 'input', label: 'C', x: 40, y: 205 },
+    { id: 'p', kind: 'output', label: 'P', x: 520, y: 135 },
+  ],
+  wires: [
+    { from: 'a', to: 'g1' },
+    { from: 'b', to: 'g1' },
+    { from: 'c', to: 'g2' },
+    { from: 'g1', to: 'gout' },
+    { from: 'g2', to: 'gout' },
+    { from: 'gout', to: 'p' },
+  ],
+};
+
+describe('validateLogicDiagramConfigShape (gate_in_box variant)', () => {
+  it('accepts a valid gate_in_box config', () => {
+    expect(validateLogicDiagramConfigShape(GIB_CFG)).toEqual([]);
+  });
+
+  it('requires gates to be a non-empty array', () => {
+    const issues = validateLogicDiagramConfigShape({
+      variant: 'gate_in_box',
+      canvas: { width: 600, height: 400 },
+      gates: [],
+      terminals: [],
+      wires: [],
+    });
+    expect(issues).toEqual(expect.arrayContaining([expect.stringContaining('gates')]));
+  });
+
+  it('requires at least one pupil-fill blank', () => {
+    const issues = validateLogicDiagramConfigShape({
+      variant: 'gate_in_box',
+      canvas: { width: 600, height: 400 },
+      gates: [{ id: 'g1', type: 'AND', x: 0, y: 0, width: 80, height: 50 }],
+      terminals: [],
+      wires: [],
+    });
+    expect(issues).toEqual(expect.arrayContaining([expect.stringContaining("'accept'")]));
+  });
+
+  it('rejects gates with both type and accept', () => {
+    const issues = validateLogicDiagramConfigShape({
+      variant: 'gate_in_box',
+      canvas: { width: 600, height: 400 },
+      gates: [{ id: 'g1', type: 'AND', x: 0, y: 0, width: 80, height: 50, accept: ['OR'] }],
+      terminals: [],
+      wires: [],
+    });
+    expect(issues).toEqual(
+      expect.arrayContaining([expect.stringContaining("exactly one of 'type'")]),
+    );
+  });
+
+  it('rejects gates extending past the canvas', () => {
+    const issues = validateLogicDiagramConfigShape({
+      variant: 'gate_in_box',
+      canvas: { width: 300, height: 300 },
+      gates: [{ id: 'g1', x: 250, y: 0, width: 80, height: 50, accept: ['AND'] }],
+      terminals: [],
+      wires: [],
+    });
+    expect(issues).toEqual(expect.arrayContaining([expect.stringContaining('past canvas width')]));
+  });
+
+  it('rejects duplicate ids across gates and terminals', () => {
+    const issues = validateLogicDiagramConfigShape({
+      variant: 'gate_in_box',
+      canvas: { width: 600, height: 400 },
+      gates: [{ id: 'a', x: 100, y: 0, width: 80, height: 50, accept: ['AND'] }],
+      terminals: [{ id: 'a', kind: 'input', label: 'A', x: 20, y: 20 }],
+      wires: [],
+    });
+    expect(issues).toEqual(expect.arrayContaining([expect.stringContaining("reuses id 'a'")]));
+  });
+
+  it('rejects wires that reference unknown ids', () => {
+    const issues = validateLogicDiagramConfigShape({
+      variant: 'gate_in_box',
+      canvas: { width: 600, height: 400 },
+      gates: [{ id: 'g1', x: 100, y: 0, width: 80, height: 50, accept: ['AND'] }],
+      terminals: [],
+      wires: [{ from: 'g1', to: 'ghost' }],
+    });
+    expect(issues).toEqual(
+      expect.arrayContaining([expect.stringContaining('existing gate/terminal id')]),
+    );
+  });
+
+  it('rejects terminals with unsupported kinds or long labels', () => {
+    const issues = validateLogicDiagramConfigShape({
+      variant: 'gate_in_box',
+      canvas: { width: 600, height: 400 },
+      gates: [{ id: 'g1', x: 100, y: 0, width: 80, height: 50, accept: ['AND'] }],
+      terminals: [{ id: 'x', kind: 'middle', label: 'WAY_TOO_LONG', x: 0, y: 0 }],
+      wires: [],
+    });
+    expect(issues.some((m) => m.includes('kind'))).toBe(true);
+    expect(issues.some((m) => m.includes('label'))).toBe(true);
+  });
+});
+
+describe('parseLogicDiagramGatesRawAnswer / serialiseLogicDiagramGatesAnswer', () => {
+  it('round-trips pupil fills keyed by gate id', () => {
+    const raw = 'gout=OR';
+    const parsed = parseLogicDiagramGatesRawAnswer(raw);
+    expect(parsed.get('gout')).toBe('OR');
+    expect(serialiseLogicDiagramGatesAnswer(GIB_CFG, parsed)).toBe(raw);
+  });
+
+  it('ignores malformed lines and prefilled gate keys', () => {
+    const parsed = parseLogicDiagramGatesRawAnswer('no-equals\ngout=OR\n=orphan');
+    expect(parsed.size).toBe(1);
+    expect(parsed.get('gout')).toBe('OR');
+  });
+
+  it('serialiser skips prefilled and empty-fill expected gates', () => {
+    const fills = new Map<string, string>([
+      ['g1', 'ignored'],
+      ['gout', 'OR'],
+    ]);
+    expect(serialiseLogicDiagramGatesAnswer(GIB_CFG, fills)).toBe('gout=OR');
+  });
+});
+
+describe('markLogicDiagramGates', () => {
+  it('hits when pupil answer matches accept list (case-insensitive default)', () => {
+    const fills = new Map<string, string>([['gout', 'or']]);
+    const result = markLogicDiagramGates(GIB_CFG, fills);
+    expect(result.total).toBe(1);
+    expect(result.hits).toBe(1);
+    expect(result.outcomes[0]?.hit).toBe(true);
+  });
+
+  it('misses when the pupil answer is wrong or blank', () => {
+    const empty = markLogicDiagramGates(GIB_CFG, new Map());
+    expect(empty.hits).toBe(0);
+    expect(empty.outcomes[0]?.pupilValue).toBeNull();
+
+    const wrong = markLogicDiagramGates(GIB_CFG, new Map([['gout', 'NAND']]));
+    expect(wrong.hits).toBe(0);
+  });
+
+  it('respects caseSensitive=true on a gate', () => {
+    const cfg: LogicDiagramGateInBoxConfig = {
+      ...GIB_CFG,
+      gates: GIB_CFG.gates.map((g) =>
+        g.id === 'gout' && 'accept' in g ? { ...g, accept: ['OR'], caseSensitive: true } : g,
+      ),
+    };
+    const ok = markLogicDiagramGates(cfg, new Map([['gout', 'OR']]));
+    expect(ok.outcomes[0]?.hit).toBe(true);
+    const bad = markLogicDiagramGates(cfg, new Map([['gout', 'or']]));
+    expect(bad.outcomes[0]?.hit).toBe(false);
   });
 });

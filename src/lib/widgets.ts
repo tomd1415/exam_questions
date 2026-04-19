@@ -284,21 +284,95 @@ const MATCHING_SCHEMA: WidgetConfigSchema = {
 const LOGIC_DIAGRAM_SCHEMA: WidgetConfigSchema = {
   $schema: SCHEMA_DRAFT,
   title: 'logic_diagram part_config',
-  type: 'object',
-  additionalProperties: false,
-  required: ['variant', 'canvas'],
-  properties: {
-    variant: { type: 'string', enum: ['image'] },
-    canvas: {
+  // oneOf handles the two authoring variants — image (freehand PNG) and
+  // gate_in_box (teacher-placed gates + pupil-fill blanks).
+  oneOf: [
+    {
       type: 'object',
       additionalProperties: false,
-      required: ['width', 'height'],
+      required: ['variant', 'canvas'],
       properties: {
-        width: { type: 'integer', minimum: 100, maximum: 2000 },
-        height: { type: 'integer', minimum: 100, maximum: 2000 },
+        variant: { type: 'string', enum: ['image'] },
+        canvas: {
+          type: 'object',
+          additionalProperties: false,
+          required: ['width', 'height'],
+          properties: {
+            width: { type: 'integer', minimum: 100, maximum: 2000 },
+            height: { type: 'integer', minimum: 100, maximum: 2000 },
+          },
+        },
       },
     },
-  },
+    {
+      type: 'object',
+      additionalProperties: false,
+      required: ['variant', 'canvas', 'gates', 'terminals', 'wires'],
+      properties: {
+        variant: { type: 'string', enum: ['gate_in_box'] },
+        canvas: {
+          type: 'object',
+          additionalProperties: false,
+          required: ['width', 'height'],
+          properties: {
+            width: { type: 'integer', minimum: 100, maximum: 2000 },
+            height: { type: 'integer', minimum: 100, maximum: 2000 },
+          },
+        },
+        gates: {
+          type: 'array',
+          minItems: 1,
+          items: {
+            type: 'object',
+            additionalProperties: false,
+            required: ['id', 'x', 'y', 'width', 'height'],
+            properties: {
+              id: { type: 'string', pattern: '^[A-Za-z0-9_-]{1,40}$' },
+              type: { type: 'string', enum: ['AND', 'OR', 'NOT'] },
+              x: { type: 'integer', minimum: 0 },
+              y: { type: 'integer', minimum: 0 },
+              width: { type: 'integer', minimum: 40 },
+              height: { type: 'integer', minimum: 30 },
+              accept: {
+                type: 'array',
+                minItems: 1,
+                items: { type: 'string', minLength: 1 },
+              },
+              caseSensitive: { type: 'boolean' },
+              trimWhitespace: { type: 'boolean' },
+            },
+          },
+        },
+        terminals: {
+          type: 'array',
+          items: {
+            type: 'object',
+            additionalProperties: false,
+            required: ['id', 'kind', 'label', 'x', 'y'],
+            properties: {
+              id: { type: 'string', pattern: '^[A-Za-z0-9_-]{1,40}$' },
+              kind: { type: 'string', enum: ['input', 'output'] },
+              label: { type: 'string', minLength: 1, maxLength: 8 },
+              x: { type: 'integer', minimum: 0 },
+              y: { type: 'integer', minimum: 0 },
+            },
+          },
+        },
+        wires: {
+          type: 'array',
+          items: {
+            type: 'object',
+            additionalProperties: false,
+            required: ['from', 'to'],
+            properties: {
+              from: { type: 'string', pattern: '^[A-Za-z0-9_-]{1,40}$' },
+              to: { type: 'string', pattern: '^[A-Za-z0-9_-]{1,40}$' },
+            },
+          },
+        },
+      },
+    },
+  ],
 };
 
 const FLOWCHART_SCHEMA: WidgetConfigSchema = {
@@ -651,11 +725,11 @@ const REGISTRATIONS: readonly WidgetRegistration[] = [
   {
     type: 'logic_diagram',
     marker: 'teacher_pending',
-    displayName: 'Logic diagram (free draw)',
+    displayName: 'Logic diagram',
     description:
-      'Pupil draws a Boolean / logic-gate diagram on a canvas; the answer is sent to teacher review as a PNG. Phase-2.5 MVP: pen + clear only, no structured wire model.',
+      'Two authoring variants: "image" lets pupils draw a logic-gate diagram freehand on a canvas (sent to teacher review as a PNG); "gate_in_box" lets you place labelled terminals and a mix of prefilled AND/OR/NOT gates alongside blank "?" boxes that the pupil names — auto-marked per blank.',
     markPointGuidance:
-      'List the assessable features the diagram should show (e.g. "AND gate fed by A and B", "output Q = (A AND B) OR (NOT C)"). The teacher applies them while viewing the image.',
+      'For the image variant, list the assessable features the diagram should show (e.g. "AND gate fed by A and B", "output Q = (A AND B) OR (NOT C)"). For the gate_in_box variant, the wizard derives one mark per pupil-fill blank from the accept list; you do not need to add mark_points by hand.',
     configSchema: LOGIC_DIAGRAM_SCHEMA,
     exampleConfig: { variant: 'image', canvas: { width: 600, height: 400 } },
     validateConfig: (c) => validateLogicDiagramConfigShape(c).map((m) => ({ message: m })),

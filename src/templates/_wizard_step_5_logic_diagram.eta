@@ -1,17 +1,67 @@
 <%
 const cfg = ((it.draft.payload || {}).parts?.[0]?.part_config) || {};
+const variant = cfg.variant === 'gate_in_box' ? 'gate_in_box' : 'image';
 const canvas = (cfg.canvas && typeof cfg.canvas === 'object') ? cfg.canvas : {};
 const width = typeof canvas.width === 'number' ? canvas.width : 600;
 const height = typeof canvas.height === 'number' ? canvas.height : 400;
 const issueMap = it.issueMap || {};
+
+// Re-serialise gates/terminals/wires back to pipe-encoded textarea lines if
+// the draft round-trips (so the teacher doesn't lose their work on a
+// validation error). Format mirrors parseLogicGateLine/parseLogicTerminalLine
+// in wizard-widget-editors.ts.
+const gateLines = [];
+if (Array.isArray(cfg.gates)) {
+  for (const g of cfg.gates) {
+    if (!g || typeof g !== 'object') continue;
+    const tail = Array.isArray(g.accept)
+      ? `BLANK|${g.accept.join(', ')}`
+      : `GATE|${g.type ?? 'AND'}`;
+    gateLines.push(`${g.id}|${g.x}|${g.y}|${g.width}|${g.height}|${tail}`);
+  }
+}
+const terminalLines = [];
+if (Array.isArray(cfg.terminals)) {
+  for (const t of cfg.terminals) {
+    if (!t || typeof t !== 'object') continue;
+    const kind = t.kind === 'output' ? 'OUTPUT' : 'INPUT';
+    terminalLines.push(`${t.id}|${kind}|${t.label}|${t.x}|${t.y}`);
+  }
+}
+const wireLines = [];
+if (Array.isArray(cfg.wires)) {
+  for (const w of cfg.wires) {
+    if (!w || typeof w !== 'object') continue;
+    wireLines.push(`${w.from}|${w.to}`);
+  }
+}
+const gatesValue = gateLines.join('\n');
+const terminalsValue = terminalLines.join('\n');
+const wiresValue = wireLines.join('\n');
 %>
 <fieldset class="wizard-step wizard-step--5 wizard-step--canvas">
-  <legend>Logic diagram canvas</legend>
+  <legend>Logic diagram</legend>
 
   <p class="form-hint">
-    Pupils will draw their answer on a blank canvas of the size you set here. Phase&nbsp;2.5
-    ships pen-and-clear only; the diagram is sent to teacher review as an image.
+    Pick how pupils will work on this diagram. <strong>Image</strong> gives
+    them a blank canvas to draw on (teacher-marked). <strong>Gate in box</strong>
+    lays out labelled input/output terminals plus a mix of prefilled gates
+    and blank boxes pupils must name (auto-marked).
   </p>
+
+  <div class="form-radio-group" role="radiogroup" aria-label="Logic-diagram variant">
+    <label class="form-radio">
+      <input type="radio" name="variant" value="image"
+             <%= variant === 'image' ? 'checked' : '' %> />
+      <span>Image — pupil draws freehand (teacher-marked)</span>
+    </label>
+    <label class="form-radio">
+      <input type="radio" name="variant" value="gate_in_box"
+             <%= variant === 'gate_in_box' ? 'checked' : '' %> />
+      <span>Gate in box — prefilled + pupil-fill blanks (auto-marked)</span>
+    </label>
+  </div>
+  <% (issueMap.variant || []).forEach(function (m) { %><p class="form-error"><%= m %></p><% }); %>
 
   <label for="canvas_width">Canvas width (px)</label>
   <input id="canvas_width" name="canvas_width" type="number" min="100" max="2000"
@@ -22,4 +72,75 @@ const issueMap = it.issueMap || {};
   <input id="canvas_height" name="canvas_height" type="number" min="100" max="2000"
          inputmode="numeric" value="<%= height %>" required />
   <% (issueMap.canvas_height || []).forEach(function (m) { %><p class="form-error"><%= m %></p><% }); %>
+
+  <div class="wizard-logic-diagram__gib-only"
+       data-visible-when-variant="gate_in_box"
+       <%= variant === 'gate_in_box' ? '' : 'hidden' %>>
+    <label for="gates">Gates (one per line)</label>
+    <p class="form-hint">
+      Format: <code>id|x|y|width|height|GATE|AND</code> for a prefilled gate
+      (<code>AND</code>, <code>OR</code>, or <code>NOT</code>), or
+      <code>id|x|y|width|height|BLANK|answer1, answer2</code> for a pupil-fill.
+    </p>
+    <textarea id="gates" name="gates" rows="8"
+              placeholder="g1|80|60|80|50|GATE|AND&#10;g2|80|180|80|50|GATE|NOT&#10;gout|300|120|80|50|BLANK|OR"><%= gatesValue %></textarea>
+    <% (issueMap.gates || []).forEach(function (m) { %><p class="form-error"><%= m %></p><% }); %>
+
+    <label for="terminals">Terminals (one per line)</label>
+    <p class="form-hint">
+      Format: <code>id|INPUT|A|x|y</code> or <code>id|OUTPUT|P|x|y</code>
+      (labels are 1–8 chars, rendered next to a small dot).
+    </p>
+    <textarea id="terminals" name="terminals" rows="5"
+              placeholder="a|INPUT|A|20|85&#10;b|INPUT|B|20|140&#10;c|INPUT|C|20|205&#10;p|OUTPUT|P|400|145"><%= terminalsValue %></textarea>
+    <% (issueMap.terminals || []).forEach(function (m) { %><p class="form-error"><%= m %></p><% }); %>
+
+    <label for="wires">Wires (one per line, optional)</label>
+    <p class="form-hint">
+      Format: <code>fromId|toId</code>. Wires are decorative only — pupils
+      don't route them; they just show how the signals flow.
+    </p>
+    <textarea id="wires" name="wires" rows="6"
+              placeholder="a|g1&#10;b|g1&#10;c|g2&#10;g1|gout&#10;g2|gout&#10;gout|p"><%= wiresValue %></textarea>
+    <% (issueMap.wires || []).forEach(function (m) { %><p class="form-error"><%= m %></p><% }); %>
+
+    <details class="wizard-logic-diagram__example">
+      <summary>Worked example: P = (A AND B) OR NOT C</summary>
+      <p>Copy into the boxes above (canvas 600 × 400):</p>
+      <pre>g1|140|60|80|50|GATE|AND
+g2|140|180|80|50|GATE|NOT
+gout|360|110|80|50|BLANK|OR</pre>
+      <pre>a|INPUT|A|40|75
+b|INPUT|B|40|125
+c|INPUT|C|40|205
+p|OUTPUT|P|520|135</pre>
+      <pre>a|g1
+b|g1
+c|g2
+g1|gout
+g2|gout
+gout|p</pre>
+    </details>
+  </div>
 </fieldset>
+
+<script>
+  // Progressive enhancement: toggle the gate_in_box-only section when the
+  // variant radio changes. No-JS teachers see both sections and can still
+  // submit.
+  (function () {
+    const root = document.currentScript.previousElementSibling;
+    if (!root) return;
+    const radios = root.querySelectorAll('input[name="variant"]');
+    const gibOnly = root.querySelector('[data-visible-when-variant="gate_in_box"]');
+    if (!gibOnly) return;
+    function sync() {
+      const selected = Array.from(radios).find((r) => r.checked);
+      if (!selected) return;
+      if (selected.value === 'gate_in_box') gibOnly.removeAttribute('hidden');
+      else gibOnly.setAttribute('hidden', '');
+    }
+    radios.forEach((r) => r.addEventListener('change', sync));
+    sync();
+  })();
+</script>

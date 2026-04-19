@@ -23,6 +23,7 @@
 import type { StepIssue } from './wizard-steps.js';
 import { getWidget, validatePartConfig } from './widgets.js';
 import { FLOWCHART_SHAPE_TYPES, type FlowchartShapeType } from './flowchart.js';
+import { LOGIC_GATE_TYPES, type LogicGateType } from './logic-diagram.js';
 
 export interface DerivedMarkPoint {
   text: string;
@@ -423,26 +424,8 @@ function parseMatching(body: Record<string, unknown>): WidgetConfigParseResult {
 }
 
 // ---------------------------------------------------------------------------
-// logic_diagram, flowchart (canvas / shapes)
+// flowchart (image / shapes)
 // ---------------------------------------------------------------------------
-
-function buildCanvasParser(): WidgetConfigParser {
-  return (body) => {
-    const width = intIn(body['canvas_width'], 100, 2000);
-    const height = intIn(body['canvas_height'], 100, 2000);
-    const issues: StepIssue[] = [];
-    if (width === null)
-      issues.push({ path: 'canvas_width', message: 'Canvas width must be 100–2000.' });
-    if (height === null)
-      issues.push({ path: 'canvas_height', message: 'Canvas height must be 100–2000.' });
-    if (issues.length > 0) return { ok: false, issues };
-    return {
-      ok: true,
-      config: { variant: 'image', canvas: { width: width!, height: height! } },
-      issues: [],
-    };
-  };
-}
 
 interface FlowchartShapeForm {
   id: string;
@@ -632,6 +615,260 @@ function parseFlowchart(body: Record<string, unknown>): WidgetConfigParseResult 
 }
 
 // ---------------------------------------------------------------------------
+// logic_diagram (variant dispatch: image | gate_in_box)
+// ---------------------------------------------------------------------------
+
+interface LogicGateForm {
+  id: string;
+  type?: LogicGateType;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  accept?: string[];
+}
+
+function parseLogicGateLine(
+  line: string,
+  seen: Set<string>,
+  canvasW: number,
+  canvasH: number,
+  issues: StepIssue[],
+): LogicGateForm | null {
+  // Format: id|x|y|w|h|GATE|AND|OR|NOT   OR   id|x|y|w|h|BLANK|ans1, ans2
+  const parts = line.split('|').map((p) => p.trim());
+  if (parts.length < 7) {
+    issues.push({
+      path: 'gates',
+      message: `Gate line '${line}' must look like "id|x|y|w|h|GATE|AND" or "id|x|y|w|h|BLANK|answer1, answer2".`,
+    });
+    return null;
+  }
+  const [id, xs, ys, ws, hs, kind] = parts;
+  const body = parts.slice(6).join('|').trim();
+  if (!/^[A-Za-z0-9_-]{1,40}$/.test(id!)) {
+    issues.push({
+      path: 'gates',
+      message: `Gate id '${id}' must be 1–40 chars (letters, digits, _ or -).`,
+    });
+    return null;
+  }
+  if (seen.has(id!)) {
+    issues.push({ path: 'gates', message: `Duplicate gate/terminal id '${id}'.` });
+    return null;
+  }
+  const x = intIn(xs, 0, canvasW);
+  const y = intIn(ys, 0, canvasH);
+  const w = intIn(ws, 40, canvasW);
+  const h = intIn(hs, 30, canvasH);
+  if (x === null || y === null || w === null || h === null) {
+    issues.push({
+      path: 'gates',
+      message: `Gate '${id}': x/y must be ≥0; width ≥40; height ≥30; all must fit the canvas.`,
+    });
+    return null;
+  }
+  if (x + w > canvasW || y + h > canvasH) {
+    issues.push({
+      path: 'gates',
+      message: `Gate '${id}' extends past the canvas (${canvasW}×${canvasH}).`,
+    });
+    return null;
+  }
+  const kindUpper = (kind ?? '').toUpperCase();
+  if (kindUpper !== 'GATE' && kindUpper !== 'BLANK') {
+    issues.push({
+      path: 'gates',
+      message: `Gate '${id}': 6th field must be GATE (prefilled) or BLANK (pupil-fill).`,
+    });
+    return null;
+  }
+  seen.add(id!);
+  const gate: LogicGateForm = { id: id!, x, y, width: w, height: h };
+  if (kindUpper === 'GATE') {
+    const typeUpper = body.toUpperCase();
+    if (!LOGIC_GATE_TYPES.includes(typeUpper as LogicGateType)) {
+      issues.push({
+        path: 'gates',
+        message: `Gate '${id}': type must be one of ${LOGIC_GATE_TYPES.join(', ')}.`,
+      });
+      return null;
+    }
+    gate.type = typeUpper as LogicGateType;
+  } else {
+    const accept = body
+      .split(',')
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0);
+    if (accept.length === 0) {
+      issues.push({
+        path: 'gates',
+        message: `Blank gate '${id}' needs at least one accepted answer.`,
+      });
+      return null;
+    }
+    gate.accept = accept;
+  }
+  return gate;
+}
+
+interface LogicTerminalForm {
+  id: string;
+  kind: 'input' | 'output';
+  label: string;
+  x: number;
+  y: number;
+}
+
+function parseLogicTerminalLine(
+  line: string,
+  seen: Set<string>,
+  canvasW: number,
+  canvasH: number,
+  issues: StepIssue[],
+): LogicTerminalForm | null {
+  // Format: id|kind|label|x|y  (kind = INPUT|OUTPUT)
+  const parts = line.split('|').map((p) => p.trim());
+  if (parts.length !== 5) {
+    issues.push({
+      path: 'terminals',
+      message: `Terminal line '${line}' must look like "id|INPUT|A|20|100" or "id|OUTPUT|P|580|200".`,
+    });
+    return null;
+  }
+  const [id, kindRaw, label, xs, ys] = parts;
+  if (!/^[A-Za-z0-9_-]{1,40}$/.test(id!)) {
+    issues.push({
+      path: 'terminals',
+      message: `Terminal id '${id}' must be 1–40 chars (letters, digits, _ or -).`,
+    });
+    return null;
+  }
+  if (seen.has(id!)) {
+    issues.push({ path: 'terminals', message: `Duplicate gate/terminal id '${id}'.` });
+    return null;
+  }
+  const kindUpper = (kindRaw ?? '').toUpperCase();
+  if (kindUpper !== 'INPUT' && kindUpper !== 'OUTPUT') {
+    issues.push({
+      path: 'terminals',
+      message: `Terminal '${id}': kind must be INPUT or OUTPUT.`,
+    });
+    return null;
+  }
+  if (!label || label.length === 0 || label.length > 8) {
+    issues.push({
+      path: 'terminals',
+      message: `Terminal '${id}': label must be 1–8 characters.`,
+    });
+    return null;
+  }
+  const x = intIn(xs, 0, canvasW);
+  const y = intIn(ys, 0, canvasH);
+  if (x === null || y === null) {
+    issues.push({
+      path: 'terminals',
+      message: `Terminal '${id}': x and y must fit inside the canvas.`,
+    });
+    return null;
+  }
+  seen.add(id!);
+  return {
+    id: id!,
+    kind: kindUpper === 'INPUT' ? 'input' : 'output',
+    label,
+    x,
+    y,
+  };
+}
+
+function parseLogicDiagram(body: Record<string, unknown>): WidgetConfigParseResult {
+  const issues: StepIssue[] = [];
+  const variantRaw = trimmed(body['variant']);
+  const variant = variantRaw === 'gate_in_box' ? 'gate_in_box' : 'image';
+
+  const width = intIn(body['canvas_width'], 100, 2000);
+  const height = intIn(body['canvas_height'], 100, 2000);
+  if (width === null)
+    issues.push({ path: 'canvas_width', message: 'Canvas width must be 100–2000.' });
+  if (height === null)
+    issues.push({ path: 'canvas_height', message: 'Canvas height must be 100–2000.' });
+
+  if (variant === 'image') {
+    if (issues.length > 0) return { ok: false, issues };
+    return {
+      ok: true,
+      config: { variant: 'image', canvas: { width: width!, height: height! } },
+      issues: [],
+    };
+  }
+
+  // variant === 'gate_in_box'
+  if (width === null || height === null) return { ok: false, issues };
+
+  const seen = new Set<string>();
+  const gates: LogicGateForm[] = [];
+  for (const line of lines(body['gates'])) {
+    const g = parseLogicGateLine(line, seen, width, height, issues);
+    if (g) gates.push(g);
+  }
+  if (gates.length === 0) {
+    issues.push({ path: 'gates', message: 'List at least one gate, one per line.' });
+  }
+  const blanks = gates.filter((g) => g.accept !== undefined);
+  if (gates.length > 0 && blanks.length === 0) {
+    issues.push({
+      path: 'gates',
+      message: 'At least one gate must be BLANK (a pupil-fill).',
+    });
+  }
+
+  const terminals: LogicTerminalForm[] = [];
+  for (const line of lines(body['terminals'])) {
+    const term = parseLogicTerminalLine(line, seen, width, height, issues);
+    if (term) terminals.push(term);
+  }
+
+  const wires: { from: string; to: string }[] = [];
+  for (const line of lines(body['wires'])) {
+    const parts = line.split('|').map((p) => p.trim());
+    if (parts.length !== 2) {
+      issues.push({
+        path: 'wires',
+        message: `Wire line '${line}' must look like "from|to".`,
+      });
+      continue;
+    }
+    const [from, to] = parts;
+    if (!seen.has(from!) || !seen.has(to!)) {
+      issues.push({
+        path: 'wires',
+        message: `Wire '${from}→${to}' references an unknown gate/terminal id.`,
+      });
+      continue;
+    }
+    wires.push({ from: from!, to: to! });
+  }
+
+  if (issues.length > 0) return { ok: false, issues };
+
+  const config = {
+    variant: 'gate_in_box',
+    canvas: { width, height },
+    gates,
+    terminals,
+    wires,
+  };
+
+  const derivedMarkPoints: DerivedMarkPoint[] = blanks.map((g) => ({
+    text: `${g.id}: ${(g.accept ?? []).join(' / ')}`,
+    marks: 1,
+  }));
+
+  return { ok: true, config, derivedMarkPoints, issues: [] };
+}
+
+// ---------------------------------------------------------------------------
 // diagram_labels
 // ---------------------------------------------------------------------------
 
@@ -739,7 +976,7 @@ const PARSERS: Readonly<Record<string, WidgetConfigParser>> = {
   cloze_code: buildClozeParser({ requireBank: false }),
   cloze_with_bank: buildClozeParser({ requireBank: true }),
   matching: parseMatching,
-  logic_diagram: buildCanvasParser(),
+  logic_diagram: parseLogicDiagram,
   flowchart: parseFlowchart,
   diagram_labels: parseDiagramLabels,
 };

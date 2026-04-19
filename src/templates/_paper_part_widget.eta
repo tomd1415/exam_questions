@@ -525,47 +525,177 @@ const t = part.expected_response_type;
     const ldCanvas = (ldCfg.canvas && typeof ldCfg.canvas === 'object') ? ldCfg.canvas : {};
     const ldWidth = Number.isInteger(ldCanvas.width) ? ldCanvas.width : 600;
     const ldHeight = Number.isInteger(ldCanvas.height) ? ldCanvas.height : 400;
-    // Pull the prior PNG out of the `image=…` line, if any. We deliberately
-    // accept whatever shape the DB holds so a malformed payload is shown as
-    // an empty canvas rather than a server error.
+    const ldGates = Array.isArray(ldCfg.gates) ? ldCfg.gates : [];
+    const ldTerminals = Array.isArray(ldCfg.terminals) ? ldCfg.terminals : [];
+    const ldWires = Array.isArray(ldCfg.wires) ? ldCfg.wires : [];
+    // Pull the prior PNG out of the `image=…` line (image variant) and any
+    // per-gate fills (gate_in_box variant). We deliberately accept whatever
+    // shape the DB holds so a malformed payload renders as empty rather than
+    // a server error.
     let ldPriorImage = '';
+    const ldPriorFills = Object.create(null);
     priorLines.forEach(function(line) {
       const eq = line.indexOf('=');
       if (eq <= 0) return;
       const key = line.slice(0, eq).trim();
-      if (key === 'image') ldPriorImage = line.slice(eq + 1);
+      const value = line.slice(eq + 1);
+      if (key === 'image') {
+        ldPriorImage = value;
+      } else if (/^[A-Za-z0-9_-]+$/.test(key)) {
+        ldPriorFills[key] = value;
+      }
     });
+
+    // Gate centre (SVG coords) — used to anchor decorative wires.
+    function ldGateCentre(g) {
+      return { x: g.x + g.width / 2, y: g.y + g.height / 2 };
+    }
+
+    // Gate glyph path for prefilled AND/OR/NOT. Drawn inside the gate's
+    // bounding box with a small inset so the glyph doesn't touch the edges.
+    function ldGatePath(g) {
+      const pad = 4;
+      const x = g.x + pad, y = g.y + pad;
+      const w = g.width - 2 * pad, h = g.height - 2 * pad;
+      if (g.type === 'AND') {
+        // D-shape: flat left, flat top/bottom, semicircle right.
+        const r = h / 2;
+        return 'M ' + x + ' ' + y +
+               ' L ' + (x + w - r) + ' ' + y +
+               ' A ' + r + ' ' + r + ' 0 0 1 ' + (x + w - r) + ' ' + (y + h) +
+               ' L ' + x + ' ' + (y + h) + ' Z';
+      }
+      if (g.type === 'OR') {
+        // Curved back (left), two side arcs meeting at a point on the right.
+        const cp = w * 0.25;
+        return 'M ' + x + ' ' + y +
+               ' Q ' + (x + cp) + ' ' + (y + h / 2) + ' ' + x + ' ' + (y + h) +
+               ' Q ' + (x + w * 0.6) + ' ' + (y + h) + ' ' + (x + w) + ' ' + (y + h / 2) +
+               ' Q ' + (x + w * 0.6) + ' ' + y + ' ' + x + ' ' + y + ' Z';
+      }
+      // NOT = triangle only; the bubble is rendered separately.
+      return 'M ' + x + ' ' + y +
+             ' L ' + (x + w * 0.8) + ' ' + (y + h / 2) +
+             ' L ' + x + ' ' + (y + h) + ' Z';
+    }
   %>
-  <div class="widget widget--logic-diagram logic-diagram"
-       data-autosave-part-id="<%= part.id %>"
-       data-logic-diagram-variant="<%= ldVariant %>"
-       data-logic-diagram-width="<%= ldWidth %>"
-       data-logic-diagram-height="<%= ldHeight %>"
-       aria-describedby="marks-<%= part.id %>">
-    <div class="logic-diagram__toolbar" role="toolbar" aria-label="Drawing tools">
-      <button type="button" class="logic-diagram__tool" data-logic-diagram-tool="pen" aria-pressed="true">Pen</button>
-      <button type="button" class="logic-diagram__tool" data-logic-diagram-tool="eraser" aria-pressed="false">Eraser</button>
-      <button type="button" class="logic-diagram__clear" data-logic-diagram-clear>Clear</button>
-      <span class="logic-diagram__hint" data-logic-diagram-hint>
-        Draw your gates and wires by hand. Use the Eraser to rub out mistakes; Clear wipes the whole canvas.
-      </span>
+  <% if (ldVariant === 'gate_in_box') { %>
+    <div class="widget widget--logic-diagram widget--logic-diagram-gib logic-gates"
+         data-autosave-part-id="<%= part.id %>"
+         aria-describedby="marks-<%= part.id %>">
+      <svg class="logic-gates__stage"
+           viewBox="0 0 <%= ldWidth %> <%= ldHeight %>"
+           width="<%= ldWidth %>"
+           height="<%= ldHeight %>"
+           role="img"
+           aria-label="Logic diagram with <%= ldGates.length %> gates and <%= ldTerminals.length %> terminals">
+        <% ldWires.forEach(function(w) {
+          const nodes = [];
+          ldGates.forEach(function(g) { if (g && g.id === w.from) nodes[0] = ldGateCentre(g); });
+          ldGates.forEach(function(g) { if (g && g.id === w.to) nodes[1] = ldGateCentre(g); });
+          ldTerminals.forEach(function(t) { if (t && t.id === w.from) nodes[0] = { x: t.x, y: t.y }; });
+          ldTerminals.forEach(function(t) { if (t && t.id === w.to) nodes[1] = { x: t.x, y: t.y }; });
+          if (!nodes[0] || !nodes[1]) return;
+        %>
+          <line class="logic-gates__wire"
+                x1="<%= nodes[0].x %>" y1="<%= nodes[0].y %>"
+                x2="<%= nodes[1].x %>" y2="<%= nodes[1].y %>" />
+        <% }); %>
+        <% ldGates.forEach(function(g) {
+          if (!g || typeof g !== 'object') return;
+          const isBlank = Array.isArray(g.accept);
+        %>
+          <% if (isBlank) { %>
+            <rect class="logic-gates__blank"
+                  x="<%= g.x %>" y="<%= g.y %>"
+                  width="<%= g.width %>" height="<%= g.height %>" />
+          <% } else { %>
+            <path class="logic-gates__gate logic-gates__gate--<%= g.type %>"
+                  d="<%= ldGatePath(g) %>" />
+            <% if (g.type === 'NOT') {
+                 const r = 4;
+                 const bx = g.x + g.width - r * 2 - 2;
+                 const by = g.y + g.height / 2;
+            %>
+              <circle class="logic-gates__bubble" cx="<%= bx + r %>" cy="<%= by %>" r="<%= r %>" />
+            <% } %>
+            <text class="logic-gates__gate-label"
+                  x="<%= g.x + g.width / 2 %>"
+                  y="<%= g.y + g.height / 2 %>"
+                  text-anchor="middle" dominant-baseline="middle"><%= g.type %></text>
+          <% } %>
+        <% }); %>
+        <% ldTerminals.forEach(function(tm) {
+          if (!tm || typeof tm !== 'object') return;
+          const labelDx = tm.kind === 'input' ? -10 : 10;
+          const anchor = tm.kind === 'input' ? 'end' : 'start';
+        %>
+          <circle class="logic-gates__terminal logic-gates__terminal--<%= tm.kind %>"
+                  cx="<%= tm.x %>" cy="<%= tm.y %>" r="4" />
+          <text class="logic-gates__terminal-label"
+                x="<%= tm.x + labelDx %>" y="<%= tm.y %>"
+                text-anchor="<%= anchor %>" dominant-baseline="middle"><%= tm.label %></text>
+        <% }); %>
+      </svg>
+      <div class="logic-gates__inputs">
+        <% ldGates.forEach(function(g) {
+          if (!g || typeof g !== 'object') return;
+          if (!Array.isArray(g.accept)) return;
+          const fieldId = 'part-' + part.id + '-' + g.id;
+          const prior = ldPriorFills[g.id] || '';
+          const leftPct = (g.x / ldWidth * 100).toFixed(4);
+          const topPct = (g.y / ldHeight * 100).toFixed(4);
+          const wPct = (g.width / ldWidth * 100).toFixed(4);
+          const hPct = (g.height / ldHeight * 100).toFixed(4);
+        %>
+          <label class="logic-gates__input"
+                 style="left:<%= leftPct %>%;top:<%= topPct %>%;width:<%= wPct %>%;height:<%= hPct %>%;"
+                 for="<%= fieldId %>">
+            <span class="visually-hidden">Gate <%= g.id %></span>
+            <input id="<%= fieldId %>"
+                   name="<%= fieldName %>__<%= g.id %>"
+                   type="text"
+                   value="<%= prior %>"
+                   autocomplete="off"
+                   spellcheck="false"
+                   maxlength="8"
+                   data-logic-gate-input />
+          </label>
+        <% }); %>
+      </div>
     </div>
-    <canvas class="logic-diagram__canvas"
-            data-logic-diagram-canvas
-            width="<%= ldWidth %>"
-            height="<%= ldHeight %>"
-            aria-label="Logic-diagram drawing area, <%= ldWidth %> by <%= ldHeight %> pixels"
-            tabindex="0"></canvas>
-    <input type="hidden"
-           name="<%= fieldName %>__image"
-           value="<%= ldPriorImage %>"
-           data-logic-diagram-image />
-    <noscript>
-      <p class="logic-diagram__noscript">
-        This widget needs JavaScript to draw. Without it, you cannot submit a diagram.
-      </p>
-    </noscript>
-  </div>
+  <% } else { %>
+    <div class="widget widget--logic-diagram logic-diagram"
+         data-autosave-part-id="<%= part.id %>"
+         data-logic-diagram-variant="<%= ldVariant %>"
+         data-logic-diagram-width="<%= ldWidth %>"
+         data-logic-diagram-height="<%= ldHeight %>"
+         aria-describedby="marks-<%= part.id %>">
+      <div class="logic-diagram__toolbar" role="toolbar" aria-label="Drawing tools">
+        <button type="button" class="logic-diagram__tool" data-logic-diagram-tool="pen" aria-pressed="true">Pen</button>
+        <button type="button" class="logic-diagram__tool" data-logic-diagram-tool="eraser" aria-pressed="false">Eraser</button>
+        <button type="button" class="logic-diagram__clear" data-logic-diagram-clear>Clear</button>
+        <span class="logic-diagram__hint" data-logic-diagram-hint>
+          Draw your gates and wires by hand. Use the Eraser to rub out mistakes; Clear wipes the whole canvas.
+        </span>
+      </div>
+      <canvas class="logic-diagram__canvas"
+              data-logic-diagram-canvas
+              width="<%= ldWidth %>"
+              height="<%= ldHeight %>"
+              aria-label="Logic-diagram drawing area, <%= ldWidth %> by <%= ldHeight %> pixels"
+              tabindex="0"></canvas>
+      <input type="hidden"
+             name="<%= fieldName %>__image"
+             value="<%= ldPriorImage %>"
+             data-logic-diagram-image />
+      <noscript>
+        <p class="logic-diagram__noscript">
+          This widget needs JavaScript to draw. Without it, you cannot submit a diagram.
+        </p>
+      </noscript>
+    </div>
+  <% } %>
 <% } else if (t === 'flowchart') { %>
   <%
     const fcCfg = part.part_config || {};

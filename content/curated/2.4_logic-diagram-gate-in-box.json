@@ -1,0 +1,53 @@
+{
+  "external_key": "j277-2-4-logic-diagram-gate-in-box",
+  "component_code": "J277/02",
+  "topic_code": "2.4",
+  "subtopic_code": "2.4.1",
+  "command_word_code": "complete",
+  "archetype_code": "define",
+  "expected_response_type": "logic_diagram",
+  "stem": "The logic diagram below computes P = (A AND B) OR NOT C. One of the three gates is blank.",
+  "model_answer": "The blank gate combines the AND output with the NOT output, so it must be an OR gate (accept 'OR' or 'or gate').",
+  "difficulty_band": 2,
+  "difficulty_step": 1,
+  "source_type": "imported_pattern",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Write the name of the missing gate in the blank box so the diagram gives P = (A AND B) OR NOT C.",
+      "marks": 1,
+      "expected_response_type": "logic_diagram",
+      "part_config": {
+        "variant": "gate_in_box",
+        "canvas": { "width": 600, "height": 400 },
+        "gates": [
+          { "id": "g1", "type": "AND", "x": 140, "y": 60, "width": 80, "height": 50 },
+          { "id": "g2", "type": "NOT", "x": 140, "y": 200, "width": 80, "height": 50 },
+          {
+            "id": "gout",
+            "x": 360,
+            "y": 120,
+            "width": 80,
+            "height": 50,
+            "accept": ["OR", "or gate"]
+          }
+        ],
+        "terminals": [
+          { "id": "a", "kind": "input", "label": "A", "x": 40, "y": 75 },
+          { "id": "b", "kind": "input", "label": "B", "x": 40, "y": 105 },
+          { "id": "c", "kind": "input", "label": "C", "x": 40, "y": 225 },
+          { "id": "p", "kind": "output", "label": "P", "x": 520, "y": 145 }
+        ],
+        "wires": [
+          { "from": "a", "to": "g1" },
+          { "from": "b", "to": "g1" },
+          { "from": "c", "to": "g2" },
+          { "from": "g1", "to": "gout" },
+          { "from": "g2", "to": "gout" },
+          { "from": "gout", "to": "p" }
+        ]
+      },
+      "mark_points": [{ "text": "gout: OR / or gate", "marks": 1 }]
+    }
+  ]
+}
