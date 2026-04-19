@@ -4,9 +4,11 @@
 // The v1 template ships three stacked <select>s. v2 keeps that accessible
 // base and layers a progressive-enhancement filter on top:
 //   • a "Filter options" search input narrows all three selects at once
-//   • the existing wizard_curriculum_chain.js still enforces parent/child
-//     cascades, so picking a component limits topics, picking a topic
-//     limits subtopics.
+//   • wizard_curriculum_chain.js enforces parent/child cascades, so picking
+//     a component limits topics, picking a topic limits subtopics — AND
+//     picking a subtopic auto-fills the topic and component above it.
+//     (Teachers almost always know the subtopic code; forcing them to pick
+//     component first was the #1 wizard friction point.)
 //
 // Native selects remain functional with JS disabled.
 const p = it.draft.payload || {};

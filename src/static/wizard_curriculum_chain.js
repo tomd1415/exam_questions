@@ -44,9 +44,31 @@
     applyFilter(subtopicSel, 'data-topic', topicSel.value);
   }
 
+  // Given an <option value>, find its parent on the sibling select. Used to
+  // walk the subtopic → topic → component chain when the teacher picks a
+  // subtopic first (the most natural path, because subtopic codes like
+  // "1.1.1" fully determine their ancestors).
+  function parentOf(child, attrName, childValue) {
+    if (!childValue) return '';
+    var opt = child.querySelector('option[value="' + childValue + '"]');
+    return opt ? opt.getAttribute(attrName) || '' : '';
+  }
+
   componentSel.addEventListener('change', refresh);
   topicSel.addEventListener('change', function () {
+    // Auto-fill component if the teacher jumped straight to a topic.
+    var comp = parentOf(topicSel, 'data-component', topicSel.value);
+    if (comp && componentSel.value !== comp) componentSel.value = comp;
     applyFilter(subtopicSel, 'data-topic', topicSel.value);
+  });
+  subtopicSel.addEventListener('change', function () {
+    // Subtopic → topic → component: set ancestors, then re-apply filters
+    // so the other dropdowns reflect the newly-chosen scope.
+    var topic = parentOf(subtopicSel, 'data-topic', subtopicSel.value);
+    if (topic && topicSel.value !== topic) topicSel.value = topic;
+    var comp = parentOf(topicSel, 'data-component', topicSel.value);
+    if (comp && componentSel.value !== comp) componentSel.value = comp;
+    refresh();
   });
   refresh();
 })();
