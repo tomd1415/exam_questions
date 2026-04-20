@@ -1,0 +1,60 @@
+{
+  "external_key": "j277-1-3-star-topology-labels-2024",
+  "component_code": "J277/01",
+  "topic_code": "1.3",
+  "subtopic_code": "1.3.1",
+  "command_word_code": "label",
+  "archetype_code": "recall",
+  "expected_response_type": "diagram_labels",
+  "stem": "A small office has computers connected in a star topology with a central device that directs traffic and two shared printers.",
+  "model_answer": "{\"centre\": \"switch\", \"node-a\": \"computer\", \"node-b\": \"printer\"}",
+  "difficulty_band": 3,
+  "difficulty_step": 2,
+  "source_type": "imported_pattern",
+  "review_notes": "2024 J277/01 Q2(c)(i) adapted. Pupils label the central device and two of the edge nodes on the existing star topology SVG.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Label the highlighted areas of the star topology.",
+      "marks": 3,
+      "expected_response_type": "diagram_labels",
+      "part_config": {
+        "imageUrl": "/static/curated/network-topology-star.svg",
+        "imageAlt": "A star topology with a central networking device and four labelled hosts.",
+        "width": 600,
+        "height": 360,
+        "hotspots": [
+          {
+            "id": "centre",
+            "x": 260,
+            "y": 140,
+            "width": 100,
+            "height": 60,
+            "accept": ["switch", "hub", "central switch"]
+          },
+          {
+            "id": "node-a",
+            "x": 40,
+            "y": 40,
+            "width": 120,
+            "height": 40,
+            "accept": ["computer", "client", "host", "PC", "workstation", "laptop"]
+          },
+          {
+            "id": "node-b",
+            "x": 440,
+            "y": 260,
+            "width": 120,
+            "height": 40,
+            "accept": ["printer", "network printer", "shared printer"]
+          }
+        ]
+      },
+      "mark_points": [
+        { "text": "central device is a switch (hub also accepted)", "marks": 1 },
+        { "text": "edge node is a computer / client / host", "marks": 1 },
+        { "text": "shared peripheral is a printer", "marks": 1 }
+      ]
+    }
+  ]
+}

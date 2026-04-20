@@ -1,0 +1,43 @@
+{
+  "external_key": "j277-2-2-iteration-features-multi",
+  "component_code": "J277/02",
+  "topic_code": "2.2",
+  "subtopic_code": "2.2.1",
+  "command_word_code": "identify",
+  "archetype_code": "recall",
+  "expected_response_type": "matrix_tick_multi",
+  "stem": "A programmer is choosing between `for` loops and `while` loops.",
+  "model_answer": "{\"for loop\": [\"Uses a counter variable\", \"Runs a fixed number of times\"], \"while loop\": [\"Controlled by a Boolean condition\", \"May run zero times if the condition is false at the start\"]}",
+  "difficulty_band": 4,
+  "difficulty_step": 1,
+  "source_type": "teacher",
+  "review_notes": "Each row can have multiple ticks. Partial credit awarded per correct tick.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Tick every feature that applies to each kind of loop.",
+      "marks": 4,
+      "expected_response_type": "matrix_tick_multi",
+      "part_config": {
+        "rows": ["for loop", "while loop"],
+        "columns": [
+          "Uses a counter variable",
+          "Runs a fixed number of times",
+          "Controlled by a Boolean condition",
+          "May run zero times if the condition is false at the start"
+        ],
+        "correctByRow": [
+          ["Uses a counter variable", "Runs a fixed number of times"],
+          ["Controlled by a Boolean condition", "May run zero times if the condition is false at the start"]
+        ],
+        "partialCredit": true
+      },
+      "mark_points": [
+        { "text": "for loop — uses a counter variable", "marks": 1 },
+        { "text": "for loop — runs a fixed number of times", "marks": 1 },
+        { "text": "while loop — controlled by a Boolean condition", "marks": 1 },
+        { "text": "while loop — may run zero times if the condition is false at the start", "marks": 1 }
+      ]
+    }
+  ]
+}

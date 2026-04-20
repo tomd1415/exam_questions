@@ -1,0 +1,39 @@
+{
+  "external_key": "j277-2-4-logic-diagram-image",
+  "component_code": "J277/02",
+  "topic_code": "2.4",
+  "subtopic_code": "2.4.1",
+  "command_word_code": "draw",
+  "archetype_code": "explain",
+  "expected_response_type": "logic_diagram",
+  "stem": "A security system sounds an alarm (Q) when a door sensor (A) is open AND the system is armed (B), OR when a panic button (C) is pressed.",
+  "model_answer": "The diagram should have three labelled inputs (A, B, C) and one labelled output (Q). An AND gate takes A and B; its output feeds, together with C, into an OR gate whose output is Q. Equivalent expression: Q = (A AND B) OR C.",
+  "difficulty_band": 5,
+  "difficulty_step": 2,
+  "source_type": "teacher",
+  "review_notes": "Image variant — pupil draws freehand on the canvas and the PNG is sent to teacher review. Assess correct gate shapes, labelled inputs/output, and the Q = (A AND B) OR C structure.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Draw a logic circuit that produces the output Q described above. Label all three inputs (A, B, C), the gates used, and the output Q.",
+      "marks": 4,
+      "expected_response_type": "logic_diagram",
+      "part_config": {
+        "variant": "image",
+        "canvas": { "width": 640, "height": 400 }
+      },
+      "mark_points": [
+        { "text": "three inputs labelled A, B and C, and an output labelled Q", "marks": 1 },
+        { "text": "an AND gate with inputs A and B", "marks": 1 },
+        { "text": "an OR gate whose inputs are (A AND B) and C", "marks": 1 },
+        { "text": "the OR gate output is connected to Q with no redundant gates", "marks": 1 }
+      ],
+      "misconceptions": [
+        {
+          "label": "Swapping AND and OR",
+          "description": "Q = (A OR B) AND C would only fire when C is pressed as well, not when just the door+armed condition holds."
+        }
+      ]
+    }
+  ]
+}

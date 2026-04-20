@@ -1,0 +1,58 @@
+{
+  "external_key": "j277-1-5-utility-software-cloze-2024",
+  "component_code": "J277/01",
+  "topic_code": "1.5",
+  "subtopic_code": "1.5.2",
+  "command_word_code": "complete",
+  "archetype_code": "recall",
+  "expected_response_type": "cloze_with_bank",
+  "stem": "Utility system software keeps a computer running smoothly.",
+  "model_answer": "{\"w1\": \"encryption\", \"w2\": \"key\", \"w3\": \"understood\", \"w4\": \"defragmentation\", \"w5\": \"consecutive\", \"w6\": \"access\"}",
+  "difficulty_band": 4,
+  "difficulty_step": 2,
+  "source_type": "imported_pattern",
+  "review_notes": "2024 J277/01 Q3(b). Six-mark cloze. The bank follows the paper exactly; not all words are used.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Complete the description using words from the bank. Not every word is used.",
+      "marks": 6,
+      "expected_response_type": "cloze_with_bank",
+      "part_config": {
+        "text": "{{w1}} software changes data using a {{w2}}. If the changed data is intercepted, it cannot be {{w3}}. This software does not stop the data from being intercepted.\n\n{{w4}} software analyses the data on a disk to find files that have been split and stored in separate locations. The split files are moved to be {{w5}} in storage and the free space is moved together. This does not provide more storage space on the disk, instead it makes the {{w6}} of the data faster because the read head does not have to move as far to access the next part of the file.",
+        "gaps": [
+          { "id": "w1", "accept": ["encryption"] },
+          { "id": "w2", "accept": ["key"] },
+          { "id": "w3", "accept": ["understood"] },
+          { "id": "w4", "accept": ["defragmentation"] },
+          { "id": "w5", "accept": ["consecutive"] },
+          { "id": "w6", "accept": ["access"] }
+        ],
+        "bank": [
+          "access",
+          "amount",
+          "apart",
+          "compression",
+          "consecutive",
+          "defragmentation",
+          "deleted",
+          "encryption",
+          "key",
+          "lock",
+          "quantity",
+          "separate",
+          "speed",
+          "understood"
+        ]
+      },
+      "mark_points": [
+        { "text": "encryption", "marks": 1 },
+        { "text": "key", "marks": 1 },
+        { "text": "understood", "marks": 1 },
+        { "text": "defragmentation", "marks": 1 },
+        { "text": "consecutive", "marks": 1 },
+        { "text": "access", "marks": 1 }
+      ]
+    }
+  ]
+}

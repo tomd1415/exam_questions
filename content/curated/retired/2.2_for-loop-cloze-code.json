@@ -1,0 +1,52 @@
+{
+  "external_key": "j277-2-2-for-loop-cloze-code",
+  "component_code": "J277/02",
+  "topic_code": "2.2",
+  "subtopic_code": "2.2.1",
+  "command_word_code": "complete",
+  "archetype_code": "algorithm_completion",
+  "expected_response_type": "cloze_code",
+  "stem": "A pupil is writing OCR Exam Reference Language pseudocode that prints the integers 1 to 5 inclusive on separate lines. Two parts of the loop are missing.",
+  "model_answer": "{\"stop\": \"5\", \"counter\": \"i\"}",
+  "difficulty_band": 3,
+  "difficulty_step": 1,
+  "source_type": "imported_pattern",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Fill in the gaps so the program prints 1 to 5 inclusive on separate lines.",
+      "marks": 2,
+      "expected_response_type": "cloze_code",
+      "part_config": {
+        "text": "for i = 1 to {{stop}}\n  print({{counter}})\nnext i",
+        "gaps": [
+          {
+            "id": "stop",
+            "accept": [
+              "5"
+            ],
+            "trimWhitespace": true
+          },
+          {
+            "id": "counter",
+            "accept": [
+              "i"
+            ],
+            "caseSensitive": false,
+            "trimWhitespace": true
+          }
+        ]
+      },
+      "mark_points": [
+        {
+          "text": "Loop ends at 5 (inclusive).",
+          "marks": 1
+        },
+        {
+          "text": "Print the loop counter `i` inside the body.",
+          "marks": 1
+        }
+      ]
+    }
+  ]
+}

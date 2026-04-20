@@ -1,0 +1,57 @@
+{
+  "external_key": "j277-1-5-os-functions-matching-2024",
+  "component_code": "J277/01",
+  "topic_code": "1.5",
+  "subtopic_code": "1.5.1",
+  "command_word_code": "identify",
+  "archetype_code": "recall",
+  "expected_response_type": "matching",
+  "stem": "The table shows four operating system functions and the tasks they perform.",
+  "model_answer": "[[0, 0], [1, 1], [2, 2], [3, 3]]",
+  "difficulty_band": 3,
+  "difficulty_step": 2,
+  "source_type": "imported_pattern",
+  "review_notes": "2024 J277/01 Q3(a). Match each function name to its task.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Match each operating system function to the task it performs.",
+      "marks": 4,
+      "expected_response_type": "matching",
+      "part_config": {
+        "left": [
+          "Memory management",
+          "Peripheral management",
+          "File management",
+          "User interface"
+        ],
+        "right": [
+          "Moves data from secondary storage to RAM",
+          "Installs device drivers and handles input/output devices",
+          "Allows the user to create, name and delete folders",
+          "Allows the user to interact with the computer via a GUI or command line",
+          "Stops unauthorised users from gaining access to the system"
+        ],
+        "correctPairs": [
+          [0, 0],
+          [1, 1],
+          [2, 2],
+          [3, 3]
+        ],
+        "partialCredit": true
+      },
+      "mark_points": [
+        { "text": "Memory management — moves data from secondary storage to RAM", "marks": 1 },
+        { "text": "Peripheral management — installs device drivers and handles I/O", "marks": 1 },
+        { "text": "File management — create / name / delete folders", "marks": 1 },
+        { "text": "User interface — lets the user interact with the computer", "marks": 1 }
+      ],
+      "misconceptions": [
+        {
+          "label": "File vs folder management",
+          "description": "File management covers folders and files; 'folder management' alone is not the function name."
+        }
+      ]
+    }
+  ]
+}

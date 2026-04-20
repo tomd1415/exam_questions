@@ -1,0 +1,28 @@
+{
+  "external_key": "j277-1-3-mac-format-2024",
+  "component_code": "J277/01",
+  "topic_code": "1.3",
+  "subtopic_code": "1.3.2",
+  "command_word_code": "describe",
+  "archetype_code": "explain",
+  "expected_response_type": "medium_text",
+  "stem": "Every networked device has both an IP address and a MAC address.",
+  "model_answer": "A MAC address is 48 bits long and is usually shown as 6 pairs of 2-digit hexadecimal numbers separated by colons or hyphens (e.g. 3C:5A:37:1B:99:4F). The first half identifies the manufacturer and the second half is the unique serial number of the device.",
+  "difficulty_band": 5,
+  "difficulty_step": 2,
+  "source_type": "imported_pattern",
+  "review_notes": "2024 J277/01 Q2(a)(ii). '6 pairs of numbers' earns MP2+MP3; '4 pairs' earns only MP3.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Describe the format of a MAC address.",
+      "marks": 2,
+      "expected_response_type": "medium_text",
+      "mark_points": [
+        { "text": "written in hexadecimal / denary / binary", "marks": 1 },
+        { "text": "6 groups (12 hex digits) separated by colons or hyphens; 48 bits long; each group is 2 hex digits / 8 binary bits", "marks": 1 },
+        { "text": "first half is the manufacturer ID; second half is the device serial number", "marks": 1 }
+      ]
+    }
+  ]
+}

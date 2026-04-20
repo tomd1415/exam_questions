@@ -167,6 +167,7 @@ export class AttemptRepo {
            FROM questions
           WHERE topic_code = $1
             AND active = true
+            AND retired_at IS NULL
             AND approval_status = 'approved'
           ORDER BY random()
           LIMIT $2`,
@@ -230,6 +231,7 @@ export class AttemptRepo {
          FROM questions
         WHERE topic_code = $1
           AND active = true
+          AND retired_at IS NULL
           AND approval_status = 'approved'
         ORDER BY random()
         LIMIT $2`,

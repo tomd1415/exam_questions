@@ -1,0 +1,48 @@
+{
+  "external_key": "j277-2-2-data-types-matrix-single",
+  "component_code": "J277/02",
+  "topic_code": "2.2",
+  "subtopic_code": "2.2.2",
+  "command_word_code": "identify",
+  "archetype_code": "recall",
+  "expected_response_type": "matrix_tick_single",
+  "stem": "A program uses the five variables shown below. Each variable stores a value of exactly one data type.",
+  "model_answer": "{\"age = 14\": \"Integer\", \"price = 9.99\": \"Real\", \"isLoggedIn = True\": \"Boolean\", \"initial = 'A'\": \"Character\", \"name = \\\"Alice\\\"\": \"String\"}",
+  "difficulty_band": 3,
+  "difficulty_step": 2,
+  "source_type": "teacher",
+  "review_notes": "Classifies literals into the five J277 data types. Each row has exactly one correct column.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Tick the data type that matches each variable assignment. One tick per row.",
+      "marks": 5,
+      "expected_response_type": "matrix_tick_single",
+      "part_config": {
+        "rows": [
+          "age = 14",
+          "price = 9.99",
+          "isLoggedIn = True",
+          "initial = 'A'",
+          "name = \"Alice\""
+        ],
+        "columns": ["Integer", "Real", "Boolean", "Character", "String"],
+        "correctByRow": ["Integer", "Real", "Boolean", "Character", "String"],
+        "allOrNothing": false
+      },
+      "mark_points": [
+        { "text": "age = 14 — Integer", "marks": 1 },
+        { "text": "price = 9.99 — Real", "marks": 1 },
+        { "text": "isLoggedIn = True — Boolean", "marks": 1 },
+        { "text": "initial = 'A' — Character", "marks": 1 },
+        { "text": "name = \"Alice\" — String", "marks": 1 }
+      ],
+      "misconceptions": [
+        {
+          "label": "Character vs String",
+          "description": "A single letter in single quotes is a character; double-quoted text of any length is a string."
+        }
+      ]
+    }
+  ]
+}

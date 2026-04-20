@@ -1,0 +1,45 @@
+{
+  "external_key": "j277-1-1-cpu-chars-tick-2024",
+  "component_code": "J277/01",
+  "topic_code": "1.1",
+  "subtopic_code": "1.1.2",
+  "command_word_code": "tick",
+  "archetype_code": "recall",
+  "expected_response_type": "tick_box",
+  "stem": "A buyer is comparing two CPUs to decide which one will give their desktop computer better performance.",
+  "model_answer": "[\"Clock speed\", \"Cache size\", \"Number of cores\"]",
+  "difficulty_band": 3,
+  "difficulty_step": 1,
+  "source_type": "imported_pattern",
+  "review_notes": "2024 J277/01 Q6(c) style. Pupils must pick the three CPU characteristics that affect performance. Distractors are common misconceptions (RAM capacity, graphics card, hard-drive size).",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Tick the three characteristics of a CPU that affect its performance.",
+      "marks": 3,
+      "expected_response_type": "tick_box",
+      "part_config": {
+        "tickExactly": 3,
+        "options": [
+          "Clock speed",
+          "Cache size",
+          "Number of cores",
+          "Amount of RAM",
+          "Graphics card model",
+          "Hard-drive capacity"
+        ]
+      },
+      "mark_points": [
+        { "text": "Clock speed", "marks": 1 },
+        { "text": "Cache size", "marks": 1 },
+        { "text": "Number of cores", "marks": 1 }
+      ],
+      "misconceptions": [
+        {
+          "label": "RAM / storage confused with CPU spec",
+          "description": "RAM capacity and hard-drive size affect overall system performance but are not characteristics of the CPU itself."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "external_key": "j277-1-6-open-source-proprietary-qer-2024",
+  "component_code": "J277/01",
+  "topic_code": "1.6",
+  "subtopic_code": "1.6.1",
+  "command_word_code": "discuss",
+  "archetype_code": "evaluate",
+  "expected_response_type": "extended_response",
+  "stem": "A computer programmer has developed a computer game that they want to release for users to download over the internet. The programmer needs to decide whether to release the game as open source or proprietary software.",
+  "model_answer": "A full band 3 answer covers: (1) features of each licence (open source is usually free, source code is available and can be modified and redistributed; proprietary is purchased, source code is hidden and cannot be altered); (2) legal/ethical points (both are copyrighted; open source exposes work to being adapted or rebadged; proprietary restricts what users can do but protects the developer's income); (3) benefits and drawbacks applied to the game (open source reaches a wider player base and lets the community fix bugs, but earns little money; proprietary gives financial return and tight quality control, but limits who can play or modify); (4) a justified recommendation that references the scenario — for example 'recommend proprietary because the programmer needs income from download sales, and for a game the user experience is tightly controlled'.",
+  "difficulty_band": 7,
+  "difficulty_step": 2,
+  "source_type": "imported_pattern",
+  "review_notes": "2024 J277/01 Q4 (QER, 8 marks — AO2.1a x4, AO2.1b x4). Mark by levels: L1 1-2, L2 3-5, L3 6-8. Expect features + legal/ethical + benefits/drawbacks + justified recommendation.",
+  "parts": [
+    {
+      "label": "(a)*",
+      "prompt": "Discuss the features, benefits and drawbacks of each type of licence for this program and make a recommendation to the programmer. Include: features of each licence; legal and ethical issues of each licence; benefits and drawbacks of each licence.",
+      "marks": 8,
+      "expected_response_type": "extended_response",
+      "mark_points": [
+        { "text": "Features of open source: free to download, source code is available, can be modified and redistributed", "marks": 1 },
+        { "text": "Features of proprietary: purchased at a cost, source code is hidden, modification/redistribution not allowed", "marks": 1 },
+        { "text": "Legal/ethical: both provide copyright protection; open source can be rebranded or resold by others; proprietary restricts users' rights", "marks": 1 },
+        { "text": "Open source benefit: wider audience, community can fix bugs / improve the game", "marks": 1 },
+        { "text": "Open source drawback: little direct financial gain, limited documentation, risk of altered versions confusing users", "marks": 1 },
+        { "text": "Proprietary benefit: income from sales, tight control over the user experience, usually better-tested releases", "marks": 1 },
+        { "text": "Proprietary drawback: smaller audience (paywall), cannot be adapted to individual user needs", "marks": 1 },
+        { "text": "Justified recommendation that explicitly references this scenario (the game and the programmer)", "marks": 1 }
+      ],
+      "misconceptions": [
+        {
+          "label": "No recommendation",
+          "description": "Answers that list pros/cons but do not conclude with a justified choice are capped at the middle band."
+        },
+        {
+          "label": "Open source = free of copyright",
+          "description": "Open source software is still copyrighted; the licence grants specific freedoms."
+        }
+      ]
+    }
+  ]
+}

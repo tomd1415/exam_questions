@@ -1,0 +1,36 @@
+{
+  "external_key": "j277-2-2-variable-cloze-free",
+  "component_code": "J277/02",
+  "topic_code": "2.2",
+  "subtopic_code": "2.2.1",
+  "command_word_code": "complete",
+  "archetype_code": "recall",
+  "expected_response_type": "cloze_free",
+  "stem": "A pupil is revising the difference between variables and constants.",
+  "model_answer": "{\"g1\": \"variable\", \"g2\": \"constant\", \"g3\": \"assignment\"}",
+  "difficulty_band": 3,
+  "difficulty_step": 1,
+  "source_type": "teacher",
+  "review_notes": "Free-typed cloze with no visible bank. Accept lists use lowercase canonical form; trimWhitespace defaults true.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Type the missing word into each gap.",
+      "marks": 3,
+      "expected_response_type": "cloze_free",
+      "part_config": {
+        "text": "A named store whose value can change while the program is running is called a {{g1}}. A named store whose value is fixed for the whole program is called a {{g2}}. The symbol used to give a value to one of these stores is called the {{g3}} operator.",
+        "gaps": [
+          { "id": "g1", "accept": ["variable"] },
+          { "id": "g2", "accept": ["constant"] },
+          { "id": "g3", "accept": ["assignment"] }
+        ]
+      },
+      "mark_points": [
+        { "text": "variable", "marks": 1 },
+        { "text": "constant", "marks": 1 },
+        { "text": "assignment", "marks": 1 }
+      ]
+    }
+  ]
+}

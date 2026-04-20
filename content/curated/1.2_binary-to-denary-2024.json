@@ -1,0 +1,46 @@
+{
+  "external_key": "j277-1-2-binary-to-denary-2024",
+  "component_code": "J277/01",
+  "topic_code": "1.2",
+  "subtopic_code": "1.2.4",
+  "command_word_code": "complete",
+  "archetype_code": "recall",
+  "expected_response_type": "trace_table",
+  "stem": "The following table has either the 8-bit binary or the denary value of three numbers. Complete the table by converting the 8-bit binary number into denary and the denary number into 8-bit binary.",
+  "model_answer": "{\"0,1\": \"240\", \"1,0\": \"01101001\", \"2,1\": \"30\"}",
+  "difficulty_band": 3,
+  "difficulty_step": 1,
+  "source_type": "imported_pattern",
+  "review_notes": "2024 J277/01 Q1(a). Binary must be 8 bits.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Fill in the three missing cells.",
+      "marks": 3,
+      "expected_response_type": "trace_table",
+      "part_config": {
+        "columns": [
+          { "name": "8-bit Binary", "width": 9 },
+          { "name": "Denary", "width": 4 }
+        ],
+        "rows": 3,
+        "prefill": {
+          "0,0": "11110000",
+          "1,1": "105",
+          "2,0": "00011110"
+        },
+        "expected": {
+          "0,1": "240",
+          "1,0": "01101001",
+          "2,1": "30"
+        },
+        "marking": { "mode": "perCell" }
+      },
+      "mark_points": [
+        { "text": "11110000 = 240", "marks": 1 },
+        { "text": "105 = 01101001", "marks": 1 },
+        { "text": "00011110 = 30", "marks": 1 }
+      ]
+    }
+  ]
+}

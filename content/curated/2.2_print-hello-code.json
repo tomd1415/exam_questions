@@ -1,0 +1,34 @@
+{
+  "external_key": "j277-2-2-print-hello-code",
+  "component_code": "J277/02",
+  "topic_code": "2.2",
+  "subtopic_code": "2.2.1",
+  "command_word_code": "write_rewrite",
+  "archetype_code": "code_writing",
+  "expected_response_type": "code",
+  "stem": "A shopkeeper wants a very small program that greets a customer by name.",
+  "model_answer": "name = input(\"Enter your name: \")\nprint(\"Hello, \" + name)",
+  "difficulty_band": 3,
+  "difficulty_step": 1,
+  "source_type": "teacher",
+  "review_notes": "Teacher-marked. Accept OCR pseudocode or Python. Look for input to a variable, a greeting string, and concatenation or equivalent output of the two together.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Write a program, using OCR pseudocode or Python, that asks the user for their name and then prints a greeting in the form 'Hello, <name>'.",
+      "marks": 3,
+      "expected_response_type": "code",
+      "mark_points": [
+        { "text": "reads a value from the user into a variable (e.g. name = input(...))", "marks": 1 },
+        { "text": "outputs a greeting that includes the text 'Hello,'", "marks": 1 },
+        { "text": "the greeting output includes the value of the variable (concatenation or comma-separated print)", "marks": 1 }
+      ],
+      "misconceptions": [
+        {
+          "label": "Prints a literal name",
+          "description": "A program that hard-codes the greeting (e.g. print(\"Hello, Alice\")) does not use input; no mark for variable use."
+        }
+      ]
+    }
+  ]
+}

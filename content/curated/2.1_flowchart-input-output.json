@@ -1,0 +1,40 @@
+{
+  "external_key": "j277-2-1-flowchart-input-output",
+  "component_code": "J277/02",
+  "topic_code": "2.1",
+  "subtopic_code": "2.1.2",
+  "command_word_code": "draw",
+  "archetype_code": "algorithm_completion",
+  "expected_response_type": "flowchart",
+  "stem": "A program asks the user for a whole number. If the number is even it prints 'even', otherwise it prints 'odd'.",
+  "model_answer": "The flowchart should start with a terminator 'Start', then an input shape reading the number, then a decision 'number MOD 2 = 0?' with a Yes branch going to an output 'print even' and a No branch going to an output 'print odd'. The two branches rejoin and lead to a terminator 'End'.",
+  "difficulty_band": 4,
+  "difficulty_step": 2,
+  "source_type": "teacher",
+  "review_notes": "Freehand flowchart (image variant). Teacher-reviewed. Assess shapes used (terminator, io, decision), the MOD 2 condition, and labelled Yes/No branches that produce the right output.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Draw a flowchart for this program. Use the correct shapes for terminators, input/output and decisions, and label every arrow out of the decision.",
+      "marks": 5,
+      "expected_response_type": "flowchart",
+      "part_config": {
+        "variant": "image",
+        "canvas": { "width": 600, "height": 500 }
+      },
+      "mark_points": [
+        { "text": "Start and End terminators are present", "marks": 1 },
+        { "text": "input shape reads the number from the user", "marks": 1 },
+        { "text": "decision shape tests whether the number is even (e.g. number MOD 2 = 0)", "marks": 1 },
+        { "text": "Yes branch leads to an output shape printing 'even'", "marks": 1 },
+        { "text": "No branch leads to an output shape printing 'odd'", "marks": 1 }
+      ],
+      "misconceptions": [
+        {
+          "label": "Process shape used for input",
+          "description": "Rectangles are for processing; reading from the user belongs in an io (parallelogram) shape."
+        }
+      ]
+    }
+  ]
+}

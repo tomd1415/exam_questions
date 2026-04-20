@@ -1,0 +1,34 @@
+{
+  "external_key": "j277-1-2-hex-to-denary-2024",
+  "component_code": "J277/01",
+  "topic_code": "1.2",
+  "subtopic_code": "1.2.4",
+  "command_word_code": "describe",
+  "archetype_code": "explain",
+  "expected_response_type": "medium_text",
+  "stem": "Hexadecimal is a base-16 number system used to write binary values more concisely.",
+  "model_answer": "Give a valid 2-digit hex example (e.g. 2A). Either: multiply the left digit by 16 and add the value of the right digit (2*16 + 10 = 42). Or: convert each digit to its 4-bit binary (2 = 0010, A = 1010), combine to make an 8-bit binary number (00101010), then convert that to denary (42).",
+  "difficulty_band": 5,
+  "difficulty_step": 2,
+  "source_type": "imported_pattern",
+  "review_notes": "2024 J277/01 Q1(d). No marks for denary->hex. Method marks still available if the worked example is numerically wrong.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Describe how to convert a 2-digit hexadecimal number into denary. Use an example in your answer.",
+      "marks": 3,
+      "expected_response_type": "medium_text",
+      "mark_points": [
+        { "text": "gives a valid 2-digit hexadecimal example and correctly converts it to denary", "marks": 1 },
+        { "text": "multiply left/first digit by 16; or convert each hex digit to 4-bit binary", "marks": 1 },
+        { "text": "add the value of the right/second digit; or combine to 8-bit binary and convert to denary", "marks": 1 }
+      ],
+      "misconceptions": [
+        {
+          "label": "Converts the wrong way",
+          "description": "Some pupils describe denary-to-hex instead of hex-to-denary; read the command word carefully."
+        }
+      ]
+    }
+  ]
+}

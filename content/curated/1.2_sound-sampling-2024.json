@@ -1,0 +1,34 @@
+{
+  "external_key": "j277-1-2-sound-sampling-2024",
+  "component_code": "J277/01",
+  "topic_code": "1.2",
+  "subtopic_code": "1.2.4",
+  "command_word_code": "identify",
+  "archetype_code": "recall",
+  "expected_response_type": "multiple_choice",
+  "stem": "A musician uses a computer to record music by sampling analogue sound.",
+  "model_answer": "The amplitude of the wave is measured at set intervals.",
+  "difficulty_band": 3,
+  "difficulty_step": 1,
+  "source_type": "imported_pattern",
+  "review_notes": "2024 J277/01 Q5(a)(i). Tick one.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Tick the one box that correctly describes sound sampling.",
+      "marks": 1,
+      "expected_response_type": "multiple_choice",
+      "part_config": {
+        "options": [
+          "The frequency of the wave is measured a set number of times each second.",
+          "The amplitude of the wave is measured at set intervals.",
+          "The digital sound wave is measured a set number of times each second.",
+          "The analogue sound wave's resolution is measured at set intervals."
+        ]
+      },
+      "mark_points": [
+        { "text": "The amplitude of the wave is measured at set intervals.", "marks": 1 }
+      ]
+    }
+  ]
+}

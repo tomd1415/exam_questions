@@ -1,0 +1,28 @@
+{
+  "external_key": "j277-1-1-fetch-execute-2024",
+  "component_code": "J277/01",
+  "topic_code": "1.1",
+  "subtopic_code": "1.1.1",
+  "command_word_code": "describe",
+  "archetype_code": "explain",
+  "expected_response_type": "medium_text",
+  "stem": "A computer has a Central Processing Unit (CPU) that runs programs using the fetch-decode-execute cycle.",
+  "model_answer": "During the fetch-decode-execute cycle the CPU first fetches an instruction from memory (RAM / primary storage) using registers such as the program counter and MAR/MDR. The instruction is decoded — split into an opcode and operand — by the control unit. Finally the instruction is executed; arithmetic and logical operations are performed by the ALU and the result may be stored in a register before the cycle repeats.",
+  "difficulty_band": 5,
+  "difficulty_step": 2,
+  "source_type": "imported_pattern",
+  "review_notes": "2024 J277/01 Q6(a). 2 marks. Ignore inaccurate register/component references; credit the 'fetched from memory', 'decoded', 'executed', 'ALU performs arithmetic/logic' ideas.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Describe what happens during the fetch-execute cycle.",
+      "marks": 2,
+      "expected_response_type": "medium_text",
+      "mark_points": [
+        { "text": "instructions/data are fetched from memory (RAM / primary storage)", "marks": 1 },
+        { "text": "instructions are decoded / split into opcode and operand", "marks": 1 },
+        { "text": "instructions are executed / the ALU performs the arithmetic or logic", "marks": 1 }
+      ]
+    }
+  ]
+}

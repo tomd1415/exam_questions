@@ -1,0 +1,35 @@
+{
+  "external_key": "j277-2-1-bubble-sort-steps",
+  "component_code": "J277/02",
+  "topic_code": "2.1",
+  "subtopic_code": "2.1.3",
+  "command_word_code": "describe",
+  "archetype_code": "algorithm_completion",
+  "expected_response_type": "algorithm",
+  "stem": "A bubble sort is being used to sort the list [5, 3, 8, 1] into ascending order.",
+  "model_answer": "Compare the first two items (5 and 3); because 5 > 3, swap them, giving [3, 5, 8, 1]. Compare the next pair (5 and 8); leave in place. Compare the final pair (8 and 1); swap, giving [3, 5, 1, 8]. That is the end of the first pass. Repeat passes, one element shorter each time, until a full pass completes with no swaps — the list is then sorted.",
+  "difficulty_band": 5,
+  "difficulty_step": 2,
+  "source_type": "teacher",
+  "review_notes": "Teacher-marked. Look for: pairwise comparison, swap when out of order, largest value reaches the end after each pass, terminate when a pass makes no swaps.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Describe, using numbered steps, how a bubble sort algorithm would sort the list [5, 3, 8, 1] into ascending order. Use the list's values to illustrate each pass.",
+      "marks": 4,
+      "expected_response_type": "algorithm",
+      "mark_points": [
+        { "text": "compares adjacent pairs of items starting at the beginning of the list", "marks": 1 },
+        { "text": "swaps a pair when the left item is greater than the right item", "marks": 1 },
+        { "text": "after each pass the largest remaining value settles at the right-hand end", "marks": 1 },
+        { "text": "repeats passes until a whole pass makes no swaps (list is sorted)", "marks": 1 }
+      ],
+      "misconceptions": [
+        {
+          "label": "Single pass sorts the list",
+          "description": "One pass of bubble sort only guarantees the largest item reaches the end; further passes are needed for full ordering."
+        }
+      ]
+    }
+  ]
+}

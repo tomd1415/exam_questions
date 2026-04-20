@@ -1,0 +1,49 @@
+{
+  "external_key": "j277-1-2-bit-facts-2024",
+  "component_code": "J277/01",
+  "topic_code": "1.2",
+  "subtopic_code": "1.2.4",
+  "command_word_code": "complete",
+  "archetype_code": "recall",
+  "expected_response_type": "trace_table",
+  "stem": "Complete the table by writing the answer to each statement about binary representation.",
+  "model_answer": "{\"0,1\": \"0\", \"1,1\": \"63\", \"2,1\": \"128\", \"3,1\": \"8\"}",
+  "difficulty_band": 3,
+  "difficulty_step": 2,
+  "source_type": "imported_pattern",
+  "review_notes": "2024 J277/01 Q1(b). Accept calculations equal to the same answer.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Write one numeric answer per row.",
+      "marks": 4,
+      "expected_response_type": "trace_table",
+      "part_config": {
+        "columns": [
+          { "name": "Statement", "width": 48 },
+          { "name": "Answer", "width": 6 }
+        ],
+        "rows": 4,
+        "prefill": {
+          "0,0": "The smallest denary number that can be represented by a 4-bit binary number",
+          "1,0": "The largest denary number that can be represented by a 6-bit binary number",
+          "2,0": "The maximum number of different colours that can be represented with a colour depth of 7 bits",
+          "3,0": "The minimum number of bits needed to represent 150 different characters in a character set"
+        },
+        "expected": {
+          "0,1": "0",
+          "1,1": "63",
+          "2,1": "128",
+          "3,1": "8"
+        },
+        "marking": { "mode": "perCell" }
+      },
+      "mark_points": [
+        { "text": "4-bit smallest = 0", "marks": 1 },
+        { "text": "6-bit largest = 63", "marks": 1 },
+        { "text": "2^7 = 128 colours", "marks": 1 },
+        { "text": "7 bits only gives 128 values, so 8 bits are needed for 150", "marks": 1 }
+      ]
+    }
+  ]
+}

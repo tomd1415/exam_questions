@@ -4,47 +4,39 @@
   "topic_code": "2.2",
   "subtopic_code": "2.2.1",
   "command_word_code": "complete",
-  "archetype_code": "algorithm_completion",
+  "archetype_code": "code_writing",
   "expected_response_type": "cloze_code",
-  "stem": "A pupil is writing OCR Exam Reference Language pseudocode that prints the integers 1 to 5 inclusive on separate lines. Two parts of the loop are missing.",
-  "model_answer": "{\"stop\": \"5\", \"counter\": \"i\"}",
-  "difficulty_band": 3,
-  "difficulty_step": 1,
-  "source_type": "imported_pattern",
+  "stem": "The pseudocode below should print the numbers 1 to 10 and then the total.",
+  "model_answer": "{\"g1\": \"0\", \"g2\": \"10\", \"g3\": \"total + i\", \"g4\": \"total\"}",
+  "difficulty_band": 4,
+  "difficulty_step": 2,
+  "source_type": "teacher",
+  "review_notes": "Rendered in monospace. Accept lists permit common equivalent forms.",
   "parts": [
     {
       "label": "(a)",
-      "prompt": "Fill in the gaps so the program prints 1 to 5 inclusive on separate lines.",
-      "marks": 2,
+      "prompt": "Complete the pseudocode by filling each gap.",
+      "marks": 4,
       "expected_response_type": "cloze_code",
       "part_config": {
-        "text": "for i = 1 to {{stop}}\n  print({{counter}})\nnext i",
+        "text": "total = {{g1}}\nfor i = 1 to {{g2}}\n  print(i)\n  total = {{g3}}\nnext i\nprint({{g4}})",
         "gaps": [
-          {
-            "id": "stop",
-            "accept": [
-              "5"
-            ],
-            "trimWhitespace": true
-          },
-          {
-            "id": "counter",
-            "accept": [
-              "i"
-            ],
-            "caseSensitive": false,
-            "trimWhitespace": true
-          }
+          { "id": "g1", "accept": ["0"] },
+          { "id": "g2", "accept": ["10"] },
+          { "id": "g3", "accept": ["total + i", "total+i", "i + total", "i+total"] },
+          { "id": "g4", "accept": ["total"] }
         ]
       },
       "mark_points": [
+        { "text": "initialise total to 0", "marks": 1 },
+        { "text": "loop upper bound is 10", "marks": 1 },
+        { "text": "running total accumulates total + i", "marks": 1 },
+        { "text": "print the total after the loop", "marks": 1 }
+      ],
+      "misconceptions": [
         {
-          "text": "Loop ends at 5 (inclusive).",
-          "marks": 1
-        },
-        {
-          "text": "Print the loop counter `i` inside the body.",
-          "marks": 1
+          "label": "Off-by-one in loop bound",
+          "description": "Using 9 instead of 10 stops the loop one iteration short; `for i = 1 to 10` is inclusive in OCR pseudocode."
         }
       ]
     }

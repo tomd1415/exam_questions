@@ -1,0 +1,57 @@
+{
+  "external_key": "j277-1-1-registers-matching-2024",
+  "component_code": "J277/01",
+  "topic_code": "1.1",
+  "subtopic_code": "1.1.1",
+  "command_word_code": "identify",
+  "archetype_code": "recall",
+  "expected_response_type": "matching",
+  "stem": "The fetch-decode-execute cycle uses several special-purpose registers inside the CPU.",
+  "model_answer": "[[0, 0], [1, 1], [2, 2], [3, 3]]",
+  "difficulty_band": 5,
+  "difficulty_step": 2,
+  "source_type": "imported_pattern",
+  "review_notes": "2024 J277/01 Q6(b) adapted from a free-text table into a matching widget to give instant feedback.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Match each register to the purpose it performs during the fetch-execute cycle.",
+      "marks": 4,
+      "expected_response_type": "matching",
+      "part_config": {
+        "left": [
+          "Program Counter (PC)",
+          "Memory Address Register (MAR)",
+          "Memory Data Register (MDR)",
+          "Accumulator (ACC)"
+        ],
+        "right": [
+          "Stores the address of the next instruction to be fetched",
+          "Holds the address in memory that is currently being read from or written to",
+          "Holds the data or instruction that has just been fetched from memory",
+          "Stores the result of calculations performed by the ALU",
+          "Decodes the opcode and operand of the current instruction"
+        ],
+        "correctPairs": [
+          [0, 0],
+          [1, 1],
+          [2, 2],
+          [3, 3]
+        ],
+        "partialCredit": true
+      },
+      "mark_points": [
+        { "text": "PC — stores the address of the next instruction", "marks": 1 },
+        { "text": "MAR — holds the memory address to read from / write to", "marks": 1 },
+        { "text": "MDR — holds the data or instruction fetched from memory", "marks": 1 },
+        { "text": "ACC — stores the result of ALU calculations", "marks": 1 }
+      ],
+      "misconceptions": [
+        {
+          "label": "MAR vs MDR swap",
+          "description": "MAR holds the address; MDR holds the data at that address. Candidates commonly swap these."
+        }
+      ]
+    }
+  ]
+}

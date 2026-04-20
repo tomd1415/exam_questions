@@ -1,0 +1,30 @@
+{
+  "external_key": "j277-1-2-binary-shift-2024",
+  "component_code": "J277/01",
+  "topic_code": "1.2",
+  "subtopic_code": "1.2.4",
+  "command_word_code": "show",
+  "archetype_code": "recall",
+  "expected_response_type": "short_text",
+  "stem": "Binary shifts are used by a CPU to multiply or divide values by powers of two.",
+  "model_answer": "11110000",
+  "difficulty_band": 3,
+  "difficulty_step": 1,
+  "source_type": "imported_pattern",
+  "review_notes": "2024 J277/01 Q1(c). Leading zeros may be ignored.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Show the result of a left binary shift of 4 places on the binary number 00001111.",
+      "marks": 1,
+      "expected_response_type": "short_text",
+      "mark_points": [
+        {
+          "text": "11110000",
+          "marks": 1,
+          "accepted_alternatives": ["1111 0000", "11110000b"]
+        }
+      ]
+    }
+  ]
+}

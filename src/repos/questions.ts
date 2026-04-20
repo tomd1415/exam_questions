@@ -109,7 +109,7 @@ export class QuestionRepo {
     }>(
       `SELECT id::text, stem, marks_total, topic_code, subtopic_code, command_word_code
          FROM questions
-        WHERE id = $1::bigint AND active = true`,
+        WHERE id = $1::bigint AND active = true AND retired_at IS NULL`,
       [id],
     );
     const q = qRes.rows[0];
