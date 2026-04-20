@@ -1,5 +1,7 @@
 <%
 function truncate(s, n) { return s.length > n ? s.slice(0, n - 1) + '\u2026' : s; }
+
+// Build component > topic option groups for the topic filter select.
 const components = [];
 const seen = new Map();
 for (const t of it.topics) {
@@ -10,12 +12,64 @@ for (const t of it.topics) {
   }
   seen.get(t.component_code).topics.push(t);
 }
+
+// Index topic and subtopic titles for quick lookup.
+const topicTitleByCode = new Map(it.topics.map(function(t){ return [t.code, t.title]; }));
+const subtopicTitleByCode = new Map(it.subtopics.map(function(s){ return [s.code, s.title]; }));
+
+// Group questions by topic_code -> subtopic_code, preserving the display order
+// implied by the topics / subtopics reference tables.
+const byTopic = new Map();
+for (const q of it.questions) {
+  if (!byTopic.has(q.topic_code)) {
+    byTopic.set(q.topic_code, { code: q.topic_code, title: topicTitleByCode.get(q.topic_code) || q.topic_code, subtopics: new Map() });
+  }
+  const topic = byTopic.get(q.topic_code);
+  if (!topic.subtopics.has(q.subtopic_code)) {
+    topic.subtopics.set(q.subtopic_code, {
+      code: q.subtopic_code,
+      title: subtopicTitleByCode.get(q.subtopic_code) || q.subtopic_code,
+      questions: [],
+    });
+  }
+  topic.subtopics.get(q.subtopic_code).questions.push(q);
+}
+
+// Render topics in the canonical curriculum order (from it.topics), then any
+// extras alphabetically. Subtopics likewise follow it.subtopics ordering.
+const topicGroups = [];
+for (const t of it.topics) {
+  if (byTopic.has(t.code)) {
+    const g = byTopic.get(t.code);
+    const orderedSubtopics = [];
+    for (const s of it.subtopics) {
+      if (s.topic_code === t.code && g.subtopics.has(s.code)) {
+        orderedSubtopics.push(g.subtopics.get(s.code));
+      }
+    }
+    for (const [code, sub] of g.subtopics) {
+      if (!orderedSubtopics.some(function(x){ return x.code === code; })) orderedSubtopics.push(sub);
+    }
+    topicGroups.push({ code: g.code, title: g.title, subtopics: orderedSubtopics });
+    byTopic.delete(t.code);
+  }
+}
+for (const g of byTopic.values()) {
+  const subs = Array.from(g.subtopics.values());
+  topicGroups.push({ code: g.code, title: g.title, subtopics: subs });
+}
 %>
-<section class="admin-card">
+<section class="admin-card" data-admin-questions>
   <header class="admin-card__header">
     <div>
       <h1>Questions</h1>
-      <span class="admin-card__sub"><%= it.questions.length %> match<%= it.questions.length === 1 ? '' : 'es' %></span>
+      <span class="admin-card__sub">
+        <span data-questions-count><%= it.questions.length %></span>
+        match<%= it.questions.length === 1 ? '' : 'es' %>
+        <span class="admin-card__sub-note" data-questions-visible-note hidden>
+          (<span data-questions-visible>0</span> shown)
+        </span>
+      </span>
     </div>
     <div class="admin-card__actions">
       <a href="/admin/questions/wizard" class="btn btn--primary">New question (wizard)</a>
@@ -62,40 +116,96 @@ for (const t of it.topics) {
     <a href="/admin/questions" class="btn btn--ghost btn--sm">Clear</a>
   </form>
 
+  <div class="admin-search-bar">
+    <label class="admin-search-bar__input">
+      <span class="visually-hidden">Search questions</span>
+      <input
+        type="search"
+        id="questions-search"
+        data-questions-search
+        placeholder="Search by stem, id, command word, status…"
+        autocomplete="off"
+      />
+    </label>
+    <div class="admin-search-bar__actions">
+      <button type="button" class="btn btn--ghost btn--sm" data-questions-expand>Expand all</button>
+      <button type="button" class="btn btn--ghost btn--sm" data-questions-collapse>Collapse all</button>
+    </div>
+  </div>
+
   <% if (it.questions.length === 0) { %>
     <p class="empty">No questions match those filters.</p>
   <% } else { %>
-    <table class="admin-table">
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>Topic</th>
-          <th>Subtopic</th>
-          <th>Command</th>
-          <th>Marks</th>
-          <th>Status</th>
-          <th>Active</th>
-          <th>Stem</th>
-          <th>Created by</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        <% it.questions.forEach(function(q) { %>
-          <tr>
-            <td><%= q.id %></td>
-            <td><%= q.topic_code %> · <%= q.topic_title %></td>
-            <td><%= q.subtopic_code %></td>
-            <td><%= q.command_word_code %></td>
-            <td><%= q.marks_total %></td>
-            <td><%= q.approval_status %></td>
-            <td><%= q.active ? 'yes' : 'no' %></td>
-            <td><%= truncate(q.stem, 90) %></td>
-            <td><%= q.created_by_display_name %></td>
-            <td><a href="/admin/questions/<%= q.id %>">Open</a></td>
-          </tr>
-        <% }); %>
-      </tbody>
-    </table>
+    <p class="admin-empty-search" data-questions-empty hidden>No questions match that search.</p>
+    <div class="question-tree">
+      <% topicGroups.forEach(function(topic) { %>
+        <%
+          let topicCount = 0;
+          topic.subtopics.forEach(function(s){ topicCount += s.questions.length; });
+        %>
+        <details class="topic-group" data-topic-group data-topic-code="<%= topic.code %>" open>
+          <summary class="topic-group__summary">
+            <span class="topic-group__code"><%= topic.code %></span>
+            <span class="topic-group__title"><%= topic.title %></span>
+            <span class="topic-group__count" data-topic-count><%= topicCount %></span>
+          </summary>
+          <div class="topic-group__body">
+            <% topic.subtopics.forEach(function(sub) { %>
+              <details class="subtopic-group" data-subtopic-group data-subtopic-code="<%= sub.code %>" open>
+                <summary class="subtopic-group__summary">
+                  <span class="subtopic-group__code"><%= sub.code %></span>
+                  <span class="subtopic-group__title"><%= sub.title %></span>
+                  <span class="subtopic-group__count" data-subtopic-count><%= sub.questions.length %></span>
+                </summary>
+                <div class="subtopic-group__body">
+                  <table class="admin-table admin-table--questions">
+                    <thead>
+                      <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Command</th>
+                        <th scope="col">Marks</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">Active</th>
+                        <th scope="col">Stem</th>
+                        <th scope="col">Created by</th>
+                        <th scope="col"><span class="visually-hidden">Actions</span></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <% sub.questions.forEach(function(q) { %>
+                        <%
+                          const haystack = [
+                            q.id,
+                            q.topic_code,
+                            q.subtopic_code,
+                            q.command_word_code,
+                            q.approval_status,
+                            q.active ? 'active' : 'inactive',
+                            q.stem,
+                            q.created_by_display_name,
+                          ].join(' ').toLowerCase();
+                        %>
+                        <tr class="question-row" data-question-row data-search="<%= haystack %>">
+                          <td class="question-row__id"><%= q.id %></td>
+                          <td><%= q.command_word_code %></td>
+                          <td><%= q.marks_total %></td>
+                          <td>
+                            <span class="pill pill--status-<%= q.approval_status %>"><%= q.approval_status %></span>
+                          </td>
+                          <td><%= q.active ? 'yes' : 'no' %></td>
+                          <td class="question-row__stem"><%= truncate(q.stem, 120) %></td>
+                          <td><%= q.created_by_display_name %></td>
+                          <td><a href="/admin/questions/<%= q.id %>" class="btn btn--ghost btn--sm">Open</a></td>
+                        </tr>
+                      <% }); %>
+                    </tbody>
+                  </table>
+                </div>
+              </details>
+            <% }); %>
+          </div>
+        </details>
+      <% }); %>
+    </div>
   <% } %>
 </section>

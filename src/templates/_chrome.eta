@@ -70,6 +70,9 @@ const themePref = (it.currentUser && it.currentUser.theme_preference) || 'auto';
       <script src="/static/v2/drafts_filter.js" defer></script>
       <script src="/static/v2/drafts_shortcuts.js" defer></script>
     <% } %>
+    <% if (it.adminQuestionsListEnabled) { %>
+      <script src="/static/admin_questions_list.js" defer></script>
+    <% } %>
     <% if (it.wizardV2ShellEnabled) { %>
       <script src="/static/v2/wizard_shell.js" defer></script>
       <script src="/static/v2/wizard_autosave.js" defer></script>

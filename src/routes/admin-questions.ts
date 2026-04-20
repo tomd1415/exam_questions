@@ -79,9 +79,10 @@ export function registerAdminQuestionRoutes(app: FastifyInstance): void {
       }
     }
 
-    const [questions, topics] = await Promise.all([
+    const [questions, topics, subtopics] = await Promise.all([
       app.repos.questions.listQuestions(filters),
       app.repos.curriculum.listTopics(),
+      app.repos.curriculum.listSubtopics(),
     ]);
 
     return reply.view('admin_questions_list.eta', {
@@ -90,9 +91,11 @@ export function registerAdminQuestionRoutes(app: FastifyInstance): void {
       csrfToken: reply.generateCsrf(),
       questions,
       topics,
+      subtopics,
       selected,
       approvalStatuses: APPROVAL_STATUSES,
       flash: readQueryFlash(req),
+      adminQuestionsListEnabled: true,
     });
   });
 

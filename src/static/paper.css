@@ -16,7 +16,7 @@
   background: var(--paper-bg);
   border: 1px solid var(--paper-rule);
   border-radius: 0.25rem;
-  padding: 2rem 1.5rem;
+  padding: 2.5rem 2.25rem;
   color: var(--paper-ink);
 }
 
@@ -98,12 +98,12 @@
 
 .paper-question {
   border-top: 1px solid var(--paper-rule);
-  padding: 1.5rem 0 1rem 0;
+  padding: 2rem 0 1.25rem 0;
   margin: 0;
 }
 .paper-question:first-of-type {
   border-top: 0;
-  padding-top: 0.5rem;
+  padding-top: 0.75rem;
 }
 
 .paper-question__header {
@@ -139,13 +139,13 @@
 .paper-part {
   display: grid;
   grid-template-columns: 1fr var(--paper-gutter);
-  gap: 0.5rem 1rem;
-  padding: 0.5rem 0 1rem 0;
+  gap: 0.6rem 1rem;
+  padding: 0.75rem 0 1.25rem 0;
   border: 0;
 }
 .paper-part + .paper-part {
   border-top: 1px dashed var(--paper-rule);
-  padding-top: 1rem;
+  padding-top: 1.25rem;
 }
 
 .paper-part__prompt {
@@ -212,7 +212,7 @@
   gap: 0.75rem;
   align-items: center;
   justify-content: flex-end;
-  margin-top: 1.25rem;
+  margin-top: 1.75rem;
   padding-top: 1rem;
   border-top: 2px solid var(--paper-sep);
 }
@@ -550,11 +550,9 @@
 
 /* --- Phase 2 Chunk 5: review page two-column layout ------------------- */
 
-/* The global .site-main is capped at 720px which squashes the side-by-side
-   review columns. Widen only on pages that actually render the review. */
-.site-main:has(.question-part--review) {
-  max-width: 1100px;
-}
+/* Historic override — the global .site-main cap was 960px and squashed the
+   review columns. The cap is now 1200px everywhere, so this rule is a no-op
+   kept only as documentation of the prior constraint. */
 
 .question-part--review {
   border: 1px solid var(--paper-rule);
