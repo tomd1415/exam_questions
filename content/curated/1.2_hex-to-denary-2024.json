@@ -19,9 +19,18 @@
       "marks": 3,
       "expected_response_type": "medium_text",
       "mark_points": [
-        { "text": "gives a valid 2-digit hexadecimal example and correctly converts it to denary", "marks": 1 },
-        { "text": "multiply left/first digit by 16; or convert each hex digit to 4-bit binary", "marks": 1 },
-        { "text": "add the value of the right/second digit; or combine to 8-bit binary and convert to denary", "marks": 1 }
+        {
+          "text": "gives a valid 2-digit hexadecimal example and correctly converts it to denary",
+          "marks": 1
+        },
+        {
+          "text": "multiply left/first digit by 16; or convert each hex digit to 4-bit binary",
+          "marks": 1
+        },
+        {
+          "text": "add the value of the right/second digit; or combine to 8-bit binary and convert to denary",
+          "marks": 1
+        }
       ],
       "misconceptions": [
         {

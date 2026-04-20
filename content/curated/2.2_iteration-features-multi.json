@@ -28,7 +28,10 @@
         ],
         "correctByRow": [
           ["Uses a counter variable", "Runs a fixed number of times"],
-          ["Controlled by a Boolean condition", "May run zero times if the condition is false at the start"]
+          [
+            "Controlled by a Boolean condition",
+            "May run zero times if the condition is false at the start"
+          ]
         ],
         "partialCredit": true
       },
@@ -36,7 +39,10 @@
         { "text": "for loop — uses a counter variable", "marks": 1 },
         { "text": "for loop — runs a fixed number of times", "marks": 1 },
         { "text": "while loop — controlled by a Boolean condition", "marks": 1 },
-        { "text": "while loop — may run zero times if the condition is false at the start", "marks": 1 }
+        {
+          "text": "while loop — may run zero times if the condition is false at the start",
+          "marks": 1
+        }
       ]
     }
   ]

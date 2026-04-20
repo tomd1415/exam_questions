@@ -19,10 +19,22 @@
       "marks": 4,
       "expected_response_type": "extended_response",
       "mark_points": [
-        { "text": "Benefit 1: fast connection / high bandwidth / consistent bandwidth", "marks": 1 },
-        { "text": "Benefit 1 expansion applied to airport (e.g. reduces delays at check-in / supports live flight data)", "marks": 1 },
-        { "text": "Benefit 2: secure / unlikely to be intercepted / data transmissions are safe", "marks": 1 },
-        { "text": "Benefit 2 expansion applied to airport (e.g. passenger or aircraft data is not intercepted)", "marks": 1 }
+        {
+          "text": "Benefit 1: fast connection / high bandwidth / consistent bandwidth",
+          "marks": 1
+        },
+        {
+          "text": "Benefit 1 expansion applied to airport (e.g. reduces delays at check-in / supports live flight data)",
+          "marks": 1
+        },
+        {
+          "text": "Benefit 2: secure / unlikely to be intercepted / data transmissions are safe",
+          "marks": 1
+        },
+        {
+          "text": "Benefit 2 expansion applied to airport (e.g. passenger or aircraft data is not intercepted)",
+          "marks": 1
+        }
       ],
       "misconceptions": [
         {

@@ -19,12 +19,7 @@
       "marks": 4,
       "expected_response_type": "matching",
       "part_config": {
-        "left": [
-          "Memory management",
-          "Peripheral management",
-          "File management",
-          "User interface"
-        ],
+        "left": ["Memory management", "Peripheral management", "File management", "User interface"],
         "right": [
           "Moves data from secondary storage to RAM",
           "Installs device drivers and handles input/output devices",

@@ -46,11 +46,7 @@
             "y": 120
           }
         ],
-        "palette": [
-          "AND",
-          "OR",
-          "NOT"
-        ],
+        "palette": ["AND", "OR", "NOT"],
         "maxGates": 4,
         "expected": {
           "truthTable": [

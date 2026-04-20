@@ -24,18 +24,8 @@
           "A pupil's full name",
           "Whether the pupil has paid (yes/no)"
         ],
-        "columns": [
-          "Integer",
-          "Real",
-          "String",
-          "Boolean"
-        ],
-        "correctByRow": [
-          "Integer",
-          "Real",
-          "String",
-          "Boolean"
-        ],
+        "columns": ["Integer", "Real", "String", "Boolean"],
+        "correctByRow": ["Integer", "Real", "String", "Boolean"],
         "allOrNothing": false
       },
       "mark_points": [

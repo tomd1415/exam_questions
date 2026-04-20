@@ -25,7 +25,10 @@
       "mark_points": [
         { "text": "Start and End terminators are present", "marks": 1 },
         { "text": "input shape reads the number from the user", "marks": 1 },
-        { "text": "decision shape tests whether the number is even (e.g. number MOD 2 = 0)", "marks": 1 },
+        {
+          "text": "decision shape tests whether the number is even (e.g. number MOD 2 = 0)",
+          "marks": 1
+        },
         { "text": "Yes branch leads to an output shape printing 'even'", "marks": 1 },
         { "text": "No branch leads to an output shape printing 'odd'", "marks": 1 }
       ],

@@ -22,16 +22,12 @@
         "gaps": [
           {
             "id": "stop",
-            "accept": [
-              "5"
-            ],
+            "accept": ["5"],
             "trimWhitespace": true
           },
           {
             "id": "counter",
-            "accept": [
-              "i"
-            ],
+            "accept": ["i"],
             "caseSensitive": false,
             "trimWhitespace": true
           }

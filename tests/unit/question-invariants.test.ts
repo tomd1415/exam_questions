@@ -291,7 +291,13 @@ describe('validateModelAnswerShape (Chunk B1)', () => {
   });
 
   it('cloze_free: requires JSON object covering every gap id', () => {
-    const cfg = { text: '{{g1}} and {{g2}}', gaps: [{ id: 'g1', accept: ['x'] }, { id: 'g2', accept: ['y'] }] };
+    const cfg = {
+      text: '{{g1}} and {{g2}}',
+      gaps: [
+        { id: 'g1', accept: ['x'] },
+        { id: 'g2', accept: ['y'] },
+      ],
+    };
     expect(validateModelAnswerShape('cloze_free', '{"g1":"x","g2":"y"}', cfg)).toEqual([]);
     expect(validateModelAnswerShape('cloze_free', '{"g1":"x"}', cfg).length).toBeGreaterThan(0);
     expect(validateModelAnswerShape('cloze_free', 'prose answer', cfg).length).toBeGreaterThan(0);
@@ -313,24 +319,22 @@ describe('validateModelAnswerShape (Chunk B1)', () => {
     expect(
       validateModelAnswerShape('matrix_tick_multi', '{"R1":["A"],"R2":["A","B"]}', cfg),
     ).toEqual([]);
-    expect(
-      validateModelAnswerShape('matrix_tick_multi', '{"R1":"A"}', cfg).length,
-    ).toBeGreaterThan(0);
+    expect(validateModelAnswerShape('matrix_tick_multi', '{"R1":"A"}', cfg).length).toBeGreaterThan(
+      0,
+    );
   });
 
   it('trace_table: keys must match the "row,col" pattern', () => {
     expect(validateModelAnswerShape('trace_table', '{"0,0":"1","1,0":"2"}', null)).toEqual([]);
-    expect(
-      validateModelAnswerShape('trace_table', '{"row0":"1"}', null).length,
-    ).toBeGreaterThan(0);
+    expect(validateModelAnswerShape('trace_table', '{"row0":"1"}', null).length).toBeGreaterThan(0);
   });
 
   it('diagram_labels: JSON object must cover every hotspot id', () => {
     const cfg = { hotspots: [{ id: 'a' }, { id: 'b' }] };
     expect(validateModelAnswerShape('diagram_labels', '{"a":"top","b":"bottom"}', cfg)).toEqual([]);
-    expect(
-      validateModelAnswerShape('diagram_labels', '{"a":"top"}', cfg).length,
-    ).toBeGreaterThan(0);
+    expect(validateModelAnswerShape('diagram_labels', '{"a":"top"}', cfg).length).toBeGreaterThan(
+      0,
+    );
   });
 
   it('logic_diagram + flowchart accept any non-empty prose for now', () => {

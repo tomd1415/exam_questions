@@ -20,8 +20,14 @@
       "expected_response_type": "medium_text",
       "mark_points": [
         { "text": "written in hexadecimal / denary / binary", "marks": 1 },
-        { "text": "6 groups (12 hex digits) separated by colons or hyphens; 48 bits long; each group is 2 hex digits / 8 binary bits", "marks": 1 },
-        { "text": "first half is the manufacturer ID; second half is the device serial number", "marks": 1 }
+        {
+          "text": "6 groups (12 hex digits) separated by colons or hyphens; 48 bits long; each group is 2 hex digits / 8 binary bits",
+          "marks": 1
+        },
+        {
+          "text": "first half is the manufacturer ID; second half is the device serial number",
+          "marks": 1
+        }
       ]
     }
   ]

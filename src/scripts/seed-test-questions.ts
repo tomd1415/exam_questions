@@ -176,9 +176,7 @@ function buildQuestions(): TestQuestionDef[] {
         marks: 1,
         expected_response_type: 'short_text',
         part_config: null,
-        mark_points: [
-          { text: 'megabyte', accepted_alternatives: ['MB', 'Megabyte', 'mega byte'] },
-        ],
+        mark_points: [{ text: 'megabyte', accepted_alternatives: ['MB', 'Megabyte', 'mega byte'] }],
       },
     ],
   });
@@ -296,10 +294,7 @@ function buildQuestions(): TestQuestionDef[] {
         marks: 2,
         expected_response_type: 'code',
         part_config: null,
-        mark_points: [
-          { text: 'Function signature def add(a, b).' },
-          { text: 'Returns a + b.' },
-        ],
+        mark_points: [{ text: 'Function signature def add(a, b).' }, { text: 'Returns a + b.' }],
       },
     ],
   });
@@ -316,10 +311,7 @@ function buildQuestions(): TestQuestionDef[] {
         marks: 2,
         expected_response_type: 'code',
         part_config: null,
-        mark_points: [
-          { text: 'Iterates from 1 to 10 inclusive.' },
-          { text: 'Prints each value.' },
-        ],
+        mark_points: [{ text: 'Iterates from 1 to 10 inclusive.' }, { text: 'Prints each value.' }],
       },
     ],
   });
@@ -376,7 +368,14 @@ function buildQuestions(): TestQuestionDef[] {
     suffix: 'trace_table-1',
     stem: 'Trace the following loop:\n  total ← 0\n  for i = 1 to 3\n    total ← total + i\n  next i\nRecord the value of total after each iteration.',
     expected_response_type: 'trace_table',
-    model_answer: JSON.stringify({ '0,0': '1', '0,1': '1', '1,0': '2', '1,1': '3', '2,0': '3', '2,1': '6' }),
+    model_answer: JSON.stringify({
+      '0,0': '1',
+      '0,1': '1',
+      '1,0': '2',
+      '1,1': '3',
+      '2,0': '3',
+      '2,1': '6',
+    }),
     command_word_code: 'complete',
     archetype_code: 'trace_table',
     parts: [
@@ -802,8 +801,7 @@ function buildQuestions(): TestQuestionDef[] {
     suffix: 'logic_diagram-1',
     stem: 'Draw a logic circuit that implements Q = A AND (NOT B).',
     expected_response_type: 'logic_diagram',
-    model_answer:
-      'NOT gate with B as input; AND gate takes A and NOT B as inputs; output Q.',
+    model_answer: 'NOT gate with B as input; AND gate takes A and NOT B as inputs; output Q.',
     command_word_code: 'draw',
     archetype_code: 'explain',
     parts: [
@@ -840,9 +838,7 @@ function buildQuestions(): TestQuestionDef[] {
             { id: 'B', label: 'B', kind: 'input', x: 40, y: 220 },
             { id: 'Q', label: 'Q', kind: 'output', x: 540, y: 170 },
           ],
-          gates: [
-            { id: 'g1', accept: ['OR', 'or'], x: 260, y: 140, width: 140, height: 80 },
-          ],
+          gates: [{ id: 'g1', accept: ['OR', 'or'], x: 260, y: 140, width: 140, height: 80 }],
           wires: [
             { from: 'A', to: 'g1' },
             { from: 'B', to: 'g1' },
@@ -873,9 +869,23 @@ function buildQuestions(): TestQuestionDef[] {
           width: 600,
           height: 200,
           hotspots: [
-            { id: 'alu', x: 40, y: 60, width: 140, height: 80, accept: ['ALU', 'arithmetic logic unit'] },
+            {
+              id: 'alu',
+              x: 40,
+              y: 60,
+              width: 140,
+              height: 80,
+              accept: ['ALU', 'arithmetic logic unit'],
+            },
             { id: 'cu', x: 220, y: 60, width: 140, height: 80, accept: ['CU', 'control unit'] },
-            { id: 'reg', x: 400, y: 60, width: 160, height: 80, accept: ['Registers', 'register file'] },
+            {
+              id: 'reg',
+              x: 400,
+              y: 60,
+              width: 160,
+              height: 80,
+              accept: ['Registers', 'register file'],
+            },
           ],
         },
         mark_points: [
@@ -905,7 +915,14 @@ function buildQuestions(): TestQuestionDef[] {
           height: 400,
           hotspots: [
             { id: 'centre', x: 260, y: 170, width: 120, height: 60, accept: ['switch', 'hub'] },
-            { id: 'host', x: 40, y: 40, width: 120, height: 40, accept: ['client', 'host', 'computer'] },
+            {
+              id: 'host',
+              x: 40,
+              y: 40,
+              width: 120,
+              height: 40,
+              accept: ['client', 'host', 'computer'],
+            },
           ],
         },
         mark_points: [
@@ -956,7 +973,15 @@ function buildQuestions(): TestQuestionDef[] {
           variant: 'shapes',
           canvas: { width: 600, height: 500 },
           shapes: [
-            { id: 'start', type: 'terminator', x: 220, y: 20, width: 160, height: 50, text: 'Start' },
+            {
+              id: 'start',
+              type: 'terminator',
+              x: 220,
+              y: 20,
+              width: 160,
+              height: 50,
+              text: 'Start',
+            },
             {
               id: 'q1',
               type: 'decision',
@@ -984,7 +1009,15 @@ function buildQuestions(): TestQuestionDef[] {
               height: 50,
               accept: ['Output B', 'Print B'],
             },
-            { id: 'stop', type: 'terminator', x: 220, y: 310, width: 160, height: 50, text: 'Stop' },
+            {
+              id: 'stop',
+              type: 'terminator',
+              x: 220,
+              y: 310,
+              width: 160,
+              height: 50,
+              text: 'Stop',
+            },
           ],
           arrows: [
             { from: 'start', to: 'q1' },
@@ -1039,8 +1072,7 @@ async function ensureUser(
   );
   if (existing.rows.length > 0) return { id: existing.rows[0]!.id, password: null };
 
-  const password =
-    opts.role === 'pupil' ? 'test-pupil-0000' : randomBytes(16).toString('hex');
+  const password = opts.role === 'pupil' ? 'test-pupil-0000' : randomBytes(16).toString('hex');
   const passwordHash = await hashPassword(password);
   const { rows } = await pool.query<{ id: string }>(
     `INSERT INTO users
@@ -1095,10 +1127,9 @@ async function purgePreviousTestQuestions(client: PoolClient): Promise<void> {
        )`,
     [`${TEST_HASH_PREFIX}%`],
   );
-  await client.query(
-    `DELETE FROM questions WHERE similarity_hash LIKE $1`,
-    [`${TEST_HASH_PREFIX}%`],
-  );
+  await client.query(`DELETE FROM questions WHERE similarity_hash LIKE $1`, [
+    `${TEST_HASH_PREFIX}%`,
+  ]);
 }
 
 export async function seedTestQuestions(
@@ -1163,7 +1194,8 @@ export async function seedTestQuestions(
         academicYear: opts.academicYear,
       });
   if (!opts.dryRun) await ensureEnrolment(pool, classId, pupil.id);
-  if (pupil.password) summary.pupilLogin = { username: opts.pupilUsername, password: pupil.password };
+  if (pupil.password)
+    summary.pupilLogin = { username: opts.pupilUsername, password: pupil.password };
 
   const createdQuestionIds: string[] = [];
 

@@ -19,9 +19,15 @@
       "marks": 4,
       "expected_response_type": "algorithm",
       "mark_points": [
-        { "text": "compares adjacent pairs of items starting at the beginning of the list", "marks": 1 },
+        {
+          "text": "compares adjacent pairs of items starting at the beginning of the list",
+          "marks": 1
+        },
         { "text": "swaps a pair when the left item is greater than the right item", "marks": 1 },
-        { "text": "after each pass the largest remaining value settles at the right-hand end", "marks": 1 },
+        {
+          "text": "after each pass the largest remaining value settles at the right-hand end",
+          "marks": 1
+        },
         { "text": "repeats passes until a whole pass makes no swaps (list is sorted)", "marks": 1 }
       ],
       "misconceptions": [

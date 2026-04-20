@@ -354,18 +354,42 @@ async function runPupilFlow(browser: Browser): Promise<void> {
     }
 
     // Step 8 — autosave round-trip on the first textarea-shaped widget.
-    const autosaveTa = page
-      .locator('[data-autosave-part-id]')
-      .filter({ has: page.locator('xpath=self::textarea | self::input') })
-      .first();
-    let usableTa = autosaveTa;
-    if (!(await usableTa.count())) {
-      // Some widgets (radios/checkboxes) wrap the data attribute on the
-      // fieldset. Fall back to the first textarea regardless.
+    // Phase 2.5 widget types (trace_table_grid, matrix_tick, cloze, logic
+    // diagram, flowchart, diagram labels, matching) do not surface their
+    // raw_answer as a single DOM value the walker can fill + re-read, so
+    // walk forward through the attempt's questions via the "Next →" link
+    // until a <textarea>-shaped question is found. If none of the topic's
+    // questions render as plain text, skip step 8 rather than failing —
+    // the autosave path itself is still covered by widget-specific tests.
+    const MAX_NAV = 20;
+    let usableTa = page.locator('form.question-form textarea').first();
+    let probeUrl: string | null = null;
+    let probeQuestionNo: string | null = null;
+    for (let i = 0; i < MAX_NAV; i++) {
+      if (await usableTa.count()) {
+        probeUrl = page.url();
+        probeQuestionNo =
+          (await page.locator('.paper-question__number').first().textContent())?.trim() ?? null;
+        break;
+      }
+      const nextLink = page.locator('nav.paper-nav a', { hasText: 'Next' }).first();
+      if (!(await nextLink.count())) break;
+      await Promise.all([
+        page.waitForURL(/\/attempts\/\d+\?q=\d+/, {
+          waitUntil: 'domcontentloaded',
+          timeout: 15000,
+        }),
+        nextLink.click(),
+      ]);
       usableTa = page.locator('form.question-form textarea').first();
     }
+    let ctxForSubmit: BrowserContext = ctx;
+    let pageForSubmit: Page = page;
     if (!(await usableTa.count())) {
-      await fail('8', 'no textarea/input found to autosave-probe', page);
+      skip(
+        '8',
+        `no <textarea>-shaped question found in topic ${TOPIC_CODE} after walking ${MAX_NAV} questions; autosave round-trip requires a plain-text widget`,
+      );
     } else {
       const partIdAttr =
         (await usableTa.getAttribute('data-autosave-part-id')) ??
@@ -384,7 +408,9 @@ async function runPupilFlow(browser: Browser): Promise<void> {
         if (autosaveResp.status() !== 200) {
           await fail('8', `autosave POST returned ${autosaveResp.status()}`, page);
         } else {
-          // Round-trip across a fresh context.
+          // Round-trip across a fresh context — re-open the same question URL
+          // because /attempts/<id> defaults to the first question, which may
+          // not be the one we probed.
           await ctx.close();
           const ctx2 = await browser.newContext();
           const page2 = await ctx2.newPage();
@@ -394,27 +420,32 @@ async function runPupilFlow(browser: Browser): Promise<void> {
             await ctx2.close();
             return;
           }
-          await page2.goto(`${APP_URL}/attempts/${result.attemptId}`, {
+          await page2.goto(probeUrl ?? `${APP_URL}/attempts/${result.attemptId}`, {
             waitUntil: 'domcontentloaded',
           });
           const restored = await page2.locator('form.question-form textarea').first().inputValue();
           if (restored !== AUTOSAVE_PROBE) {
             await fail(
               '8',
-              `first textarea did not restore autosave probe; got ${JSON.stringify(restored)}`,
+              `${probeQuestionNo ?? 'first'} textarea did not restore autosave probe; got ${JSON.stringify(restored)}`,
               page2,
             );
             await ctx2.close();
             return;
           }
-          pass('8', `autosave POST 200, raw_answer survived a fresh context+login`);
-          await runPupilSubmit(browser, ctx2, page2);
-          return;
+          pass(
+            '8',
+            `autosave POST 200 on ${probeQuestionNo ?? 'first text question'}, raw_answer survived a fresh context+login`,
+          );
+          ctxForSubmit = ctx2;
+          pageForSubmit = page2;
         }
       } catch (e) {
         await fail('8', `exception: ${String(e)}`, page);
       }
     }
+    await runPupilSubmit(browser, ctxForSubmit, pageForSubmit);
+    return;
   } catch (e) {
     await fail('5', `exception: ${String(e)}`, page);
   }

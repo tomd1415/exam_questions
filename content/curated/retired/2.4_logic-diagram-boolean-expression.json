@@ -19,16 +19,8 @@
       "expected_response_type": "logic_diagram",
       "part_config": {
         "variant": "boolean_expression",
-        "accept": [
-          "(A AND B) OR NOT C",
-          "(A AND B) OR (NOT C)",
-          "NOT C OR (A AND B)"
-        ],
-        "allowedOperators": [
-          "AND",
-          "OR",
-          "NOT"
-        ]
+        "accept": ["(A AND B) OR NOT C", "(A AND B) OR (NOT C)", "NOT C OR (A AND B)"],
+        "allowedOperators": ["AND", "OR", "NOT"]
       },
       "mark_points": [
         {

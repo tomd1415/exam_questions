@@ -22,37 +22,19 @@
         "gaps": [
           {
             "id": "u1",
-            "accept": [
-              "byte",
-              "B"
-            ]
+            "accept": ["byte", "B"]
           },
           {
             "id": "u2",
-            "accept": [
-              "kilobyte",
-              "kibibyte",
-              "KB",
-              "KiB"
-            ]
+            "accept": ["kilobyte", "kibibyte", "KB", "KiB"]
           },
           {
             "id": "u3",
-            "accept": [
-              "megabyte",
-              "mebibyte",
-              "MB",
-              "MiB"
-            ]
+            "accept": ["megabyte", "mebibyte", "MB", "MiB"]
           },
           {
             "id": "u4",
-            "accept": [
-              "gigabyte",
-              "gibibyte",
-              "GB",
-              "GiB"
-            ]
+            "accept": ["gigabyte", "gibibyte", "GB", "GiB"]
           }
         ]
       },

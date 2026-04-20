@@ -23,31 +23,19 @@
           {
             "id": "ab",
             "prompt": "Gate combining A and B",
-            "options": [
-              "AND",
-              "OR",
-              "NOT"
-            ],
+            "options": ["AND", "OR", "NOT"],
             "accept": "AND"
           },
           {
             "id": "notc",
             "prompt": "Gate inverting C",
-            "options": [
-              "AND",
-              "OR",
-              "NOT"
-            ],
+            "options": ["AND", "OR", "NOT"],
             "accept": "NOT"
           },
           {
             "id": "out",
             "prompt": "Gate combining (A AND B) with NOT C",
-            "options": [
-              "AND",
-              "OR",
-              "NOT"
-            ],
+            "options": ["AND", "OR", "NOT"],
             "accept": "OR"
           }
         ]

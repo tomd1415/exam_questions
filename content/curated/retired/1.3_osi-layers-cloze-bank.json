@@ -22,32 +22,18 @@
         "gaps": [
           {
             "id": "d1",
-            "accept": [
-              "switch"
-            ]
+            "accept": ["switch"]
           },
           {
             "id": "d2",
-            "accept": [
-              "router"
-            ]
+            "accept": ["router"]
           },
           {
             "id": "d3",
-            "accept": [
-              "wireless access point",
-              "access point",
-              "WAP"
-            ]
+            "accept": ["wireless access point", "access point", "WAP"]
           }
         ],
-        "bank": [
-          "switch",
-          "router",
-          "wireless access point",
-          "hub",
-          "modem"
-        ]
+        "bank": ["switch", "router", "wireless access point", "hub", "modem"]
       },
       "mark_points": [
         {

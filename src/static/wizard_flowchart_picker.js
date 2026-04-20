@@ -49,7 +49,9 @@
   }
 
   function parseShapeLine(line) {
-    var parts = line.split('|').map(function (s) { return s.trim(); });
+    var parts = line.split('|').map(function (s) {
+      return s.trim();
+    });
     if (parts.length < 8) return null;
     var id = parts[0];
     var type = parts[1];
@@ -67,8 +69,12 @@
     } else if (kind === 'EXPECTED') {
       shape.accept = body
         .split(',')
-        .map(function (s) { return s.trim(); })
-        .filter(function (s) { return s.length > 0; });
+        .map(function (s) {
+          return s.trim();
+        })
+        .filter(function (s) {
+          return s.length > 0;
+        });
     } else {
       return null;
     }
@@ -93,7 +99,9 @@
     for (var i = 0; i < lines.length; i++) {
       var line = lines[i].trim();
       if (!line) continue;
-      var parts = line.split('|').map(function (s) { return s.trim(); });
+      var parts = line.split('|').map(function (s) {
+        return s.trim();
+      });
       if (parts.length < 2 || parts.length > 3) continue;
       var a = { from: parts[0], to: parts[1] };
       if (parts[2]) a.label = parts[2];
@@ -115,7 +123,9 @@
 
   function formatArrows(list) {
     return list
-      .map(function (a) { return a.label ? a.from + '|' + a.to + '|' + a.label : a.from + '|' + a.to; })
+      .map(function (a) {
+        return a.label ? a.from + '|' + a.to + '|' + a.label : a.from + '|' + a.to;
+      })
       .join('\n');
   }
 
@@ -133,33 +143,86 @@
   }
 
   function shapePath(s) {
-    var x = s.x, y = s.y, w = s.width, h = s.height;
+    var x = s.x,
+      y = s.y,
+      w = s.width,
+      h = s.height;
     if (s.type === 'terminator') {
       var r = Math.min(w, h) / 2;
-      return 'M ' + (x + r) + ' ' + y +
-        ' H ' + (x + w - r) +
-        ' A ' + r + ' ' + r + ' 0 0 1 ' + (x + w - r) + ' ' + (y + h) +
-        ' H ' + (x + r) +
-        ' A ' + r + ' ' + r + ' 0 0 1 ' + (x + r) + ' ' + y + ' Z';
+      return (
+        'M ' +
+        (x + r) +
+        ' ' +
+        y +
+        ' H ' +
+        (x + w - r) +
+        ' A ' +
+        r +
+        ' ' +
+        r +
+        ' 0 0 1 ' +
+        (x + w - r) +
+        ' ' +
+        (y + h) +
+        ' H ' +
+        (x + r) +
+        ' A ' +
+        r +
+        ' ' +
+        r +
+        ' 0 0 1 ' +
+        (x + r) +
+        ' ' +
+        y +
+        ' Z'
+      );
     }
     if (s.type === 'decision') {
-      var mx = x + w / 2, my = y + h / 2;
-      return 'M ' + mx + ' ' + y +
-        ' L ' + (x + w) + ' ' + my +
-        ' L ' + mx + ' ' + (y + h) +
-        ' L ' + x + ' ' + my + ' Z';
+      var mx = x + w / 2,
+        my = y + h / 2;
+      return (
+        'M ' +
+        mx +
+        ' ' +
+        y +
+        ' L ' +
+        (x + w) +
+        ' ' +
+        my +
+        ' L ' +
+        mx +
+        ' ' +
+        (y + h) +
+        ' L ' +
+        x +
+        ' ' +
+        my +
+        ' Z'
+      );
     }
     if (s.type === 'io') {
       var skew = Math.min(20, w / 6);
-      return 'M ' + (x + skew) + ' ' + y +
-        ' L ' + (x + w) + ' ' + y +
-        ' L ' + (x + w - skew) + ' ' + (y + h) +
-        ' L ' + x + ' ' + (y + h) + ' Z';
+      return (
+        'M ' +
+        (x + skew) +
+        ' ' +
+        y +
+        ' L ' +
+        (x + w) +
+        ' ' +
+        y +
+        ' L ' +
+        (x + w - skew) +
+        ' ' +
+        (y + h) +
+        ' L ' +
+        x +
+        ' ' +
+        (y + h) +
+        ' Z'
+      );
     }
-    return 'M ' + x + ' ' + y +
-      ' H ' + (x + w) +
-      ' V ' + (y + h) +
-      ' H ' + x + ' Z';
+    return 'M ' + x + ' ' + y + ' H ' + (x + w) + ' V ' + (y + h) + ' H ' + x + ' Z';
   }
 
   function shapeCentre(s) {
@@ -218,9 +281,15 @@
         );
       }
       if (hint) {
-        if (tool === 'select') hint.textContent = 'Click a shape to select; drag to move; drag SE corner to resize.';
-        else if (tool === 'add:arrow') hint.textContent = 'Click the source shape, then the target shape.';
-        else if (tool && tool.indexOf('add:') === 0) hint.textContent = 'Click the canvas to drop a ' + tool.slice(4) + '. Edit its text/accept list in the inspector.';
+        if (tool === 'select')
+          hint.textContent = 'Click a shape to select; drag to move; drag SE corner to resize.';
+        else if (tool === 'add:arrow')
+          hint.textContent = 'Click the source shape, then the target shape.';
+        else if (tool && tool.indexOf('add:') === 0)
+          hint.textContent =
+            'Click the canvas to drop a ' +
+            tool.slice(4) +
+            '. Edit its text/accept list in the inspector.';
         else hint.textContent = '';
       }
     }
@@ -290,7 +359,11 @@
       evt.stopPropagation();
       var model = readModel();
       var idx = -1;
-      for (var i = 0; i < model.shapes.length; i++) if (model.shapes[i].id === id) { idx = i; break; }
+      for (var i = 0; i < model.shapes.length; i++)
+        if (model.shapes[i].id === id) {
+          idx = i;
+          break;
+        }
       if (idx < 0) return;
       if (state.tool === 'add:arrow') {
         if (!state.arrowPending) {
@@ -324,7 +397,11 @@
       evt.stopPropagation();
       var model = readModel();
       var shape = null;
-      for (var i = 0; i < model.shapes.length; i++) if (model.shapes[i].id === id) { shape = model.shapes[i]; break; }
+      for (var i = 0; i < model.shapes.length; i++)
+        if (model.shapes[i].id === id) {
+          shape = model.shapes[i];
+          break;
+        }
       if (!shape) return;
       var p = clientToCanvas(evt);
       state.drag = {
@@ -344,7 +421,11 @@
       evt.preventDefault();
       var model = readModel();
       var shape = null;
-      for (var i = 0; i < model.shapes.length; i++) if (model.shapes[i].id === state.drag.id) { shape = model.shapes[i]; break; }
+      for (var i = 0; i < model.shapes.length; i++)
+        if (model.shapes[i].id === state.drag.id) {
+          shape = model.shapes[i];
+          break;
+        }
       if (!shape) return;
       var p = clientToCanvas(evt);
       var size = canvasSize();
@@ -372,19 +453,36 @@
       inspector.hidden = false;
       if (state.selected.kind === 'shape') {
         var shape = model.shapes[state.selected.index];
-        if (!shape) { inspector.hidden = true; return; }
+        if (!shape) {
+          inspector.hidden = true;
+          return;
+        }
         var isExpected = Array.isArray(shape.accept);
         var html =
           '<h3 class="wizard-flowchart-editor__inspector-title">Shape</h3>' +
-          '<label>Id<input type="text" data-inspect="id" value="' + escapeHtml(shape.id) + '" /></label>' +
+          '<label>Id<input type="text" data-inspect="id" value="' +
+          escapeHtml(shape.id) +
+          '" /></label>' +
           '<label>Type<select data-inspect="type">' +
           SHAPE_TYPES.map(function (t) {
-            return '<option value="' + t + '"' + (t === shape.type ? ' selected' : '') + '>' + t + '</option>';
+            return (
+              '<option value="' +
+              t +
+              '"' +
+              (t === shape.type ? ' selected' : '') +
+              '>' +
+              t +
+              '</option>'
+            );
           }).join('') +
           '</select></label>' +
           '<label>Mode<select data-inspect="mode">' +
-          '<option value="TEXT"' + (isExpected ? '' : ' selected') + '>Prefilled text</option>' +
-          '<option value="EXPECTED"' + (isExpected ? ' selected' : '') + '>Pupil-fill blank</option>' +
+          '<option value="TEXT"' +
+          (isExpected ? '' : ' selected') +
+          '>Prefilled text</option>' +
+          '<option value="EXPECTED"' +
+          (isExpected ? ' selected' : '') +
+          '>Pupil-fill blank</option>' +
           '</select></label>';
         if (isExpected) {
           html +=
@@ -397,17 +495,25 @@
             escapeHtml(shape.text || '') +
             '" /></label>';
         }
-        html += '<button type="button" data-inspect-action="delete" class="btn btn--danger btn--sm">Delete shape</button>';
+        html +=
+          '<button type="button" data-inspect-action="delete" class="btn btn--danger btn--sm">Delete shape</button>';
         inspector.innerHTML = html;
       } else {
         var arrow = model.arrows[state.selected.index];
-        if (!arrow) { inspector.hidden = true; return; }
+        if (!arrow) {
+          inspector.hidden = true;
+          return;
+        }
         inspector.innerHTML =
           '<h3 class="wizard-flowchart-editor__inspector-title">Arrow</h3>' +
           '<p class="wizard-flowchart-editor__inspector-meta">' +
-          escapeHtml(arrow.from) + ' → ' + escapeHtml(arrow.to) +
+          escapeHtml(arrow.from) +
+          ' → ' +
+          escapeHtml(arrow.to) +
           '</p>' +
-          '<label>Label (optional)<input type="text" data-inspect="label" value="' + escapeHtml(arrow.label || '') + '" /></label>' +
+          '<label>Label (optional)<input type="text" data-inspect="label" value="' +
+          escapeHtml(arrow.label || '') +
+          '" /></label>' +
           '<button type="button" data-inspect-action="delete" class="btn btn--danger btn--sm">Delete arrow</button>';
       }
     }
@@ -418,7 +524,8 @@
       stage.setAttribute('width', String(size.w));
       stage.setAttribute('height', String(size.h));
 
-      var defs = '<defs><marker id="wf-arrowhead" viewBox="0 0 10 10" refX="9" refY="5" ' +
+      var defs =
+        '<defs><marker id="wf-arrowhead" viewBox="0 0 10 10" refX="9" refY="5" ' +
         'markerWidth="8" markerHeight="8" orient="auto-start-reverse">' +
         '<path d="M 0 0 L 10 5 L 0 10 Z" fill="currentColor" /></marker></defs>';
 
@@ -426,24 +533,44 @@
       var arrowSvg = '';
       for (var ai = 0; ai < model.arrows.length; ai++) {
         var a = model.arrows[ai];
-        var from = null, to = null;
+        var from = null,
+          to = null;
         for (var k = 0; k < model.shapes.length; k++) {
           if (model.shapes[k].id === a.from) from = model.shapes[k];
           if (model.shapes[k].id === a.to) to = model.shapes[k];
         }
         if (!from || !to) continue;
-        var p1 = shapeCentre(from), p2 = shapeCentre(to);
+        var p1 = shapeCentre(from),
+          p2 = shapeCentre(to);
         var sel = state.selected && state.selected.kind === 'arrow' && state.selected.index === ai;
         arrowSvg +=
-          '<line class="wizard-flowchart-editor__arrow' + (sel ? ' is-selected' : '') + '" ' +
-          'data-arrow-index="' + ai + '" ' +
-          'x1="' + p1.x + '" y1="' + p1.y + '" x2="' + p2.x + '" y2="' + p2.y + '" ' +
+          '<line class="wizard-flowchart-editor__arrow' +
+          (sel ? ' is-selected' : '') +
+          '" ' +
+          'data-arrow-index="' +
+          ai +
+          '" ' +
+          'x1="' +
+          p1.x +
+          '" y1="' +
+          p1.y +
+          '" x2="' +
+          p2.x +
+          '" y2="' +
+          p2.y +
+          '" ' +
           'marker-end="url(#wf-arrowhead)" />';
         if (a.label) {
           arrowSvg +=
             '<text class="wizard-flowchart-editor__arrow-label" ' +
-            'x="' + ((p1.x + p2.x) / 2) + '" y="' + ((p1.y + p2.y) / 2) + '" ' +
-            'text-anchor="middle" dy="-4">' + escapeHtml(a.label) + '</text>';
+            'x="' +
+            (p1.x + p2.x) / 2 +
+            '" y="' +
+            (p1.y + p2.y) / 2 +
+            '" ' +
+            'text-anchor="middle" dy="-4">' +
+            escapeHtml(a.label) +
+            '</text>';
         }
       }
 
@@ -451,22 +578,47 @@
       for (var si = 0; si < model.shapes.length; si++) {
         var s = model.shapes[si];
         var isExpected = Array.isArray(s.accept);
-        var selShape = state.selected && state.selected.kind === 'shape' && state.selected.index === si;
+        var selShape =
+          state.selected && state.selected.kind === 'shape' && state.selected.index === si;
         var pending = state.arrowPending === s.id;
-        var cls = 'wizard-flowchart-editor__shape' +
+        var cls =
+          'wizard-flowchart-editor__shape' +
           (isExpected ? ' is-expected' : '') +
           (selShape ? ' is-selected' : '') +
           (pending ? ' is-arrow-pending' : '');
         shapeSvg +=
-          '<g class="wizard-flowchart-editor__shape-group" data-shape-id="' + escapeHtml(s.id) + '">' +
-          '<path class="' + cls + '" d="' + shapePath(s) + '" />' +
-          '<text class="wizard-flowchart-editor__shape-label" x="' + (s.x + s.width / 2) +
-          '" y="' + (s.y + s.height / 2) + '" text-anchor="middle" dominant-baseline="middle">' +
-          escapeHtml(isExpected ? '[' + s.id + ']' : (s.text || '')) +
+          '<g class="wizard-flowchart-editor__shape-group" data-shape-id="' +
+          escapeHtml(s.id) +
+          '">' +
+          '<path class="' +
+          cls +
+          '" d="' +
+          shapePath(s) +
+          '" />' +
+          '<text class="wizard-flowchart-editor__shape-label" x="' +
+          (s.x + s.width / 2) +
+          '" y="' +
+          (s.y + s.height / 2) +
+          '" text-anchor="middle" dominant-baseline="middle">' +
+          escapeHtml(isExpected ? '[' + s.id + ']' : s.text || '') +
           '</text>' +
           (selShape
-            ? '<rect class="wizard-flowchart-editor__selection" x="' + s.x + '" y="' + s.y + '" width="' + s.width + '" height="' + s.height + '" />' +
-              '<rect class="wizard-flowchart-editor__resize" data-resize-id="' + escapeHtml(s.id) + '" x="' + (s.x + s.width - 6) + '" y="' + (s.y + s.height - 6) + '" width="12" height="12" />'
+            ? '<rect class="wizard-flowchart-editor__selection" x="' +
+              s.x +
+              '" y="' +
+              s.y +
+              '" width="' +
+              s.width +
+              '" height="' +
+              s.height +
+              '" />' +
+              '<rect class="wizard-flowchart-editor__resize" data-resize-id="' +
+              escapeHtml(s.id) +
+              '" x="' +
+              (s.x + s.width - 6) +
+              '" y="' +
+              (s.y + s.height - 6) +
+              '" width="12" height="12" />'
             : '') +
           '</g>';
       }
@@ -492,7 +644,10 @@
 
     stage.addEventListener('mousedown', function (evt) {
       var resize = evt.target.closest('[data-resize-id]');
-      if (resize) { beginDrag(evt, resize.getAttribute('data-resize-id'), 'resize'); return; }
+      if (resize) {
+        beginDrag(evt, resize.getAttribute('data-resize-id'), 'resize');
+        return;
+      }
       var shape = evt.target.closest('[data-shape-id]');
       if (shape && state.tool === 'select') {
         // Select first so the selection box appears before dragging.
@@ -505,9 +660,15 @@
       var resize = evt.target.closest('[data-resize-id]');
       if (resize) return;
       var shape = evt.target.closest('[data-shape-id]');
-      if (shape) { onShapeClick(evt, shape.getAttribute('data-shape-id')); return; }
+      if (shape) {
+        onShapeClick(evt, shape.getAttribute('data-shape-id'));
+        return;
+      }
       var arrow = evt.target.closest('[data-arrow-index]');
-      if (arrow) { onArrowClick(evt, parseInt(arrow.getAttribute('data-arrow-index'), 10)); return; }
+      if (arrow) {
+        onArrowClick(evt, parseInt(arrow.getAttribute('data-arrow-index'), 10));
+        return;
+      }
       onStageClick(evt);
     });
 
@@ -526,7 +687,12 @@
         if (name === 'id') {
           var newId = field.value.trim();
           if (!newId || newId === shape.id) return;
-          if (model.shapes.some(function (x) { return x.id === newId; })) return;
+          if (
+            model.shapes.some(function (x) {
+              return x.id === newId;
+            })
+          )
+            return;
           for (var i = 0; i < model.arrows.length; i++) {
             if (model.arrows[i].from === shape.id) model.arrows[i].from = newId;
             if (model.arrows[i].to === shape.id) model.arrows[i].to = newId;
@@ -541,8 +707,12 @@
           delete shape.text;
           shape.accept = field.value
             .split(',')
-            .map(function (s) { return s.trim(); })
-            .filter(function (s) { return s.length > 0; });
+            .map(function (s) {
+              return s.trim();
+            })
+            .filter(function (s) {
+              return s.length > 0;
+            });
         }
       } else if (state.selected.kind === 'arrow') {
         var arrow = model.arrows[state.selected.index];
@@ -601,9 +771,18 @@
       if (!state.selected) return;
       if (evt.key !== 'Delete' && evt.key !== 'Backspace' && evt.key !== 'Escape') return;
       var active = document.activeElement;
-      if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.tagName === 'SELECT')) return;
+      if (
+        active &&
+        (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.tagName === 'SELECT')
+      )
+        return;
       evt.preventDefault();
-      if (evt.key === 'Escape') { state.selected = null; state.arrowPending = null; render(); return; }
+      if (evt.key === 'Escape') {
+        state.selected = null;
+        state.arrowPending = null;
+        render();
+        return;
+      }
       var btn = inspector.querySelector('[data-inspect-action="delete"]');
       if (btn) btn.click();
     });

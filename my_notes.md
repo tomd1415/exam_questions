@@ -1,4 +1,4 @@
-## Wizard issues to fix:
+## Wizard issues to fix
 
 1. When a subcategory is selected fill in the above categories with the relevant options.
 2. On step 3 - How should the pupil answer? When the user clicks an option it does not change appearance to signify that the selection has been made. or at least it cannot be seen.
@@ -13,7 +13,7 @@
 
 ## Notes from 20/4/2026
 
-1. When clicking on the submit answer button, there is no feedback form the page. It should idealy go stright to the feedback page if just one question at a time or otherwise confirm that the submit is successful.
+1. When clicking on the submit answer button, there is no feedback form the page. It should ideally go straight to the feedback page if just one question at a time or otherwise confirm that the submit is successful.
 2. The same pupil was able to login to the same account on multiple different computers. This should be prevented without making it harder for pupils to login in the first place.
 3. The pupils wanted an 'undo' button for some of the more complicated questions, like the flowcharts and logic diagrams.
 4. the colour mismatch between the header area and the lower area upset some pupils, a consistent colour between sections (in light and dark mode) is preferable.

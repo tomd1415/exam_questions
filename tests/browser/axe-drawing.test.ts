@@ -1,3 +1,4 @@
+/// <reference lib="dom" />
 import { afterAll, beforeAll, describe, it } from 'vitest';
 import type { FastifyInstance } from 'fastify';
 import type { Browser, BrowserContext, Page } from 'playwright';

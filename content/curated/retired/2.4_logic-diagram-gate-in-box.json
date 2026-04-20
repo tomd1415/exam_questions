@@ -46,10 +46,7 @@
             "y": 120,
             "width": 80,
             "height": 50,
-            "accept": [
-              "OR",
-              "or gate"
-            ]
+            "accept": ["OR", "or gate"]
           }
         ],
         "terminals": [

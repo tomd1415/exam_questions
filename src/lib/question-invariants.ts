@@ -206,9 +206,7 @@ export function validateModelAnswerShape(
       const options = readStringArray(partConfig, 'options');
       if (options === null) return [];
       if (!options.includes(text)) {
-        return [
-          'Model answer for multiple_choice must equal one of part_config.options verbatim.',
-        ];
+        return ['Model answer for multiple_choice must equal one of part_config.options verbatim.'];
       }
       return [];
     }
@@ -220,7 +218,7 @@ export function validateModelAnswerShape(
       }
       const options = readStringArray(partConfig, 'options');
       if (options !== null) {
-        const bad = (parsed as string[]).filter((v) => !options.includes(v));
+        const bad = parsed.filter((v) => !options.includes(v));
         if (bad.length > 0) {
           return [
             `Model answer for tick_box lists options not in part_config.options: ${bad.join(', ')}.`,
@@ -262,9 +260,7 @@ export function validateModelAnswerShape(
       }
       const gaps = readGapIds(partConfig);
       if (gaps !== null && !sameSet(Object.keys(map), gaps)) {
-        return [
-          `Model answer for cloze must have one entry per gap (ids: ${gaps.join(', ')}).`,
-        ];
+        return [`Model answer for cloze must have one entry per gap (ids: ${gaps.join(', ')}).`];
       }
       return [];
     }
@@ -273,9 +269,7 @@ export function validateModelAnswerShape(
       const parsed = tryParseJson(text);
       const map = asStringMap(parsed);
       if (map === null) {
-        return [
-          'Model answer for matrix_tick_single must be a JSON object mapping row → column.',
-        ];
+        return ['Model answer for matrix_tick_single must be a JSON object mapping row → column.'];
       }
       const rows = readStringArray(partConfig, 'rows');
       if (rows !== null && !sameSet(Object.keys(map), rows)) {
@@ -327,9 +321,7 @@ export function validateModelAnswerShape(
       }
       for (const k of Object.keys(map)) {
         if (!/^\d+,\d+$/.test(k)) {
-          return [
-            `Model answer for trace_table key '${k}' must match the "row,col" pattern.`,
-          ];
+          return [`Model answer for trace_table key '${k}' must match the "row,col" pattern.`];
         }
       }
       return [];
@@ -385,7 +377,10 @@ export function validateQuestionDraft(
       path: 'model_answer',
       message: `Model answer must be ≤${MAX_MODEL_ANSWER_LENGTH} characters.`,
     });
-  else if (input.parts.length === 1 && input.parts[0]!.expected_response_type === input.expected_response_type) {
+  else if (
+    input.parts.length === 1 &&
+    input.parts[0]!.expected_response_type === input.expected_response_type
+  ) {
     // Only apply the shape invariant to single-part questions whose
     // part response type matches the question's. Multi-part or mixed-type
     // questions store one prose blob covering all parts, so a per-type

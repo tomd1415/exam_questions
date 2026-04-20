@@ -19,9 +19,15 @@
       "marks": 3,
       "expected_response_type": "code",
       "mark_points": [
-        { "text": "reads a value from the user into a variable (e.g. name = input(...))", "marks": 1 },
+        {
+          "text": "reads a value from the user into a variable (e.g. name = input(...))",
+          "marks": 1
+        },
         { "text": "outputs a greeting that includes the text 'Hello,'", "marks": 1 },
-        { "text": "the greeting output includes the value of the variable (concatenation or comma-separated print)", "marks": 1 }
+        {
+          "text": "the greeting output includes the value of the variable (concatenation or comma-separated print)",
+          "marks": 1
+        }
       ],
       "misconceptions": [
         {

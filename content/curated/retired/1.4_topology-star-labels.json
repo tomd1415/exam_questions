@@ -29,10 +29,7 @@
             "y": 150,
             "width": 120,
             "height": 60,
-            "accept": [
-              "switch",
-              "hub"
-            ]
+            "accept": ["switch", "hub"]
           },
           {
             "id": "top-left",
@@ -40,12 +37,7 @@
             "y": 30,
             "width": 120,
             "height": 60,
-            "accept": [
-              "client",
-              "host",
-              "computer",
-              "device"
-            ]
+            "accept": ["client", "host", "computer", "device"]
           },
           {
             "id": "top-right",
@@ -53,12 +45,7 @@
             "y": 30,
             "width": 120,
             "height": 60,
-            "accept": [
-              "client",
-              "host",
-              "computer",
-              "device"
-            ]
+            "accept": ["client", "host", "computer", "device"]
           },
           {
             "id": "bottom-left",
@@ -66,12 +53,7 @@
             "y": 270,
             "width": 120,
             "height": 60,
-            "accept": [
-              "client",
-              "host",
-              "computer",
-              "device"
-            ]
+            "accept": ["client", "host", "computer", "device"]
           },
           {
             "id": "bottom-right",
@@ -79,12 +61,7 @@
             "y": 270,
             "width": 120,
             "height": 60,
-            "accept": [
-              "client",
-              "host",
-              "computer",
-              "device"
-            ]
+            "accept": ["client", "host", "computer", "device"]
           }
         ]
       },

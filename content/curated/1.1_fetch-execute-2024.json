@@ -21,7 +21,10 @@
       "mark_points": [
         { "text": "instructions/data are fetched from memory (RAM / primary storage)", "marks": 1 },
         { "text": "instructions are decoded / split into opcode and operand", "marks": 1 },
-        { "text": "instructions are executed / the ALU performs the arithmetic or logic", "marks": 1 }
+        {
+          "text": "instructions are executed / the ALU performs the arithmetic or logic",
+          "marks": 1
+        }
       ]
     }
   ]

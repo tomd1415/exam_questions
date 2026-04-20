@@ -18,17 +18,8 @@
       "marks": 4,
       "expected_response_type": "matrix_tick_single",
       "part_config": {
-        "rows": [
-          "RAM",
-          "ROM",
-          "HDD",
-          "Cache"
-        ],
-        "columns": [
-          "Volatile primary",
-          "Non-volatile primary",
-          "Secondary"
-        ],
+        "rows": ["RAM", "ROM", "HDD", "Cache"],
+        "columns": ["Volatile primary", "Non-volatile primary", "Secondary"],
         "correctByRow": [
           "Volatile primary",
           "Non-volatile primary",

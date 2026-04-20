@@ -26,10 +26,10 @@ let teacherId: string;
 // override resolves on the initial cascade — no flash of light styles, no
 // ambiguity about whether the attribute landed before axe scanned.
 async function setTheme(theme: 'light' | 'dark'): Promise<void> {
-  await getSharedPool().query(
-    `UPDATE users SET theme_preference = $1 WHERE id = $2::bigint`,
-    [theme, teacherId],
-  );
+  await getSharedPool().query(`UPDATE users SET theme_preference = $1 WHERE id = $2::bigint`, [
+    theme,
+    teacherId,
+  ]);
 }
 
 const SERIOUS_IMPACTS: readonly string[] = ['serious', 'critical'];

@@ -18,12 +18,7 @@
       "marks": 5,
       "expected_response_type": "matrix_tick_multi",
       "part_config": {
-        "rows": [
-          "HTTPS",
-          "SMTP",
-          "IMAP",
-          "FTP"
-        ],
+        "rows": ["HTTPS", "SMTP", "IMAP", "FTP"],
         "columns": [
           "Transfers web pages",
           "Encrypts the traffic",
@@ -32,19 +27,10 @@
           "Transfers files"
         ],
         "correctByRow": [
-          [
-            "Transfers web pages",
-            "Encrypts the traffic"
-          ],
-          [
-            "Sends email"
-          ],
-          [
-            "Retrieves email"
-          ],
-          [
-            "Transfers files"
-          ]
+          ["Transfers web pages", "Encrypts the traffic"],
+          ["Sends email"],
+          ["Retrieves email"],
+          ["Transfers files"]
         ],
         "partialCredit": true
       },

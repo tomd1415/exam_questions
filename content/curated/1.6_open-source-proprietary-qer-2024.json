@@ -19,14 +19,38 @@
       "marks": 8,
       "expected_response_type": "extended_response",
       "mark_points": [
-        { "text": "Features of open source: free to download, source code is available, can be modified and redistributed", "marks": 1 },
-        { "text": "Features of proprietary: purchased at a cost, source code is hidden, modification/redistribution not allowed", "marks": 1 },
-        { "text": "Legal/ethical: both provide copyright protection; open source can be rebranded or resold by others; proprietary restricts users' rights", "marks": 1 },
-        { "text": "Open source benefit: wider audience, community can fix bugs / improve the game", "marks": 1 },
-        { "text": "Open source drawback: little direct financial gain, limited documentation, risk of altered versions confusing users", "marks": 1 },
-        { "text": "Proprietary benefit: income from sales, tight control over the user experience, usually better-tested releases", "marks": 1 },
-        { "text": "Proprietary drawback: smaller audience (paywall), cannot be adapted to individual user needs", "marks": 1 },
-        { "text": "Justified recommendation that explicitly references this scenario (the game and the programmer)", "marks": 1 }
+        {
+          "text": "Features of open source: free to download, source code is available, can be modified and redistributed",
+          "marks": 1
+        },
+        {
+          "text": "Features of proprietary: purchased at a cost, source code is hidden, modification/redistribution not allowed",
+          "marks": 1
+        },
+        {
+          "text": "Legal/ethical: both provide copyright protection; open source can be rebranded or resold by others; proprietary restricts users' rights",
+          "marks": 1
+        },
+        {
+          "text": "Open source benefit: wider audience, community can fix bugs / improve the game",
+          "marks": 1
+        },
+        {
+          "text": "Open source drawback: little direct financial gain, limited documentation, risk of altered versions confusing users",
+          "marks": 1
+        },
+        {
+          "text": "Proprietary benefit: income from sales, tight control over the user experience, usually better-tested releases",
+          "marks": 1
+        },
+        {
+          "text": "Proprietary drawback: smaller audience (paywall), cannot be adapted to individual user needs",
+          "marks": 1
+        },
+        {
+          "text": "Justified recommendation that explicitly references this scenario (the game and the programmer)",
+          "marks": 1
+        }
       ],
       "misconceptions": [
         {
