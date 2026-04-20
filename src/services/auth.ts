@@ -76,6 +76,17 @@ export class AuthService {
       return { kind: 'invalid_credentials' };
     }
 
+    // Pupils may only hold one live session at a time: logging in on a
+    // new device silently kicks any prior session. Pupil feedback from
+    // 20/4/2026 reported that pupils were sharing accounts across
+    // multiple computers; this closes that without adding extra login
+    // friction. Teachers and admins can legitimately work from several
+    // devices, so the sweep is pupil-only.
+    let kickedSessions = 0;
+    if (user.role === 'pupil') {
+      kickedSessions = await this.sessions.deleteAllForUser(user.id);
+    }
+
     const sessionId = randomBytes(32).toString('hex');
     const expiresAt = new Date(Date.now() + SESSION_DURATION_MS);
     await this.sessions.create({
@@ -89,7 +100,10 @@ export class AuthService {
     await this.audit.record(
       { userId: user.id, role: user.role },
       'auth.login.ok',
-      { session_id_prefix: sessionId.slice(0, 8) },
+      {
+        session_id_prefix: sessionId.slice(0, 8),
+        ...(kickedSessions > 0 ? { kicked_prior_sessions: kickedSessions } : {}),
+      },
       user.id,
     );
 

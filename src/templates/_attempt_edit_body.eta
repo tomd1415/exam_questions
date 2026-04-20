@@ -71,7 +71,7 @@ const crumbs = [
   </header>
 
   <% if (it.flash) { %>
-    <p class="flash flash--ok" role="status"><%= it.flash %></p>
+    <p class="flash flash--ok flash--prominent" role="status" aria-live="polite"><%= it.flash %></p>
   <% } %>
 
   <% if (!perQuestion) { %>

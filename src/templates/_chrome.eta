@@ -36,6 +36,7 @@ const themePref = (it.currentUser && it.currentUser.theme_preference) || 'auto';
     <%~ include('_footer', it) %>
     <% if (it.autosaveEnabled) { %>
       <script src="/static/autosave.js" defer></script>
+      <script src="/static/submit-feedback.js" defer></script>
       <script src="/static/widget_counters.js" defer></script>
       <script src="/static/cloze_bank.js" defer></script>
       <script src="/static/matching.js" defer></script>

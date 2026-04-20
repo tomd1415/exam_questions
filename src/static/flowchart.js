@@ -18,6 +18,11 @@
   var PEN_COLOUR = '#111';
   var PEN_WIDTH = 2;
   var ERASER_WIDTH = 18;
+  // Cap the undo stack so a pupil who has been drawing for twenty minutes
+  // on a low-end Chromebook doesn't fill memory with PNG dataURLs. Thirty
+  // strokes is plenty for the kinds of flowcharts we ask for and keeps the
+  // cost bounded.
+  var MAX_UNDO = 30;
 
   function paintPriorImage(canvas, ctx, dataUrl) {
     if (typeof dataUrl !== 'string' || dataUrl.length === 0) return;
@@ -63,6 +68,7 @@
     var canvas = widget.querySelector('[data-flowchart-canvas]');
     var hidden = widget.querySelector('[data-flowchart-image]');
     var clearBtn = widget.querySelector('[data-flowchart-clear]');
+    var undoBtn = widget.querySelector('[data-flowchart-undo]');
     var toolBtns = widget.querySelectorAll('[data-flowchart-tool]');
     if (!canvas || !canvas.getContext || !hidden) return;
     var ctx = canvas.getContext('2d');
@@ -74,6 +80,44 @@
     ctx.lineWidth = PEN_WIDTH;
 
     paintPriorImage(canvas, ctx, hidden.value);
+
+    var history = [];
+    function refreshUndoBtn() {
+      if (!undoBtn) return;
+      if (history.length === 0) undoBtn.setAttribute('disabled', '');
+      else undoBtn.removeAttribute('disabled');
+    }
+    function snapshot() {
+      try {
+        history.push(canvas.toDataURL('image/png'));
+        if (history.length > MAX_UNDO) history.shift();
+      } catch (_err) {
+        // A tainted canvas would block export; we never load cross-origin
+        // images so this shouldn't happen. Drop the snapshot silently
+        // rather than crash the drawing flow.
+      }
+      refreshUndoBtn();
+    }
+    function undo() {
+      if (history.length === 0) return;
+      var prev = history.pop();
+      ctx.save();
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.restore();
+      if (typeof prev === 'string' && prev.length > 0) {
+        var img = new Image();
+        img.onload = function () {
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          exportImage(canvas, hidden);
+        };
+        img.src = prev;
+      } else {
+        exportImage(canvas, hidden);
+      }
+      refreshUndoBtn();
+    }
+    refreshUndoBtn();
 
     var tool = 'pen';
     function setTool(next) {
@@ -98,6 +142,9 @@
 
     function beginStroke(evt) {
       evt.preventDefault();
+      // Snapshot before mutating the canvas, so undo rolls back the
+      // whole stroke as one atomic step rather than stroke-mid.
+      snapshot();
       drawing = true;
       lastPos = pointerPos(canvas, evt);
       if (tool === 'eraser') {
@@ -148,6 +195,8 @@
     if (clearBtn) {
       clearBtn.addEventListener('click', function (evt) {
         evt.preventDefault();
+        // Clear is also undoable — pupils sometimes tap Clear by accident.
+        snapshot();
         ctx.save();
         ctx.globalCompositeOperation = 'source-over';
         ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -155,6 +204,24 @@
         exportImage(canvas, hidden);
       });
     }
+
+    if (undoBtn) {
+      undoBtn.addEventListener('click', function (evt) {
+        evt.preventDefault();
+        undo();
+      });
+    }
+
+    // Ctrl+Z / Cmd+Z while focus is inside the widget rolls back the
+    // last action. We scope to the widget so a pupil using undo in one
+    // flowchart doesn't accidentally unwind a second flowchart on the
+    // same page.
+    widget.addEventListener('keydown', function (evt) {
+      if ((evt.ctrlKey || evt.metaKey) && !evt.shiftKey && !evt.altKey && evt.key === 'z') {
+        evt.preventDefault();
+        undo();
+      }
+    });
   }
 
   function initAll() {

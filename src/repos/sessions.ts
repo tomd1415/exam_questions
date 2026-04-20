@@ -46,6 +46,17 @@ export class SessionRepo {
     await this.db.query(`DELETE FROM sessions WHERE id = $1`, [id]);
   }
 
+  /**
+   * Deletes every session row for a given user. Used on pupil login so
+   * that signing in on a new device silently kicks the old one — one
+   * pupil, one active session. Returns the number of rows removed so
+   * the caller can surface it in audit logs.
+   */
+  async deleteAllForUser(userId: string): Promise<number> {
+    const { rowCount } = await this.db.query(`DELETE FROM sessions WHERE user_id = $1`, [userId]);
+    return rowCount ?? 0;
+  }
+
   async deleteExpired(): Promise<number> {
     const { rowCount } = await this.db.query(`DELETE FROM sessions WHERE expires_at <= now()`);
     return rowCount ?? 0;

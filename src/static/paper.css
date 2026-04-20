@@ -892,6 +892,7 @@
   align-items: center;
 }
 .logic-diagram__tool,
+.logic-diagram__undo,
 .logic-diagram__clear {
   padding: 0.35rem 0.85rem;
   border: 1px solid var(--paper-ink);
@@ -903,13 +904,19 @@
   font-weight: 600;
 }
 .logic-diagram__tool:hover,
+.logic-diagram__undo:hover,
 .logic-diagram__clear:hover {
   background: var(--paper-rule);
 }
 .logic-diagram__tool:focus-visible,
+.logic-diagram__undo:focus-visible,
 .logic-diagram__clear:focus-visible {
   outline: 2px solid var(--paper-accent, #1d4ed8);
   outline-offset: 2px;
+}
+.logic-diagram__undo[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 .logic-diagram__tool[aria-pressed='true'] {
   background: var(--paper-accent, #1d4ed8);
@@ -1000,6 +1007,7 @@
   align-items: center;
 }
 .flowchart__tool,
+.flowchart__undo,
 .flowchart__clear {
   padding: 0.3rem 0.7rem;
   border: 1px solid var(--paper-rule);
@@ -1012,6 +1020,10 @@
   background: var(--paper-accent, #1a4f8a);
   color: #fff;
   border-color: transparent;
+}
+.flowchart__undo[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 .flowchart__hint {
   font-size: 0.85rem;
@@ -1268,6 +1280,7 @@
   gap: 0.25rem;
 }
 .logic-palette__tool,
+.logic-palette__undo,
 .logic-palette__clear {
   font: inherit;
   padding: 0.2rem 0.6rem;
@@ -1278,6 +1291,10 @@
 .logic-palette__tool[aria-pressed='true'] {
   background: var(--paper-accent, #1a4f8a);
   color: #fff;
+}
+.logic-palette__undo[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 .logic-palette__stage {
   width: 100%;

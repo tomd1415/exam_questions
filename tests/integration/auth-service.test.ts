@@ -157,6 +157,64 @@ describe('AuthService.login', () => {
     expect(after.rows[0]?.failed_login_count).toBe(0);
     expect(after.rows[0]?.locked_until).toBeNull();
   });
+
+  it('silently kicks any prior pupil session on a new login', async () => {
+    const u = await createUser(pool, {
+      username: 'pupil-shared',
+      password: 'pw-shared-12',
+      role: 'pupil',
+    });
+    const first = await auth.login({
+      username: 'pupil-shared',
+      password: 'pw-shared-12',
+      ...baseInput,
+    });
+    if (first.kind !== 'ok') throw new Error('expected first login ok');
+
+    const second = await auth.login({
+      username: 'pupil-shared',
+      password: 'pw-shared-12',
+      ...baseInput,
+    });
+    if (second.kind !== 'ok') throw new Error('expected second login ok');
+
+    const { rows } = await pool.query<{ id: string }>(
+      `SELECT id FROM sessions WHERE user_id = $1::bigint`,
+      [u.id],
+    );
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.id).toBe(second.sessionId);
+
+    const last = await lastAuditEvent();
+    expect(last.event_type).toBe('auth.login.ok');
+    expect(last.details['kicked_prior_sessions']).toBe(1);
+  });
+
+  it('does not kick other sessions for teachers on new login', async () => {
+    const u = await createUser(pool, {
+      username: 'teacher-two-devices',
+      password: 'pw-teacher-12',
+      role: 'teacher',
+    });
+    const first = await auth.login({
+      username: 'teacher-two-devices',
+      password: 'pw-teacher-12',
+      ...baseInput,
+    });
+    if (first.kind !== 'ok') throw new Error('expected first login ok');
+
+    const second = await auth.login({
+      username: 'teacher-two-devices',
+      password: 'pw-teacher-12',
+      ...baseInput,
+    });
+    if (second.kind !== 'ok') throw new Error('expected second login ok');
+
+    const { rowCount } = await pool.query(`SELECT 1 FROM sessions WHERE user_id = $1::bigint`, [
+      u.id,
+    ]);
+    expect(rowCount).toBe(2);
+  });
 });
 
 describe('AuthService.resolveSession', () => {

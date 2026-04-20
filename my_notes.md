@@ -10,3 +10,11 @@
 8. I think we need to recreate all of the initial questions so that they are in the correct format with the correct input for the answer from the pupil.
 9. The model answer needs have the same format as the answer expected from the pupil, this is not always the case and needs checking for all answer types.
 10. For further testing I need 2 questions generated for each of the different possible answer types and have them assigned to a test user.
+
+## Notes from 20/4/2026
+
+1. When clicking on the submit answer button, there is no feedback form the page. It should idealy go stright to the feedback page if just one question at a time or otherwise confirm that the submit is successful.
+2. The same pupil was able to login to the same account on multiple different computers. This should be prevented without making it harder for pupils to login in the first place.
+3. The pupils wanted an 'undo' button for some of the more complicated questions, like the flowcharts and logic diagrams.
+4. the colour mismatch between the header area and the lower area upset some pupils, a consistent colour between sections (in light and dark mode) is preferable.
+5. More work on the style sheets in other areas of the pupil UI (other than the questions area) as it is still a bit cramped and squashed up.

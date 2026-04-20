@@ -789,6 +789,7 @@ const _shuffleSeed = String(part.id) + ':' + t;
         <% }); %>
         <button type="button" class="logic-palette__tool logic-palette__tool--wire" data-logic-palette-tool="wire">Wire</button>
         <button type="button" class="logic-palette__tool logic-palette__tool--delete" data-logic-palette-tool="delete">Delete</button>
+        <button type="button" class="logic-palette__undo" data-logic-palette-undo disabled aria-keyshortcuts="Control+Z">Undo</button>
         <button type="button" class="logic-palette__clear" data-logic-palette-clear>Clear</button>
       </div>
       <svg class="logic-palette__stage"
@@ -861,9 +862,10 @@ const _shuffleSeed = String(part.id) + ':' + t;
       <div class="logic-diagram__toolbar" role="toolbar" aria-label="Drawing tools">
         <button type="button" class="logic-diagram__tool" data-logic-diagram-tool="pen" aria-pressed="true">Pen</button>
         <button type="button" class="logic-diagram__tool" data-logic-diagram-tool="eraser" aria-pressed="false">Eraser</button>
+        <button type="button" class="logic-diagram__undo" data-logic-diagram-undo disabled aria-keyshortcuts="Control+Z">Undo</button>
         <button type="button" class="logic-diagram__clear" data-logic-diagram-clear>Clear</button>
         <span class="logic-diagram__hint" data-logic-diagram-hint>
-          Draw your gates and wires by hand. Use the Eraser to rub out mistakes; Clear wipes the whole canvas.
+          Draw your gates and wires by hand. Use the Eraser to rub out mistakes; Undo rolls back the last stroke (Ctrl+Z); Clear wipes the whole canvas.
         </span>
       </div>
       <canvas class="logic-diagram__canvas"
@@ -1028,9 +1030,10 @@ const _shuffleSeed = String(part.id) + ':' + t;
       <div class="flowchart__toolbar" role="toolbar" aria-label="Drawing tools">
         <button type="button" class="flowchart__tool" data-flowchart-tool="pen" aria-pressed="true">Pen</button>
         <button type="button" class="flowchart__tool" data-flowchart-tool="eraser" aria-pressed="false">Eraser</button>
+        <button type="button" class="flowchart__undo" data-flowchart-undo disabled aria-keyshortcuts="Control+Z">Undo</button>
         <button type="button" class="flowchart__clear" data-flowchart-clear>Clear</button>
         <span class="flowchart__hint" data-flowchart-hint>
-          Draw your flowchart by hand. Use the Eraser to rub out mistakes; Clear wipes the whole canvas.
+          Draw your flowchart by hand. Use the Eraser to rub out mistakes; Undo rolls back the last stroke (Ctrl+Z); Clear wipes the whole canvas.
         </span>
       </div>
       <canvas class="flowchart__canvas"

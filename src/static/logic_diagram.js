@@ -24,6 +24,10 @@
   var PEN_COLOUR = '#111';
   var PEN_WIDTH = 2;
   var ERASER_WIDTH = 18;
+  // Cap the undo stack so extended drawing sessions don't accumulate
+  // unbounded PNG dataURLs. Thirty strokes covers ordinary use and keeps
+  // memory bounded on low-end pupil devices.
+  var MAX_UNDO = 30;
 
   function paintPriorImage(canvas, ctx, dataUrl) {
     if (typeof dataUrl !== 'string' || dataUrl.length === 0) return;
@@ -73,6 +77,7 @@
     var canvas = widget.querySelector('[data-logic-diagram-canvas]');
     var hidden = widget.querySelector('[data-logic-diagram-image]');
     var clearBtn = widget.querySelector('[data-logic-diagram-clear]');
+    var undoBtn = widget.querySelector('[data-logic-diagram-undo]');
     var toolBtns = widget.querySelectorAll('[data-logic-diagram-tool]');
     if (!canvas || !canvas.getContext || !hidden) return;
     var ctx = canvas.getContext('2d');
@@ -84,6 +89,43 @@
     ctx.lineWidth = PEN_WIDTH;
 
     paintPriorImage(canvas, ctx, hidden.value);
+
+    var history = [];
+    function refreshUndoBtn() {
+      if (!undoBtn) return;
+      if (history.length === 0) undoBtn.setAttribute('disabled', '');
+      else undoBtn.removeAttribute('disabled');
+    }
+    function snapshot() {
+      try {
+        history.push(canvas.toDataURL('image/png'));
+        if (history.length > MAX_UNDO) history.shift();
+      } catch (_err) {
+        // Tainted canvases can't export; skip the snapshot. We never
+        // load cross-origin images so this should never fire.
+      }
+      refreshUndoBtn();
+    }
+    function undo() {
+      if (history.length === 0) return;
+      var prev = history.pop();
+      ctx.save();
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.restore();
+      if (typeof prev === 'string' && prev.length > 0) {
+        var img = new Image();
+        img.onload = function () {
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          exportImage(canvas, hidden);
+        };
+        img.src = prev;
+      } else {
+        exportImage(canvas, hidden);
+      }
+      refreshUndoBtn();
+    }
+    refreshUndoBtn();
 
     var tool = 'pen';
     function setTool(next) {
@@ -108,6 +150,9 @@
 
     function beginStroke(evt) {
       evt.preventDefault();
+      // Snapshot before mutating the canvas so undo rolls back the
+      // whole stroke atomically.
+      snapshot();
       drawing = true;
       lastPos = pointerPos(canvas, evt);
       // Apply the tool settings at stroke-start so a mid-stroke tool change
@@ -164,6 +209,8 @@
     if (clearBtn) {
       clearBtn.addEventListener('click', function (evt) {
         evt.preventDefault();
+        // Clear is undoable — accidental taps should recover with Undo.
+        snapshot();
         ctx.save();
         ctx.globalCompositeOperation = 'source-over';
         ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -171,6 +218,20 @@
         exportImage(canvas, hidden);
       });
     }
+
+    if (undoBtn) {
+      undoBtn.addEventListener('click', function (evt) {
+        evt.preventDefault();
+        undo();
+      });
+    }
+
+    widget.addEventListener('keydown', function (evt) {
+      if ((evt.ctrlKey || evt.metaKey) && !evt.shiftKey && !evt.altKey && evt.key === 'z') {
+        evt.preventDefault();
+        undo();
+      }
+    });
   }
 
   // ---- boolean_expression: quick-insert palette --------------------------
@@ -211,6 +272,7 @@
     var gateBtns = widget.querySelectorAll('[data-logic-palette-gate]');
     var toolBtns = widget.querySelectorAll('[data-logic-palette-tool]');
     var clearBtn = widget.querySelector('[data-logic-palette-clear]');
+    var undoBtn = widget.querySelector('[data-logic-palette-undo]');
     if (!stage || !hidden) return;
 
     var maxGates = parseInt(widget.getAttribute('data-logic-palette-max-gates'), 10) || 8;
@@ -232,6 +294,42 @@
     for (var g = 0; g < state.gates.length; g++) {
       var m = /^g(\d+)$/.exec(state.gates[g].id || '');
       if (m) nextGateSeq = Math.max(nextGateSeq, parseInt(m[1], 10) + 1);
+    }
+
+    var paletteHistory = [];
+    function refreshUndoBtn() {
+      if (!undoBtn) return;
+      if (paletteHistory.length === 0) undoBtn.setAttribute('disabled', '');
+      else undoBtn.removeAttribute('disabled');
+    }
+    function snapshotState() {
+      try {
+        paletteHistory.push(
+          JSON.stringify({ gates: state.gates, wires: state.wires, nextGateSeq: nextGateSeq }),
+        );
+        if (paletteHistory.length > MAX_UNDO) paletteHistory.shift();
+      } catch (_err) {
+        // JSON.stringify only fails on circular refs; our state is flat
+        // arrays of plain objects so this shouldn't happen.
+      }
+      refreshUndoBtn();
+    }
+    function undoPalette() {
+      if (paletteHistory.length === 0) return;
+      var raw = paletteHistory.pop();
+      try {
+        var prev = JSON.parse(raw);
+        state.gates = Array.isArray(prev.gates) ? prev.gates : [];
+        state.wires = Array.isArray(prev.wires) ? prev.wires : [];
+        nextGateSeq = typeof prev.nextGateSeq === 'number' ? prev.nextGateSeq : 1;
+      } catch (_err) {
+        state.gates = [];
+        state.wires = [];
+      }
+      resetPending();
+      sync();
+      redraw();
+      refreshUndoBtn();
     }
 
     function sync() {
@@ -336,6 +434,8 @@
       pt.x = evt.clientX;
       pt.y = evt.clientY;
       var loc = pt.matrixTransform(stage.getScreenCTM().inverse());
+      // Snapshot before mutating so undo reverts the whole placement.
+      snapshotState();
       var gate = {
         id: 'g' + nextGateSeq++,
         type: pendingGateType,
@@ -367,6 +467,8 @@
           return;
         }
         if (wireSource !== nodeId) {
+          // Snapshot before adding a wire so undo removes it as one step.
+          snapshotState();
           state.wires.push({ from: wireSource, to: nodeId });
           sync();
           redraw();
@@ -378,6 +480,9 @@
         var g = target.closest('[data-logic-palette-gate-id]');
         if (g) {
           var id = g.getAttribute('data-logic-palette-gate-id');
+          // Snapshot before removing — deleting a gate also removes its
+          // connected wires, so undo must restore both together.
+          snapshotState();
           state.gates = state.gates.filter(function (x) {
             return x.id !== id;
           });
@@ -391,6 +496,7 @@
         var wireLine = target.closest('[data-logic-palette-wire-index]');
         if (wireLine) {
           var idx = parseInt(wireLine.getAttribute('data-logic-palette-wire-index'), 10);
+          snapshotState();
           state.wires.splice(idx, 1);
           sync();
           redraw();
@@ -424,6 +530,8 @@
     if (clearBtn) {
       clearBtn.addEventListener('click', function (evt) {
         evt.preventDefault();
+        // Clear is undoable — pupils sometimes hit it by accident mid-build.
+        snapshotState();
         state.gates = [];
         state.wires = [];
         resetPending();
@@ -431,9 +539,22 @@
         redraw();
       });
     }
+    if (undoBtn) {
+      undoBtn.addEventListener('click', function (evt) {
+        evt.preventDefault();
+        undoPalette();
+      });
+    }
+    widget.addEventListener('keydown', function (evt) {
+      if ((evt.ctrlKey || evt.metaKey) && !evt.shiftKey && !evt.altKey && evt.key === 'z') {
+        evt.preventDefault();
+        undoPalette();
+      }
+    });
     stage.addEventListener('click', handleStageClick);
     redraw();
     highlightTools();
+    refreshUndoBtn();
   }
 
   function initAll() {

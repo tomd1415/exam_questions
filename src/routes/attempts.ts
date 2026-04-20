@@ -443,8 +443,10 @@ export function registerAttemptRoutes(app: FastifyInstance): void {
         if (result.attemptFullySubmitted) {
           return reply.redirect(`/attempts/${params.data.id}?flash=${encodeURIComponent(msg)}`);
         }
+        // Fragment jumps the browser to the just-submitted question so pupils
+        // see their marks without having to scroll past the paper header.
         return reply.redirect(
-          `/attempts/${params.data.id}?q=${params.data.qid}&flash=${encodeURIComponent(msg)}`,
+          `/attempts/${params.data.id}?q=${params.data.qid}&flash=${encodeURIComponent(msg)}#q-${params.data.qid}`,
         );
       } catch (err) {
         if (err instanceof AttemptAccessError) {
