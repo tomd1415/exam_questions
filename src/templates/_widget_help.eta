@@ -4,28 +4,27 @@
 // `it.tip` is { title, body } from src/lib/widget-tips.ts.
 // `it.csrfToken` is the per-request CSRF token.
 //
-// Renders inert without JS: a noscript-friendly form posts to
-// /me/widget-tips/dismiss, the page reloads, and the tip is gone.
-// With JS, src/static/widget_tips.js intercepts the click, posts in
-// the background, and hides the panel without a reload.
+// src/static/widget_tips.js handles the click: POSTs to
+// /me/widget-tips/dismiss and hides the panel. This element must NOT
+// contain a <form>, because the pupil-answer <form class="question-form">
+// already wraps the whole paper — nested forms are invalid and the inner
+// </form> would close the outer one early, leaving Save/Submit orphaned.
 %>
 <aside class="widget-tip"
        role="note"
        aria-labelledby="widget-tip-title-<%= it.widgetKey %>"
        data-widget-tip
-       data-widget-tip-key="<%= it.widgetKey %>">
+       data-widget-tip-key="<%= it.widgetKey %>"
+       data-widget-tip-csrf="<%= it.csrfToken %>">
   <h3 class="widget-tip__title" id="widget-tip-title-<%= it.widgetKey %>">
     <%= it.tip.title %>
   </h3>
   <p class="widget-tip__body"><%= it.tip.body %></p>
-  <form method="post"
-        action="/me/widget-tips/dismiss"
-        class="widget-tip__form"
-        data-widget-tip-form>
-    <input type="hidden" name="_csrf" value="<%= it.csrfToken %>" />
-    <input type="hidden" name="key" value="<%= it.widgetKey %>" />
-    <button type="submit" class="btn btn--secondary btn--sm widget-tip__dismiss">
+  <div class="widget-tip__form">
+    <button type="button"
+            class="btn btn--secondary btn--sm widget-tip__dismiss"
+            data-widget-tip-dismiss>
       Got it
     </button>
-  </form>
+  </div>
 </aside>
