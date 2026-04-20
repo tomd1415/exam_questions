@@ -1,0 +1,43 @@
+{
+  "external_key": "j277-shuffle-test-matrix-multi-search",
+  "component_code": "J277/02",
+  "topic_code": "2.1",
+  "subtopic_code": "2.1.2",
+  "command_word_code": "identify",
+  "archetype_code": "recall",
+  "expected_response_type": "matrix_tick_multi",
+  "stem": "A programmer is comparing two standard search algorithms.",
+  "model_answer": "{\"Linear search\": [\"Works on unsorted data\", \"Checks each item one by one\"], \"Binary search\": [\"Requires the data to be sorted\", \"Halves the search space on each step\"]}",
+  "difficulty_band": 3,
+  "difficulty_step": 1,
+  "source_type": "teacher",
+  "review_notes": "Shuffle-test fixture for matrix_tick_multi. Column order is authored so the correct ticks cluster in a diagonal pattern — shuffling breaks the pattern visibly.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Tick every feature that applies to each search algorithm.",
+      "marks": 4,
+      "expected_response_type": "matrix_tick_multi",
+      "part_config": {
+        "rows": ["Linear search", "Binary search"],
+        "columns": [
+          "Works on unsorted data",
+          "Checks each item one by one",
+          "Requires the data to be sorted",
+          "Halves the search space on each step"
+        ],
+        "correctByRow": [
+          ["Works on unsorted data", "Checks each item one by one"],
+          ["Requires the data to be sorted", "Halves the search space on each step"]
+        ],
+        "partialCredit": true
+      },
+      "mark_points": [
+        { "text": "Linear search — works on unsorted data", "marks": 1 },
+        { "text": "Linear search — checks each item one by one", "marks": 1 },
+        { "text": "Binary search — requires sorted data", "marks": 1 },
+        { "text": "Binary search — halves the search space on each step", "marks": 1 }
+      ]
+    }
+  ]
+}

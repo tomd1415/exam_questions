@@ -194,6 +194,9 @@ export async function seedCuratedContent(
           active: true,
           review_notes: null,
         });
+        // A curated JSON present on disk should be live — clear retired_at if
+        // a prior bulk-retirement (migration 0027) or teacher action set it.
+        await questionRepo.clearRetirement(existingId);
         summary.updated++;
       } else {
         const newId = await questionRepo.createWithChildren({

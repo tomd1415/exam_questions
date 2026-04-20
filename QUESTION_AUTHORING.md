@@ -102,57 +102,57 @@ that already exists in that migration.
 
 ### 3.1 Components
 
-| Code      | Title                                                |
-| --------- | ---------------------------------------------------- |
-| `J277/01` | Computer systems                                     |
-| `J277/02` | Computational thinking, algorithms and programming   |
+| Code      | Title                                              |
+| --------- | -------------------------------------------------- |
+| `J277/01` | Computer systems                                   |
+| `J277/02` | Computational thinking, algorithms and programming |
 
 ### 3.2 Topics
 
-| Code  | Component | Title                                                                     |
-| ----- | --------- | ------------------------------------------------------------------------- |
-| `1.1` | J277/01   | Systems architecture                                                      |
-| `1.2` | J277/01   | Memory and storage                                                        |
-| `1.3` | J277/01   | Computer networks, connections and protocols                              |
-| `1.4` | J277/01   | Network security                                                          |
-| `1.5` | J277/01   | Systems software                                                          |
-| `1.6` | J277/01   | Ethical, legal, cultural and environmental impacts of digital technology  |
-| `2.1` | J277/02   | Algorithms                                                                |
-| `2.2` | J277/02   | Programming fundamentals                                                  |
-| `2.3` | J277/02   | Producing robust programs                                                 |
-| `2.4` | J277/02   | Boolean logic                                                             |
-| `2.5` | J277/02   | Programming languages and Integrated Development Environments             |
+| Code  | Component | Title                                                                    |
+| ----- | --------- | ------------------------------------------------------------------------ |
+| `1.1` | J277/01   | Systems architecture                                                     |
+| `1.2` | J277/01   | Memory and storage                                                       |
+| `1.3` | J277/01   | Computer networks, connections and protocols                             |
+| `1.4` | J277/01   | Network security                                                         |
+| `1.5` | J277/01   | Systems software                                                         |
+| `1.6` | J277/01   | Ethical, legal, cultural and environmental impacts of digital technology |
+| `2.1` | J277/02   | Algorithms                                                               |
+| `2.2` | J277/02   | Programming fundamentals                                                 |
+| `2.3` | J277/02   | Producing robust programs                                                |
+| `2.4` | J277/02   | Boolean logic                                                            |
+| `2.5` | J277/02   | Programming languages and Integrated Development Environments            |
 
 ### 3.3 Subtopics
 
-| Code    | Title                                                               |
-| ------- | ------------------------------------------------------------------- |
-| `1.1.1` | Architecture of the CPU                                             |
-| `1.1.2` | CPU performance                                                     |
-| `1.1.3` | Embedded systems                                                    |
-| `1.2.1` | Primary storage (memory)                                            |
-| `1.2.2` | Secondary storage                                                   |
-| `1.2.3` | Units                                                               |
-| `1.2.4` | Data storage                                                        |
-| `1.2.5` | Compression                                                         |
-| `1.3.1` | Networks and topologies                                             |
-| `1.3.2` | Wired and wireless networks, protocols and layers                   |
-| `1.4.1` | Threats to computer systems and networks                            |
-| `1.4.2` | Identifying and preventing vulnerabilities                          |
-| `1.5.1` | Operating systems                                                   |
-| `1.5.2` | Utility software                                                    |
-| `1.6.1` | Ethical, legal, cultural and environmental impact                   |
-| `2.1.1` | Computational thinking                                              |
-| `2.1.2` | Designing, creating and refining algorithms                         |
-| `2.1.3` | Searching and sorting algorithms                                    |
-| `2.2.1` | Programming fundamentals                                            |
-| `2.2.2` | Data types                                                          |
-| `2.2.3` | Additional programming techniques                                   |
-| `2.3.1` | Defensive design                                                    |
-| `2.3.2` | Testing                                                             |
-| `2.4.1` | Boolean logic                                                       |
-| `2.5.1` | Languages                                                           |
-| `2.5.2` | The Integrated Development Environment (IDE)                        |
+| Code    | Title                                             |
+| ------- | ------------------------------------------------- |
+| `1.1.1` | Architecture of the CPU                           |
+| `1.1.2` | CPU performance                                   |
+| `1.1.3` | Embedded systems                                  |
+| `1.2.1` | Primary storage (memory)                          |
+| `1.2.2` | Secondary storage                                 |
+| `1.2.3` | Units                                             |
+| `1.2.4` | Data storage                                      |
+| `1.2.5` | Compression                                       |
+| `1.3.1` | Networks and topologies                           |
+| `1.3.2` | Wired and wireless networks, protocols and layers |
+| `1.4.1` | Threats to computer systems and networks          |
+| `1.4.2` | Identifying and preventing vulnerabilities        |
+| `1.5.1` | Operating systems                                 |
+| `1.5.2` | Utility software                                  |
+| `1.6.1` | Ethical, legal, cultural and environmental impact |
+| `2.1.1` | Computational thinking                            |
+| `2.1.2` | Designing, creating and refining algorithms       |
+| `2.1.3` | Searching and sorting algorithms                  |
+| `2.2.1` | Programming fundamentals                          |
+| `2.2.2` | Data types                                        |
+| `2.2.3` | Additional programming techniques                 |
+| `2.3.1` | Defensive design                                  |
+| `2.3.2` | Testing                                           |
+| `2.4.1` | Boolean logic                                     |
+| `2.5.1` | Languages                                         |
+| `2.5.2` | The Integrated Development Environment (IDE)      |
 
 A subtopic's topic is fixed; `validateQuestionDraft` rejects mismatched
 pairs.
@@ -169,16 +169,16 @@ matches what the prompt actually asks for — pupils learn to read these.
 
 ### 3.5 Archetypes
 
-| Code                    | Use for                                                                   |
-| ----------------------- | ------------------------------------------------------------------------- |
-| `recall`                | Single-fact recall (typically state/identify/define).                     |
-| `explain`               | Fact + reason or causation (typically explain/describe/give).             |
-| `compare`               | Similarities and differences across two or more items.                    |
-| `evaluate`              | Balanced assessment with judgement (evaluate/discuss/justify).            |
-| `algorithm_completion`  | Complete a partially given algorithm (pseudocode or flow).                |
-| `code_writing`          | Write a program/function from scratch.                                    |
-| `trace_table`           | Produce or complete a trace table for a given algorithm or program.       |
-| `extended_response`     | Multi-mark structured response, often describe + explain + evaluate.      |
+| Code                   | Use for                                                              |
+| ---------------------- | -------------------------------------------------------------------- |
+| `recall`               | Single-fact recall (typically state/identify/define).                |
+| `explain`              | Fact + reason or causation (typically explain/describe/give).        |
+| `compare`              | Similarities and differences across two or more items.               |
+| `evaluate`             | Balanced assessment with judgement (evaluate/discuss/justify).       |
+| `algorithm_completion` | Complete a partially given algorithm (pseudocode or flow).           |
+| `code_writing`         | Write a program/function from scratch.                               |
+| `trace_table`          | Produce or complete a trace table for a given algorithm or program.  |
+| `extended_response`    | Multi-mark structured response, often describe + explain + evaluate. |
 
 ## 4. Expected response types (17)
 
@@ -210,21 +210,21 @@ When a question has exactly one part AND the question's
 `expected_response_type` equals that part's, the marker enforces the
 following shape on `model_answer`:
 
-| Widget                | `model_answer` must be …                                                    |
-| --------------------- | --------------------------------------------------------------------------- |
-| `short_text`          | any non-empty prose (no structural check)                                   |
-| `medium_text`         | any non-empty prose                                                         |
-| `extended_response`   | any non-empty prose                                                         |
-| `code`, `algorithm`   | any non-empty prose                                                         |
-| `multiple_choice`     | equal (verbatim) to one entry in `part_config.options`                      |
-| `tick_box`            | JSON array of option strings, each drawn from `part_config.options`         |
-| `matching`            | JSON array of `[leftIdx, rightIdx]` integer pairs                           |
-| `cloze_free`, `cloze_with_bank`, `cloze_code` | JSON object `{ "<gap id>": "answer", … }` with **every** gap id present |
-| `matrix_tick_single`  | JSON object `{ "<row>": "<column>", … }` one entry per row, columns from `part_config.columns` |
-| `matrix_tick_multi`   | JSON object `{ "<row>": ["col", …], … }` one entry per row                  |
-| `trace_table`         | JSON object `{ "r,c": "value", … }` — keys must match `\d+,\d+`             |
-| `diagram_labels`      | JSON object `{ "<hotspot id>": "label", … }` covering every hotspot         |
-| `logic_diagram`, `flowchart` | any non-empty prose (teacher review)                                  |
+| Widget                                        | `model_answer` must be …                                                                       |
+| --------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `short_text`                                  | any non-empty prose (no structural check)                                                      |
+| `medium_text`                                 | any non-empty prose                                                                            |
+| `extended_response`                           | any non-empty prose                                                                            |
+| `code`, `algorithm`                           | any non-empty prose                                                                            |
+| `multiple_choice`                             | equal (verbatim) to one entry in `part_config.options`                                         |
+| `tick_box`                                    | JSON array of option strings, each drawn from `part_config.options`                            |
+| `matching`                                    | JSON array of `[leftIdx, rightIdx]` integer pairs                                              |
+| `cloze_free`, `cloze_with_bank`, `cloze_code` | JSON object `{ "<gap id>": "answer", … }` with **every** gap id present                        |
+| `matrix_tick_single`                          | JSON object `{ "<row>": "<column>", … }` one entry per row, columns from `part_config.columns` |
+| `matrix_tick_multi`                           | JSON object `{ "<row>": ["col", …], … }` one entry per row                                     |
+| `trace_table`                                 | JSON object `{ "r,c": "value", … }` — keys must match `\d+,\d+`                                |
+| `diagram_labels`                              | JSON object `{ "<hotspot id>": "label", … }` covering every hotspot                            |
+| `logic_diagram`, `flowchart`                  | any non-empty prose (teacher review)                                                           |
 
 For multi-part questions, `model_answer` is a single prose summary covering
 all parts — the shape check is skipped.
@@ -267,7 +267,7 @@ by index, and each entry must appear in `columns`.
   "rows": ["Bubble sort", "Linear search", "Binary search"],
   "columns": ["Sorting algorithm", "Searching algorithm"],
   "correctByRow": ["Sorting algorithm", "Searching algorithm", "Searching algorithm"],
-  "allOrNothing": false
+  "allOrNothing": false,
 }
 ```
 
@@ -281,7 +281,7 @@ aligned with `rows`; every inner entry must be a column name.
   "rows": ["RAM", "ROM"],
   "columns": ["Volatile", "Read-only", "Stores BIOS"],
   "correctByRow": [["Volatile"], ["Read-only", "Stores BIOS"]],
-  "partialCredit": true
+  "partialCredit": true,
 }
 ```
 
@@ -296,8 +296,8 @@ Optional `bank` adds visible hint words but is not required.
   "text": "Eight bits make one {{u1}}. 1024 bytes make one {{u2}}.",
   "gaps": [
     { "id": "u1", "accept": ["byte", "B"] },
-    { "id": "u2", "accept": ["kilobyte", "kibibyte", "KB", "KiB"] }
-  ]
+    { "id": "u2", "accept": ["kilobyte", "kibibyte", "KB", "KiB"] },
+  ],
 }
 ```
 
@@ -314,9 +314,9 @@ distractors so the bank is not a giveaway.
   "text": "A {{d1}} forwards traffic within a LAN; a {{d2}} joins LANs into a WAN.",
   "gaps": [
     { "id": "d1", "accept": ["switch"] },
-    { "id": "d2", "accept": ["router"] }
+    { "id": "d2", "accept": ["router"] },
   ],
-  "bank": ["switch", "router", "hub", "bridge"]
+  "bank": ["switch", "router", "hub", "bridge"],
 }
 ```
 
@@ -330,8 +330,8 @@ block. Use for pseudocode or program fill-ins.
   "text": "for i = 1 to {{stop}}\n  print({{what}})\nnext i",
   "gaps": [
     { "id": "stop", "accept": ["5"] },
-    { "id": "what", "accept": ["i"] }
-  ]
+    { "id": "what", "accept": ["i"] },
+  ],
 }
 ```
 
@@ -345,14 +345,14 @@ indexes). `marking.mode` is `perCell` (default), `perRow`, or
 ```jsonc
 {
   "columns": [
-    { "name": "i",      "width": 3 },
-    { "name": "total",  "width": 4 },
-    { "name": "output", "width": 6 }
+    { "name": "i", "width": 3 },
+    { "name": "total", "width": 4 },
+    { "name": "output", "width": 6 },
   ],
   "rows": 5,
   "prefill": { "0,0": "1", "1,0": "2", "2,0": "3", "3,0": "4" },
   "expected": { "0,1": "2", "1,1": "6", "2,1": "12", "3,1": "20", "4,2": "20" },
-  "marking": { "mode": "perCell" }
+  "marking": { "mode": "perCell" },
 }
 ```
 
@@ -364,10 +364,14 @@ left (distractors) or shorter (options reused across rows).
 
 ```jsonc
 {
-  "left":  ["HTTP", "SMTP", "FTP"],
+  "left": ["HTTP", "SMTP", "FTP"],
   "right": ["web pages", "email", "file transfer", "remote shell"],
-  "correctPairs": [[0, 0], [1, 1], [2, 2]],
-  "partialCredit": true
+  "correctPairs": [
+    [0, 0],
+    [1, 1],
+    [2, 2],
+  ],
+  "partialCredit": true,
 }
 ```
 
@@ -385,11 +389,9 @@ hotspot's `accept` list drives deterministic marking.
   "width": 600,
   "height": 360,
   "hotspots": [
-    { "id": "centre", "x": 260, "y": 140, "width": 100, "height": 60,
-      "accept": ["switch", "hub"] },
-    { "id": "host1", "x": 40, "y": 40, "width": 120, "height": 40,
-      "accept": ["client", "host"] }
-  ]
+    { "id": "centre", "x": 260, "y": 140, "width": 100, "height": 60, "accept": ["switch", "hub"] },
+    { "id": "host1", "x": 40, "y": 40, "width": 120, "height": 40, "accept": ["client", "host"] },
+  ],
 }
 ```
 
@@ -417,20 +419,19 @@ review.
   "canvas": { "width": 600, "height": 400 },
   "gates": [
     { "id": "g1", "type": "AND", "x": 200, "y": 100, "width": 80, "height": 50 },
-    { "id": "g2",                "x": 400, "y": 100, "width": 80, "height": 50,
-      "accept": ["OR"] }
+    { "id": "g2", "x": 400, "y": 100, "width": 80, "height": 50, "accept": ["OR"] },
   ],
   "terminals": [
-    { "id": "A", "kind": "input",  "label": "A", "x": 40,  "y":  80 },
-    { "id": "B", "kind": "input",  "label": "B", "x": 40,  "y": 160 },
-    { "id": "Q", "kind": "output", "label": "Q", "x": 540, "y": 120 }
+    { "id": "A", "kind": "input", "label": "A", "x": 40, "y": 80 },
+    { "id": "B", "kind": "input", "label": "B", "x": 40, "y": 160 },
+    { "id": "Q", "kind": "output", "label": "Q", "x": 540, "y": 120 },
   ],
   "wires": [
-    { "from": "A",  "to": "g1" },
-    { "from": "B",  "to": "g1" },
+    { "from": "A", "to": "g1" },
+    { "from": "B", "to": "g1" },
     { "from": "g1", "to": "g2" },
-    { "from": "g2", "to": "Q"  }
-  ]
+    { "from": "g2", "to": "Q" },
+  ],
 }
 ```
 
@@ -447,9 +448,9 @@ are <=8 characters.
       "id": "op1",
       "prompt": "Which gate outputs 1 only when both inputs are 1?",
       "options": ["AND", "OR", "NOT", "XOR"],
-      "accept": "AND"
-    }
-  ]
+      "accept": "AND",
+    },
+  ],
 }
 ```
 
@@ -461,7 +462,7 @@ tokenises and matches against `accept`.
   "variant": "boolean_expression",
   "accept": ["(A AND B) OR NOT C", "NOT C OR (A AND B)"],
   "allowedOperators": ["AND", "OR", "NOT"],
-  "normaliseSymbols": true
+  "normaliseSymbols": true,
 }
 ```
 
@@ -473,9 +474,9 @@ truth table the author supplies.
   "variant": "gate_palette",
   "canvas": { "width": 600, "height": 400 },
   "terminals": [
-    { "id": "A", "kind": "input",  "label": "A", "x": 40,  "y":  80 },
-    { "id": "B", "kind": "input",  "label": "B", "x": 40,  "y": 160 },
-    { "id": "Q", "kind": "output", "label": "Q", "x": 540, "y": 120 }
+    { "id": "A", "kind": "input", "label": "A", "x": 40, "y": 80 },
+    { "id": "B", "kind": "input", "label": "B", "x": 40, "y": 160 },
+    { "id": "Q", "kind": "output", "label": "Q", "x": 540, "y": 120 },
   ],
   "palette": ["AND", "OR", "NOT"],
   "maxGates": 4,
@@ -484,9 +485,9 @@ truth table the author supplies.
       { "inputs": { "A": 0, "B": 0 }, "output": 0 },
       { "inputs": { "A": 0, "B": 1 }, "output": 0 },
       { "inputs": { "A": 1, "B": 0 }, "output": 0 },
-      { "inputs": { "A": 1, "B": 1 }, "output": 1 }
-    ]
-  }
+      { "inputs": { "A": 1, "B": 1 }, "output": 1 },
+    ],
+  },
 }
 ```
 
@@ -510,23 +511,69 @@ shapes, `accept` for blank ones (provide one, not both).
   "variant": "shapes",
   "canvas": { "width": 600, "height": 400 },
   "shapes": [
-    { "id": "start",  "type": "terminator", "x": 220, "y":  20, "width": 160, "height": 50, "text": "Start" },
-    { "id": "input",  "type": "io",         "x": 200, "y":  90, "width": 200, "height": 50, "text": "Input A, B" },
-    { "id": "q1",     "type": "decision",   "x": 200, "y": 160, "width": 200, "height": 80, "text": "Is A > B?" },
-    { "id": "out_a",  "type": "io",         "x":  40, "y": 270, "width": 200, "height": 50,
-      "accept": ["Output A", "Print A", "Display A"] },
-    { "id": "out_b",  "type": "io",         "x": 360, "y": 270, "width": 200, "height": 50,
-      "accept": ["Output B", "Print B", "Display B"] },
-    { "id": "stop",   "type": "terminator", "x": 220, "y": 340, "width": 160, "height": 50, "text": "Stop" }
+    {
+      "id": "start",
+      "type": "terminator",
+      "x": 220,
+      "y": 20,
+      "width": 160,
+      "height": 50,
+      "text": "Start",
+    },
+    {
+      "id": "input",
+      "type": "io",
+      "x": 200,
+      "y": 90,
+      "width": 200,
+      "height": 50,
+      "text": "Input A, B",
+    },
+    {
+      "id": "q1",
+      "type": "decision",
+      "x": 200,
+      "y": 160,
+      "width": 200,
+      "height": 80,
+      "text": "Is A > B?",
+    },
+    {
+      "id": "out_a",
+      "type": "io",
+      "x": 40,
+      "y": 270,
+      "width": 200,
+      "height": 50,
+      "accept": ["Output A", "Print A", "Display A"],
+    },
+    {
+      "id": "out_b",
+      "type": "io",
+      "x": 360,
+      "y": 270,
+      "width": 200,
+      "height": 50,
+      "accept": ["Output B", "Print B", "Display B"],
+    },
+    {
+      "id": "stop",
+      "type": "terminator",
+      "x": 220,
+      "y": 340,
+      "width": 160,
+      "height": 50,
+      "text": "Stop",
+    },
   ],
   "arrows": [
     { "from": "start", "to": "input" },
-    { "from": "input", "to": "q1"    },
-    { "from": "q1",    "to": "out_a", "label": "Yes" },
-    { "from": "q1",    "to": "out_b", "label": "No"  },
-    { "from": "out_a", "to": "stop"  },
-    { "from": "out_b", "to": "stop"  }
-  ]
+    { "from": "input", "to": "q1" },
+    { "from": "q1", "to": "out_a", "label": "Yes" },
+    { "from": "q1", "to": "out_b", "label": "No" },
+    { "from": "out_a", "to": "stop" },
+    { "from": "out_b", "to": "stop" },
+  ],
 }
 ```
 
@@ -541,11 +588,17 @@ Never attach a `part_config`. Use `null` or omit the field.
   "marks": 2,
   "expected_response_type": "short_text",
   "mark_points": [
-    { "text": "performs arithmetic operations", "marks": 1,
-      "accepted_alternatives": ["does calculations", "adds and subtracts"] },
-    { "text": "performs logical operations",    "marks": 1,
-      "accepted_alternatives": ["handles Boolean logic", "carries out comparisons"] }
-  ]
+    {
+      "text": "performs arithmetic operations",
+      "marks": 1,
+      "accepted_alternatives": ["does calculations", "adds and subtracts"],
+    },
+    {
+      "text": "performs logical operations",
+      "marks": 1,
+      "accepted_alternatives": ["handles Boolean logic", "carries out comparisons"],
+    },
+  ],
 }
 ```
 
@@ -586,12 +639,16 @@ Keep them specific to common errors rather than generic hints.
 - Never delete a `questions` row — `attempt_parts.question_part_id` is
   FK-restricted so pupils' historical attempts would break.
 - The live filter is `active = true AND retired_at IS NULL`. To take a
-  question out of rotation:
-  1. Move the JSON file to `content/curated/retired/` (the seeder ignores
-     subdirectories, so it will stop re-activating).
-  2. Set `retired_at = now()` on the `questions` row. A teacher admin UI
-     handles this in normal operation; for bulk changes, migration 0027
-     demonstrates the pattern.
+  question out of rotation, **both steps are required** and order matters:
+  1. **First**, move the JSON file to `content/curated/retired/` (the
+     seeder ignores subdirectories, so it will stop re-activating).
+  2. **Then**, set `retired_at = now()` on the `questions` row. A teacher
+     admin UI handles this in normal operation; for bulk changes,
+     migration 0027 demonstrates the pattern.
+- Skipping step 1 is a bug trap: `npm run content:seed` calls
+  `QuestionRepo.clearRetirement` on every curated JSON it finds on disk,
+  which would un-retire the row on the next seed. The archive step is
+  what makes retirement stick.
 
 Retired questions still appear in teacher-facing list views with a "retired"
 tag but never in pupil paper builders or preview selectors.
@@ -623,17 +680,17 @@ tag but never in pupil paper builders or preview selectors.
         "gaps": [
           { "id": "l1", "accept": ["application"] },
           { "id": "l2", "accept": ["transport"] },
-          { "id": "l3", "accept": ["network", "internet"] }
+          { "id": "l3", "accept": ["network", "internet"] },
         ],
-        "bank": ["application", "transport", "network", "data link"]
+        "bank": ["application", "transport", "network", "data link"],
       },
       "mark_points": [
         { "text": "application", "marks": 1 },
-        { "text": "transport",   "marks": 1 },
-        { "text": "network / internet", "marks": 1 }
-      ]
-    }
-  ]
+        { "text": "transport", "marks": 1 },
+        { "text": "network / internet", "marks": 1 },
+      ],
+    },
+  ],
 }
 ```
 
@@ -653,3 +710,7 @@ tag but never in pupil paper builders or preview selectors.
    only for short_text.
 7. Save as `content/curated/<topic>_<slug>.json`, run `npm run content:seed`,
    and visit the pupil page to sanity-check it renders.
+8. (Optional, dev-only.) To hand-test through the pupil UI without
+   drawing against a live class, run `npm run test-questions:seed -- --reset`
+   — every live curated question is attached to the `test_pupil`'s
+   pre-loaded attempt alongside the 34 widget fixtures. See RUNBOOK §5.2.

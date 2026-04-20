@@ -1,0 +1,35 @@
+{
+  "external_key": "j277-shuffle-test-matrix-binary",
+  "component_code": "J277/01",
+  "topic_code": "1.2",
+  "subtopic_code": "1.2.4",
+  "command_word_code": "identify",
+  "archetype_code": "recall",
+  "expected_response_type": "matrix_tick_single",
+  "stem": "Each row of the table shows a four-bit binary number.",
+  "model_answer": "{\"0011\": \"3\", \"0101\": \"5\", \"1001\": \"9\", \"1110\": \"14\"}",
+  "difficulty_band": 3,
+  "difficulty_step": 2,
+  "source_type": "teacher",
+  "review_notes": "Shuffle-test fixture. The authored column order (3, 5, 9, 14) is the diagonal of correct answers — if the pupil sees it in authored order the widget is NOT shuffling.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Tick the correct denary value for each binary number. One tick per row.",
+      "marks": 4,
+      "expected_response_type": "matrix_tick_single",
+      "part_config": {
+        "rows": ["0011", "0101", "1001", "1110"],
+        "columns": ["3", "5", "9", "14"],
+        "correctByRow": ["3", "5", "9", "14"],
+        "allOrNothing": false
+      },
+      "mark_points": [
+        { "text": "0011 — 3", "marks": 1 },
+        { "text": "0101 — 5", "marks": 1 },
+        { "text": "1001 — 9", "marks": 1 },
+        { "text": "1110 — 14", "marks": 1 }
+      ]
+    }
+  ]
+}

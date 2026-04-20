@@ -1,0 +1,50 @@
+{
+  "external_key": "j277-shuffle-test-cloze-bank-networks",
+  "component_code": "J277/01",
+  "topic_code": "1.3",
+  "subtopic_code": "1.3.2",
+  "command_word_code": "complete",
+  "archetype_code": "recall",
+  "expected_response_type": "cloze_with_bank",
+  "stem": "The text describes how data is sent across a network.",
+  "model_answer": "{\"src\": \"source\", \"dst\": \"destination\", \"ps\": \"packet switching\", \"prot\": \"IP\"}",
+  "difficulty_band": 3,
+  "difficulty_step": 2,
+  "source_type": "teacher",
+  "review_notes": "Shuffle-test fixture for cloze_with_bank. The bank is authored alphabetically — if the displayed bank stays alphabetical the shuffle is NOT applied. Not every word is used.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Complete the description with words from the bank. Not every word is used.",
+      "marks": 4,
+      "expected_response_type": "cloze_with_bank",
+      "part_config": {
+        "text": "A packet sent across the internet has a header containing the {{src}} address of the sender and the {{dst}} address of the recipient. Splitting a larger message into smaller packets that travel independently across the network is called {{ps}}. The protocol that assigns these addresses and routes the packets is {{prot}}.",
+        "gaps": [
+          { "id": "src", "accept": ["source"] },
+          { "id": "dst", "accept": ["destination"] },
+          { "id": "ps", "accept": ["packet switching"] },
+          { "id": "prot", "accept": ["IP"] }
+        ],
+        "bank": [
+          "circuit switching",
+          "destination",
+          "frame",
+          "gateway",
+          "IP",
+          "MAC",
+          "packet switching",
+          "payload",
+          "source",
+          "TCP"
+        ]
+      },
+      "mark_points": [
+        { "text": "source", "marks": 1 },
+        { "text": "destination", "marks": 1 },
+        { "text": "packet switching", "marks": 1 },
+        { "text": "IP", "marks": 1 }
+      ]
+    }
+  ]
+}

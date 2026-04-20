@@ -1023,6 +1023,7 @@ export interface RunSummary {
   created: number;
   updated: number;
   failed: number;
+  curatedAttached: number;
   attemptId: string | null;
   pupilLogin: { username: string; password: string } | null;
   errors: { key: string; message: string }[];
@@ -1109,6 +1110,7 @@ export async function seedTestQuestions(
     created: 0,
     updated: 0,
     failed: 0,
+    curatedAttached: 0,
     attemptId: null,
     pupilLogin: null,
     errors: [],
@@ -1258,7 +1260,29 @@ export async function seedTestQuestions(
     createdQuestionIds.push(questionId);
   }
 
-  if (!opts.dryRun && createdQuestionIds.length > 0 && summary.failed === 0) {
+  // Also pull in every approved, active, non-retired curated question so the
+  // test pupil's pre-built attempt exercises the live content bank alongside
+  // the internal widget fixtures. Curated rows carry similarity_hash
+  // 'curated:<external_key>' (see seed-curated-content.ts) — filter on that
+  // prefix so ad-hoc teacher-authored content doesn't get pulled in.
+  const curatedQuestionIds: string[] = [];
+  if (!opts.dryRun) {
+    const { rows: curatedRows } = await pool.query<{ id: string }>(
+      `SELECT id::text
+         FROM questions
+        WHERE similarity_hash LIKE 'curated:%'
+          AND approval_status = 'approved'
+          AND active = true
+          AND retired_at IS NULL
+        ORDER BY topic_code, subtopic_code, id`,
+    );
+    for (const row of curatedRows) curatedQuestionIds.push(row.id);
+    summary.curatedAttached = curatedQuestionIds.length;
+  }
+
+  const attachableIds = [...createdQuestionIds, ...curatedQuestionIds];
+
+  if (!opts.dryRun && attachableIds.length > 0 && summary.failed === 0) {
     const client = await pool.connect();
     try {
       await client.query('BEGIN');
@@ -1281,8 +1305,8 @@ export async function seedTestQuestions(
       );
       const attemptId = attemptRow[0]!.id;
 
-      for (let i = 0; i < createdQuestionIds.length; i++) {
-        const qid = createdQuestionIds[i]!;
+      for (let i = 0; i < attachableIds.length; i++) {
+        const qid = attachableIds[i]!;
         const { rows: aqRow } = await client.query<{ id: string }>(
           `INSERT INTO attempt_questions (attempt_id, question_id, display_order)
            VALUES ($1::bigint, $2::bigint, $3)
@@ -1325,8 +1349,9 @@ function printSummary(summary: RunSummary, opts: SeedOptions): void {
     console.log(`  ✓ pupil '${opts.pupilUsername}' already existed (password unchanged)`);
   }
   if (summary.attemptId) {
+    const total = summary.created + summary.updated + summary.curatedAttached;
     console.log(
-      `  ✓ pre-loaded attempt ${summary.attemptId} with ${summary.created + summary.updated} questions`,
+      `  ✓ pre-loaded attempt ${summary.attemptId} with ${total} questions (${summary.created + summary.updated} widget fixtures + ${summary.curatedAttached} curated)`,
     );
     console.log(`    Sign in as '${opts.pupilUsername}' and continue the in-progress attempt.`);
   }

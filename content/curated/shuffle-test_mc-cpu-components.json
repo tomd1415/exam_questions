@@ -1,0 +1,32 @@
+{
+  "external_key": "j277-shuffle-test-mc-cpu-components",
+  "component_code": "J277/01",
+  "topic_code": "1.1",
+  "subtopic_code": "1.1.1",
+  "command_word_code": "identify",
+  "archetype_code": "recall",
+  "expected_response_type": "multiple_choice",
+  "stem": "During the fetch–decode–execute cycle the CPU holds the address of the next instruction in a specific register.",
+  "model_answer": "Program Counter",
+  "difficulty_band": 2,
+  "difficulty_step": 1,
+  "source_type": "teacher",
+  "review_notes": "Shuffle-test fixture. The correct option is listed FIRST in the authored JSON so it is easy to tell the pupil-side display has been shuffled.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Which register holds the memory address of the next instruction to be fetched?",
+      "marks": 1,
+      "expected_response_type": "multiple_choice",
+      "part_config": {
+        "options": [
+          "Program Counter",
+          "Memory Address Register",
+          "Memory Data Register",
+          "Accumulator"
+        ]
+      },
+      "mark_points": [{ "text": "Program Counter", "marks": 1 }]
+    }
+  ]
+}

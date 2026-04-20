@@ -1,0 +1,39 @@
+{
+  "external_key": "j277-shuffle-test-tick-cpu-inside",
+  "component_code": "J277/01",
+  "topic_code": "1.1",
+  "subtopic_code": "1.1.1",
+  "command_word_code": "tick",
+  "archetype_code": "recall",
+  "expected_response_type": "tick_box",
+  "stem": "A diagram of a CPU labels several internal components.",
+  "model_answer": "[\"Arithmetic Logic Unit\", \"Control Unit\", \"Register\"]",
+  "difficulty_band": 2,
+  "difficulty_step": 1,
+  "source_type": "teacher",
+  "review_notes": "Shuffle-test fixture. The three correct options are listed FIRST in the authored JSON so shuffled rendering is obvious at a glance.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Tick the three components that are found inside the CPU.",
+      "marks": 3,
+      "expected_response_type": "tick_box",
+      "part_config": {
+        "tickExactly": 3,
+        "options": [
+          "Arithmetic Logic Unit",
+          "Control Unit",
+          "Register",
+          "Solid-state drive",
+          "Power supply unit",
+          "Graphics card"
+        ]
+      },
+      "mark_points": [
+        { "text": "Arithmetic Logic Unit", "marks": 1 },
+        { "text": "Control Unit", "marks": 1 },
+        { "text": "Register", "marks": 1 }
+      ]
+    }
+  ]
+}

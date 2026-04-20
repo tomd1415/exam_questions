@@ -70,10 +70,14 @@
 
     function redraw() {
       while (overlay.firstChild) overlay.removeChild(overlay.firstChild);
-      var containerRect = widget.getBoundingClientRect();
-      overlay.setAttribute('width', String(containerRect.width));
-      overlay.setAttribute('height', String(containerRect.height));
-      overlay.setAttribute('viewBox', '0 0 ' + containerRect.width + ' ' + containerRect.height);
+      // Compute positions relative to the overlay's own rect, not the
+      // widget's — the overlay is inset by the widget's padding (and,
+      // in grid-enhanced mode, bounded by its grid area), so using the
+      // widget rect would shift every line by that padding amount.
+      var overlayRect = overlay.getBoundingClientRect();
+      overlay.setAttribute('width', String(overlayRect.width));
+      overlay.setAttribute('height', String(overlayRect.height));
+      overlay.setAttribute('viewBox', '0 0 ' + overlayRect.width + ' ' + overlayRect.height);
       endpoints.forEach(function (ep) {
         var selectId = ep.getAttribute('data-matching-for');
         if (!selectId) return;
@@ -81,8 +85,8 @@
         if (!select || !select.value) return;
         var target = widget.querySelector('[data-matching-right="' + select.value + '"]');
         if (!target) return;
-        var a = boxCentre(ep, containerRect);
-        var b = boxCentre(target, containerRect);
+        var a = boxCentre(ep, overlayRect);
+        var b = boxCentre(target, overlayRect);
         var line = svgNS('line');
         line.setAttribute('x1', String(a.x));
         line.setAttribute('y1', String(a.y));

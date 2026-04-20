@@ -156,11 +156,13 @@ For hand-testing every widget variant end-to-end without polluting the random-dr
 
 ```bash
 # Create test_pupil + test_teacher + Widget Test Harness class,
-# seed 2 questions per response type (34 total), and pre-load them
-# into an open topic-set attempt owned by test_pupil.
+# seed 2 questions per response type (34 total), AND attach every
+# live curated question (approved + active + retired_at IS NULL)
+# to the same pre-loaded topic-set attempt owned by test_pupil.
 npm run test-questions:seed
 
-# Validate all 34 without writing anything
+# Validate all 34 internal fixtures without writing anything
+# (dry-run skips the curated attachment step).
 npm run test-questions:seed -- --dry-run
 
 # Purge previous 'test:%' questions (and attempts that reference them)
@@ -168,9 +170,11 @@ npm run test-questions:seed -- --dry-run
 npm run test-questions:seed -- --reset
 ```
 
-The seeded questions are marked `active=false + approval_status=approved`, so `createTopicSetAttempt` never draws them for other classes; the pupil just continues the pre-built attempt. Sign in as `test_pupil` (password printed on first run) and work through each widget in order.
+The 34 internal widget fixtures are marked `active=false + approval_status=approved`, so `createTopicSetAttempt` never draws them for other classes; the pupil just continues the pre-built attempt. Curated questions are `active=true` and so are also visible to real classes via the normal picker — they are attached here so the test pupil always exercises the current curated bank. Sign in as `test_pupil` (password printed on first run) and work through each question in order.
 
-Internals: [src/scripts/seed-test-questions.ts](src/scripts/seed-test-questions.ts). Similarity hashes are `test:<type>-<n>` so re-runs upsert rather than duplicate.
+The output line reports both counts, e.g. `pre-loaded attempt 29 with 56 questions (34 widget fixtures + 22 curated)`.
+
+Internals: [src/scripts/seed-test-questions.ts](src/scripts/seed-test-questions.ts). Similarity hashes are `test:<type>-<n>` for fixtures and `curated:<external_key>` for curated rows; re-runs upsert rather than duplicate. If curated content has changed, run `npm run content:seed` first to refresh the bank, then `npm run test-questions:seed -- --reset` to rebuild the attempt.
 
 ## 6. Backup and restore drill
 

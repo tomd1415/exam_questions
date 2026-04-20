@@ -70,7 +70,7 @@ describe('seedTestQuestions', () => {
          FROM attempt_questions WHERE attempt_id = $1::bigint`,
       [summary.attemptId],
     );
-    expect(Number(aq[0]!.n)).toBe(summary.scanned);
+    expect(Number(aq[0]!.n)).toBe(summary.scanned + summary.curatedAttached);
 
     const { rows: inactive } = await pool.query<{ n: string }>(
       `SELECT COUNT(*)::text AS n

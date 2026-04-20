@@ -390,6 +390,16 @@ export class QuestionRepo {
       [id, input.approval_status, input.approved_by, input.active, input.review_notes],
     );
   }
+
+  async clearRetirement(id: string): Promise<void> {
+    await this.pool.query(
+      `UPDATE questions
+          SET retired_at = NULL,
+              updated_at = now()
+        WHERE id = $1::bigint AND retired_at IS NOT NULL`,
+      [id],
+    );
+  }
 }
 
 export interface CreateQuestionInput extends NormalisedQuestionDraft {

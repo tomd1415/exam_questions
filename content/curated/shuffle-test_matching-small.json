@@ -1,0 +1,42 @@
+{
+  "external_key": "j277-shuffle-test-matching-small",
+  "component_code": "J277/02",
+  "topic_code": "2.2",
+  "subtopic_code": "2.2.1",
+  "command_word_code": "identify",
+  "archetype_code": "recall",
+  "expected_response_type": "matching",
+  "stem": "The three programming constructs each control the flow of a program differently.",
+  "model_answer": "[[0, 0], [1, 1], [2, 2]]",
+  "difficulty_band": 2,
+  "difficulty_step": 1,
+  "source_type": "teacher",
+  "review_notes": "Shuffle-test fixture. Small (3-row) matching widget — eyeball whether the connector lines start on the endpoint dots and end on the target text.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Match each programming construct to the description that defines it.",
+      "marks": 3,
+      "expected_response_type": "matching",
+      "part_config": {
+        "left": ["Sequence", "Selection", "Iteration"],
+        "right": [
+          "One instruction runs after another in order.",
+          "The program branches based on a Boolean condition.",
+          "A block of code is repeated while a condition holds."
+        ],
+        "correctPairs": [
+          [0, 0],
+          [1, 1],
+          [2, 2]
+        ],
+        "partialCredit": true
+      },
+      "mark_points": [
+        { "text": "Sequence — instructions run one after another", "marks": 1 },
+        { "text": "Selection — branches on a Boolean condition", "marks": 1 },
+        { "text": "Iteration — repeats while a condition holds", "marks": 1 }
+      ]
+    }
+  ]
+}

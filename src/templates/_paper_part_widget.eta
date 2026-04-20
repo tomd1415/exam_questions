@@ -13,6 +13,40 @@ const prior = part.raw_answer || '';
 const priorLines = prior.length > 0 ? prior.split('\n') : [];
 const tickedSet = new Set(priorLines.map(function(s) { return s.trim(); }));
 const t = part.expected_response_type;
+
+// Deterministic shuffle so pupils see answer options in a non-canonical
+// order without the correct option being "first" — while a given
+// attempt_part always renders the same order on reload. The seed is the
+// attempt_part id (per-pupil, per-question), so two pupils in the same
+// class see different orderings but each pupil's view is stable.
+function _seedFrom(s) {
+  const str = String(s);
+  let h = 0x811c9dc5 >>> 0;
+  for (let i = 0; i < str.length; i++) {
+    h ^= str.charCodeAt(i);
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  return h >>> 0;
+}
+function _mulberry32(a) {
+  return function() {
+    a = (a + 0x6d2b79f5) | 0;
+    let x = a;
+    x = Math.imul(x ^ (x >>> 15), x | 1);
+    x ^= x + Math.imul(x ^ (x >>> 7), x | 61);
+    return ((x ^ (x >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function shuffled(list, seedSource) {
+  const out = Array.isArray(list) ? list.slice() : [];
+  const rnd = _mulberry32(_seedFrom(seedSource));
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(rnd() * (i + 1));
+    const tmp = out[i]; out[i] = out[j]; out[j] = tmp;
+  }
+  return out;
+}
+const _shuffleSeed = String(part.id) + ':' + t;
 %>
 <% if (t === 'multiple_choice') { %>
   <%
@@ -24,10 +58,13 @@ const t = part.expected_response_type;
     const mcOptions = Array.isArray(mcCfg.options) && mcCfg.options.length > 0
       ? mcCfg.options
       : markPoints.map(function (mp) { return mp.text; });
+    // Shuffle display order — value="<%= opt %>" stores option text, so
+    // marking is independent of position.
+    const mcDisplay = shuffled(mcOptions, _shuffleSeed);
   %>
   <fieldset class="widget widget--mc" data-autosave-part-id="<%= part.id %>" aria-describedby="marks-<%= part.id %>">
     <legend class="sr-only">Choose one</legend>
-    <% mcOptions.forEach(function(opt) { %>
+    <% mcDisplay.forEach(function(opt) { %>
       <label class="widget-choice">
         <input type="radio"
                name="<%= fieldName %>"
@@ -49,6 +86,8 @@ const t = part.expected_response_type;
     const tickOptions = Array.isArray(tickCfg.options) && tickCfg.options.length > 0
       ? tickCfg.options
       : markPoints.map(function(mp) { return mp.text; });
+    // Shuffle display — value="<%= opt %>" stores option text.
+    const tickDisplay = shuffled(tickOptions, _shuffleSeed);
   %>
   <fieldset class="widget widget--tick<%= tickExactly !== null ? ' widget--tick-exactly' : '' %>"
             data-autosave-part-id="<%= part.id %>"
@@ -57,7 +96,7 @@ const t = part.expected_response_type;
     <legend class="sr-only">
       <%= tickExactly !== null ? 'Tick exactly ' + tickExactly : 'Tick all that apply' %>
     </legend>
-    <% tickOptions.forEach(function(opt) { %>
+    <% tickDisplay.forEach(function(opt) { %>
       <label class="widget-choice">
         <input type="checkbox"
                name="<%= fieldName %>"
@@ -135,7 +174,11 @@ const t = part.expected_response_type;
   <%
     const cfg = part.part_config || {};
     const rows = Array.isArray(cfg.rows) ? cfg.rows : [];
-    const columns = Array.isArray(cfg.columns) ? cfg.columns : [];
+    const columnsAuthored = Array.isArray(cfg.columns) ? cfg.columns : [];
+    // Shuffle column display — the input's value=<col> stores the column
+    // name, so marking is unaffected. Rows stay fixed: their order is
+    // content-meaningful (e.g. "age = 14" → column "Integer").
+    const columns = shuffled(columnsAuthored, _shuffleSeed);
     const priorByRow = new Map();
     priorLines.forEach(function(line) {
       const eq = line.indexOf('=');
@@ -178,7 +221,9 @@ const t = part.expected_response_type;
   <%
     const cfgM = part.part_config || {};
     const rowsM = Array.isArray(cfgM.rows) ? cfgM.rows : [];
-    const columnsM = Array.isArray(cfgM.columns) ? cfgM.columns : [];
+    const columnsAuthoredM = Array.isArray(cfgM.columns) ? cfgM.columns : [];
+    // Shuffle column display (rows stay fixed — see matrix_tick_single).
+    const columnsM = shuffled(columnsAuthoredM, _shuffleSeed);
     const correctByRowM = Array.isArray(cfgM.correctByRow) ? cfgM.correctByRow : [];
     const priorByRowMulti = new Map();
     priorLines.forEach(function(line) {
@@ -296,7 +341,7 @@ const t = part.expected_response_type;
   <div class="<%= wrapClass %>" data-autosave-part-id="<%= part.id %>" aria-describedby="marks-<%= part.id %>">
     <% if (t === 'cloze_with_bank' && clozeBank.length > 0) { %>
       <ul class="cloze-bank" role="list" aria-label="Word bank">
-        <% clozeBank.forEach(function(term) { %>
+        <% shuffled(clozeBank, _shuffleSeed).forEach(function(term) { %>
           <li class="cloze-bank__term">
             <button type="button" class="cloze-bank__copy" data-cloze-bank-term="<%= term %>">
               <%= term %>
@@ -407,7 +452,14 @@ const t = part.expected_response_type;
   <%
     const mcfg = part.part_config || {};
     const mLeft = Array.isArray(mcfg.left) ? mcfg.left : [];
-    const mRight = Array.isArray(mcfg.right) ? mcfg.right : [];
+    const mRightAuthored = Array.isArray(mcfg.right) ? mcfg.right : [];
+    // Shuffle right-column *display* while preserving each option's
+    // original index — raw_answer stores `L=origIndex`, so marking is
+    // unaffected. The left column is the prompt; its order matters.
+    const mRightDisplay = shuffled(
+      mRightAuthored.map(function(label, i) { return { label: label, origIndex: i }; }),
+      _shuffleSeed,
+    );
     // Reconstitute prior pupil answers from raw_answer's `L=R` lines.
     const priorByLeft = new Map();
     priorLines.forEach(function(line) {
@@ -422,7 +474,7 @@ const t = part.expected_response_type;
   <div class="widget widget--matching matching"
        data-autosave-part-id="<%= part.id %>"
        data-matching-left-count="<%= mLeft.length %>"
-       data-matching-right-count="<%= mRight.length %>"
+       data-matching-right-count="<%= mRightAuthored.length %>"
        aria-describedby="marks-<%= part.id %>">
     <ul class="matching__rows" role="list">
       <% mLeft.forEach(function(leftLabel, li) { %>
@@ -449,8 +501,8 @@ const t = part.expected_response_type;
                     name="<%= rowFieldName %>"
                     data-matching-select>
               <option value="">— choose —</option>
-              <% mRight.forEach(function(rightLabel, ri) { %>
-                <option value="<%= ri %>" <%= priorRight === String(ri) ? 'selected' : '' %>><%= rightLabel %></option>
+              <% mRightDisplay.forEach(function(rightItem) { %>
+                <option value="<%= rightItem.origIndex %>" <%= priorRight === String(rightItem.origIndex) ? 'selected' : '' %>><%= rightItem.label %></option>
               <% }); %>
             </select>
           </label>
@@ -458,10 +510,10 @@ const t = part.expected_response_type;
       <% }); %>
     </ul>
     <ul class="matching__targets" role="list" aria-hidden="true">
-      <% mRight.forEach(function(rightLabel, ri) { %>
+      <% mRightDisplay.forEach(function(rightItem) { %>
         <li class="matching__target"
-            data-matching-right="<%= ri %>"
-            tabindex="-1"><%= rightLabel %></li>
+            data-matching-right="<%= rightItem.origIndex %>"
+            tabindex="-1"><%= rightItem.label %></li>
       <% }); %>
     </ul>
     <svg class="matching__overlay" data-matching-overlay aria-hidden="true"></svg>
