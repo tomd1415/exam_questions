@@ -30,12 +30,14 @@ const auditService = new AuditService(auditRepo);
 const llmCallRepo = new LlmCallRepo(pool);
 const promptRepo = new PromptVersionRepo(pool);
 
-async function seedActivePrompt(): Promise<PromptVersionRow> {
+async function seedActivePrompt(
+  name: 'mark_open_response' | 'mark_code_response' = 'mark_open_response',
+): Promise<PromptVersionRow> {
   return promptRepo.upsert({
-    name: 'mark_open_response',
+    name,
     version: `v0.1.0-test-${randomBytes(3).toString('hex')}`,
     modelId: 'gpt-5-mini',
-    systemPrompt: 'You are a test open-response marker.',
+    systemPrompt: `You are a test ${name} marker.`,
     outputSchema: FAMILY_B_OUTPUT_SCHEMA,
     status: 'active',
   });
@@ -90,7 +92,9 @@ async function buildLlmAttemptService(fetchImpl: typeof fetch): Promise<AttemptS
 beforeEach(async () => {
   await cleanDb();
   await pool.query(`DELETE FROM llm_calls`);
-  await pool.query(`DELETE FROM prompt_versions WHERE name = 'mark_open_response'`);
+  await pool.query(
+    `DELETE FROM prompt_versions WHERE name IN ('mark_open_response', 'mark_code_response')`,
+  );
 });
 
 async function setup(): Promise<{
@@ -318,5 +322,153 @@ describe('AttemptService.submitAttempt — LLM path for medium_text', () => {
     expect(auditRows[0]!.details['prompt_version']).toBe(
       `${promptVersion.name}@${promptVersion.version}`,
     );
+  });
+});
+
+describe('AttemptService.submitAttempt — LLM path for code/algorithm (Chunk 3f)', () => {
+  for (const responseType of ['code', 'algorithm'] as const) {
+    it(`routes ${responseType} parts to mark_code_response and writes marker=llm`, async () => {
+      const { teacher, pupil } = await setup();
+      await createQuestion(pool, teacher.id, {
+        topicCode: '1.2',
+        active: true,
+        approvalStatus: 'approved',
+        modelAnswer: 'A short loop counting from 1 to 5.',
+        parts: [
+          {
+            label: '(a)',
+            prompt: 'Write pseudocode that prints the numbers 1 to 5.',
+            marks: 3,
+            expectedResponseType: responseType,
+            markPoints: [
+              { text: 'Uses a for loop with correct bounds', marks: 2 },
+              { text: 'Prints inside the loop body', marks: 1 },
+            ],
+          },
+        ],
+      });
+      const codePrompt = await seedActivePrompt('mark_code_response');
+
+      let payload: FamilyBPayload | null = null;
+      const fetchImpl: typeof fetch = () => {
+        if (!payload) return Promise.reject(new Error('payload not prepared'));
+        return Promise.resolve(okResponse(payload));
+      };
+      const service = await buildLlmAttemptService(fetchImpl);
+
+      const actor = { id: pupil.id, role: 'pupil' as const };
+      const { attemptId } = await service.startTopicSet(actor, '1.2');
+      const bundle = await attemptRepo.loadAttemptBundle(attemptId);
+      const part = bundle!.partsByQuestion.get(bundle!.questions[0]!.id)![0]!;
+      const mps = bundle!.markPointsByPart.get(part.question_part_id)!;
+
+      await service.saveAnswer(actor, attemptId, [
+        {
+          attemptPartId: part.id,
+          rawAnswer: 'for i = 1 to 5\n  print(i)\nnext i',
+        },
+      ]);
+
+      payload = {
+        marks_awarded: 3,
+        mark_points_hit: [
+          { mark_point_id: mps[0]!.id, evidence_quote: 'for i = 1 to 5' },
+          { mark_point_id: mps[1]!.id, evidence_quote: 'print(i)' },
+        ],
+        mark_points_missed: [],
+        contradiction_detected: false,
+        over_answer_detected: false,
+        confidence: 0.91,
+        feedback_for_pupil: {
+          what_went_well: 'Loop bounds and print line are both correct.',
+          how_to_gain_more: 'Add a comment explaining the step-by-step behaviour.',
+          next_focus: 'Try a while-loop version to show the alternative.',
+        },
+        feedback_for_teacher: {
+          summary: 'Clean pseudocode, correct bounds, correct body.',
+        },
+        refusal: false,
+      };
+
+      const res = await service.submitAttempt(actor, attemptId);
+      expect(res.markedParts).toBe(1);
+      expect(res.pendingParts).toBe(0);
+
+      const { rows: awardedRows } = await pool.query<{
+        marker: string;
+        prompt_version: string | null;
+        model_id: string | null;
+      }>(
+        `SELECT marker, prompt_version, model_id
+           FROM awarded_marks
+          WHERE attempt_part_id = $1::bigint`,
+        [part.id],
+      );
+      expect(awardedRows).toHaveLength(1);
+      expect(awardedRows[0]!.marker).toBe('llm');
+      expect(awardedRows[0]!.prompt_version).toBe(`${codePrompt.name}@${codePrompt.version}`);
+      expect(awardedRows[0]!.model_id).toBe(codePrompt.model_id);
+
+      const { rows: callRows } = await pool.query<{
+        status: string;
+        prompt_version_id: string;
+      }>(
+        `SELECT status, prompt_version_id::text
+           FROM llm_calls
+          WHERE attempt_part_id = $1::bigint`,
+        [part.id],
+      );
+      expect(callRows).toHaveLength(1);
+      expect(callRows[0]!.status).toBe('ok');
+      expect(callRows[0]!.prompt_version_id).toBe(codePrompt.id);
+    });
+  }
+
+  it('holds a code part as pending when only mark_open_response is active', async () => {
+    const { teacher, pupil } = await setup();
+    await createQuestion(pool, teacher.id, {
+      topicCode: '1.2',
+      active: true,
+      approvalStatus: 'approved',
+      modelAnswer: 'A short loop.',
+      parts: [
+        {
+          label: '(a)',
+          prompt: 'Write pseudocode that counts to 5.',
+          marks: 3,
+          expectedResponseType: 'code',
+        },
+      ],
+    });
+    await seedActivePrompt('mark_open_response');
+
+    const fetchImpl: typeof fetch = () => {
+      throw new Error('fetch should not be called when the mapped prompt is missing');
+    };
+    const service = await buildLlmAttemptService(fetchImpl);
+
+    const actor = { id: pupil.id, role: 'pupil' as const };
+    const { attemptId } = await service.startTopicSet(actor, '1.2');
+    const bundle = await attemptRepo.loadAttemptBundle(attemptId);
+    const part = bundle!.partsByQuestion.get(bundle!.questions[0]!.id)![0]!;
+    await service.saveAnswer(actor, attemptId, [
+      { attemptPartId: part.id, rawAnswer: 'for i = 1 to 5\n  print(i)' },
+    ]);
+
+    const res = await service.submitAttempt(actor, attemptId);
+    expect(res.markedParts).toBe(0);
+    expect(res.pendingParts).toBe(1);
+
+    const { rows: awardedRows } = await pool.query(
+      `SELECT id FROM awarded_marks WHERE attempt_part_id = $1::bigint`,
+      [part.id],
+    );
+    expect(awardedRows).toHaveLength(0);
+
+    const { rows: callRows } = await pool.query(
+      `SELECT id FROM llm_calls WHERE attempt_part_id = $1::bigint`,
+      [part.id],
+    );
+    expect(callRows).toHaveLength(0);
   });
 });

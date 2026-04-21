@@ -151,6 +151,33 @@ const reviewActions =
               <p><strong>Pupil self-estimate:</strong> <%= part.pupil_self_marks %> / <%= part.marks %></p>
             <% } %>
           <% } %>
+
+          <% const feedback = (it.pupilFeedbackByPart || {})[part.id]; %>
+          <% if (feedback && feedback.kind === 'ai') { %>
+            <section class="pupil-feedback pupil-feedback--ai" aria-label="AI feedback">
+              <p class="pupil-feedback__badge">
+                <span class="pill pill--info">Marked with AI assistance</span>
+                <span class="pupil-feedback__note">Your teacher will check this.</span>
+              </p>
+              <dl class="pupil-feedback__blocks">
+                <dt>What went well</dt>
+                <dd><%= feedback.what_went_well %></dd>
+                <dt>How to gain more marks</dt>
+                <dd><%= feedback.how_to_gain_more %></dd>
+                <dt>What to focus on next</dt>
+                <dd><%= feedback.next_focus %></dd>
+              </dl>
+            </section>
+          <% } else if (feedback && feedback.kind === 'overridden') { %>
+            <section class="pupil-feedback pupil-feedback--override" aria-label="Teacher override">
+              <p class="pupil-feedback__badge">
+                <span class="pill pill--warn">Teacher-marked override</span>
+              </p>
+              <% if (feedback.overrideReason) { %>
+                <p class="pupil-feedback__override-reason"><strong>Teacher's note:</strong> <%= feedback.overrideReason %></p>
+              <% } %>
+            </section>
+          <% } %>
         </div>
       <% }); %>
     </article>

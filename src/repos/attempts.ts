@@ -47,6 +47,7 @@ export interface AttemptPartRow {
   last_saved_at: Date;
   submitted_at: Date | null;
   pupil_self_marks: number | null;
+  pupil_feedback_fallback: string | null;
 }
 
 export interface AttemptPartMarkPointRow {
@@ -59,6 +60,12 @@ export interface AttemptPartMarkPointRow {
   display_order: number;
 }
 
+export interface AwardedMarkFeedbackForPupil {
+  what_went_well: string;
+  how_to_gain_more: string;
+  next_focus: string;
+}
+
 export interface AwardedMarkRow {
   id: string;
   attempt_part_id: string;
@@ -67,6 +74,9 @@ export interface AwardedMarkRow {
   mark_points_hit: string[];
   mark_points_missed: string[];
   marker: 'deterministic' | 'llm' | 'teacher_override';
+  moderation_status: 'pending' | 'accepted' | 'overridden' | 'not_required';
+  feedback_for_pupil: AwardedMarkFeedbackForPupil | null;
+  override_reason: string | null;
   created_at: Date;
 }
 
@@ -410,7 +420,8 @@ export class AttemptRepo {
               ap.raw_answer,
               ap.last_saved_at,
               ap.submitted_at,
-              ap.pupil_self_marks
+              ap.pupil_self_marks,
+              qp.pupil_feedback_fallback
          FROM attempt_parts ap
          JOIN question_parts qp ON qp.id = ap.question_part_id
          JOIN attempt_questions aq ON aq.id = ap.attempt_question_id
@@ -444,10 +455,14 @@ export class AttemptRepo {
               (SELECT array_agg(x::text) FROM unnest(am.mark_points_hit) AS x) AS mark_points_hit,
               (SELECT array_agg(x::text) FROM unnest(am.mark_points_missed) AS x) AS mark_points_missed,
               am.marker,
+              am.moderation_status,
+              am.feedback_for_pupil,
+              tov.reason AS override_reason,
               am.created_at
          FROM awarded_marks am
          JOIN attempt_parts ap     ON ap.id = am.attempt_part_id
          JOIN attempt_questions aq ON aq.id = ap.attempt_question_id
+         LEFT JOIN teacher_overrides tov ON tov.awarded_mark_id = am.id
         WHERE aq.attempt_id = $1::bigint
         ORDER BY am.attempt_part_id, am.created_at DESC, am.id DESC`,
       [attemptId],
@@ -685,15 +700,18 @@ export class AttemptRepo {
     moderationRequired: boolean;
     moderationStatus: 'pending' | 'not_required';
     moderationNotes: unknown;
+    feedbackForPupil: AwardedMarkFeedbackForPupil;
   }): Promise<void> {
     await this.pool.query(
       `INSERT INTO awarded_marks
          (attempt_part_id, marks_awarded, marks_total,
           mark_points_hit, mark_points_missed, evidence_quotes,
           marker, confidence, moderation_required, moderation_status,
-          moderation_notes, prompt_version, model_id)
+          moderation_notes, prompt_version, model_id,
+          feedback_for_pupil)
        VALUES ($1::bigint, $2, $3, $4::bigint[], $5::bigint[], $6::text[],
-               'llm', $7, $8, $9, $10::jsonb, $11, $12)`,
+               'llm', $7, $8, $9, $10::jsonb, $11, $12,
+               $13::jsonb)`,
       [
         input.attemptPartId,
         input.marksAwarded,
@@ -707,19 +725,28 @@ export class AttemptRepo {
         input.moderationNotes === null ? null : JSON.stringify(input.moderationNotes),
         input.promptVersion,
         input.modelId,
+        JSON.stringify(input.feedbackForPupil),
       ],
     );
   }
 
   async findAwardedMarkForPart(attemptPartId: string): Promise<AwardedMarkRow | null> {
     const { rows } = await this.pool.query<AwardedMarkRow>(
-      `SELECT id::text, attempt_part_id::text, marks_awarded, marks_total,
-              (SELECT array_agg(x::text) FROM unnest(mark_points_hit) AS x) AS mark_points_hit,
-              (SELECT array_agg(x::text) FROM unnest(mark_points_missed) AS x) AS mark_points_missed,
-              marker, created_at
-         FROM awarded_marks
-        WHERE attempt_part_id = $1::bigint
-        ORDER BY created_at DESC
+      `SELECT am.id::text,
+              am.attempt_part_id::text,
+              am.marks_awarded,
+              am.marks_total,
+              (SELECT array_agg(x::text) FROM unnest(am.mark_points_hit) AS x) AS mark_points_hit,
+              (SELECT array_agg(x::text) FROM unnest(am.mark_points_missed) AS x) AS mark_points_missed,
+              am.marker,
+              am.moderation_status,
+              am.feedback_for_pupil,
+              tov.reason AS override_reason,
+              am.created_at
+         FROM awarded_marks am
+         LEFT JOIN teacher_overrides tov ON tov.awarded_mark_id = am.id
+        WHERE am.attempt_part_id = $1::bigint
+        ORDER BY am.created_at DESC
         LIMIT 1`,
       [attemptPartId],
     );

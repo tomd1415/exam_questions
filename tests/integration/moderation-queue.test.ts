@@ -294,6 +294,19 @@ describe('moderation queue end-to-end', () => {
     ).rejects.toMatchObject({ reason: 'not_admin' });
   });
 
+  it('persists feedback_for_pupil JSONB alongside the LLM awarded mark', async () => {
+    const { awardedMarkId } = await submitLowConfidenceAnswer();
+    const { rows } = await pool.query<{ feedback_for_pupil: unknown }>(
+      `SELECT feedback_for_pupil FROM awarded_marks WHERE id = $1::bigint`,
+      [awardedMarkId],
+    );
+    const f = rows[0]!.feedback_for_pupil as Record<string, unknown> | null;
+    expect(f).not.toBeNull();
+    expect(f!['what_went_well']).toBe('Both components named clearly.');
+    expect(f!['how_to_gain_more']).toBe('Explain why each exists, not just what.');
+    expect(f!['next_focus']).toBe('Practise comparing parallelism vs serial execution.');
+  });
+
   it('rejects override with marks outside the part range', async () => {
     const { admin, awardedMarkId, partMarks } = await submitLowConfidenceAnswer();
     await expect(

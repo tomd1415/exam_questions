@@ -13,6 +13,24 @@ import type { PromptVersionRepo, PromptVersionRow } from '../repos/prompts.js';
 // prompts/<name>/<version>.md is the editable source and the DB
 // row snapshots it at promotion time.
 
+// Chunk 3f routing map. Family B has two prompts: `mark_open_response`
+// for English prose (medium_text / extended_response) and
+// `mark_code_response` for code / algorithm / pseudocode. The map
+// keys off `expected_response_type` so the call site never branches
+// on string literals — grep for prompt names returns the map plus
+// the seed list, nothing more.
+
+const PROMPT_NAME_BY_RESPONSE_TYPE: Readonly<Record<string, string>> = {
+  medium_text: 'mark_open_response',
+  extended_response: 'mark_open_response',
+  code: 'mark_code_response',
+  algorithm: 'mark_code_response',
+};
+
+export function promptNameForResponseType(responseType: string): string | null {
+  return PROMPT_NAME_BY_RESPONSE_TYPE[responseType] ?? null;
+}
+
 export class PromptVersionService {
   private activeByName: ReadonlyMap<string, PromptVersionRow> = new Map();
   private loaded = false;

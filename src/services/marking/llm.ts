@@ -1,19 +1,17 @@
 import type { LlmClient, StructuredCallResult } from '../llm/client.js';
-import type { PromptVersionService } from '../prompts.js';
+import { promptNameForResponseType, type PromptVersionService } from '../prompts.js';
 import type { PromptVersionRow } from '../../repos/prompts.js';
 
 // Family B dispatcher. Takes the same MarkingInputPart shape as the
 // deterministic marker and returns a parallel outcome union so the
 // call site in AttemptService can branch on one discriminant.
 //
-// Chunk 3c only routes medium_text / extended_response through here.
-// code / algorithm wait for chunk 3f (mark_code_response prompt).
-// Canvas widgets (logic_diagram/flowchart) stay teacher_pending and
-// never reach this module — the allowlist in dispatch.ts enforces
-// that; the guard here is belt-and-braces.
-
-const SUPPORTED_RESPONSE_TYPES = new Set<string>(['medium_text', 'extended_response']);
-const PROMPT_NAME = 'mark_open_response';
+// Chunk 3f: the prompt name is resolved from `expected_response_type`
+// via promptNameForResponseType — medium_text / extended_response map
+// to `mark_open_response`, code / algorithm map to `mark_code_response`.
+// Canvas widgets (logic_diagram/flowchart) have no entry in the map
+// and stay teacher_pending; the allowlist in dispatch.ts is the first
+// guard, this lookup is belt-and-braces.
 
 export interface LlmMarkingInputPart {
   readonly id: string;
@@ -114,10 +112,11 @@ export class LlmOpenResponseMarker {
   ) {}
 
   async mark(input: LlmMarkingInput): Promise<LlmMarkingOutcome> {
-    if (!SUPPORTED_RESPONSE_TYPES.has(input.part.expected_response_type)) {
+    const promptName = promptNameForResponseType(input.part.expected_response_type);
+    if (!promptName) {
       return { kind: 'skipped', reason: 'wrong_type' };
     }
-    const promptVersion = this.prompts.getActive(PROMPT_NAME);
+    const promptVersion = this.prompts.getActive(promptName);
     if (!promptVersion) {
       return { kind: 'skipped', reason: 'no_active_prompt' };
     }

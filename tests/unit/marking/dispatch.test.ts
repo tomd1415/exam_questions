@@ -12,11 +12,11 @@ import type {
   LlmOpenResponseMarker,
 } from '../../../src/services/marking/llm.js';
 
-// Exhaustive router check: the only response types that may hand off
-// to the LLM are medium_text and extended_response. Objective types,
-// code/algorithm, and canvas widgets must never reach the marker even
+// Exhaustive router check: the response types that hand off to the
+// LLM are medium_text, extended_response, code, and algorithm.
+// Objective types and canvas widgets must never reach the marker even
 // when the kill switch is on. This test is the guardrail for the
-// invariant in PHASE3_PLAN.md §5 chunk 3c.
+// invariant in PHASE3_PLAN.md §5 chunk 3c, widened in chunk 3f.
 
 const PROMPT: PromptVersionRow = {
   id: '99',
@@ -77,6 +77,7 @@ function makePart(overrides: Partial<AttemptPartRow>): AttemptPartRow {
     last_saved_at: new Date(),
     submitted_at: null,
     pupil_self_marks: null,
+    pupil_feedback_fallback: null,
     ...overrides,
   };
 }
@@ -125,7 +126,7 @@ describe('MarkingDispatcher — LLM allowlist', () => {
   }
 
   for (const type of ['code', 'algorithm']) {
-    it(`holds ${type} as pending (waiting on 3f) even with the flag on`, async () => {
+    it(`routes ${type} to the LLM when the flag is on (chunk 3f)`, async () => {
       const marker = new RecordingLlmMarker();
       const dispatcher = new MarkingDispatcher({ llmEnabled: true, llmMarker: asMarker(marker) });
       const part = makePart({ expected_response_type: type });
@@ -134,8 +135,23 @@ describe('MarkingDispatcher — LLM allowlist', () => {
         part,
         markPoints: NO_MARK_POINTS,
       });
+      expect(marker.calls).toHaveLength(1);
+      expect(marker.calls[0]!.part.expected_response_type).toBe(type);
+      expect(outcome.kind).toBe('llm_awarded');
+    });
+
+    it(`holds ${type} as pending (llm_disabled) when the flag is off`, async () => {
+      const marker = new RecordingLlmMarker();
+      const dispatcher = new MarkingDispatcher({ llmEnabled: false, llmMarker: null });
+      const part = makePart({ expected_response_type: type });
+      const outcome = await dispatcher.dispatch({
+        question: makeQuestion(),
+        part,
+        markPoints: NO_MARK_POINTS,
+      });
       expect(marker.calls).toHaveLength(0);
       expect(outcome.kind).toBe('pending');
+      if (outcome.kind === 'pending') expect(outcome.reason).toBe('llm_disabled');
     });
   }
 

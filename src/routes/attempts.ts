@@ -3,6 +3,8 @@ import { z } from 'zod';
 import { AttemptAccessError } from '../services/attempts.js';
 import { FONT_PREFERENCES, REVEAL_MODES, THEME_PREFERENCES } from '../repos/users.js';
 import { isWidgetTipKey, WIDGET_TIPS } from '../lib/widget-tips.js';
+import { buildPupilFeedback, type PupilFeedback } from '../lib/pupil-feedback.js';
+import type { AttemptBundle } from '../repos/attempts.js';
 
 const StartBody = z.object({ _csrf: z.string().min(1) });
 
@@ -333,6 +335,8 @@ export function registerAttemptRoutes(app: FastifyInstance): void {
       }
 
       const dismissed = req.currentUser?.widget_tips_dismissed ?? {};
+      const pupilFeedbackByPart =
+        bundle.attempt.submitted_at !== null ? buildPupilFeedbackByPart(bundle) : {};
       return reply.view(view, {
         title:
           bundle.attempt.submitted_at === null
@@ -345,6 +349,7 @@ export function registerAttemptRoutes(app: FastifyInstance): void {
         flash: readQueryFlash(req),
         widgetTipsDismissed: dismissed,
         widgetTips: WIDGET_TIPS,
+        pupilFeedbackByPart,
       });
     } catch (err) {
       if (err instanceof AttemptAccessError) {
@@ -610,4 +615,15 @@ function parseElapsedSeconds(raw: string | undefined): number | null {
 function readQueryFlash(req: FastifyRequest): string | null {
   const q = req.query as { flash?: unknown };
   return typeof q.flash === 'string' && q.flash.length > 0 ? q.flash.slice(0, 200) : null;
+}
+
+function buildPupilFeedbackByPart(bundle: AttemptBundle): Record<string, PupilFeedback> {
+  const out: Record<string, PupilFeedback> = {};
+  for (const parts of bundle.partsByQuestion.values()) {
+    for (const part of parts) {
+      const awarded = bundle.awardedByAttemptPart.get(part.id);
+      out[part.id] = buildPupilFeedback(awarded, part.pupil_feedback_fallback);
+    }
+  }
+  return out;
 }

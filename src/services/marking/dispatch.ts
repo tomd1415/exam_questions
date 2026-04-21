@@ -31,8 +31,17 @@ import { evaluateSafetyGate, type SafetyGateReason } from './safety-gate.js';
 // (matrix_*, cloze_*, multiple_choice, etc.) to the LLM even if the
 // flag is on. Test tests/unit/marking/dispatch.test.ts asserts that
 // invariant.
+//
+// Chunk 3f widened the allowlist to include `code` and `algorithm`;
+// the LLM marker's routing map (promptNameForResponseType) picks the
+// right prompt per type.
 
-const LLM_ALLOWED_TYPES = new Set<string>(['medium_text', 'extended_response']);
+const LLM_ALLOWED_TYPES = new Set<string>([
+  'medium_text',
+  'extended_response',
+  'code',
+  'algorithm',
+]);
 
 export type DispatchAuditEvent =
   | 'marking.llm.ok'
@@ -112,7 +121,8 @@ export class MarkingDispatcher {
 
     const type = input.part.expected_response_type;
     if (!LLM_ALLOWED_TYPES.has(type)) {
-      // Canvas widgets, code, algorithm — wait for 3f or Phase 7.
+      // Canvas widgets (logic_diagram/flowchart/trace_table) stay in
+      // teacher_pending until Phase 7 gains their own markers.
       return { kind: 'pending', reason: det.reason };
     }
     // Hard guard: objective types must never reach the LLM path
