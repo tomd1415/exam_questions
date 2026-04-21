@@ -29,6 +29,9 @@ import { QuestionService } from './services/questions.js';
 import { QuestionDraftService } from './services/question_drafts.js';
 import { AttemptService } from './services/attempts.js';
 import { TeacherMarkingService } from './services/marking/teacher.js';
+import { MarkingDispatcher } from './services/marking/dispatch.js';
+import { LlmOpenResponseMarker } from './services/marking/llm.js';
+import { LlmClient } from './services/llm/client.js';
 import { FeedbackService } from './services/feedback.js';
 import { PromptVersionService } from './services/prompts.js';
 import { seedPromptDraftsFromDisk } from './services/prompts_bootstrap.js';
@@ -157,12 +160,35 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
     questionService,
     auditService,
   );
-  const attemptService = new AttemptService(attemptRepo, classRepo, auditService, userRepo);
   const teacherMarkingService = new TeacherMarkingService(attemptRepo, auditService);
   const feedbackService = new FeedbackService(feedbackRepo, auditService, userRepo);
   const promptService = new PromptVersionService(promptRepo);
   await seedPromptDraftsFromDisk(promptRepo);
   await promptService.loadActive();
+
+  // LLM marker is only built when the kill switch is on AND an API key
+  // is configured. The config.ts superRefine enforces that OPENAI_API_KEY
+  // is present when LLM_ENABLED=true, so this branch is safe to take.
+  // When disabled, the dispatcher runs deterministic-only exactly as in
+  // Phase 2.5 — no LLM allocations, no llm_calls rows, no network calls.
+  const llmMarker =
+    config.LLM_ENABLED && config.OPENAI_API_KEY
+      ? new LlmOpenResponseMarker(
+          new LlmClient(llmCallRepo, { apiKey: config.OPENAI_API_KEY }),
+          promptService,
+        )
+      : null;
+  const markingDispatcher = new MarkingDispatcher({
+    llmEnabled: config.LLM_ENABLED,
+    llmMarker,
+  });
+  const attemptService = new AttemptService(
+    attemptRepo,
+    classRepo,
+    auditService,
+    userRepo,
+    markingDispatcher,
+  );
 
   app.decorate('services', {
     auth: authService,

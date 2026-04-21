@@ -2,6 +2,7 @@ import type {
   AttemptBundle,
   AttemptPartMarkPointRow,
   AttemptPartRow,
+  AttemptQuestionRow,
   AttemptRepo,
   PupilAttemptSummary,
   SubmittedAttemptSummary,
@@ -21,6 +22,7 @@ import {
   type MarkingInputMarkPoint,
   type MarkingInputPart,
 } from './marking/deterministic.js';
+import type { DispatchOutcome, MarkingDispatcher } from './marking/dispatch.js';
 import type { AuditService } from './audit.js';
 
 export type ActorForAttempt = Pick<UserRow, 'id' | 'role'>;
@@ -61,6 +63,7 @@ export class AttemptService {
     private readonly classRepo: ClassRepo,
     private readonly audit: AuditService,
     private readonly userRepo?: UserRepo,
+    private readonly dispatcher?: MarkingDispatcher,
   ) {}
 
   async listAttemptsForPupil(actor: ActorForAttempt): Promise<PupilAttemptSummary[]> {
@@ -304,19 +307,13 @@ export class AttemptService {
 
     let markedParts = 0;
     let pendingParts = 0;
-    for (const parts of bundle.partsByQuestion.values()) {
+    for (const question of bundle.questions) {
+      const parts = bundle.partsByQuestion.get(question.id) ?? [];
       for (const part of parts) {
         if (bundle.awardedByAttemptPart.has(part.id)) continue;
         const mps = bundle.markPointsByPart.get(part.question_part_id) ?? [];
-        const outcome = runDeterministicMarker(part, mps);
-        if (outcome.kind === 'awarded') {
-          await this.repo.writeDeterministicMark({
-            attemptPartId: part.id,
-            marksAwarded: outcome.marks_awarded,
-            marksTotal: outcome.marks_possible,
-            markPointsHit: outcome.hitMarkPointIds,
-            markPointsMissed: outcome.missedMarkPointIds,
-          });
+        const outcome = await this.dispatchPart(actor, question, part, mps);
+        if (outcome.kind === 'deterministic_awarded' || outcome.kind === 'llm_awarded') {
           markedParts++;
         } else {
           pendingParts++;
@@ -367,15 +364,8 @@ export class AttemptService {
     for (const part of parts) {
       if (bundle.awardedByAttemptPart.has(part.id)) continue;
       const mps = bundle.markPointsByPart.get(part.question_part_id) ?? [];
-      const outcome = runDeterministicMarker(part, mps);
-      if (outcome.kind === 'awarded') {
-        await this.repo.writeDeterministicMark({
-          attemptPartId: part.id,
-          marksAwarded: outcome.marks_awarded,
-          marksTotal: outcome.marks_possible,
-          markPointsHit: outcome.hitMarkPointIds,
-          markPointsMissed: outcome.missedMarkPointIds,
-        });
+      const outcome = await this.dispatchPart(actor, question, part, mps);
+      if (outcome.kind === 'deterministic_awarded' || outcome.kind === 'llm_awarded') {
         markedParts++;
       } else {
         pendingParts++;
@@ -441,16 +431,77 @@ export class AttemptService {
       actor.id,
     );
   }
-}
 
-interface DeterministicAwarded {
-  kind: 'awarded';
-  marks_awarded: number;
-  marks_possible: number;
-  hitMarkPointIds: string[];
-  missedMarkPointIds: string[];
+  // Runs the marking dispatcher for a single attempt_part and persists
+  // the awarded_marks row for an `awarded` outcome. Audit events emitted
+  // by the LLM path are forwarded to the audit service one-per-outcome,
+  // matching the llm_calls row-per-outcome invariant. Missing dispatcher
+  // (e.g. a test that does not wire LLM) falls back to deterministic
+  // only — the same behaviour as Phase 2.5.
+  private async dispatchPart(
+    actor: ActorForAttempt,
+    question: AttemptQuestionRow,
+    part: AttemptPartRow,
+    markPoints: readonly AttemptPartMarkPointRow[],
+  ): Promise<DispatchOutcome> {
+    if (!this.dispatcher) {
+      const fallback = buildDeterministicFallback(part, markPoints);
+      if (fallback.kind === 'deterministic_awarded') {
+        await this.repo.writeDeterministicMark({
+          attemptPartId: part.id,
+          marksAwarded: fallback.marksAwarded,
+          marksTotal: fallback.marksTotal,
+          markPointsHit: fallback.hitMarkPointIds,
+          markPointsMissed: fallback.missedMarkPointIds,
+        });
+      }
+      return fallback;
+    }
+
+    const outcome = await this.dispatcher.dispatch({
+      question: { stem: question.stem, model_answer: question.model_answer },
+      part,
+      markPoints,
+    });
+
+    if (outcome.kind === 'deterministic_awarded') {
+      await this.repo.writeDeterministicMark({
+        attemptPartId: part.id,
+        marksAwarded: outcome.marksAwarded,
+        marksTotal: outcome.marksTotal,
+        markPointsHit: outcome.hitMarkPointIds,
+        markPointsMissed: outcome.missedMarkPointIds,
+      });
+    } else if (outcome.kind === 'llm_awarded') {
+      await this.repo.writeLlmMark({
+        attemptPartId: part.id,
+        marksAwarded: outcome.marksAwarded,
+        marksTotal: outcome.marksTotal,
+        markPointsHit: outcome.hitMarkPointIds,
+        markPointsMissed: outcome.missedMarkPointIds,
+        evidenceQuotes: outcome.evidenceQuotes,
+        confidence: outcome.confidence,
+        promptVersion: `${outcome.promptVersion.name}@${outcome.promptVersion.version}`,
+        modelId: outcome.promptVersion.model_id,
+      });
+      await this.audit.record(
+        { userId: actor.id, role: actor.role },
+        outcome.auditEvent,
+        outcome.auditDetails,
+        actor.id,
+      );
+    } else if (outcome.auditEvent) {
+      await this.audit.record(
+        { userId: actor.id, role: actor.role },
+        outcome.auditEvent,
+        outcome.auditDetails ?? {},
+        actor.id,
+      );
+    }
+
+    return outcome;
+  }
 }
-type DeterministicOutcome = DeterministicAwarded | { kind: 'pending' };
 
 function clampElapsedSeconds(raw: number | null, timerMinutes: number | null): number | null {
   if (timerMinutes === null) return null;
@@ -460,11 +511,14 @@ function clampElapsedSeconds(raw: number | null, timerMinutes: number | null): n
   return Math.min(floored, ceiling);
 }
 
-function runDeterministicMarker(
+// Minimal deterministic-only dispatch for callers that don't wire a
+// MarkingDispatcher (most tests). Mirrors the awarded/pending union in
+// dispatch.ts but skips the LLM path entirely.
+function buildDeterministicFallback(
   part: AttemptPartRow,
   markPoints: readonly AttemptPartMarkPointRow[],
-): DeterministicOutcome {
-  const input: MarkingInputPart = {
+): DispatchOutcome {
+  const markingPart: MarkingInputPart = {
     marks: part.marks,
     expected_response_type: part.expected_response_type,
     part_config: part.part_config,
@@ -475,9 +529,10 @@ function runDeterministicMarker(
     marks: mp.marks,
     is_required: mp.is_required,
   }));
-  const result = markAttemptPart(input, part.raw_answer, mps);
-  if (result.kind === 'teacher_pending') return { kind: 'pending' };
-
+  const result = markAttemptPart(markingPart, part.raw_answer, mps);
+  if (result.kind === 'teacher_pending') {
+    return { kind: 'pending', reason: result.reason };
+  }
   const hit: string[] = [];
   const missed: string[] = [];
   for (let i = 0; i < result.mark_point_outcomes.length; i++) {
@@ -486,9 +541,9 @@ function runDeterministicMarker(
     else missed.push(id);
   }
   return {
-    kind: 'awarded',
-    marks_awarded: result.marks_awarded,
-    marks_possible: result.marks_possible,
+    kind: 'deterministic_awarded',
+    marksAwarded: result.marks_awarded,
+    marksTotal: result.marks_possible,
     hitMarkPointIds: hit,
     missedMarkPointIds: missed,
   };

@@ -25,6 +25,7 @@ export interface AttemptQuestionRow {
   question_id: string;
   display_order: number;
   stem: string;
+  model_answer: string;
   topic_code: string;
   subtopic_code: string;
   command_word_code: string;
@@ -383,6 +384,7 @@ export class AttemptRepo {
               aq.question_id::text,
               aq.display_order,
               q.stem,
+              q.model_answer,
               q.topic_code,
               q.subtopic_code,
               q.command_word_code,
@@ -666,6 +668,42 @@ export class AttemptRepo {
         input.marksTotal,
         input.markPointsHit,
         input.markPointsMissed,
+      ],
+    );
+  }
+
+  async writeLlmMark(input: {
+    attemptPartId: string;
+    marksAwarded: number;
+    marksTotal: number;
+    markPointsHit: string[];
+    markPointsMissed: string[];
+    evidenceQuotes: string[];
+    confidence: number;
+    promptVersion: string;
+    modelId: string;
+  }): Promise<void> {
+    // moderation_required / moderation_status stay at the schema
+    // defaults (false / 'not_required') until chunk 3d's safety gate
+    // flips them based on the gate's rule set.
+    await this.pool.query(
+      `INSERT INTO awarded_marks
+         (attempt_part_id, marks_awarded, marks_total,
+          mark_points_hit, mark_points_missed, evidence_quotes,
+          marker, confidence, moderation_required, moderation_status,
+          prompt_version, model_id)
+       VALUES ($1::bigint, $2, $3, $4::bigint[], $5::bigint[], $6::text[],
+               'llm', $7, false, 'not_required', $8, $9)`,
+      [
+        input.attemptPartId,
+        input.marksAwarded,
+        input.marksTotal,
+        input.markPointsHit,
+        input.markPointsMissed,
+        input.evidenceQuotes,
+        input.confidence,
+        input.promptVersion,
+        input.modelId,
       ],
     );
   }
