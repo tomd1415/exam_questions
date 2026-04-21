@@ -1,0 +1,72 @@
+<%~ include('_page_header', {
+  crumbs: [{ label: 'LLM costs' }],
+  heading: 'LLM costs',
+  subtitle:
+    'Rolling windows over the llm_calls audit log. Each card projects onto a 30-day month and bands the projection against the monthly cap (' + it.budgetFormatted + ').',
+}) %>
+
+<% it.cards.forEach(function(card) { %>
+  <section class="admin-card llm-cost-card llm-cost-card--<%= card.verdict.band %>" aria-labelledby="card-<%= card.label.replace(/\s+/g, '-').toLowerCase() %>">
+    <header class="admin-card__header">
+      <h2 id="card-<%= card.label.replace(/\s+/g, '-').toLowerCase() %>"><%= card.label %></h2>
+      <p class="admin-card__sub">
+        <time datetime="<%= card.windowStart.toISOString() %>"><%= card.windowStart.toISOString().slice(0, 10) %></time>
+        — <time datetime="<%= card.windowEnd.toISOString() %>"><%= card.windowEnd.toISOString().slice(0, 10) %></time>
+      </p>
+    </header>
+
+    <dl class="admin-kv">
+      <dt>Spent so far</dt>
+      <dd><strong><%= card.totalPenceFormatted %></strong></dd>
+
+      <dt>Calls</dt>
+      <dd><%= card.totalCalls %> <span class="muted">(<%= card.totalOkCalls %> ok)</span></dd>
+
+      <dt>Projected monthly</dt>
+      <dd>
+        <strong><%= card.verdictFormatted.projectedFormatted %></strong>
+        of <%= card.verdictFormatted.budgetFormatted %>
+        <span class="pill pill--<%= card.verdict.band === 'green' ? 'ok' : (card.verdict.band === 'amber' ? 'warn' : 'danger') %>">
+          <%= card.verdict.band %>
+        </span>
+        <span class="muted"><%= card.verdict.percentOfBudget %>% of budget</span>
+      </dd>
+    </dl>
+
+    <% if (card.perPrompt.length === 0) { %>
+      <p class="empty">No LLM calls in this window.</p>
+    <% } else { %>
+      <table class="admin-table llm-cost-table">
+        <thead>
+          <tr>
+            <th scope="col">Prompt</th>
+            <th scope="col">Model</th>
+            <th scope="col" class="num">Calls</th>
+            <th scope="col" class="num">OK</th>
+            <th scope="col" class="num">Input tok.</th>
+            <th scope="col" class="num">Output tok.</th>
+            <th scope="col" class="num">Cost</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% card.perPrompt.forEach(function(row) { %>
+            <tr>
+              <td><%= row.prompt_name %> <span class="muted"><%= row.prompt_version %></span></td>
+              <td><%= row.model_id %></td>
+              <td class="num"><%= row.calls %></td>
+              <td class="num"><%= row.ok_calls %></td>
+              <td class="num"><%= row.input_tokens %></td>
+              <td class="num"><%= row.output_tokens %></td>
+              <td class="num"><%= row.cost_formatted %></td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    <% } %>
+  </section>
+<% }); %>
+
+<p class="muted">
+  Generated <time datetime="<%= it.generatedAt.toISOString() %>"><%= it.generatedAt.toISOString() %></time>.
+  Editing the cap is a deploy-time change (MONTHLY_LLM_BUDGET_PENCE in env).
+</p>

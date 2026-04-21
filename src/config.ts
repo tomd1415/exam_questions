@@ -20,6 +20,12 @@ const ConfigSchema = z
     OPENAI_MODEL_MARKING: z.string().optional(),
     OPENAI_MODEL_GENERATION: z.string().optional(),
     OPENAI_MODEL_EMBEDDING: z.string().default('text-embedding-3-small'),
+    // Chunk 3g. Monthly LLM budget cap in pence. Kept as a constant-like
+    // env var with a sensible default so editing it is a deliberate deploy
+    // (per RESOURCES_REQUIRED.md "hard monthly cap"). The cost dashboard
+    // compares projected monthly spend against this value; the kill
+    // switch that pauses calls once the cap is reached is Phase 3.1.
+    MONTHLY_LLM_BUDGET_PENCE: z.coerce.number().int().positive().default(2000),
     ADMIN_USERNAME: z.string().min(1).default('admin'),
     ADMIN_INITIAL_PASSWORD: z.string().min(8),
     // Wizard redesign (chunks 2.5n–2.5t). The v2 wizard is now the default

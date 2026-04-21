@@ -92,4 +92,44 @@ export class LlmCallRepo {
     );
     return rows;
   }
+
+  // Chunk 3g rollups. Cost dashboard reads these directly — each row
+  // is one (prompt_version, model) pairing with totals for the window.
+  // Cost is in pence at integer precision (see migration 0029). The
+  // `ok_calls` count is split out so the dashboard can show how many
+  // calls actually produced a mark vs how many burned budget on
+  // refusals / schema errors / timeouts.
+  async rollupBetween(start: Date, end: Date): Promise<LlmCostRollupRow[]> {
+    const { rows } = await this.db.query<LlmCostRollupRow>(
+      `SELECT c.prompt_version_id::text AS prompt_version_id,
+              pv.name                    AS prompt_name,
+              pv.version                 AS prompt_version,
+              c.model_id                 AS model_id,
+              COUNT(*)::int              AS calls,
+              SUM((c.status = 'ok')::int)::int AS ok_calls,
+              COALESCE(SUM(c.input_tokens), 0)::int  AS input_tokens,
+              COALESCE(SUM(c.output_tokens), 0)::int AS output_tokens,
+              COALESCE(SUM(c.cost_pence), 0)::int    AS cost_pence
+         FROM llm_calls c
+         JOIN prompt_versions pv ON pv.id = c.prompt_version_id
+        WHERE c.created_at >= $1
+          AND c.created_at < $2
+        GROUP BY c.prompt_version_id, pv.name, pv.version, c.model_id
+        ORDER BY cost_pence DESC, prompt_name ASC, prompt_version ASC`,
+      [start, end],
+    );
+    return rows;
+  }
+}
+
+export interface LlmCostRollupRow {
+  prompt_version_id: string;
+  prompt_name: string;
+  prompt_version: string;
+  model_id: string;
+  calls: number;
+  ok_calls: number;
+  input_tokens: number;
+  output_tokens: number;
+  cost_pence: number;
 }

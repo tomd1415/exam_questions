@@ -3501,3 +3501,39 @@ input[type='number'].input {
 .pupil-feedback__override-reason {
   margin: 0;
 }
+
+/* LLM cost dashboard (chunk 3g). The band is carried on the card
+   as a border accent rather than a background tint so the WCAG AA
+   text contrast on the card body doesn't depend on the band. */
+.llm-cost-card {
+  border-left: 4px solid var(--color-border);
+}
+.llm-cost-card--green {
+  border-left-color: #2f7a46;
+}
+.llm-cost-card--amber {
+  border-left-color: #b97a00;
+}
+.llm-cost-card--red {
+  border-left-color: #b33a3a;
+}
+.pill--danger {
+  background: #fde2e2;
+  color: #7a1f1f;
+  border-color: #e59393;
+}
+[data-theme='dark'] .pill--danger {
+  background: rgba(200, 70, 70, 0.22);
+  color: #f3b4b4;
+  border-color: rgba(200, 70, 70, 0.55);
+}
+.muted {
+  color: var(--color-ink-3);
+}
+.admin-table .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.llm-cost-table {
+  margin-top: var(--space-2);
+}
