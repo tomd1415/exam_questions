@@ -509,11 +509,10 @@ const _shuffleSeed = String(part.id) + ':' + t;
         </li>
       <% }); %>
     </ul>
-    <ul class="matching__targets" role="list" aria-hidden="true">
+    <ul class="matching__targets" role="list">
       <% mRightDisplay.forEach(function(rightItem) { %>
         <li class="matching__target"
-            data-matching-right="<%= rightItem.origIndex %>"
-            tabindex="-1"><%= rightItem.label %></li>
+            data-matching-right="<%= rightItem.origIndex %>"><%= rightItem.label %></li>
       <% }); %>
     </ul>
     <svg class="matching__overlay" data-matching-overlay aria-hidden="true"></svg>

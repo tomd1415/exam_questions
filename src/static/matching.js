@@ -44,6 +44,13 @@
 
     var endpoints = Array.prototype.slice.call(widget.querySelectorAll('[data-matching-endpoint]'));
     var targets = Array.prototype.slice.call(widget.querySelectorAll('[data-matching-right]'));
+    // Switch the targets <ul> from an (implicit) list role to group so its
+    // children can take role=button without tripping aria-required-children.
+    var targetsList = widget.querySelector('.matching__targets');
+    if (targetsList) {
+      targetsList.setAttribute('role', 'group');
+      targetsList.setAttribute('aria-label', 'Match targets');
+    }
     endpoints.forEach(function (ep) {
       ep.removeAttribute('aria-hidden');
       ep.setAttribute('tabindex', '0');
