@@ -20,6 +20,8 @@ import { AttemptRepo } from './repos/attempts.js';
 import { ClassRepo } from './repos/classes.js';
 import { CurriculumRepo } from './repos/curriculum.js';
 import { FeedbackRepo } from './repos/feedback.js';
+import { PromptVersionRepo } from './repos/prompts.js';
+import { LlmCallRepo } from './repos/llm_calls.js';
 import { AuditService } from './services/audit.js';
 import { AuthService } from './services/auth.js';
 import { ClassService } from './services/classes.js';
@@ -28,6 +30,8 @@ import { QuestionDraftService } from './services/question_drafts.js';
 import { AttemptService } from './services/attempts.js';
 import { TeacherMarkingService } from './services/marking/teacher.js';
 import { FeedbackService } from './services/feedback.js';
+import { PromptVersionService } from './services/prompts.js';
+import { seedPromptDraftsFromDisk } from './services/prompts_bootstrap.js';
 import { registerAuthRoutes } from './routes/auth.js';
 import { registerQuestionRoutes } from './routes/questions.js';
 import { registerAdminClassRoutes } from './routes/admin-classes.js';
@@ -35,6 +39,7 @@ import { registerAdminQuestionRoutes } from './routes/admin-questions.js';
 import { registerAdminQuestionWizardRoutes } from './routes/admin-question-wizard.js';
 import { registerAdminAttemptRoutes } from './routes/admin-attempts.js';
 import { registerAdminTopicRoutes } from './routes/admin-topics.js';
+import { registerAdminPromptRoutes } from './routes/admin-prompts.js';
 import { registerAttemptRoutes } from './routes/attempts.js';
 import { registerFeedbackRoutes } from './routes/feedback.js';
 import { registerApiRoutes } from './routes/api.js';
@@ -67,6 +72,7 @@ declare module 'fastify' {
       attempts: AttemptService;
       teacherMarking: TeacherMarkingService;
       feedback: FeedbackService;
+      prompts: PromptVersionService;
     };
     repos: {
       users: UserRepo;
@@ -76,6 +82,8 @@ declare module 'fastify' {
       classes: ClassRepo;
       curriculum: CurriculumRepo;
       feedback: FeedbackRepo;
+      prompts: PromptVersionRepo;
+      llmCalls: LlmCallRepo;
     };
   }
   interface FastifyRequest {
@@ -138,6 +146,8 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
   const classRepo = new ClassRepo(pool);
   const curriculumRepo = new CurriculumRepo(pool);
   const feedbackRepo = new FeedbackRepo(pool);
+  const promptRepo = new PromptVersionRepo(pool);
+  const llmCallRepo = new LlmCallRepo(pool);
   const auditService = new AuditService(auditRepo);
   const authService = new AuthService(userRepo, sessionRepo, auditService);
   const classService = new ClassService(classRepo, auditService);
@@ -150,6 +160,9 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
   const attemptService = new AttemptService(attemptRepo, classRepo, auditService, userRepo);
   const teacherMarkingService = new TeacherMarkingService(attemptRepo, auditService);
   const feedbackService = new FeedbackService(feedbackRepo, auditService, userRepo);
+  const promptService = new PromptVersionService(promptRepo);
+  await seedPromptDraftsFromDisk(promptRepo);
+  await promptService.loadActive();
 
   app.decorate('services', {
     auth: authService,
@@ -160,6 +173,7 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
     attempts: attemptService,
     teacherMarking: teacherMarkingService,
     feedback: feedbackService,
+    prompts: promptService,
   });
   app.decorate('repos', {
     users: userRepo,
@@ -169,6 +183,8 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
     classes: classRepo,
     curriculum: curriculumRepo,
     feedback: feedbackRepo,
+    prompts: promptRepo,
+    llmCalls: llmCallRepo,
   });
   app.decorateRequest('currentUser', null);
   app.decorateRequest('sessionId', null);
@@ -248,6 +264,7 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
   registerAdminQuestionRoutes(app);
   registerAdminQuestionWizardRoutes(app);
   registerAdminTopicRoutes(app);
+  registerAdminPromptRoutes(app);
   registerFeedbackRoutes(app);
   registerApiRoutes(app);
 

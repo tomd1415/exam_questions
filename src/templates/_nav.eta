@@ -24,6 +24,7 @@ function navLinksFor(role) {
     ];
     if (role === 'admin') {
       base.push({ href: '/admin/users', label: 'Users', match: ['/admin/users'], key: 'users', icon: 'user-check' });
+      base.push({ href: '/admin/prompts/versions', label: 'Prompts', match: ['/admin/prompts'], key: 'prompts', icon: 'file-text' });
       base.push({ href: '/admin/audit', label: 'Audit log', match: ['/admin/audit'], key: 'audit', icon: 'file-text' });
     }
     return base;

@@ -3322,6 +3322,20 @@ input[type='number'].input {
   background: var(--color-surface-2);
   color: var(--color-ink-3);
 }
+.pill--status-active {
+  background: #dcf5e3;
+  color: #205a32;
+  border-color: #8cc89e;
+}
+.pill--status-retired {
+  background: var(--color-surface-2);
+  color: var(--color-ink-3);
+}
+[data-theme='dark'] .pill--status-active {
+  background: rgba(120, 200, 140, 0.18);
+  color: #9ad8a8;
+  border-color: rgba(120, 200, 140, 0.45);
+}
 [data-theme='dark'] .pill--status-pending_review {
   background: rgba(230, 180, 70, 0.2);
   color: #f0c972;
@@ -3352,6 +3366,11 @@ input[type='number'].input {
     background: rgba(220, 120, 120, 0.18);
     color: #e39a9a;
     border-color: rgba(220, 120, 120, 0.45);
+  }
+  [data-theme='auto'] .pill--status-active {
+    background: rgba(120, 200, 140, 0.18);
+    color: #9ad8a8;
+    border-color: rgba(120, 200, 140, 0.45);
   }
 }
 

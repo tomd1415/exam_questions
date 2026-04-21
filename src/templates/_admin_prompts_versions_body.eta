@@ -1,0 +1,43 @@
+<%~ include('_page_header', {
+  crumbs: [{ label: 'Prompt versions' }],
+  heading: 'Prompt versions',
+  subtitle:
+    'Read-only list of LLM prompt versions known to the system. Promoting a draft to active or retiring an old version is a deploy-time migration, not a UI action.',
+}) %>
+
+<section class="admin-card">
+  <% if (!it.versions || it.versions.length === 0) { %>
+    <p class="empty">No prompt versions are registered yet.</p>
+  <% } else { %>
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th scope="col">Name</th>
+          <th scope="col">Version</th>
+          <th scope="col">Model</th>
+          <th scope="col">Status</th>
+          <th scope="col">Created</th>
+          <th scope="col">Body</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% it.versions.forEach(function(v) { %>
+          <tr>
+            <td><%= v.name %></td>
+            <td><%= v.version %></td>
+            <td><%= v.model_id %></td>
+            <td>
+              <span class="pill pill--status-<%= v.status %>"><%= v.status %></span>
+            </td>
+            <td>
+              <time datetime="<%= v.created_at.toISOString() %>"><%= v.created_at.toISOString().slice(0, 10) %></time>
+            </td>
+            <td>
+              <%= v.system_prompt_length %> chars
+            </td>
+          </tr>
+        <% }); %>
+      </tbody>
+    </table>
+  <% } %>
+</section>
