@@ -3378,3 +3378,77 @@ input[type='number'].input {
   color: var(--color-ink-3);
   margin-left: var(--space-1);
 }
+
+/* Moderation queue and detail (chunk 3d). Highlights pupil-answer
+   spans that the LLM cited as evidence; warns on safety-gate pills. */
+.evidence-highlight {
+  background: #fff4b3;
+  color: inherit;
+  padding: 0 2px;
+  border-radius: 2px;
+}
+[data-theme='dark'] .evidence-highlight {
+  background: rgba(230, 200, 70, 0.35);
+}
+.pill--warn {
+  background: #fef3c7;
+  color: #7a4a00;
+  border-color: #e9c66b;
+}
+.pill--ok {
+  background: #dcf5e3;
+  color: #205a32;
+  border-color: #8cc89e;
+}
+.pill--muted {
+  background: var(--color-surface-2);
+  color: var(--color-ink-3);
+}
+.pill-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.pupil-answer-box {
+  white-space: pre-wrap;
+  padding: var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background: var(--color-surface-2);
+}
+.reason-list {
+  list-style: disc inside;
+  padding: 0;
+  margin: 0 0 var(--space-2) 0;
+}
+.reason-list__detail {
+  display: block;
+  color: var(--color-ink-3);
+  margin-left: var(--space-3);
+}
+.admin-kv {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: var(--space-1) var(--space-3);
+  margin: 0;
+}
+.admin-kv dt {
+  color: var(--color-ink-3);
+}
+.admin-kv dd {
+  margin: 0;
+}
+.admin-divider {
+  border: none;
+  border-top: 1px solid var(--color-border);
+  margin: var(--space-3) 0;
+}
+.admin-form--inline {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  flex-wrap: wrap;
+}

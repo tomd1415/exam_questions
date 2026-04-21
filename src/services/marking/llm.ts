@@ -55,6 +55,7 @@ export type LlmMarkingOutcome =
   | {
       kind: 'awarded';
       marksAwarded: number;
+      marksAwardedRaw: number;
       marksTotal: number;
       hitMarkPointIds: string[];
       missedMarkPointIds: string[];
@@ -192,6 +193,7 @@ export class LlmOpenResponseMarker {
     return {
       kind: 'awarded',
       marksAwarded,
+      marksAwardedRaw: rawAwarded,
       marksTotal: input.part.marks,
       hitMarkPointIds: hitIds,
       missedMarkPointIds: missedIds,

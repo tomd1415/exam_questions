@@ -19,12 +19,14 @@ function navLinksFor(role) {
       { href: '/admin/questions', label: 'Questions', match: ['/admin/questions'], key: 'questions', icon: 'clipboard-check' },
       { href: '/admin/topics', label: 'Topics', match: ['/admin/topics'], key: 'topics', icon: 'book' },
       { href: '/admin/attempts', label: 'Marking queue', match: ['/admin/attempts'], key: 'queue', icon: 'list-checks' },
+      { href: '/admin/moderation', label: 'AI moderation', match: ['/admin/moderation'], key: 'moderation', icon: 'shield-check' },
       { href: '/admin/feedback', label: 'Feedback', match: ['/admin/feedback', '/feedback'], key: 'feedback', icon: 'pencil-line' },
       { href: '/me/preferences', label: 'Preferences', match: ['/me/preferences'], key: 'prefs', icon: 'settings' },
     ];
     if (role === 'admin') {
       base.push({ href: '/admin/users', label: 'Users', match: ['/admin/users'], key: 'users', icon: 'user-check' });
       base.push({ href: '/admin/prompts/versions', label: 'Prompts', match: ['/admin/prompts'], key: 'prompts', icon: 'file-text' });
+      base.push({ href: '/admin/content-guards', label: 'Content guards', match: ['/admin/content-guards'], key: 'guards', icon: 'shield' });
       base.push({ href: '/admin/audit', label: 'Audit log', match: ['/admin/audit'], key: 'audit', icon: 'file-text' });
     }
     return base;

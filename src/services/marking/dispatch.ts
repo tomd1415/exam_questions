@@ -16,6 +16,8 @@ import {
   type LlmOpenResponseMarker,
 } from './llm.js';
 import type { PromptVersionRow } from '../../repos/prompts.js';
+import type { ContentGuardService } from '../content_guards.js';
+import { evaluateSafetyGate, type SafetyGateReason } from './safety-gate.js';
 
 // Marker router. Called once per attempt_part during submit. The
 // deterministic path runs for every part; if it returns
@@ -34,6 +36,7 @@ const LLM_ALLOWED_TYPES = new Set<string>(['medium_text', 'extended_response']);
 
 export type DispatchAuditEvent =
   | 'marking.llm.ok'
+  | 'marking.llm.flagged'
   | 'marking.llm.refusal'
   | 'marking.llm.schema_invalid'
   | 'marking.llm.http_error'
@@ -61,12 +64,16 @@ export type DispatchOutcome =
       feedbackForTeacher: LlmFeedbackForTeacher;
       notes: string | null;
       promptVersion: PromptVersionRow;
-      auditEvent: 'marking.llm.ok';
+      moderationRequired: boolean;
+      moderationStatus: 'pending' | 'not_required';
+      moderationNotes: readonly SafetyGateReason[] | null;
+      auditEvent: 'marking.llm.ok' | 'marking.llm.flagged';
       auditDetails: {
         attempt_part_id: string;
         prompt_version: string;
         model_id: string;
         confidence: number;
+        flagged_reasons?: string[];
       };
     }
   | {
@@ -95,6 +102,7 @@ export class MarkingDispatcher {
     private readonly opts: {
       llmEnabled: boolean;
       llmMarker: LlmOpenResponseMarker | null;
+      contentGuards?: ContentGuardService | null;
     },
   ) {}
 
@@ -138,7 +146,7 @@ export class MarkingDispatcher {
       modelAnswer: input.question.model_answer,
     });
 
-    return llmOutcomeToDispatch(llm, input.part.id);
+    return llmOutcomeToDispatch(llm, input.part.id, input.part.raw_answer, this.opts.contentGuards);
   }
 
   private runDeterministic(input: DispatchInput):
@@ -182,8 +190,33 @@ export class MarkingDispatcher {
   }
 }
 
-function llmOutcomeToDispatch(outcome: LlmMarkingOutcome, attemptPartId: string): DispatchOutcome {
+function llmOutcomeToDispatch(
+  outcome: LlmMarkingOutcome,
+  attemptPartId: string,
+  pupilAnswer: string,
+  contentGuards: ContentGuardService | null | undefined,
+): DispatchOutcome {
   if (outcome.kind === 'awarded') {
+    // Content guards default to empty when no service is wired — this
+    // keeps unit tests that don't need the DB working without a stub.
+    // The gate's non-content rules (confidence, clipping, evidence)
+    // still fire.
+    const safeguardingPatterns = contentGuards?.getPatterns('safeguarding') ?? [];
+    const promptInjectionPatterns = contentGuards?.getPatterns('prompt_injection') ?? [];
+    const gate = evaluateSafetyGate({
+      pupilAnswer,
+      confidence: outcome.confidence,
+      marksAwarded: outcome.marksAwarded,
+      marksAwardedRaw: outcome.marksAwardedRaw,
+      marksTotal: outcome.marksTotal,
+      hitMarkPointCount: outcome.hitMarkPointIds.length,
+      evidenceQuotes: outcome.evidenceQuotes,
+      safeguardingPatterns,
+      promptInjectionPatterns,
+    });
+    const auditEvent: 'marking.llm.ok' | 'marking.llm.flagged' = gate.flagged
+      ? 'marking.llm.flagged'
+      : 'marking.llm.ok';
     return {
       kind: 'llm_awarded',
       marksAwarded: outcome.marksAwarded,
@@ -198,12 +231,16 @@ function llmOutcomeToDispatch(outcome: LlmMarkingOutcome, attemptPartId: string)
       feedbackForTeacher: outcome.feedbackForTeacher,
       notes: outcome.notes,
       promptVersion: outcome.promptVersion,
-      auditEvent: 'marking.llm.ok',
+      moderationRequired: gate.flagged,
+      moderationStatus: gate.flagged ? 'pending' : 'not_required',
+      moderationNotes: gate.flagged ? gate.reasons : null,
+      auditEvent,
       auditDetails: {
         attempt_part_id: attemptPartId,
         prompt_version: `${outcome.promptVersion.name}@${outcome.promptVersion.version}`,
         model_id: outcome.promptVersion.model_id,
         confidence: outcome.confidence,
+        ...(gate.flagged ? { flagged_reasons: gate.reasons.map((r) => r.kind) } : {}),
       },
     };
   }

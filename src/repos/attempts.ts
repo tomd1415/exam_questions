@@ -682,18 +682,18 @@ export class AttemptRepo {
     confidence: number;
     promptVersion: string;
     modelId: string;
+    moderationRequired: boolean;
+    moderationStatus: 'pending' | 'not_required';
+    moderationNotes: unknown;
   }): Promise<void> {
-    // moderation_required / moderation_status stay at the schema
-    // defaults (false / 'not_required') until chunk 3d's safety gate
-    // flips them based on the gate's rule set.
     await this.pool.query(
       `INSERT INTO awarded_marks
          (attempt_part_id, marks_awarded, marks_total,
           mark_points_hit, mark_points_missed, evidence_quotes,
           marker, confidence, moderation_required, moderation_status,
-          prompt_version, model_id)
+          moderation_notes, prompt_version, model_id)
        VALUES ($1::bigint, $2, $3, $4::bigint[], $5::bigint[], $6::text[],
-               'llm', $7, false, 'not_required', $8, $9)`,
+               'llm', $7, $8, $9, $10::jsonb, $11, $12)`,
       [
         input.attemptPartId,
         input.marksAwarded,
@@ -702,6 +702,9 @@ export class AttemptRepo {
         input.markPointsMissed,
         input.evidenceQuotes,
         input.confidence,
+        input.moderationRequired,
+        input.moderationStatus,
+        input.moderationNotes === null ? null : JSON.stringify(input.moderationNotes),
         input.promptVersion,
         input.modelId,
       ],
@@ -864,6 +867,184 @@ export class AttemptRepo {
     );
     return Number(rows[0]?.c ?? '0');
   }
+
+  // Moderation queue — admin-only for now. Lists every awarded_marks
+  // row flagged by the 3d safety gate that the teacher has not yet
+  // resolved. Ordered by class + pupil + submission time so the
+  // moderator can work through one class at a time.
+  async listModerationQueue(): Promise<ModerationQueueRow[]> {
+    const { rows } = await this.pool.query<ModerationQueueRow>(
+      `SELECT am.id::text AS awarded_mark_id,
+              am.attempt_part_id::text,
+              am.marks_awarded,
+              am.marks_total,
+              am.confidence,
+              am.prompt_version,
+              am.model_id,
+              am.moderation_notes,
+              am.created_at AS flagged_at,
+              qp.part_label,
+              qp.prompt AS part_prompt,
+              aq.id::text AS attempt_question_id,
+              q.stem AS question_stem,
+              q.topic_code,
+              a.id::text AS attempt_id,
+              a.user_id::text AS pupil_id,
+              u.display_name AS pupil_display_name,
+              u.pseudonym AS pupil_pseudonym,
+              a.class_id::text,
+              c.name AS class_name,
+              c.teacher_id::text
+         FROM awarded_marks am
+         JOIN attempt_parts ap     ON ap.id = am.attempt_part_id
+         JOIN question_parts qp    ON qp.id = ap.question_part_id
+         JOIN attempt_questions aq ON aq.id = ap.attempt_question_id
+         JOIN questions q          ON q.id  = aq.question_id
+         JOIN attempts a           ON a.id  = aq.attempt_id
+         JOIN users u              ON u.id  = a.user_id
+         JOIN classes c            ON c.id  = a.class_id
+        WHERE am.moderation_status = 'pending'
+          AND am.marker = 'llm'
+        ORDER BY c.name ASC, u.display_name ASC, am.created_at ASC`,
+    );
+    return rows;
+  }
+
+  async findAwardedMarkForModeration(awardedMarkId: string): Promise<ModerationDetailRow | null> {
+    const { rows } = await this.pool.query<ModerationDetailRow>(
+      `SELECT am.id::text AS awarded_mark_id,
+              am.attempt_part_id::text,
+              am.marks_awarded,
+              am.marks_total,
+              am.confidence,
+              am.prompt_version,
+              am.model_id,
+              am.marker,
+              am.moderation_status,
+              am.moderation_notes,
+              am.evidence_quotes,
+              (SELECT array_agg(x::text) FROM unnest(am.mark_points_hit) AS x) AS mark_points_hit,
+              (SELECT array_agg(x::text) FROM unnest(am.mark_points_missed) AS x) AS mark_points_missed,
+              am.created_at AS flagged_at,
+              qp.part_label,
+              qp.prompt AS part_prompt,
+              ap.raw_answer,
+              qp.marks AS part_marks,
+              qp.expected_response_type,
+              aq.id::text AS attempt_question_id,
+              q.stem AS question_stem,
+              q.model_answer,
+              q.topic_code,
+              q.subtopic_code,
+              q.command_word_code,
+              a.id::text AS attempt_id,
+              a.user_id::text AS pupil_id,
+              u.display_name AS pupil_display_name,
+              u.pseudonym AS pupil_pseudonym,
+              a.class_id::text,
+              c.name AS class_name,
+              c.teacher_id::text
+         FROM awarded_marks am
+         JOIN attempt_parts ap     ON ap.id = am.attempt_part_id
+         JOIN question_parts qp    ON qp.id = ap.question_part_id
+         JOIN attempt_questions aq ON aq.id = ap.attempt_question_id
+         JOIN questions q          ON q.id  = aq.question_id
+         JOIN attempts a           ON a.id  = aq.attempt_id
+         JOIN users u              ON u.id  = a.user_id
+         JOIN classes c            ON c.id  = a.class_id
+        WHERE am.id = $1::bigint`,
+      [awardedMarkId],
+    );
+    return rows[0] ?? null;
+  }
+
+  async listMarkPointsForAttemptPart(attemptPartId: string): Promise<AttemptPartMarkPointRow[]> {
+    const { rows } = await this.pool.query<AttemptPartMarkPointRow>(
+      `SELECT mp.id::text,
+              mp.question_part_id::text,
+              mp.text,
+              mp.accepted_alternatives,
+              mp.marks,
+              mp.is_required,
+              mp.display_order
+         FROM mark_points mp
+         JOIN attempt_parts ap ON ap.question_part_id = mp.question_part_id
+        WHERE ap.id = $1::bigint
+        ORDER BY mp.display_order ASC`,
+      [attemptPartId],
+    );
+    return rows;
+  }
+
+  // Accept the LLM's mark unchanged — flip moderation_status from
+  // 'pending' to 'accepted' and leave the marks as they are. The
+  // existing row stays marker='llm'; we do not synthesise a new
+  // awarded_marks row because nothing about the mark changed.
+  async acceptAiMark(input: {
+    awardedMarkId: string;
+    reviewerId: string;
+  }): Promise<{ updated: boolean }> {
+    const { rowCount } = await this.pool.query(
+      `UPDATE awarded_marks
+          SET moderation_status = 'accepted',
+              moderation_reviewed_by = $2::bigint,
+              moderation_reviewed_at = now()
+        WHERE id = $1::bigint
+          AND moderation_status = 'pending'`,
+      [input.awardedMarkId, input.reviewerId],
+    );
+    return { updated: (rowCount ?? 0) > 0 };
+  }
+
+  // Override the LLM's mark with a teacher decision. Mirrors
+  // insertTeacherOverride but runs in one transaction that also
+  // flips the original awarded_marks row to moderation_status='overridden'
+  // so the queue doesn't re-surface the part.
+  async overrideAiMarkInTxn(input: {
+    awardedMarkId: string;
+    attemptPartId: string;
+    reviewerId: string;
+    marksAwarded: number;
+    marksTotal: number;
+    reason: string;
+  }): Promise<{ newAwardedMarkId: string; updatedOriginal: boolean }> {
+    const client = await this.pool.connect();
+    try {
+      await client.query('BEGIN');
+      const upd = await client.query(
+        `UPDATE awarded_marks
+            SET moderation_status = 'overridden',
+                moderation_reviewed_by = $2::bigint,
+                moderation_reviewed_at = now()
+          WHERE id = $1::bigint
+            AND moderation_status = 'pending'`,
+        [input.awardedMarkId, input.reviewerId],
+      );
+      const awarded = await client.query<{ id: string }>(
+        `INSERT INTO awarded_marks
+           (attempt_part_id, marks_awarded, marks_total,
+            mark_points_hit, mark_points_missed, marker, moderation_status)
+         VALUES ($1::bigint, $2, $3, '{}'::bigint[], '{}'::bigint[],
+                 'teacher_override', 'not_required')
+         RETURNING id::text`,
+        [input.attemptPartId, input.marksAwarded, input.marksTotal],
+      );
+      const newId = awarded.rows[0]!.id;
+      await client.query(
+        `INSERT INTO teacher_overrides
+           (awarded_mark_id, teacher_id, new_marks_awarded, reason)
+         VALUES ($1::bigint, $2::bigint, $3, $4)`,
+        [newId, input.reviewerId, input.marksAwarded, input.reason],
+      );
+      await client.query('COMMIT');
+      return { newAwardedMarkId: newId, updatedOriginal: (upd.rowCount ?? 0) > 0 };
+    } catch (err) {
+      await safeRollback(client);
+      throw err;
+    } finally {
+      client.release();
+    }
+  }
 }
 
 export interface TeacherQueueRow {
@@ -937,6 +1118,65 @@ export interface AttemptPartContext {
   pupil_id: string;
   attempt_submitted_at: Date | null;
   class_id: string;
+  teacher_id: string;
+}
+
+export interface ModerationQueueRow {
+  awarded_mark_id: string;
+  attempt_part_id: string;
+  marks_awarded: number;
+  marks_total: number;
+  confidence: number | null;
+  prompt_version: string | null;
+  model_id: string | null;
+  moderation_notes: unknown;
+  flagged_at: Date;
+  part_label: string;
+  part_prompt: string;
+  attempt_question_id: string;
+  question_stem: string;
+  topic_code: string;
+  attempt_id: string;
+  pupil_id: string;
+  pupil_display_name: string;
+  pupil_pseudonym: string;
+  class_id: string;
+  class_name: string;
+  teacher_id: string;
+}
+
+export interface ModerationDetailRow {
+  awarded_mark_id: string;
+  attempt_part_id: string;
+  marks_awarded: number;
+  marks_total: number;
+  confidence: number | null;
+  prompt_version: string | null;
+  model_id: string | null;
+  marker: 'deterministic' | 'llm' | 'teacher_override';
+  moderation_status: 'pending' | 'accepted' | 'overridden' | 'not_required';
+  moderation_notes: unknown;
+  evidence_quotes: string[];
+  mark_points_hit: string[] | null;
+  mark_points_missed: string[] | null;
+  flagged_at: Date;
+  part_label: string;
+  part_prompt: string;
+  raw_answer: string;
+  part_marks: number;
+  expected_response_type: string;
+  attempt_question_id: string;
+  question_stem: string;
+  model_answer: string;
+  topic_code: string;
+  subtopic_code: string;
+  command_word_code: string;
+  attempt_id: string;
+  pupil_id: string;
+  pupil_display_name: string;
+  pupil_pseudonym: string;
+  class_id: string;
+  class_name: string;
   teacher_id: string;
 }
 

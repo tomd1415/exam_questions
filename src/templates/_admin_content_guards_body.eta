@@ -1,0 +1,96 @@
+<%~ include('_page_header', {
+  crumbs: [{ label: 'Content guards' }],
+  heading: 'Content guards',
+  subtitle:
+    'Admin-managed patterns that extend the safety gate. Seeded patterns (compiled in) are always active and not shown here.',
+}) %>
+
+<% if (it.flash) { %>
+  <p class="flash flash--ok" role="status"><%= it.flash %></p>
+<% } %>
+
+<section class="admin-card">
+  <header class="admin-card__header"><h2>Add a new pattern</h2></header>
+  <form method="post" action="/admin/content-guards" class="admin-form">
+    <input type="hidden" name="_csrf" value="<%= it.csrfToken %>">
+    <div class="form-row">
+      <label for="guard-kind">Kind</label>
+      <select id="guard-kind" name="kind" required>
+        <option value="prompt_injection">Prompt injection</option>
+        <option value="safeguarding">Safeguarding</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <label for="guard-pattern">Pattern (2–200 characters, case-insensitive)</label>
+      <input id="guard-pattern"
+             type="text"
+             name="pattern"
+             minlength="2"
+             maxlength="200"
+             required>
+    </div>
+    <div class="form-row">
+      <label for="guard-note">Note (optional, up to 500 characters)</label>
+      <textarea id="guard-note" name="note" maxlength="500" rows="2"></textarea>
+    </div>
+    <button type="submit" class="btn btn--primary">Add pattern</button>
+  </form>
+</section>
+
+<% it.kinds.forEach(function(kind) { %>
+  <% const rows = it.grouped[kind]; %>
+  <section class="admin-card">
+    <header class="admin-card__header">
+      <h2>
+        <%= kind === 'safeguarding' ? 'Safeguarding patterns' : 'Prompt-injection patterns' %>
+      </h2>
+      <p class="admin-card__sub"><%= rows.length %> custom entr<%= rows.length === 1 ? 'y' : 'ies' %>.</p>
+    </header>
+    <% if (rows.length === 0) { %>
+      <p class="empty">No admin-added patterns. The seeded list is still active.</p>
+    <% } else { %>
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th scope="col">Pattern</th>
+            <th scope="col">Note</th>
+            <th scope="col">Added</th>
+            <th scope="col">Status</th>
+            <th scope="col"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% rows.forEach(function(row) { %>
+            <tr>
+              <td><code><%= row.pattern %></code></td>
+              <td><%= row.note || '—' %></td>
+              <td>
+                <time datetime="<%= row.created_at.toISOString() %>">
+                  <%= row.created_at.toISOString().slice(0, 10) %>
+                </time>
+              </td>
+              <td>
+                <% if (row.active) { %>
+                  <span class="pill pill--ok">Active</span>
+                <% } else { %>
+                  <span class="pill pill--muted">Disabled</span>
+                <% } %>
+              </td>
+              <td>
+                <form method="post"
+                      action="/admin/content-guards/<%= row.id %>/toggle"
+                      class="admin-form admin-form--inline">
+                  <input type="hidden" name="_csrf" value="<%= it.csrfToken %>">
+                  <input type="hidden" name="active" value="<%= row.active ? 'false' : 'true' %>">
+                  <button type="submit" class="btn btn--sm">
+                    <%= row.active ? 'Disable' : 'Re-enable' %>
+                  </button>
+                </form>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    <% } %>
+  </section>
+<% }); %>

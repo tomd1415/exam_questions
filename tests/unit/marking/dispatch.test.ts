@@ -34,10 +34,11 @@ class RecordingLlmMarker {
   nextOutcome: LlmMarkingOutcome = {
     kind: 'awarded',
     marksAwarded: 2,
+    marksAwardedRaw: 2,
     marksTotal: 4,
-    hitMarkPointIds: [],
+    hitMarkPointIds: ['501'],
     missedMarkPointIds: [],
-    evidenceQuotes: [],
+    evidenceQuotes: ['A long pupil answer.'],
     confidence: 0.8,
     contradictionDetected: false,
     overAnswerDetected: false,
@@ -212,6 +213,92 @@ describe('MarkingDispatcher — LLM allowlist', () => {
     if (outcome.kind === 'pending') {
       expect(outcome.reason).toBe('llm_http_error');
       expect(outcome.auditEvent).toBe('marking.llm.http_error');
+    }
+  });
+
+  it('clean awarded outcome does not require moderation (auditEvent marking.llm.ok)', async () => {
+    const marker = new RecordingLlmMarker();
+    const dispatcher = new MarkingDispatcher({ llmEnabled: true, llmMarker: asMarker(marker) });
+    const part = makePart({ expected_response_type: 'medium_text' });
+    const outcome = await dispatcher.dispatch({
+      question: makeQuestion(),
+      part,
+      markPoints: NO_MARK_POINTS,
+    });
+    expect(outcome.kind).toBe('llm_awarded');
+    if (outcome.kind === 'llm_awarded') {
+      expect(outcome.moderationRequired).toBe(false);
+      expect(outcome.moderationStatus).toBe('not_required');
+      expect(outcome.moderationNotes).toBeNull();
+      expect(outcome.auditEvent).toBe('marking.llm.ok');
+    }
+  });
+
+  it('flags low-confidence awarded outcomes for moderation (marking.llm.flagged)', async () => {
+    const marker = new RecordingLlmMarker();
+    marker.nextOutcome = {
+      kind: 'awarded',
+      marksAwarded: 2,
+      marksAwardedRaw: 2,
+      marksTotal: 4,
+      hitMarkPointIds: ['501'],
+      missedMarkPointIds: [],
+      evidenceQuotes: ['A long pupil answer.'],
+      confidence: 0.3,
+      contradictionDetected: false,
+      overAnswerDetected: false,
+      feedbackForPupil: { what_went_well: 'ok', how_to_gain_more: 'ok', next_focus: 'ok' },
+      feedbackForTeacher: { summary: 'ok' },
+      notes: null,
+      promptVersion: PROMPT,
+    };
+    const dispatcher = new MarkingDispatcher({ llmEnabled: true, llmMarker: asMarker(marker) });
+    const part = makePart({ expected_response_type: 'medium_text' });
+    const outcome = await dispatcher.dispatch({
+      question: makeQuestion(),
+      part,
+      markPoints: NO_MARK_POINTS,
+    });
+    expect(outcome.kind).toBe('llm_awarded');
+    if (outcome.kind === 'llm_awarded') {
+      expect(outcome.moderationRequired).toBe(true);
+      expect(outcome.moderationStatus).toBe('pending');
+      expect(outcome.moderationNotes).not.toBeNull();
+      expect(outcome.moderationNotes?.[0]?.kind).toBe('low_confidence');
+      expect(outcome.auditEvent).toBe('marking.llm.flagged');
+      expect(outcome.auditDetails.flagged_reasons).toContain('low_confidence');
+    }
+  });
+
+  it('flags clipped-marks outcomes for moderation', async () => {
+    const marker = new RecordingLlmMarker();
+    marker.nextOutcome = {
+      kind: 'awarded',
+      marksAwarded: 4,
+      marksAwardedRaw: 9,
+      marksTotal: 4,
+      hitMarkPointIds: ['501'],
+      missedMarkPointIds: [],
+      evidenceQuotes: ['A long pupil answer.'],
+      confidence: 0.85,
+      contradictionDetected: false,
+      overAnswerDetected: false,
+      feedbackForPupil: { what_went_well: 'ok', how_to_gain_more: 'ok', next_focus: 'ok' },
+      feedbackForTeacher: { summary: 'ok' },
+      notes: null,
+      promptVersion: PROMPT,
+    };
+    const dispatcher = new MarkingDispatcher({ llmEnabled: true, llmMarker: asMarker(marker) });
+    const part = makePart({ expected_response_type: 'medium_text' });
+    const outcome = await dispatcher.dispatch({
+      question: makeQuestion(),
+      part,
+      markPoints: NO_MARK_POINTS,
+    });
+    expect(outcome.kind).toBe('llm_awarded');
+    if (outcome.kind === 'llm_awarded') {
+      expect(outcome.moderationRequired).toBe(true);
+      expect(outcome.auditEvent).toBe('marking.llm.flagged');
     }
   });
 

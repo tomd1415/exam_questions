@@ -1,0 +1,73 @@
+<%~ include('_page_header', {
+  crumbs: [{ label: 'AI moderation' }],
+  heading: 'AI moderation queue',
+  subtitle:
+    'Parts where the LLM awarded a mark that triggered a safety-gate rule. Review each one before it counts towards the pupil\'s score.',
+}) %>
+
+<section class="admin-card">
+  <header class="admin-card__header">
+    <div>
+      <h2><%= it.total %> item<%= it.total === 1 ? '' : 's' %> awaiting review</h2>
+      <p class="admin-card__sub">Ordered by class, then pupil, then the time the mark was flagged.</p>
+    </div>
+  </header>
+
+  <% if (it.flash) { %>
+    <p class="flash flash--ok" role="status"><%= it.flash %></p>
+  <% } %>
+
+  <% if (!it.items || it.items.length === 0) { %>
+    <p class="empty">Nothing to review. Every AI-awarded mark has passed the safety gate or been resolved.</p>
+  <% } else { %>
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th scope="col">Flagged</th>
+          <th scope="col">Class</th>
+          <th scope="col">Pupil</th>
+          <th scope="col">Part</th>
+          <th scope="col">Mark</th>
+          <th scope="col">Confidence</th>
+          <th scope="col">Why flagged</th>
+          <th scope="col"></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% it.items.forEach(function(row) { %>
+          <tr>
+            <td>
+              <time datetime="<%= row.flagged_at.toISOString() %>">
+                <%= row.flagged_at.toISOString().slice(0, 16).replace('T', ' ') %>
+              </time>
+            </td>
+            <td><%= row.class_name %></td>
+            <td><%= row.pupil_display_name %></td>
+            <td>
+              <%= row.topic_code || '—' %> · part <%= row.part_label %>
+            </td>
+            <td><%= row.marks_awarded %> / <%= row.marks_total %></td>
+            <td>
+              <% if (row.confidence !== null && row.confidence !== undefined) { %>
+                <%= Number(row.confidence).toFixed(2) %>
+              <% } else { %>—<% } %>
+            </td>
+            <td>
+              <% if (row.reasons.length === 0) { %>—<% } else { %>
+                <ul class="pill-list">
+                  <% row.reasons.forEach(function(r) { %>
+                    <li><span class="pill pill--warn"><%= r %></span></li>
+                  <% }); %>
+                </ul>
+              <% } %>
+            </td>
+            <td>
+              <a class="btn btn--primary btn--sm"
+                 href="/admin/moderation/<%= row.awarded_mark_id %>">Review</a>
+            </td>
+          </tr>
+        <% }); %>
+      </tbody>
+    </table>
+  <% } %>
+</section>

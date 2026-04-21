@@ -1,0 +1,134 @@
+<% const detail = it.detail; %>
+
+<%~ include('_page_header', {
+  crumbs: [
+    { label: 'AI moderation', href: '/admin/moderation' },
+    { label: 'Review item' }
+  ],
+  heading: 'Moderation: ' + detail.pupil_display_name + ' · ' + (detail.topic_code || '') + ' part ' + detail.part_label,
+  subtitle: 'Decide whether to accept the AI-awarded mark or override it with a teacher mark. Every decision is recorded in the audit log.',
+}) %>
+
+<% if (it.flash) { %>
+  <p class="flash flash--warn" role="status"><%= it.flash %></p>
+<% } %>
+
+<section class="admin-card">
+  <header class="admin-card__header"><h2>Why this was flagged</h2></header>
+  <% if (!it.reasons || it.reasons.length === 0) { %>
+    <p class="empty">No reasons recorded. This item may have been flagged by legacy data.</p>
+  <% } else { %>
+    <ul class="reason-list">
+      <% it.reasons.forEach(function(r) { %>
+        <li>
+          <strong><%= r.label %></strong>
+          <% if (r.detail) { %><span class="reason-list__detail"><%= r.detail %></span><% } %>
+        </li>
+      <% }); %>
+    </ul>
+  <% } %>
+</section>
+
+<section class="admin-card">
+  <header class="admin-card__header">
+    <h2>Question</h2>
+    <p class="admin-card__sub">Topic <%= detail.topic_code %> · <%= detail.command_word_code %> · <%= detail.part_marks %> mark<%= detail.part_marks === 1 ? '' : 's' %></p>
+  </header>
+  <dl class="admin-kv">
+    <dt>Stem</dt><dd><%= detail.question_stem %></dd>
+    <dt>Part prompt</dt><dd><%= detail.part_prompt %></dd>
+    <dt>Model answer</dt><dd><%= detail.model_answer %></dd>
+  </dl>
+</section>
+
+<section class="admin-card">
+  <header class="admin-card__header"><h2>Pupil's answer</h2></header>
+  <div class="pupil-answer-box"><%~ it.highlightedAnswerHtml %></div>
+  <p class="admin-card__sub">Highlighted spans are the evidence quotes the model cited.</p>
+</section>
+
+<section class="admin-card">
+  <header class="admin-card__header">
+    <h2>AI-awarded mark: <%= detail.marks_awarded %> / <%= detail.marks_total %></h2>
+    <p class="admin-card__sub">
+      Prompt <%= detail.prompt_version || '—' %> ·
+      Model <%= detail.model_id || '—' %> ·
+      Confidence <% if (detail.confidence !== null && detail.confidence !== undefined) { %><%= Number(detail.confidence).toFixed(2) %><% } else { %>—<% } %>
+    </p>
+  </header>
+
+  <% if (!it.markPoints || it.markPoints.length === 0) { %>
+    <p class="empty">No mark points defined for this part.</p>
+  <% } else { %>
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th scope="col">Mark point</th>
+          <th scope="col">Marks</th>
+          <th scope="col">Required</th>
+          <th scope="col">AI verdict</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% it.markPoints.forEach(function(mp) { %>
+          <tr>
+            <td><%= mp.text %></td>
+            <td><%= mp.marks %></td>
+            <td><%= mp.is_required ? 'Yes' : 'No' %></td>
+            <td>
+              <% if (mp.hit) { %>
+                <span class="pill pill--ok">Hit</span>
+              <% } else if (mp.missed) { %>
+                <span class="pill pill--muted">Missed</span>
+              <% } else { %>
+                <span class="pill pill--muted">Not considered</span>
+              <% } %>
+            </td>
+          </tr>
+        <% }); %>
+      </tbody>
+    </table>
+  <% } %>
+</section>
+
+<section class="admin-card">
+  <header class="admin-card__header"><h2>Decision</h2></header>
+
+  <form method="post"
+        action="/admin/moderation/<%= detail.awarded_mark_id %>/accept"
+        class="admin-form admin-form--inline">
+    <input type="hidden" name="_csrf" value="<%= it.csrfToken %>">
+    <p>Accept the AI-awarded mark of <strong><%= detail.marks_awarded %> / <%= detail.marks_total %></strong> unchanged.</p>
+    <button type="submit" class="btn btn--primary">Accept AI mark</button>
+  </form>
+
+  <hr class="admin-divider">
+
+  <form method="post"
+        action="/admin/moderation/<%= detail.awarded_mark_id %>/override"
+        class="admin-form">
+    <input type="hidden" name="_csrf" value="<%= it.csrfToken %>">
+    <h3>Override with a teacher mark</h3>
+    <div class="form-row">
+      <label for="override-marks">Marks awarded (0–<%= detail.marks_total %>)</label>
+      <input id="override-marks"
+             type="number"
+             name="marks_awarded"
+             min="0"
+             max="<%= detail.marks_total %>"
+             step="1"
+             required
+             value="<%= detail.marks_awarded %>">
+    </div>
+    <div class="form-row">
+      <label for="override-reason">Reason (required, up to 500 characters)</label>
+      <textarea id="override-reason"
+                name="reason"
+                minlength="1"
+                maxlength="500"
+                rows="3"
+                required></textarea>
+    </div>
+    <button type="submit" class="btn btn--danger">Override AI mark</button>
+  </form>
+</section>

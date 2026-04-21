@@ -483,6 +483,9 @@ export class AttemptService {
         confidence: outcome.confidence,
         promptVersion: `${outcome.promptVersion.name}@${outcome.promptVersion.version}`,
         modelId: outcome.promptVersion.model_id,
+        moderationRequired: outcome.moderationRequired,
+        moderationStatus: outcome.moderationStatus,
+        moderationNotes: outcome.moderationNotes,
       });
       await this.audit.record(
         { userId: actor.id, role: actor.role },

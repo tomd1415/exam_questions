@@ -22,6 +22,7 @@ import { CurriculumRepo } from './repos/curriculum.js';
 import { FeedbackRepo } from './repos/feedback.js';
 import { PromptVersionRepo } from './repos/prompts.js';
 import { LlmCallRepo } from './repos/llm_calls.js';
+import { ContentGuardRepo } from './repos/content_guards.js';
 import { AuditService } from './services/audit.js';
 import { AuthService } from './services/auth.js';
 import { ClassService } from './services/classes.js';
@@ -31,9 +32,11 @@ import { AttemptService } from './services/attempts.js';
 import { TeacherMarkingService } from './services/marking/teacher.js';
 import { MarkingDispatcher } from './services/marking/dispatch.js';
 import { LlmOpenResponseMarker } from './services/marking/llm.js';
+import { ModerationService } from './services/marking/moderation.js';
 import { LlmClient } from './services/llm/client.js';
 import { FeedbackService } from './services/feedback.js';
 import { PromptVersionService } from './services/prompts.js';
+import { ContentGuardService } from './services/content_guards.js';
 import { seedPromptDraftsFromDisk } from './services/prompts_bootstrap.js';
 import { registerAuthRoutes } from './routes/auth.js';
 import { registerQuestionRoutes } from './routes/questions.js';
@@ -43,6 +46,8 @@ import { registerAdminQuestionWizardRoutes } from './routes/admin-question-wizar
 import { registerAdminAttemptRoutes } from './routes/admin-attempts.js';
 import { registerAdminTopicRoutes } from './routes/admin-topics.js';
 import { registerAdminPromptRoutes } from './routes/admin-prompts.js';
+import { registerAdminModerationRoutes } from './routes/admin-moderation.js';
+import { registerAdminContentGuardRoutes } from './routes/admin-content-guards.js';
 import { registerAttemptRoutes } from './routes/attempts.js';
 import { registerFeedbackRoutes } from './routes/feedback.js';
 import { registerApiRoutes } from './routes/api.js';
@@ -74,8 +79,10 @@ declare module 'fastify' {
       questionDrafts: QuestionDraftService;
       attempts: AttemptService;
       teacherMarking: TeacherMarkingService;
+      moderation: ModerationService;
       feedback: FeedbackService;
       prompts: PromptVersionService;
+      contentGuards: ContentGuardService;
     };
     repos: {
       users: UserRepo;
@@ -87,6 +94,7 @@ declare module 'fastify' {
       feedback: FeedbackRepo;
       prompts: PromptVersionRepo;
       llmCalls: LlmCallRepo;
+      contentGuards: ContentGuardRepo;
     };
   }
   interface FastifyRequest {
@@ -151,6 +159,7 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
   const feedbackRepo = new FeedbackRepo(pool);
   const promptRepo = new PromptVersionRepo(pool);
   const llmCallRepo = new LlmCallRepo(pool);
+  const contentGuardRepo = new ContentGuardRepo(pool);
   const auditService = new AuditService(auditRepo);
   const authService = new AuthService(userRepo, sessionRepo, auditService);
   const classService = new ClassService(classRepo, auditService);
@@ -161,10 +170,13 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
     auditService,
   );
   const teacherMarkingService = new TeacherMarkingService(attemptRepo, auditService);
+  const moderationService = new ModerationService(attemptRepo, auditService);
   const feedbackService = new FeedbackService(feedbackRepo, auditService, userRepo);
   const promptService = new PromptVersionService(promptRepo);
+  const contentGuardService = new ContentGuardService(contentGuardRepo);
   await seedPromptDraftsFromDisk(promptRepo);
   await promptService.loadActive();
+  await contentGuardService.refresh();
 
   // LLM marker is only built when the kill switch is on AND an API key
   // is configured. The config.ts superRefine enforces that OPENAI_API_KEY
@@ -181,6 +193,7 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
   const markingDispatcher = new MarkingDispatcher({
     llmEnabled: config.LLM_ENABLED,
     llmMarker,
+    contentGuards: contentGuardService,
   });
   const attemptService = new AttemptService(
     attemptRepo,
@@ -198,8 +211,10 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
     questionDrafts: questionDraftService,
     attempts: attemptService,
     teacherMarking: teacherMarkingService,
+    moderation: moderationService,
     feedback: feedbackService,
     prompts: promptService,
+    contentGuards: contentGuardService,
   });
   app.decorate('repos', {
     users: userRepo,
@@ -211,6 +226,7 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
     feedback: feedbackRepo,
     prompts: promptRepo,
     llmCalls: llmCallRepo,
+    contentGuards: contentGuardRepo,
   });
   app.decorateRequest('currentUser', null);
   app.decorateRequest('sessionId', null);
@@ -291,6 +307,8 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
   registerAdminQuestionWizardRoutes(app);
   registerAdminTopicRoutes(app);
   registerAdminPromptRoutes(app);
+  registerAdminModerationRoutes(app);
+  registerAdminContentGuardRoutes(app);
   registerFeedbackRoutes(app);
   registerApiRoutes(app);
 
