@@ -38,6 +38,7 @@ import { FeedbackService } from './services/feedback.js';
 import { PromptVersionService } from './services/prompts.js';
 import { ContentGuardService } from './services/content_guards.js';
 import { seedPromptDraftsFromDisk } from './services/prompts_bootstrap.js';
+import { seedAdminFromEnv } from './services/admin_bootstrap.js';
 import { registerAuthRoutes } from './routes/auth.js';
 import { registerQuestionRoutes } from './routes/questions.js';
 import { registerAdminClassRoutes } from './routes/admin-classes.js';
@@ -179,6 +180,18 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
   await seedPromptDraftsFromDisk(promptRepo);
   await promptService.loadActive();
   await contentGuardService.refresh();
+  if (config.NODE_ENV !== 'test') {
+    const admin = await seedAdminFromEnv(pool, {
+      username: config.ADMIN_USERNAME,
+      initialPassword: config.ADMIN_INITIAL_PASSWORD,
+    });
+    if (admin.created) {
+      app.log.info(
+        { username: config.ADMIN_USERNAME },
+        'Admin user seeded from ADMIN_USERNAME/ADMIN_INITIAL_PASSWORD',
+      );
+    }
+  }
 
   // LLM marker is only built when the kill switch is on AND an API key
   // is configured. The config.ts superRefine enforces that OPENAI_API_KEY
