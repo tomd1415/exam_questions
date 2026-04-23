@@ -35,6 +35,7 @@
     "setup:lesson": "tsx src/scripts/setup-lesson.ts",
     "gen:widgets-schema": "tsx scripts/gen-widgets-schema.ts",
     "eval": "tsx scripts/eval/run-prompt-evals.ts",
+    "pilot:report": "tsx scripts/eval/pilot-report.ts",
     "seed:ai-feedback-demo": "tsx scripts/dev/seed-ai-feedback-demo.ts",
     "seed:ai-feedback-live": "tsx scripts/dev/seed-ai-feedback-live.ts",
     "test:human:phase0": "bash scripts/human-test-phase0.sh",
