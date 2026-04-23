@@ -1,0 +1,36 @@
+{
+  "id": "open_002_ram_partial",
+  "description": "Pupil hits volatility only — expect 1 mark, volatility hit, CPU-use missed.",
+  "part": {
+    "id": "fixture-open-002",
+    "marks": 2,
+    "expected_response_type": "medium_text",
+    "prompt": "Describe two characteristics of RAM.",
+    "raw_answer": "RAM is volatile so it loses all its data when you turn off the computer.",
+    "part_label": "1a"
+  },
+  "markPoints": [
+    {
+      "id": "mp_open_002_volatile",
+      "text": "Volatile — loses contents when power is removed",
+      "accepted_alternatives": ["loses its data when switched off", "not persistent"],
+      "marks": 1,
+      "is_required": false
+    },
+    {
+      "id": "mp_open_002_cpu_use",
+      "text": "Stores data/instructions currently in use by the CPU",
+      "accepted_alternatives": ["holds running programs", "used by the processor"],
+      "marks": 1,
+      "is_required": false
+    }
+  ],
+  "questionStem": "A computer has RAM and a hard disk.",
+  "modelAnswer": "RAM is volatile and stores data and instructions the CPU is currently using.",
+  "expected": {
+    "marksAwardedRange": [1, 1],
+    "mustHitMarkPointIds": ["mp_open_002_volatile"],
+    "mustNotHitMarkPointIds": ["mp_open_002_cpu_use"],
+    "shouldRefuse": false
+  }
+}

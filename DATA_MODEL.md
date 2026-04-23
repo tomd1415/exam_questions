@@ -156,16 +156,17 @@ A question may have multiple parts. For Phase 1 a `parts` table is preferable to
 
 ### `question_parts`
 
-| Column                   | Type                  | Notes                                                                                                                                                                                                                          |
-| ------------------------ | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `id`                     | BIGSERIAL PK          |                                                                                                                                                                                                                                |
-| `question_id`            | BIGINT FK → questions |                                                                                                                                                                                                                                |
-| `part_label`             | TEXT                  | "a", "b", "c(i)"                                                                                                                                                                                                               |
-| `prompt`                 | TEXT                  |                                                                                                                                                                                                                                |
-| `marks`                  | INT                   |                                                                                                                                                                                                                                |
-| `expected_response_type` | TEXT                  | Overrides the parent question's type for this part. Same widget registry values as `questions.expected_response_type` — see `src/lib/widgets.ts`.                                                                              |
-| `part_config`            | JSONB NULL            | Per-widget config blob (e.g. flowchart palette seed, trace-table headers, cloze tokens, diagram image + hotspots). Shape is enforced in the wizard and per-widget renderer; the DB is deliberately permissive (migration 0015) |
-| `display_order`          | INT                   |                                                                                                                                                                                                                                |
+| Column                    | Type                  | Notes                                                                                                                                                                                                                              |
+| ------------------------- | --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`                      | BIGSERIAL PK          |                                                                                                                                                                                                                                    |
+| `question_id`             | BIGINT FK → questions |                                                                                                                                                                                                                                    |
+| `part_label`              | TEXT                  | "a", "b", "c(i)"                                                                                                                                                                                                                   |
+| `prompt`                  | TEXT                  |                                                                                                                                                                                                                                    |
+| `marks`                   | INT                   |                                                                                                                                                                                                                                    |
+| `expected_response_type`  | TEXT                  | Overrides the parent question's type for this part. Same widget registry values as `questions.expected_response_type` — see `src/lib/widgets.ts`.                                                                                  |
+| `part_config`             | JSONB NULL            | Per-widget config blob (e.g. flowchart palette seed, trace-table headers, cloze tokens, diagram image + hotspots). Shape is enforced in the wizard and per-widget renderer; the DB is deliberately permissive (migration 0015)     |
+| `pupil_feedback_fallback` | TEXT NULL             | Teacher-authored fallback shown when the LLM's pupil feedback for this part scores Flesch < 60 (too hard to read). When NULL, the template falls back to a generic "ask your teacher to talk this through" prompt (migration 0032) |
+| `display_order`           | INT                   |                                                                                                                                                                                                                                    |
 
 ### `mark_points`
 
@@ -294,22 +295,26 @@ Audit events emitted by the wizard service:
 
 ### `awarded_marks` (Phase 1 deterministic, Phase 3 LLM)
 
-| Column                | Type                      | Notes                                               |
-| --------------------- | ------------------------- | --------------------------------------------------- |
-| `id`                  | BIGSERIAL PK              |                                                     |
-| `attempt_part_id`     | BIGINT FK → attempt_parts |                                                     |
-| `marks_awarded`       | INT                       |                                                     |
-| `marks_total`         | INT                       |                                                     |
-| `mark_points_hit`     | BIGINT[]                  | FK refs into mark_points                            |
-| `mark_points_missed`  | BIGINT[]                  |                                                     |
-| `evidence_quotes`     | TEXT[]                    | spans from the pupil answer                         |
-| `marker`              | TEXT                      | `deterministic`, `llm`, `teacher_override`          |
-| `confidence`          | NUMERIC(3,2) NULL         | 0.00–1.00 for LLM marker                            |
-| `moderation_required` | BOOLEAN DEFAULT false     |                                                     |
-| `moderation_status`   | TEXT                      | `pending`, `accepted`, `overridden`, `not_required` |
-| `prompt_version`      | TEXT NULL                 | for `llm` marker                                    |
-| `model_id`            | TEXT NULL                 |                                                     |
-| `created_at`          | TIMESTAMPTZ               |                                                     |
+| Column                   | Type                      | Notes                                                                                                                                                 |
+| ------------------------ | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`                     | BIGSERIAL PK              |                                                                                                                                                       |
+| `attempt_part_id`        | BIGINT FK → attempt_parts |                                                                                                                                                       |
+| `marks_awarded`          | INT                       |                                                                                                                                                       |
+| `marks_total`            | INT                       |                                                                                                                                                       |
+| `mark_points_hit`        | BIGINT[]                  | FK refs into mark_points                                                                                                                              |
+| `mark_points_missed`     | BIGINT[]                  |                                                                                                                                                       |
+| `evidence_quotes`        | TEXT[]                    | spans from the pupil answer                                                                                                                           |
+| `marker`                 | TEXT                      | `deterministic`, `llm`, `teacher_override`                                                                                                            |
+| `confidence`             | NUMERIC(3,2) NULL         | 0.00–1.00 for LLM marker                                                                                                                              |
+| `moderation_required`    | BOOLEAN DEFAULT false     |                                                                                                                                                       |
+| `moderation_status`      | TEXT                      | `pending`, `accepted`, `overridden`, `not_required`                                                                                                   |
+| `prompt_version`         | TEXT NULL                 | for `llm` marker                                                                                                                                      |
+| `model_id`               | TEXT NULL                 |                                                                                                                                                       |
+| `moderation_notes`       | JSONB NULL                | Safety-gate reason list captured at moderation time so the detail page can render "why flagged" without re-running (migration 0030)                   |
+| `moderation_reviewed_by` | BIGINT NULL FK → users    | Who closed the row out of moderation (accept or override); `ON DELETE SET NULL` (migration 0030)                                                      |
+| `moderation_reviewed_at` | TIMESTAMPTZ NULL          | When the row left `pending` (migration 0030)                                                                                                          |
+| `feedback_for_pupil`     | JSONB NULL                | `{what_went_well, how_to_gain_more, next_focus}` written by the LLM marker; rendered on the pupil review page once moderation clears (migration 0032) |
+| `created_at`             | TIMESTAMPTZ               |                                                                                                                                                       |
 
 ### `feedback_events`
 
@@ -387,21 +392,25 @@ Append-only.
 | `event_type`      | TEXT                      | dotted, e.g. `attempt.part.saved`, `marking.completed`, `marking.override`, `question.approved` |
 | `details`         | JSONB                     |                                                                                                 |
 
-### `llm_calls` (Phase 3)
+### `llm_calls` (Phase 3, migration 0029)
 
-| Column                | Type         | Notes                                                                  |
-| --------------------- | ------------ | ---------------------------------------------------------------------- |
-| `id`                  | BIGSERIAL PK |                                                                        |
-| `at`                  | TIMESTAMPTZ  |                                                                        |
-| `prompt_name`         | TEXT         | `mark_open_response_v3`, etc.                                          |
-| `prompt_version`      | TEXT         |                                                                        |
-| `model_id`            | TEXT         |                                                                        |
-| `input_tokens`        | INT          |                                                                        |
-| `output_tokens`       | INT          |                                                                        |
-| `latency_ms`          | INT          |                                                                        |
-| `cost_estimate_pence` | NUMERIC(8,4) |                                                                        |
-| `outcome`             | TEXT         | `ok`, `validation_failed`, `circuit_open`, `provider_error`, `timeout` |
-| `redaction_summary`   | JSONB        | what we stripped before sending                                        |
+Append-only audit log of every outbound LLM call. Pence are integers so the cost dashboard (chunk 3g) can `SUM()` without floating-point footguns. `cost_pence = 0` is a legitimate value for refusals, schema failures, and HTTP errors where no tokens were billed.
+
+| Column              | Type                           | Notes                                                                                                                                         |
+| ------------------- | ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`                | BIGSERIAL PK                   |                                                                                                                                               |
+| `prompt_version_id` | BIGINT FK → prompt_versions    | The exact prompt snapshot the call was made against.                                                                                          |
+| `attempt_part_id`   | BIGINT NULL FK → attempt_parts | Nullable for non-attempt calls (evals, pre-flight checks); `ON DELETE SET NULL` so rotating out an attempt cannot silently delete a cost row. |
+| `model_id`          | TEXT                           | e.g. `gpt-5-mini`. Denormalised from `prompt_versions.model_id` at write time.                                                                |
+| `input_tokens`      | INT                            |                                                                                                                                               |
+| `output_tokens`     | INT                            |                                                                                                                                               |
+| `cost_pence`        | INT                            | Integer pence. No floats anywhere in the cost path.                                                                                           |
+| `latency_ms`        | INT                            |                                                                                                                                               |
+| `status`            | TEXT                           | CHECK in (`ok`, `refusal`, `schema_invalid`, `http_error`, `timeout`).                                                                        |
+| `error_message`     | TEXT NULL                      | Free-text diagnostic for non-`ok` statuses.                                                                                                   |
+| `created_at`        | TIMESTAMPTZ                    |                                                                                                                                               |
+
+Index: `llm_calls_recent_idx (created_at DESC)` powers the "recent calls" dashboard widget.
 
 ### `job_runs` (Phase 4)
 
@@ -414,17 +423,44 @@ Append-only.
 | `status`      | TEXT             | `running`, `ok`, `failed` |
 | `details`     | JSONB            |                           |
 
-### `prompt_versions` (Phase 3)
+### `prompt_versions` (Phase 3, migration 0028)
 
-| Column                 | Type        | Notes                        |
-| ---------------------- | ----------- | ---------------------------- |
-| `name`                 | TEXT        | e.g. `mark_open_response`    |
-| `version`              | TEXT        | semver-style                 |
-| `body`                 | TEXT        | full prompt text             |
-| `schema_json`          | JSONB       | the structured-output schema |
-| `notes`                | TEXT        | what changed                 |
-| `created_at`           | TIMESTAMPTZ |                              |
-| PK (`name`, `version`) |             |                              |
+One row per (name, version) pair, with at most one row per name holding `status = 'active'` at any time. Prompt bodies themselves live as markdown under `prompts/<name>/<version>.md`; the table stores the compiled reference (name, semver version, model id, system prompt snapshot, and the Structured Outputs JSON schema). Snapshotting the body at promotion time means a later disk edit cannot retroactively rewrite history.
+
+| Column          | Type         | Notes                                                              |
+| --------------- | ------------ | ------------------------------------------------------------------ |
+| `id`            | BIGSERIAL PK | Numeric PK so `llm_calls.prompt_version_id` can be a simple FK.    |
+| `name`          | TEXT         | e.g. `mark_open_response`, `mark_code_response`.                   |
+| `version`       | TEXT         | Semver-style, e.g. `v0.1.0`.                                       |
+| `model_id`      | TEXT         | OpenAI model, e.g. `gpt-5-mini`.                                   |
+| `system_prompt` | TEXT         | Full prompt body snapshotted at promotion time.                    |
+| `output_schema` | JSONB        | Structured Outputs JSON schema this version expects to conform to. |
+| `status`        | TEXT         | CHECK in (`draft`, `active`, `retired`).                           |
+| `created_at`    | TIMESTAMPTZ  |                                                                    |
+
+Constraints:
+
+- `UNIQUE (name, version)` — a single version string cannot be reused for a name.
+- `UNIQUE INDEX prompt_versions_one_active_per_name ON prompt_versions (name) WHERE status = 'active'` — at most one active row per name.
+- `INDEX prompt_versions_name_created_idx ON prompt_versions (name, created_at DESC)` — for the admin history view.
+
+Promoting a new version is a deploy-time action: a migration (or the drafts seeder at app boot) marks the new row `active` and retires the old one in the same transaction. There is no UI for flipping the flag in Phase 3 — the `/admin/prompts/versions` page is read-only.
+
+### `content_guard_patterns` (Phase 3, migration 0031)
+
+Admin-editable regex-adjacent patterns used by the safety gate (chunk 3d). Two kinds: `safeguarding` (self-harm, abuse, crisis signals) and `prompt_injection` (attempts to override the marker's instructions). Patterns are treated as case-insensitive substring matches at read time — they are not compiled as regex so an admin cannot DoS the marker with a catastrophic-backtracking pattern.
+
+| Column       | Type                   | Notes                                                                |
+| ------------ | ---------------------- | -------------------------------------------------------------------- |
+| `id`         | BIGSERIAL PK           |                                                                      |
+| `kind`       | TEXT                   | CHECK in (`safeguarding`, `prompt_injection`).                       |
+| `pattern`    | TEXT                   | Substring to match; case-insensitive.                                |
+| `note`       | TEXT NULL              | Admin-authored reason / context.                                     |
+| `created_by` | BIGINT NULL FK → users | `ON DELETE SET NULL` so audit trail survives an admin being deleted. |
+| `created_at` | TIMESTAMPTZ            |                                                                      |
+| `active`     | BOOLEAN DEFAULT true   | Soft-delete flag.                                                    |
+
+Partial index: `content_guard_patterns_active_kind_idx ON (kind) WHERE active = true` keeps the hot-path cache query fast. Scope is admin-global by design for the single-school deployment.
 
 ## Indexes (initial guesses; revisit with real data)
 

@@ -1,0 +1,122 @@
+<%~ include('_page_header', {
+  crumbs: [{ label: 'Prompt evals' }],
+  heading: 'Prompt eval — latest run',
+  subtitle: 'Most recent nightly run against the golden fixtures under prompts/eval/. Reports are produced by scripts/eval/run-prompt-evals.ts and read from ' + it.outDir + '.',
+}) %>
+
+<% if (!it.report) { %>
+  <section class="admin-card" aria-labelledby="no-report-heading">
+    <header class="admin-card__header">
+      <h2 id="no-report-heading">No eval runs yet</h2>
+    </header>
+    <p class="empty">Run <code>npm run eval</code> (or trigger the nightly job) to produce the first report. Once produced, the latest run will render here.</p>
+  </section>
+<% } else { %>
+  <% const report = it.report; %>
+  <section class="admin-card llm-eval-card llm-eval-card--<%= report.totalsPassBand %>" aria-labelledby="totals-heading">
+    <header class="admin-card__header">
+      <h2 id="totals-heading">Totals</h2>
+      <p class="admin-card__sub">
+        Run at <time datetime="<%= report.generatedAt %>"><%= report.generatedAt %></time>
+      </p>
+    </header>
+    <dl class="admin-kv">
+      <dt>Pass rate</dt>
+      <dd>
+        <strong><%= report.totals.passed %>/<%= report.totals.fixtures %></strong>
+        (<%= report.totalsPassRatePercent %>%)
+        <span class="pill pill--<%= report.totalsPassBand === 'green' ? 'ok' : (report.totalsPassBand === 'amber' ? 'warn' : 'danger') %>">
+          <%= report.totalsPassBand %>
+        </span>
+      </dd>
+      <dt>Failed fixtures</dt>
+      <dd><%= report.totals.failed %></dd>
+      <dt>Total spend</dt>
+      <dd><%= report.totalCostFormatted %></dd>
+    </dl>
+  </section>
+
+  <% report.aggregates.forEach(function(agg) { %>
+    <section class="admin-card llm-eval-card llm-eval-card--<%= agg.passBand %>" aria-labelledby="agg-<%= agg.promptName %>">
+      <header class="admin-card__header">
+        <h2 id="agg-<%= agg.promptName %>"><%= agg.promptName %></h2>
+        <p class="admin-card__sub"><%= agg.promptVersion %></p>
+      </header>
+      <dl class="admin-kv">
+        <dt>Pass rate</dt>
+        <dd>
+          <strong><%= agg.passed %>/<%= agg.fixtures %></strong>
+          (<%= agg.passRatePercent %>%)
+          <span class="pill pill--<%= agg.passBand === 'green' ? 'ok' : (agg.passBand === 'amber' ? 'warn' : 'danger') %>">
+            <%= agg.passBand %>
+          </span>
+        </dd>
+        <dt>Mean abs. error</dt>
+        <dd><%= agg.meanAbsoluteErrorFormatted %> marks</dd>
+        <dt>Mean latency</dt>
+        <dd><%= agg.meanLatencyMsFormatted %></dd>
+        <dt>Spend</dt>
+        <dd><%= agg.totalCostFormatted %></dd>
+      </dl>
+      <% if (agg.worstOffenders.length > 0) { %>
+        <h3 class="llm-eval-offenders__title">Worst offenders</h3>
+        <ul class="llm-eval-offenders">
+          <% agg.worstOffenders.forEach(function(r) { %>
+            <li class="llm-eval-offender">
+              <p class="llm-eval-offender__head">
+                <strong><%= r.fixtureId %></strong>
+                <span class="muted"><%= r.outcomeKind %></span>
+                — <%= r.description %>
+              </p>
+              <p class="muted">
+                Marks <%= r.marksAwarded %> (expected <%= r.expectedRange %>, |err| <%= r.absoluteError %>)
+              </p>
+              <ul class="llm-eval-offender__reasons">
+                <% r.failReasons.forEach(function(reason) { %>
+                  <li><%= reason %></li>
+                <% }); %>
+              </ul>
+            </li>
+          <% }); %>
+        </ul>
+      <% } %>
+    </section>
+  <% }); %>
+
+  <% if (report.failures.length > 0) { %>
+    <section class="admin-card" aria-labelledby="all-failures-heading">
+      <header class="admin-card__header">
+        <h2 id="all-failures-heading">All failing fixtures</h2>
+      </header>
+      <table class="admin-table llm-eval-table">
+        <thead>
+          <tr>
+            <th scope="col">Fixture</th>
+            <th scope="col">Prompt</th>
+            <th scope="col">Outcome</th>
+            <th scope="col" class="num">Marks</th>
+            <th scope="col" class="num">Expected</th>
+            <th scope="col" class="num">|err|</th>
+            <th scope="col">Reason</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% report.failures.forEach(function(r) { %>
+            <tr>
+              <td>
+                <strong><%= r.fixtureId %></strong>
+                <span class="muted"><%= r.description %></span>
+              </td>
+              <td><%= r.promptName %></td>
+              <td><%= r.outcomeKind %></td>
+              <td class="num"><%= r.marksAwarded %></td>
+              <td class="num"><%= r.expectedRange %></td>
+              <td class="num"><%= r.absoluteError %></td>
+              <td><%= r.failReasons[0] || '' %></td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </section>
+  <% } %>
+<% } %>

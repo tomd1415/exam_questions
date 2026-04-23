@@ -45,8 +45,8 @@ export interface LlmFeedbackForPupil {
 
 export interface LlmFeedbackForTeacher {
   readonly summary: string;
-  readonly suggested_misconception_label?: string;
-  readonly suggested_next_question_type?: string;
+  readonly suggested_misconception_label?: string | null;
+  readonly suggested_next_question_type?: string | null;
 }
 
 export type LlmMarkingOutcome =

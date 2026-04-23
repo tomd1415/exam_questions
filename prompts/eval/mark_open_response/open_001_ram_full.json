@@ -1,0 +1,44 @@
+{
+  "id": "open_001_ram_full",
+  "description": "Pupil answer hits both RAM mark points — expect full marks.",
+  "part": {
+    "id": "fixture-open-001",
+    "marks": 2,
+    "expected_response_type": "medium_text",
+    "prompt": "Describe two characteristics of RAM.",
+    "raw_answer": "RAM is volatile, meaning it loses its contents when the computer is switched off. It stores data and instructions that the CPU is currently using.",
+    "part_label": "1a"
+  },
+  "markPoints": [
+    {
+      "id": "mp_open_001_volatile",
+      "text": "Volatile — loses contents when power is removed",
+      "accepted_alternatives": [
+        "loses its data when switched off",
+        "not persistent",
+        "temporary storage"
+      ],
+      "marks": 1,
+      "is_required": false
+    },
+    {
+      "id": "mp_open_001_cpu_use",
+      "text": "Stores data/instructions currently in use by the CPU",
+      "accepted_alternatives": [
+        "holds running programs",
+        "used by the processor",
+        "stores the currently-running program"
+      ],
+      "marks": 1,
+      "is_required": false
+    }
+  ],
+  "questionStem": "A computer has RAM and a hard disk.",
+  "modelAnswer": "RAM is volatile memory that loses its contents when power is removed. It stores the data and instructions the CPU is currently using.",
+  "expected": {
+    "marksAwardedRange": [2, 2],
+    "mustHitMarkPointIds": ["mp_open_001_volatile", "mp_open_001_cpu_use"],
+    "mustNotHitMarkPointIds": [],
+    "shouldRefuse": false
+  }
+}

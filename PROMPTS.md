@@ -9,7 +9,7 @@ LLM prompt families used by the platform, with their inputs, outputs, JSON schem
 These apply to every prompt in the system.
 
 1. **System prompt is fixed and not composed with pupil text.** Pupil text always arrives as a separate user-role chunk wrapped in clear delimiters.
-2. **Always Structured Outputs.** Every call uses an OpenAI Responses API structured-output schema. A response that fails schema validation is rejected (not silently parsed).
+2. **Always Structured Outputs.** Every call uses an OpenAI Responses API structured-output schema. A response that fails schema validation is rejected (not silently parsed). OpenAI strict mode requires **every key in `properties` also appear in `required`** — optional fields are expressed by giving them a nullable type (`{ "type": ["string", "null"] }`) rather than omitting them from `required`. Omitting a property from `required` produces an HTTP 400 `invalid_json_schema` on every call; see [AUDIT_2026-04-23.md](AUDIT_2026-04-23.md) for a concrete case.
 3. **Marks are clipped to `[0, marks_total]` after the call.** The model can be asked to obey the bound, but the application enforces it.
 4. **Confidence is required, never optional.** The model returns a calibrated `confidence` between 0.00 and 1.00. Low confidence triggers moderation.
 5. **Evidence quotes are required for any non-zero mark.** If the model awards marks without quoting from the pupil's answer, the safety gate flags it.
@@ -314,10 +314,12 @@ Output: a list of suggested groups with a recommended reteach focus per group.
 
 ## Evaluation and regression checks
 
-A growing set of golden test cases lives in `prompts/eval/`:
+A growing set of golden test cases lives in [prompts/eval/](prompts/eval/):
 
-- For each marking prompt: a fixture of (question, mark scheme, pupil answer, expected mark range, expected mark points hit).
-- A nightly job runs the active marking prompt over the fixtures and reports drift.
-- A new prompt version is not promoted to production until it passes the fixtures within a tolerance band.
+- Each fixture is a JSON file: question stem, part prompt, mark scheme, pupil answer, the `expected` rubric (mark range, required mark-point ids, forbidden mark-point ids, `shouldRefuse` flag, optional `maxAbsoluteError` override). Schema: [src/services/eval/fixtures.ts](src/services/eval/fixtures.ts).
+- `npm run eval` (wraps [scripts/eval/run-prompt-evals.ts](scripts/eval/run-prompt-evals.ts)) replays each `active` prompt across its fixtures, scores pass/fail, and writes a report to `scripts/eval/out/{timestamp}.{json,md}`. `EVAL_DRY_RUN=1` skips the OpenAI call and uses a stub marker so the harness can be exercised in CI without an API key.
+- Exit code is non-zero on any fail, so a CI job can gate prompt promotions on a clean run.
+- `/admin/evals/latest` renders the most recent JSON report as an admin-only dashboard: totals card with a pass-rate band, per-prompt aggregates with worst-offender lists, and an all-failures table.
+- Shipped fixtures are a synthetic seed (5 per prompt) authored to exercise every branch of the scorer. Chunk 3h's full ask is 30 anonymised real submissions per prompt — the pilot (chunk 3i) generates these.
 
 This is how prompt changes stop breaking historical agreement with teacher marking.

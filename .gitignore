@@ -35,5 +35,10 @@ tmp/
 *.tsbuildinfo
 .vitest/
 
+# Claude Code per-project scratch (locks, schedules)
+.claude/
+# Eval reports land here at runtime; keep the committed fixtures in prompts/eval/ only.
+scripts/eval/out/
+
 # OS
 Thumbs.db

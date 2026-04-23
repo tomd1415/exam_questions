@@ -1,0 +1,47 @@
+{
+  "id": "code_004_empty",
+  "description": "Empty code submission — expect refusal, zero marks.",
+  "part": {
+    "id": "fixture-code-004",
+    "marks": 3,
+    "expected_response_type": "code",
+    "prompt": "Write a Python function that returns the largest value in a list.",
+    "raw_answer": "\n\n",
+    "part_label": "6b"
+  },
+  "markPoints": [
+    {
+      "id": "mp_code_004_initial",
+      "text": "Track a current-best value",
+      "accepted_alternatives": ["biggest = numbers[0]"],
+      "marks": 1,
+      "is_required": true
+    },
+    {
+      "id": "mp_code_004_loop_compare",
+      "text": "Loop through the list and compare each element",
+      "accepted_alternatives": ["for n in numbers", "if n > biggest"],
+      "marks": 1,
+      "is_required": true
+    },
+    {
+      "id": "mp_code_004_return",
+      "text": "Return the largest value",
+      "accepted_alternatives": ["return biggest"],
+      "marks": 1,
+      "is_required": true
+    }
+  ],
+  "questionStem": "A programmer is writing a function to find the largest number in a list.",
+  "modelAnswer": "def largest(numbers):\n    biggest = numbers[0]\n    for n in numbers:\n        if n > biggest:\n            biggest = n\n    return biggest",
+  "expected": {
+    "marksAwardedRange": [0, 0],
+    "mustHitMarkPointIds": [],
+    "mustNotHitMarkPointIds": [
+      "mp_code_004_initial",
+      "mp_code_004_loop_compare",
+      "mp_code_004_return"
+    ],
+    "shouldRefuse": true
+  }
+}

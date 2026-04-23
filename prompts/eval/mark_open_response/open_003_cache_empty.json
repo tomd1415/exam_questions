@@ -1,0 +1,47 @@
+{
+  "id": "open_003_cache_empty",
+  "description": "Empty-after-trim pupil answer — expect refusal and zero marks.",
+  "part": {
+    "id": "fixture-open-003",
+    "marks": 3,
+    "expected_response_type": "medium_text",
+    "prompt": "Explain the purpose of cache memory.",
+    "raw_answer": "   \n   \n",
+    "part_label": "2b"
+  },
+  "markPoints": [
+    {
+      "id": "mp_open_003_speed",
+      "text": "Cache is faster to access than main memory",
+      "accepted_alternatives": ["quicker than RAM", "low latency"],
+      "marks": 1,
+      "is_required": false
+    },
+    {
+      "id": "mp_open_003_frequently",
+      "text": "Stores frequently/recently accessed data or instructions",
+      "accepted_alternatives": ["holds data the CPU needs often"],
+      "marks": 1,
+      "is_required": false
+    },
+    {
+      "id": "mp_open_003_reduces_fetch",
+      "text": "Reduces the need to fetch from RAM, improving performance",
+      "accepted_alternatives": ["fewer accesses to main memory", "speeds up the CPU"],
+      "marks": 1,
+      "is_required": false
+    }
+  ],
+  "questionStem": "A CPU has multiple levels of cache.",
+  "modelAnswer": "Cache memory is small and fast. It sits between the CPU and main memory and holds frequently or recently accessed data, reducing trips to slower RAM and speeding up execution.",
+  "expected": {
+    "marksAwardedRange": [0, 0],
+    "mustHitMarkPointIds": [],
+    "mustNotHitMarkPointIds": [
+      "mp_open_003_speed",
+      "mp_open_003_frequently",
+      "mp_open_003_reduces_fetch"
+    ],
+    "shouldRefuse": true
+  }
+}

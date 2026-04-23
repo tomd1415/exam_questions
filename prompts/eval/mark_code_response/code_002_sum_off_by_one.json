@@ -1,0 +1,43 @@
+{
+  "id": "code_002_sum_off_by_one",
+  "description": "Off-by-one in loop bounds — misses last element. Expect accumulator + return marks; lose the iterate mark.",
+  "part": {
+    "id": "fixture-code-002",
+    "marks": 3,
+    "expected_response_type": "code",
+    "prompt": "Write a Python function total(numbers) that returns the sum of the values in a list.",
+    "raw_answer": "def total(numbers):\n    running = 0\n    for i in range(len(numbers) - 1):\n        running = running + numbers[i]\n    return running\n",
+    "part_label": "6a"
+  },
+  "markPoints": [
+    {
+      "id": "mp_code_002_accumulator",
+      "text": "Initialise an accumulator to 0",
+      "accepted_alternatives": ["running = 0", "total = 0"],
+      "marks": 1,
+      "is_required": true
+    },
+    {
+      "id": "mp_code_002_iterate_all",
+      "text": "Iterate over every element in the list (correct bounds)",
+      "accepted_alternatives": ["for n in numbers", "range(len(numbers))"],
+      "marks": 1,
+      "is_required": true
+    },
+    {
+      "id": "mp_code_002_return",
+      "text": "Return the accumulator",
+      "accepted_alternatives": ["return running", "return total"],
+      "marks": 1,
+      "is_required": true
+    }
+  ],
+  "questionStem": "A programmer is writing a function to sum a list of numbers.",
+  "modelAnswer": "def total(numbers):\n    running = 0\n    for n in numbers:\n        running += n\n    return running",
+  "expected": {
+    "marksAwardedRange": [2, 2],
+    "mustHitMarkPointIds": ["mp_code_002_accumulator", "mp_code_002_return"],
+    "mustNotHitMarkPointIds": ["mp_code_002_iterate_all"],
+    "shouldRefuse": false
+  }
+}

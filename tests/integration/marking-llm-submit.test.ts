@@ -60,13 +60,25 @@ interface FamilyBPayload {
 }
 
 function okResponse(payload: FamilyBPayload): Response {
+  // Fill in the nullable fields the strict Structured Outputs schema
+  // requires (see FAMILY_B_OUTPUT_SCHEMA comment). Keeps test
+  // fixtures focused on the fields under test.
+  const wire = {
+    ...payload,
+    notes: null,
+    feedback_for_teacher: {
+      suggested_misconception_label: null,
+      suggested_next_question_type: null,
+      ...payload.feedback_for_teacher,
+    },
+  };
   return new Response(
     JSON.stringify({
       output: [
         {
           type: 'message',
           role: 'assistant',
-          content: [{ type: 'output_text', text: JSON.stringify(payload) }],
+          content: [{ type: 'output_text', text: JSON.stringify(wire) }],
         },
       ],
       usage: { input_tokens: 200, output_tokens: 80 },

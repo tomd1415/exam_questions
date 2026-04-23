@@ -49,6 +49,7 @@ import { registerAdminPromptRoutes } from './routes/admin-prompts.js';
 import { registerAdminModerationRoutes } from './routes/admin-moderation.js';
 import { registerAdminContentGuardRoutes } from './routes/admin-content-guards.js';
 import { registerAdminLlmRoutes } from './routes/admin-llm.js';
+import { registerAdminEvalsRoutes } from './routes/admin-evals.js';
 import { registerAttemptRoutes } from './routes/attempts.js';
 import { registerFeedbackRoutes } from './routes/feedback.js';
 import { registerApiRoutes } from './routes/api.js';
@@ -311,6 +312,7 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
   registerAdminModerationRoutes(app);
   registerAdminContentGuardRoutes(app);
   registerAdminLlmRoutes(app);
+  registerAdminEvalsRoutes(app);
   registerFeedbackRoutes(app);
   registerApiRoutes(app);
 

@@ -24,6 +24,14 @@ const DEFAULT_PROMPTS_DIR = resolve(__dirname, '..', '..', 'prompts');
 // of truth, and this object must stay in sync. Chunk 3b introduces a
 // Zod-to-JSON-Schema translator and a test that asserts they agree;
 // until then, editing either one is a code-review checklist item.
+// OpenAI Structured Outputs (strict mode) requires every key in
+// `properties` to also appear in `required`. Optional fields are
+// expressed by giving them a nullable type (`['string', 'null']`)
+// rather than omitting them from `required`; the marker in
+// services/marking/llm.ts already coalesces nulls via `?? null`.
+// Getting this wrong produces HTTP 400 `invalid_json_schema` on every
+// real call; this was caught when the first live OpenAI call was
+// attempted against the seeded schema — see AUDIT_2026-04-23.md.
 export const FAMILY_B_OUTPUT_SCHEMA = {
   type: 'object',
   additionalProperties: false,
@@ -37,6 +45,7 @@ export const FAMILY_B_OUTPUT_SCHEMA = {
     'feedback_for_pupil',
     'feedback_for_teacher',
     'refusal',
+    'notes',
   ],
   properties: {
     marks_awarded: { type: 'integer', minimum: 0 },
@@ -69,15 +78,15 @@ export const FAMILY_B_OUTPUT_SCHEMA = {
     feedback_for_teacher: {
       type: 'object',
       additionalProperties: false,
-      required: ['summary'],
+      required: ['summary', 'suggested_misconception_label', 'suggested_next_question_type'],
       properties: {
         summary: { type: 'string', maxLength: 400 },
-        suggested_misconception_label: { type: 'string', maxLength: 60 },
-        suggested_next_question_type: { type: 'string', maxLength: 60 },
+        suggested_misconception_label: { type: ['string', 'null'], maxLength: 60 },
+        suggested_next_question_type: { type: ['string', 'null'], maxLength: 60 },
       },
     },
     refusal: { type: 'boolean' },
-    notes: { type: 'string', maxLength: 400 },
+    notes: { type: ['string', 'null'], maxLength: 400 },
   },
 } as const;
 

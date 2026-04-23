@@ -28,6 +28,7 @@ function navLinksFor(role) {
       base.push({ href: '/admin/prompts/versions', label: 'Prompts', match: ['/admin/prompts'], key: 'prompts', icon: 'file-text' });
       base.push({ href: '/admin/content-guards', label: 'Content guards', match: ['/admin/content-guards'], key: 'guards', icon: 'shield' });
       base.push({ href: '/admin/llm/costs', label: 'LLM costs', match: ['/admin/llm'], key: 'llm-costs', icon: 'file-text' });
+      base.push({ href: '/admin/evals/latest', label: 'Prompt evals', match: ['/admin/evals'], key: 'evals', icon: 'clipboard-check' });
       base.push({ href: '/admin/audit', label: 'Audit log', match: ['/admin/audit'], key: 'audit', icon: 'file-text' });
     }
     return base;

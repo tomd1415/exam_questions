@@ -3537,3 +3537,43 @@ input[type='number'].input {
 .llm-cost-table {
   margin-top: var(--space-2);
 }
+
+/* Prompt eval dashboard (chunk 3h). Shares the band-accent pattern
+   with the cost dashboard — ≥90% pass = green, ≥75% = amber, below
+   = red. Offender lists keep text-only styling so axe never trips on
+   contrast in either theme. */
+.llm-eval-card {
+  border-left: 4px solid var(--color-border);
+}
+.llm-eval-card--green {
+  border-left-color: #2f7a46;
+}
+.llm-eval-card--amber {
+  border-left-color: #b97a00;
+}
+.llm-eval-card--red {
+  border-left-color: #b33a3a;
+}
+.llm-eval-offenders__title {
+  margin-top: var(--space-3);
+  font-size: 1rem;
+}
+.llm-eval-offenders {
+  margin: var(--space-2) 0 0;
+  padding-left: var(--space-3);
+  list-style: disc;
+}
+.llm-eval-offender {
+  margin-bottom: var(--space-2);
+}
+.llm-eval-offender__head {
+  margin: 0;
+}
+.llm-eval-offender__reasons {
+  margin: var(--space-1) 0 0;
+  padding-left: var(--space-3);
+  list-style: square;
+}
+.llm-eval-table {
+  margin-top: var(--space-2);
+}

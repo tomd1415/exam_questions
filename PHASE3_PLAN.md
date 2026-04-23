@@ -830,7 +830,7 @@ in scope, in expected order:
       still returns zero hits (inherited Phase 2.5 invariant).
 - [ ] PROMPTS.md Family B §Worked example updated against a real
       response from the pilot (lightly redacted).
-- [ ] DATA_MODEL.md reflects migrations 0028–0031.
+- [ ] DATA_MODEL.md reflects migrations 0028–0032.
 - [ ] PUPIL_FEEDBACK.md gains a Phase 3 row-set with the lesson
       date; any `new` rows are triaged before Phase 4 starts.
 - [ ] PLAN.md §Phase 3 "Success criteria" all ticked, or a

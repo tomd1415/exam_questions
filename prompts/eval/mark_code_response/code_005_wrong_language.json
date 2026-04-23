@@ -1,0 +1,44 @@
+{
+  "id": "code_005_wrong_language",
+  "description": "Pupil writes working JavaScript when Python was asked — logic marks only; style mark withheld. Expect 2/3 with language mismatch noted.",
+  "part": {
+    "id": "fixture-code-005",
+    "marks": 3,
+    "expected_response_type": "code",
+    "prompt": "Write a Python function even_count(numbers) that returns how many values in a list are even.",
+    "raw_answer": "function evenCount(numbers) {\n  let count = 0;\n  for (const n of numbers) {\n    if (n % 2 === 0) count++;\n  }\n  return count;\n}",
+    "part_label": "6c"
+  },
+  "markPoints": [
+    {
+      "id": "mp_code_005_iterate",
+      "text": "Iterate over every value in the list",
+      "accepted_alternatives": ["for n in numbers", "loop through each"],
+      "marks": 1,
+      "is_required": true
+    },
+    {
+      "id": "mp_code_005_even_check",
+      "text": "Check whether a value is even using modulo",
+      "accepted_alternatives": ["n % 2 == 0"],
+      "marks": 1,
+      "is_required": true
+    },
+    {
+      "id": "mp_code_005_python_syntax",
+      "text": "Written using valid Python syntax as required",
+      "accepted_alternatives": ["Python def / indentation / return"],
+      "marks": 1,
+      "is_required": false
+    }
+  ],
+  "questionStem": "A programmer needs to count even numbers in a list.",
+  "modelAnswer": "def even_count(numbers):\n    count = 0\n    for n in numbers:\n        if n % 2 == 0:\n            count += 1\n    return count",
+  "expected": {
+    "marksAwardedRange": [1, 2],
+    "mustHitMarkPointIds": [],
+    "mustNotHitMarkPointIds": ["mp_code_005_python_syntax"],
+    "shouldRefuse": false,
+    "maxAbsoluteError": 1
+  }
+}

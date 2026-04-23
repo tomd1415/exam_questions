@@ -58,13 +58,26 @@ interface FamilyBPayload {
 }
 
 function okResponse(payload: FamilyBPayload): Response {
+  // FAMILY_B_OUTPUT_SCHEMA requires every property be in `required`
+  // (OpenAI strict mode). Test fixtures are written against the
+  // "happy case" payload shape; fill in the nullable fields here so
+  // each test doesn't have to repeat them.
+  const wire = {
+    ...payload,
+    notes: null,
+    feedback_for_teacher: {
+      suggested_misconception_label: null,
+      suggested_next_question_type: null,
+      ...payload.feedback_for_teacher,
+    },
+  };
   return new Response(
     JSON.stringify({
       output: [
         {
           type: 'message',
           role: 'assistant',
-          content: [{ type: 'output_text', text: JSON.stringify(payload) }],
+          content: [{ type: 'output_text', text: JSON.stringify(wire) }],
         },
       ],
       usage: { input_tokens: 100, output_tokens: 40 },

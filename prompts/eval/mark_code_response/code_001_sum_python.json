@@ -1,0 +1,43 @@
+{
+  "id": "code_001_sum_python",
+  "description": "Correct Python sum of an array — expect full marks.",
+  "part": {
+    "id": "fixture-code-001",
+    "marks": 3,
+    "expected_response_type": "code",
+    "prompt": "Write a Python function total(numbers) that returns the sum of the values in a list.",
+    "raw_answer": "def total(numbers):\n    running = 0\n    for n in numbers:\n        running = running + n\n    return running\n",
+    "part_label": "6a"
+  },
+  "markPoints": [
+    {
+      "id": "mp_code_001_accumulator",
+      "text": "Initialise an accumulator / running total to 0",
+      "accepted_alternatives": ["sum = 0", "total = 0"],
+      "marks": 1,
+      "is_required": true
+    },
+    {
+      "id": "mp_code_001_iterate",
+      "text": "Iterate over every element in the list",
+      "accepted_alternatives": ["for n in numbers", "loop through each item"],
+      "marks": 1,
+      "is_required": true
+    },
+    {
+      "id": "mp_code_001_return",
+      "text": "Return the accumulator value",
+      "accepted_alternatives": ["return total", "return sum"],
+      "marks": 1,
+      "is_required": true
+    }
+  ],
+  "questionStem": "A programmer is writing a function to sum a list of numbers.",
+  "modelAnswer": "def total(numbers):\n    running = 0\n    for n in numbers:\n        running += n\n    return running",
+  "expected": {
+    "marksAwardedRange": [3, 3],
+    "mustHitMarkPointIds": ["mp_code_001_accumulator", "mp_code_001_iterate", "mp_code_001_return"],
+    "mustNotHitMarkPointIds": [],
+    "shouldRefuse": false
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "id": "open_005_extended_network",
+  "description": "Extended response on LAN vs WAN — expect 3/4 with one misconception present.",
+  "part": {
+    "id": "fixture-open-005",
+    "marks": 4,
+    "expected_response_type": "extended_response",
+    "prompt": "Compare a LAN with a WAN. Give at least two differences.",
+    "raw_answer": "A LAN is a local area network which covers a small area like a school or office, while a WAN covers a large geographical area like a country. LANs are usually owned by one organisation. WANs use the internet to link sites together. WANs are always slower than LANs because they use the internet.",
+    "part_label": "4"
+  },
+  "markPoints": [
+    {
+      "id": "mp_open_005_size",
+      "text": "LAN covers a small geographical area; WAN covers a large area",
+      "accepted_alternatives": ["LAN is local, WAN is wide", "different scale"],
+      "marks": 1,
+      "is_required": true
+    },
+    {
+      "id": "mp_open_005_ownership",
+      "text": "LAN is usually owned by a single organisation; WAN is made of interconnected LANs often using third-party infrastructure",
+      "accepted_alternatives": ["WAN uses leased lines / public infrastructure"],
+      "marks": 1,
+      "is_required": false
+    },
+    {
+      "id": "mp_open_005_media",
+      "text": "LAN typically uses its own cabling or Wi-Fi; WAN uses leased telecoms links, fibre, or the internet",
+      "accepted_alternatives": ["different transmission media"],
+      "marks": 1,
+      "is_required": false
+    },
+    {
+      "id": "mp_open_005_speed",
+      "text": "LANs typically achieve higher throughput and lower latency than WANs",
+      "accepted_alternatives": ["LAN faster than WAN (general)"],
+      "marks": 1,
+      "is_required": false
+    }
+  ],
+  "questionStem": "Networks can be classified as LANs or WANs.",
+  "modelAnswer": "A LAN covers a small geographical area (e.g. a school), is usually owned by one organisation, and uses its own cabling/Wi-Fi. A WAN spans large distances, is typically made of interconnected LANs using leased lines or the internet. LANs usually achieve higher throughput and lower latency than WANs but the 'always slower' claim for WANs is an over-simplification.",
+  "expected": {
+    "marksAwardedRange": [2, 3],
+    "mustHitMarkPointIds": ["mp_open_005_size"],
+    "mustNotHitMarkPointIds": [],
+    "shouldRefuse": false,
+    "maxAbsoluteError": 1
+  }
+}

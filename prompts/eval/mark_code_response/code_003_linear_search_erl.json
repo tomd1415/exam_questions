@@ -1,0 +1,55 @@
+{
+  "id": "code_003_linear_search_erl",
+  "description": "Correct linear search written in OCR ERL pseudocode — expect full marks.",
+  "part": {
+    "id": "fixture-code-003",
+    "marks": 4,
+    "expected_response_type": "algorithm",
+    "prompt": "Write an algorithm in OCR Exam Reference Language that performs a linear search for `target` in `items`. Return the index of the first occurrence, or -1 if not found.",
+    "raw_answer": "function linear_search(items, target)\n  for i = 0 to items.length - 1\n    if items[i] == target then\n      return i\n    endif\n  next i\n  return -1\nendfunction\n",
+    "part_label": "7b"
+  },
+  "markPoints": [
+    {
+      "id": "mp_code_003_loop",
+      "text": "Loop across every element in the array",
+      "accepted_alternatives": ["for i = 0 to length - 1", "iterate over items"],
+      "marks": 1,
+      "is_required": true
+    },
+    {
+      "id": "mp_code_003_compare",
+      "text": "Compare each element with target",
+      "accepted_alternatives": ["items[i] == target", "check equality"],
+      "marks": 1,
+      "is_required": true
+    },
+    {
+      "id": "mp_code_003_return_index",
+      "text": "Return the index when a match is found",
+      "accepted_alternatives": ["return i"],
+      "marks": 1,
+      "is_required": true
+    },
+    {
+      "id": "mp_code_003_return_not_found",
+      "text": "Return -1 (or suitable sentinel) when no match is found",
+      "accepted_alternatives": ["return -1", "not found sentinel"],
+      "marks": 1,
+      "is_required": true
+    }
+  ],
+  "questionStem": "A function searches an unsorted array for a target value.",
+  "modelAnswer": "function linear_search(items, target)\n  for i = 0 to items.length - 1\n    if items[i] == target then\n      return i\n    endif\n  next i\n  return -1\nendfunction",
+  "expected": {
+    "marksAwardedRange": [4, 4],
+    "mustHitMarkPointIds": [
+      "mp_code_003_loop",
+      "mp_code_003_compare",
+      "mp_code_003_return_index",
+      "mp_code_003_return_not_found"
+    ],
+    "mustNotHitMarkPointIds": [],
+    "shouldRefuse": false
+  }
+}
