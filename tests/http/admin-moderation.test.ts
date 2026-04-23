@@ -388,3 +388,176 @@ describe('POST /admin/moderation/:id/override', () => {
     expect(res.headers.location).toContain(`/admin/moderation/${seed.awardedMarkId}`);
   });
 });
+
+// Chunk 3i. Pilot-shadow queue lives at /admin/moderation?mode=pilot.
+// A row here is characterised by pilot_shadow_status='pending_shadow'.
+// Submitting at /admin/moderation/:id/pilot-review always writes a
+// teacher_override row — even when the teacher's mark matches the AI —
+// because full agreement IS the load-bearing accuracy signal.
+async function seedPilotShadowAwardedMark(): Promise<SeedResult> {
+  const seed = await seedFlaggedAwardedMark();
+  // Turn the flagged row into a clean pilot-shadow row: not flagged
+  // for the pupil (moderation_status='not_required'), but queued for
+  // teacher shadow review via pilot_shadow_status='pending_shadow'.
+  await pool.query(
+    `UPDATE awarded_marks
+        SET moderation_required = false,
+            moderation_status = 'not_required',
+            moderation_notes = NULL,
+            pilot_shadow_status = 'pending_shadow'
+      WHERE id = $1::bigint`,
+    [seed.awardedMarkId],
+  );
+  return seed;
+}
+
+describe('GET /admin/moderation?mode=pilot', () => {
+  it('lists pilot-shadow rows and not safety-gate rows', async () => {
+    const pilot = await seedPilotShadowAwardedMark();
+    // A second row that's only in the safety-gate queue.
+    await seedFlaggedAwardedMark();
+    const jar = await loginAs(pilot.admin);
+    const page = await getPageWithCsrf(jar, '/admin/moderation?mode=pilot');
+    expect(page.status).toBe(200);
+    expect(page.payload).toContain('Pilot shadow review queue');
+    expect(page.payload).toContain(pilot.awardedMarkId);
+    // Non-pilot row must not appear on the pilot tab.
+    const defaultPage = await getPageWithCsrf(jar, '/admin/moderation');
+    expect(defaultPage.payload).not.toContain(`/admin/moderation/${pilot.awardedMarkId}`);
+  });
+
+  it('shows an empty state when no pilot rows exist', async () => {
+    await seedFlaggedAwardedMark(); // default-queue row only
+    const admin = await createUser(pool, { role: 'admin', username: `admin_empty_${Date.now()}` });
+    const jar = await loginAs(admin);
+    const page = await getPageWithCsrf(jar, '/admin/moderation?mode=pilot');
+    expect(page.status).toBe(200);
+    expect(page.payload).toContain('Nothing to shadow-review');
+  });
+});
+
+describe('POST /admin/moderation/:id/pilot-review', () => {
+  it('writes a teacher_override row even when marks match the AI (agreement is a signal)', async () => {
+    const seed = await seedPilotShadowAwardedMark();
+    const jar = await loginAs(seed.admin);
+    const page = await getPageWithCsrf(jar, `/admin/moderation/${seed.awardedMarkId}?mode=pilot`);
+    expect(page.status).toBe(200);
+    expect(page.payload).toContain('Shadow review');
+
+    const res = await app.inject({
+      method: 'POST',
+      url: `/admin/moderation/${seed.awardedMarkId}/pilot-review`,
+      headers: {
+        cookie: cookieHeader(jar),
+        'content-type': 'application/x-www-form-urlencoded',
+      },
+      payload: form({
+        marks_awarded: '2', // same as the AI awarded
+        reason: 'Teacher agrees with AI.',
+        _csrf: page.csrf,
+      }),
+    });
+    expect(res.statusCode).toBe(302);
+    expect(res.headers.location).toContain('mode=pilot');
+
+    const { rows: shadowRow } = await pool.query<{
+      pilot_shadow_status: string | null;
+    }>(`SELECT pilot_shadow_status FROM awarded_marks WHERE id = $1::bigint`, [seed.awardedMarkId]);
+    expect(shadowRow[0]!.pilot_shadow_status).toBe('reviewed');
+
+    const { rows: overrides } = await pool.query<{
+      new_marks_awarded: number;
+      reason: string;
+    }>(
+      `SELECT o.new_marks_awarded, o.reason
+         FROM teacher_overrides o
+         JOIN awarded_marks am ON am.id = o.awarded_mark_id
+        WHERE am.attempt_part_id = $1::bigint AND am.marker = 'teacher_override'`,
+      [seed.attemptPartId],
+    );
+    expect(overrides).toHaveLength(1);
+    expect(overrides[0]!.new_marks_awarded).toBe(2);
+    expect(overrides[0]!.reason).toBe('Teacher agrees with AI.');
+  });
+
+  it('leaves the pupil-facing row alive (moderation_status stays not_required)', async () => {
+    const seed = await seedPilotShadowAwardedMark();
+    const jar = await loginAs(seed.admin);
+    const page = await getPageWithCsrf(jar, `/admin/moderation/${seed.awardedMarkId}?mode=pilot`);
+
+    await app.inject({
+      method: 'POST',
+      url: `/admin/moderation/${seed.awardedMarkId}/pilot-review`,
+      headers: {
+        cookie: cookieHeader(jar),
+        'content-type': 'application/x-www-form-urlencoded',
+      },
+      payload: form({
+        marks_awarded: '3',
+        reason: 'Teacher would have given 3.',
+        _csrf: page.csrf,
+      }),
+    });
+
+    const { rows } = await pool.query<{ moderation_status: string }>(
+      `SELECT moderation_status FROM awarded_marks WHERE id = $1::bigint`,
+      [seed.awardedMarkId],
+    );
+    // Pilot reviews never flip the AI row's moderation_status —
+    // the pupil keeps seeing the AI mark; the teacher's mark is a
+    // parallel record for the accuracy calculation.
+    expect(rows[0]!.moderation_status).toBe('not_required');
+  });
+
+  it('rejects marks outside the part range', async () => {
+    const seed = await seedPilotShadowAwardedMark();
+    const jar = await loginAs(seed.admin);
+    const page = await getPageWithCsrf(jar, `/admin/moderation/${seed.awardedMarkId}?mode=pilot`);
+
+    const res = await app.inject({
+      method: 'POST',
+      url: `/admin/moderation/${seed.awardedMarkId}/pilot-review`,
+      headers: {
+        cookie: cookieHeader(jar),
+        'content-type': 'application/x-www-form-urlencoded',
+      },
+      payload: form({
+        marks_awarded: String(seed.partMarks + 5),
+        reason: 'too many marks',
+        _csrf: page.csrf,
+      }),
+    });
+    expect(res.statusCode).toBe(302);
+    expect(res.headers.location).toContain(`/admin/moderation/${seed.awardedMarkId}`);
+  });
+
+  it('rejects a second pilot review (already_resolved)', async () => {
+    const seed = await seedPilotShadowAwardedMark();
+    const jar = await loginAs(seed.admin);
+    const page = await getPageWithCsrf(jar, `/admin/moderation/${seed.awardedMarkId}?mode=pilot`);
+
+    await app.inject({
+      method: 'POST',
+      url: `/admin/moderation/${seed.awardedMarkId}/pilot-review`,
+      headers: {
+        cookie: cookieHeader(jar),
+        'content-type': 'application/x-www-form-urlencoded',
+      },
+      payload: form({ marks_awarded: '2', reason: 'first', _csrf: page.csrf }),
+    });
+
+    const page2 = await getPageWithCsrf(jar, `/admin/moderation/${seed.awardedMarkId}?mode=pilot`);
+    const res = await app.inject({
+      method: 'POST',
+      url: `/admin/moderation/${seed.awardedMarkId}/pilot-review`,
+      headers: {
+        cookie: cookieHeader(jar),
+        'content-type': 'application/x-www-form-urlencoded',
+      },
+      payload: form({ marks_awarded: '3', reason: 'second', _csrf: page2.csrf }),
+    });
+    expect(res.statusCode).toBe(302);
+    // Flash is URL-encoded in the Location header.
+    expect(res.headers.location).toContain('already');
+  });
+});

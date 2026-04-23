@@ -1027,6 +1027,106 @@ export class AttemptRepo {
     return { updated: (rowCount ?? 0) > 0 };
   }
 
+  // Chunk 3i. Pilot-shadow queue: every LLM-awarded row produced
+  // while LLM_MARKING_PILOT=true, regardless of moderation_status.
+  // Gate-clean rows are live-visible to the pupil AND appear here
+  // for parallel teacher review; gate-flagged rows appear in both
+  // queues. The returned shape mirrors listModerationQueue so the
+  // existing queue template can render either set.
+  async listPilotShadowQueue(): Promise<ModerationQueueRow[]> {
+    const { rows } = await this.pool.query<ModerationQueueRow>(
+      `SELECT am.id::text AS awarded_mark_id,
+              am.attempt_part_id::text,
+              am.marks_awarded,
+              am.marks_total,
+              am.confidence,
+              am.prompt_version,
+              am.model_id,
+              am.moderation_notes,
+              am.created_at AS flagged_at,
+              qp.part_label,
+              qp.prompt AS part_prompt,
+              aq.id::text AS attempt_question_id,
+              q.stem AS question_stem,
+              q.topic_code,
+              a.id::text AS attempt_id,
+              a.user_id::text AS pupil_id,
+              u.display_name AS pupil_display_name,
+              u.pseudonym AS pupil_pseudonym,
+              a.class_id::text,
+              c.name AS class_name,
+              c.teacher_id::text
+         FROM awarded_marks am
+         JOIN attempt_parts ap     ON ap.id = am.attempt_part_id
+         JOIN question_parts qp    ON qp.id = ap.question_part_id
+         JOIN attempt_questions aq ON aq.id = ap.attempt_question_id
+         JOIN questions q          ON q.id  = aq.question_id
+         JOIN attempts a           ON a.id  = aq.attempt_id
+         JOIN users u              ON u.id  = a.user_id
+         JOIN classes c            ON c.id  = a.class_id
+        WHERE am.pilot_shadow_status = 'pending_shadow'
+          AND am.marker = 'llm'
+        ORDER BY c.name ASC, u.display_name ASC, am.created_at ASC`,
+    );
+    return rows;
+  }
+
+  // Chunk 3i. Pilot-shadow review in one transaction. Writes a
+  // teacher_override row (even when marks match — agreement IS a
+  // signal for the accuracy calculation) and flips the LLM row's
+  // pilot_shadow_status from 'pending_shadow' to 'reviewed'.
+  // Critically, this does NOT touch moderation_status: the pupil-
+  // facing row stays alive. That separation is the whole point of
+  // the pilot flag — teacher review runs in parallel, not in series.
+  async recordPilotShadowReview(input: {
+    awardedMarkId: string;
+    attemptPartId: string;
+    reviewerId: string;
+    teacherMarksAwarded: number;
+    marksTotal: number;
+    reason: string;
+  }): Promise<{ newAwardedMarkId: string; updatedOriginal: boolean }> {
+    const client = await this.pool.connect();
+    try {
+      await client.query('BEGIN');
+      const upd = await client.query(
+        `UPDATE awarded_marks
+            SET pilot_shadow_status = 'reviewed',
+                moderation_reviewed_by = $2::bigint,
+                moderation_reviewed_at = now()
+          WHERE id = $1::bigint
+            AND pilot_shadow_status = 'pending_shadow'`,
+        [input.awardedMarkId, input.reviewerId],
+      );
+      // The teacher's shadow mark lands as its own row so the
+      // accuracy CSV can JOIN by attempt_part_id and compare AI
+      // vs teacher for every pilot part.
+      const awarded = await client.query<{ id: string }>(
+        `INSERT INTO awarded_marks
+           (attempt_part_id, marks_awarded, marks_total,
+            mark_points_hit, mark_points_missed, marker, moderation_status)
+         VALUES ($1::bigint, $2, $3, '{}'::bigint[], '{}'::bigint[],
+                 'teacher_override', 'not_required')
+         RETURNING id::text`,
+        [input.attemptPartId, input.teacherMarksAwarded, input.marksTotal],
+      );
+      const newId = awarded.rows[0]!.id;
+      await client.query(
+        `INSERT INTO teacher_overrides
+           (awarded_mark_id, teacher_id, new_marks_awarded, reason)
+         VALUES ($1::bigint, $2::bigint, $3, $4)`,
+        [newId, input.reviewerId, input.teacherMarksAwarded, input.reason],
+      );
+      await client.query('COMMIT');
+      return { newAwardedMarkId: newId, updatedOriginal: (upd.rowCount ?? 0) > 0 };
+    } catch (err) {
+      await safeRollback(client);
+      throw err;
+    } finally {
+      client.release();
+    }
+  }
+
   // Override the LLM's mark with a teacher decision. Mirrors
   // insertTeacherOverride but runs in one transaction that also
   // flips the original awarded_marks row to moderation_status='overridden'

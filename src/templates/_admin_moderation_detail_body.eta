@@ -91,44 +91,84 @@
   <% } %>
 </section>
 
+<% const isPilot = it.mode === 'pilot'; %>
 <section class="admin-card">
-  <header class="admin-card__header"><h2>Decision</h2></header>
+  <header class="admin-card__header">
+    <h2><%= isPilot ? 'Shadow review' : 'Decision' %></h2>
+  </header>
 
-  <form method="post"
-        action="/admin/moderation/<%= detail.awarded_mark_id %>/accept"
-        class="admin-form admin-form--inline">
-    <input type="hidden" name="_csrf" value="<%= it.csrfToken %>">
-    <p>Accept the AI-awarded mark of <strong><%= detail.marks_awarded %> / <%= detail.marks_total %></strong> unchanged.</p>
-    <button type="submit" class="btn btn--primary">Accept AI mark</button>
-  </form>
+  <% if (isPilot) { %>
+    <p class="admin-card__sub">
+      The pupil already sees the AI's mark of
+      <strong><%= detail.marks_awarded %> / <%= detail.marks_total %></strong>.
+      Record your own mark and a short reason — even if you agree with the AI —
+      so the pilot-report CSV can count this as an agreement signal.
+    </p>
 
-  <hr class="admin-divider">
+    <form method="post"
+          action="/admin/moderation/<%= detail.awarded_mark_id %>/pilot-review"
+          class="admin-form">
+      <input type="hidden" name="_csrf" value="<%= it.csrfToken %>">
+      <div class="form-row">
+        <label for="pilot-marks">Teacher's mark (0–<%= detail.marks_total %>)</label>
+        <input id="pilot-marks"
+               type="number"
+               name="marks_awarded"
+               min="0"
+               max="<%= detail.marks_total %>"
+               step="1"
+               required
+               value="<%= detail.marks_awarded %>">
+      </div>
+      <div class="form-row">
+        <label for="pilot-reason">Reason (required, up to 500 characters)</label>
+        <textarea id="pilot-reason"
+                  name="reason"
+                  minlength="1"
+                  maxlength="500"
+                  rows="3"
+                  required
+                  placeholder="Use the same wording you'd put on the mark scheme: what the pupil got, what was missing, and whether the AI's mark looks right."></textarea>
+      </div>
+      <button type="submit" class="btn btn--primary">Record shadow review</button>
+    </form>
+  <% } else { %>
+    <form method="post"
+          action="/admin/moderation/<%= detail.awarded_mark_id %>/accept"
+          class="admin-form admin-form--inline">
+      <input type="hidden" name="_csrf" value="<%= it.csrfToken %>">
+      <p>Accept the AI-awarded mark of <strong><%= detail.marks_awarded %> / <%= detail.marks_total %></strong> unchanged.</p>
+      <button type="submit" class="btn btn--primary">Accept AI mark</button>
+    </form>
 
-  <form method="post"
-        action="/admin/moderation/<%= detail.awarded_mark_id %>/override"
-        class="admin-form">
-    <input type="hidden" name="_csrf" value="<%= it.csrfToken %>">
-    <h3>Override with a teacher mark</h3>
-    <div class="form-row">
-      <label for="override-marks">Marks awarded (0–<%= detail.marks_total %>)</label>
-      <input id="override-marks"
-             type="number"
-             name="marks_awarded"
-             min="0"
-             max="<%= detail.marks_total %>"
-             step="1"
-             required
-             value="<%= detail.marks_awarded %>">
-    </div>
-    <div class="form-row">
-      <label for="override-reason">Reason (required, up to 500 characters)</label>
-      <textarea id="override-reason"
-                name="reason"
-                minlength="1"
-                maxlength="500"
-                rows="3"
-                required></textarea>
-    </div>
-    <button type="submit" class="btn btn--danger">Override AI mark</button>
-  </form>
+    <hr class="admin-divider">
+
+    <form method="post"
+          action="/admin/moderation/<%= detail.awarded_mark_id %>/override"
+          class="admin-form">
+      <input type="hidden" name="_csrf" value="<%= it.csrfToken %>">
+      <h3>Override with a teacher mark</h3>
+      <div class="form-row">
+        <label for="override-marks">Marks awarded (0–<%= detail.marks_total %>)</label>
+        <input id="override-marks"
+               type="number"
+               name="marks_awarded"
+               min="0"
+               max="<%= detail.marks_total %>"
+               step="1"
+               required
+               value="<%= detail.marks_awarded %>">
+      </div>
+      <div class="form-row">
+        <label for="override-reason">Reason (required, up to 500 characters)</label>
+        <textarea id="override-reason"
+                  name="reason"
+                  minlength="1"
+                  maxlength="500"
+                  rows="3"
+                  required></textarea>
+      </div>
+      <button type="submit" class="btn btn--danger">Override AI mark</button>
+    </form>
+  <% } %>
 </section>

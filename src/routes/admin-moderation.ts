@@ -16,6 +16,14 @@ const OverrideBody = z.object({
 
 const AcceptBody = z.object({ _csrf: z.string().min(1) });
 
+// Chunk 3i. Pilot-shadow review: same shape as an override. A
+// separate constant keeps the intent explicit at the call site.
+const PilotReviewBody = OverrideBody;
+
+const QueueQuery = z.object({
+  mode: z.enum(['default', 'pilot']).default('default'),
+});
+
 function requireAdmin(
   req: FastifyRequest,
   reply: FastifyReply,
@@ -42,7 +50,11 @@ export function registerAdminModerationRoutes(app: FastifyInstance): void {
   app.get('/admin/moderation', async (req, reply) => {
     const actor = requireAdmin(req, reply);
     if (!actor) return reply;
-    const queue = await app.services.moderation.listQueue(actor);
+    const mode = QueueQuery.safeParse(req.query).data?.mode ?? 'default';
+    const queue =
+      mode === 'pilot'
+        ? await app.services.moderation.listPilotQueue(actor)
+        : await app.services.moderation.listQueue(actor);
     const items = queue.map((row) => ({
       awarded_mark_id: row.awarded_mark_id,
       attempt_id: row.attempt_id,
@@ -58,12 +70,13 @@ export function registerAdminModerationRoutes(app: FastifyInstance): void {
       reasons: summariseReasons(row.moderation_notes),
     }));
     return reply.view('admin_moderation_queue.eta', {
-      title: 'AI moderation queue',
+      title: mode === 'pilot' ? 'Pilot shadow queue' : 'AI moderation queue',
       currentUser: req.currentUser,
       csrfToken: reply.generateCsrf(),
       items,
       total: items.length,
       flash: readQueryFlash(req),
+      mode,
     });
   });
 
@@ -72,6 +85,7 @@ export function registerAdminModerationRoutes(app: FastifyInstance): void {
     if (!actor) return reply;
     const params = ItemParams.safeParse(req.params);
     if (!params.success) return reply.code(404).send('Not found');
+    const mode = QueueQuery.safeParse(req.query).data?.mode ?? 'default';
     try {
       const detail = await app.services.moderation.findDetail(actor, String(params.data.id));
       const markPoints = await app.repos.attempts.listMarkPointsForAttemptPart(
@@ -80,7 +94,7 @@ export function registerAdminModerationRoutes(app: FastifyInstance): void {
       const hitSet = new Set(detail.mark_points_hit ?? []);
       const missedSet = new Set(detail.mark_points_missed ?? []);
       return reply.view('admin_moderation_detail.eta', {
-        title: 'Moderation review',
+        title: mode === 'pilot' ? 'Pilot shadow review' : 'Moderation review',
         currentUser: req.currentUser,
         csrfToken: reply.generateCsrf(),
         detail,
@@ -99,6 +113,7 @@ export function registerAdminModerationRoutes(app: FastifyInstance): void {
           detail.evidence_quotes ?? [],
         ),
         flash: readQueryFlash(req),
+        mode,
       });
     } catch (err) {
       if (err instanceof ModerationError && err.reason === 'not_found') {
@@ -150,6 +165,41 @@ export function registerAdminModerationRoutes(app: FastifyInstance): void {
           reason: parsed.data.reason,
         });
         return reply.redirect(`/admin/moderation?flash=${encodeURIComponent('Mark overridden.')}`);
+      } catch (err) {
+        return handleModerationError(err, reply, String(params.data.id));
+      }
+    },
+  );
+
+  // Chunk 3i. Pilot-shadow review endpoint. Accepts the teacher's
+  // mark + reason for a pilot row. Always writes a teacher_override
+  // row even when the marks match so the pilot-report CSV can count
+  // agreement decisions as a positive signal.
+  app.post(
+    '/admin/moderation/:id/pilot-review',
+    { preValidation: csrfPreValidation },
+    async (req, reply) => {
+      const actor = requireAdmin(req, reply);
+      if (!actor) return reply;
+      const params = ItemParams.safeParse(req.params);
+      if (!params.success) return reply.code(404).send('Not found');
+      const parsed = PilotReviewBody.safeParse(req.body);
+      if (!parsed.success) {
+        return reply.redirect(
+          `/admin/moderation/${params.data.id}?mode=pilot&flash=${encodeURIComponent(
+            'Enter a whole-number mark and a short reason (up to 500 characters).',
+          )}`,
+        );
+      }
+      try {
+        await app.services.moderation.recordPilotShadowReview(actor, {
+          awardedMarkId: String(params.data.id),
+          teacherMarksAwarded: parsed.data.marks_awarded,
+          reason: parsed.data.reason,
+        });
+        return reply.redirect(
+          `/admin/moderation?mode=pilot&flash=${encodeURIComponent('Shadow review recorded.')}`,
+        );
       } catch (err) {
         return handleModerationError(err, reply, String(params.data.id));
       }

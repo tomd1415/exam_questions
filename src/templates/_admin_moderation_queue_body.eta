@@ -1,15 +1,22 @@
+<% const isPilot = it.mode === 'pilot'; %>
 <%~ include('_page_header', {
-  crumbs: [{ label: 'AI moderation' }],
-  heading: 'AI moderation queue',
-  subtitle:
-    'Parts where the LLM awarded a mark that triggered a safety-gate rule. Review each one before it counts towards the pupil\'s score.',
+  crumbs: [{ label: isPilot ? 'Pilot shadow review' : 'AI moderation' }],
+  heading: isPilot ? 'Pilot shadow review queue' : 'AI moderation queue',
+  subtitle: isPilot
+    ? 'LLM-awarded parts awaiting teacher-shadow review while LLM_MARKING_PILOT is on. Recording a mark here always writes a teacher_override row — agreement is a deliberate accuracy signal, not a no-op. Pupil-facing marks stay live-visible throughout.'
+    : 'Parts where the LLM awarded a mark that triggered a safety-gate rule. Review each one before it counts towards the pupil\'s score.',
 }) %>
+
+<nav class="admin-tabs" aria-label="Moderation queues">
+  <a class="admin-tab<% if (!isPilot) { %> admin-tab--active<% } %>" href="/admin/moderation">Safety-gate queue</a>
+  <a class="admin-tab<% if (isPilot) { %> admin-tab--active<% } %>" href="/admin/moderation?mode=pilot">Pilot shadow queue</a>
+</nav>
 
 <section class="admin-card">
   <header class="admin-card__header">
     <div>
       <h2><%= it.total %> item<%= it.total === 1 ? '' : 's' %> awaiting review</h2>
-      <p class="admin-card__sub">Ordered by class, then pupil, then the time the mark was flagged.</p>
+      <p class="admin-card__sub">Ordered by class, then pupil, then the time the mark was <%= isPilot ? 'recorded' : 'flagged' %>.</p>
     </div>
   </header>
 
@@ -18,7 +25,13 @@
   <% } %>
 
   <% if (!it.items || it.items.length === 0) { %>
-    <p class="empty">Nothing to review. Every AI-awarded mark has passed the safety gate or been resolved.</p>
+    <p class="empty">
+      <% if (isPilot) { %>
+        Nothing to shadow-review. Either LLM_MARKING_PILOT is off, or every pilot row has already been reviewed.
+      <% } else { %>
+        Nothing to review. Every AI-awarded mark has passed the safety gate or been resolved.
+      <% } %>
+    </p>
   <% } else { %>
     <table class="admin-table">
       <thead>
@@ -63,7 +76,9 @@
             </td>
             <td>
               <a class="btn btn--primary btn--sm"
-                 href="/admin/moderation/<%= row.awarded_mark_id %>">Review</a>
+                 href="/admin/moderation/<%= row.awarded_mark_id %><% if (isPilot) { %>?mode=pilot<% } %>">
+                <%= isPilot ? 'Shadow-review' : 'Review' %>
+              </a>
             </td>
           </tr>
         <% }); %>

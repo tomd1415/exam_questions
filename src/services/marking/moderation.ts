@@ -39,6 +39,17 @@ export interface OverrideAiMarkInput {
   reason: string;
 }
 
+// Chunk 3i. Pilot-shadow review uses the same shape as an override
+// but is semantically different — the teacher is recording their own
+// mark alongside the AI's, even when they agree. That agreement is
+// the load-bearing signal for the ±1 mark accuracy calculation in
+// PHASE3_PLAN.md §5 chunk 3i exit criteria.
+export interface PilotShadowReviewInput {
+  awardedMarkId: string;
+  teacherMarksAwarded: number;
+  reason: string;
+}
+
 export class ModerationService {
   constructor(
     private readonly attempts: AttemptRepo,
@@ -48,6 +59,11 @@ export class ModerationService {
   async listQueue(actor: ActorForModeration): Promise<ModerationQueueRow[]> {
     this.assertAdmin(actor);
     return this.attempts.listModerationQueue();
+  }
+
+  async listPilotQueue(actor: ActorForModeration): Promise<ModerationQueueRow[]> {
+    this.assertAdmin(actor);
+    return this.attempts.listPilotShadowQueue();
   }
 
   async findDetail(actor: ActorForModeration, awardedMarkId: string): Promise<ModerationDetailRow> {
@@ -118,6 +134,61 @@ export class ModerationService {
         new_marks_awarded: input.marksAwarded,
         marks_total: row.part_marks,
         reason: trimmedReason,
+      },
+      row.pupil_id,
+    );
+  }
+
+  // Chunk 3i. Record the teacher's shadow mark against a pilot row.
+  // Always writes a teacher_override row, even when marks match the
+  // AI, so the pilot-report CSV can count full-agreement decisions
+  // too. Flips pilot_shadow_status to 'reviewed' without touching
+  // moderation_status (the pupil-facing row stays alive).
+  async recordPilotShadowReview(
+    actor: ActorForModeration,
+    input: PilotShadowReviewInput,
+  ): Promise<void> {
+    this.assertAdmin(actor);
+    const row = await this.attempts.findAwardedMarkForModeration(input.awardedMarkId);
+    if (!row) throw new ModerationError('not_found');
+    if (row.marker !== 'llm') throw new ModerationError('not_found');
+    // This is a pilot-shadow action; the existing moderation_status
+    // is orthogonal. What matters is that the row is still pending
+    // shadow review — once reviewed, repeat submissions 409.
+    if (
+      !Number.isInteger(input.teacherMarksAwarded) ||
+      input.teacherMarksAwarded < 0 ||
+      input.teacherMarksAwarded > row.part_marks
+    ) {
+      throw new ModerationError('invalid_marks');
+    }
+    const trimmedReason = input.reason.trim();
+    if (trimmedReason.length === 0 || trimmedReason.length > 500) {
+      throw new ModerationError('invalid_reason');
+    }
+    const result = await this.attempts.recordPilotShadowReview({
+      awardedMarkId: input.awardedMarkId,
+      attemptPartId: row.attempt_part_id,
+      reviewerId: actor.id,
+      teacherMarksAwarded: input.teacherMarksAwarded,
+      marksTotal: row.part_marks,
+      reason: trimmedReason,
+    });
+    if (!result.updatedOriginal) throw new ModerationError('already_resolved');
+    await this.audit.record(
+      { userId: actor.id, role: actor.role },
+      'moderation.pilot_reviewed',
+      {
+        awarded_mark_id: input.awardedMarkId,
+        new_awarded_mark_id: result.newAwardedMarkId,
+        attempt_id: row.attempt_id,
+        attempt_part_id: row.attempt_part_id,
+        ai_marks_awarded: row.marks_awarded,
+        teacher_marks_awarded: input.teacherMarksAwarded,
+        marks_total: row.part_marks,
+        // Flag agreement vs disagreement explicitly so the CSV rollup
+        // doesn't have to recompute it from the pair.
+        agreement_within_1: Math.abs(row.marks_awarded - input.teacherMarksAwarded) <= 1,
       },
       row.pupil_id,
     );
