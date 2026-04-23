@@ -701,6 +701,9 @@ export class AttemptRepo {
     moderationStatus: 'pending' | 'not_required';
     moderationNotes: unknown;
     feedbackForPupil: AwardedMarkFeedbackForPupil;
+    // Chunk 3i. Nullable when not in pilot; 'pending_shadow' when the
+    // LLM_MARKING_PILOT flag is on. Independent of moderation_status.
+    pilotShadowStatus?: 'pending_shadow' | null;
   }): Promise<void> {
     await this.pool.query(
       `INSERT INTO awarded_marks
@@ -708,10 +711,10 @@ export class AttemptRepo {
           mark_points_hit, mark_points_missed, evidence_quotes,
           marker, confidence, moderation_required, moderation_status,
           moderation_notes, prompt_version, model_id,
-          feedback_for_pupil)
+          feedback_for_pupil, pilot_shadow_status)
        VALUES ($1::bigint, $2, $3, $4::bigint[], $5::bigint[], $6::text[],
                'llm', $7, $8, $9, $10::jsonb, $11, $12,
-               $13::jsonb)`,
+               $13::jsonb, $14)`,
       [
         input.attemptPartId,
         input.marksAwarded,
@@ -726,6 +729,7 @@ export class AttemptRepo {
         input.promptVersion,
         input.modelId,
         JSON.stringify(input.feedbackForPupil),
+        input.pilotShadowStatus ?? null,
       ],
     );
   }

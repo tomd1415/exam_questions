@@ -76,6 +76,10 @@ export type DispatchOutcome =
       moderationRequired: boolean;
       moderationStatus: 'pending' | 'not_required';
       moderationNotes: readonly SafetyGateReason[] | null;
+      // Chunk 3i. Set to 'pending_shadow' when LLM_MARKING_PILOT is on,
+      // independent of the safety gate, so a live-visible clean mark
+      // still lands in the teacher-shadow queue for accuracy scoring.
+      pilotShadowStatus: 'pending_shadow' | null;
       auditEvent: 'marking.llm.ok' | 'marking.llm.flagged';
       auditDetails: {
         attempt_part_id: string;
@@ -83,6 +87,7 @@ export type DispatchOutcome =
         model_id: string;
         confidence: number;
         flagged_reasons?: string[];
+        pilot_shadow?: true;
       };
     }
   | {
@@ -112,6 +117,10 @@ export class MarkingDispatcher {
       llmEnabled: boolean;
       llmMarker: LlmOpenResponseMarker | null;
       contentGuards?: ContentGuardService | null;
+      // Chunk 3i. When true, every LLM-awarded row is additionally
+      // queued for teacher-shadow review. Independent of the safety
+      // gate; see writeLlmMark for the DB shape.
+      llmPilot?: boolean;
     },
   ) {}
 
@@ -156,7 +165,13 @@ export class MarkingDispatcher {
       modelAnswer: input.question.model_answer,
     });
 
-    return llmOutcomeToDispatch(llm, input.part.id, input.part.raw_answer, this.opts.contentGuards);
+    return llmOutcomeToDispatch(
+      llm,
+      input.part.id,
+      input.part.raw_answer,
+      this.opts.contentGuards,
+      this.opts.llmPilot ?? false,
+    );
   }
 
   private runDeterministic(input: DispatchInput):
@@ -205,6 +220,7 @@ function llmOutcomeToDispatch(
   attemptPartId: string,
   pupilAnswer: string,
   contentGuards: ContentGuardService | null | undefined,
+  llmPilot: boolean,
 ): DispatchOutcome {
   if (outcome.kind === 'awarded') {
     // Content guards default to empty when no service is wired — this
@@ -244,6 +260,7 @@ function llmOutcomeToDispatch(
       moderationRequired: gate.flagged,
       moderationStatus: gate.flagged ? 'pending' : 'not_required',
       moderationNotes: gate.flagged ? gate.reasons : null,
+      pilotShadowStatus: llmPilot ? 'pending_shadow' : null,
       auditEvent,
       auditDetails: {
         attempt_part_id: attemptPartId,
@@ -251,6 +268,7 @@ function llmOutcomeToDispatch(
         model_id: outcome.promptVersion.model_id,
         confidence: outcome.confidence,
         ...(gate.flagged ? { flagged_reasons: gate.reasons.map((r) => r.kind) } : {}),
+        ...(llmPilot ? { pilot_shadow: true } : {}),
       },
     };
   }

@@ -347,4 +347,85 @@ describe('MarkingDispatcher — LLM allowlist', () => {
       expect(outcome.hitMarkPointIds).toEqual(['500']);
     }
   });
+
+  // Chunk 3i. The pilot flag is independent of the safety gate: every
+  // LLM-awarded row — gate-clean or gate-flagged — gains
+  // pilotShadowStatus='pending_shadow' so the teacher-shadow queue
+  // sees everything. When the pilot flag is off (default) the status
+  // is null and nothing changes in the existing moderation flow.
+  it('sets pilotShadowStatus=pending_shadow on a clean awarded outcome when llmPilot is on', async () => {
+    const marker = new RecordingLlmMarker();
+    const dispatcher = new MarkingDispatcher({
+      llmEnabled: true,
+      llmMarker: asMarker(marker),
+      llmPilot: true,
+    });
+    const part = makePart({ expected_response_type: 'medium_text' });
+    const outcome = await dispatcher.dispatch({
+      question: makeQuestion(),
+      part,
+      markPoints: NO_MARK_POINTS,
+    });
+    expect(outcome.kind).toBe('llm_awarded');
+    if (outcome.kind === 'llm_awarded') {
+      expect(outcome.pilotShadowStatus).toBe('pending_shadow');
+      // Gate-clean rows stay visible to the pupil; pilot status is
+      // orthogonal.
+      expect(outcome.moderationStatus).toBe('not_required');
+      expect(outcome.auditDetails.pilot_shadow).toBe(true);
+    }
+  });
+
+  it('also sets pilotShadowStatus=pending_shadow on a flagged outcome (pilot is orthogonal to the gate)', async () => {
+    const marker = new RecordingLlmMarker();
+    marker.nextOutcome = {
+      kind: 'awarded',
+      marksAwarded: 2,
+      marksAwardedRaw: 2,
+      marksTotal: 4,
+      hitMarkPointIds: ['501'],
+      missedMarkPointIds: [],
+      evidenceQuotes: ['A long pupil answer.'],
+      confidence: 0.3, // trips low_confidence gate
+      contradictionDetected: false,
+      overAnswerDetected: false,
+      feedbackForPupil: { what_went_well: 'ok', how_to_gain_more: 'ok', next_focus: 'ok' },
+      feedbackForTeacher: { summary: 'ok' },
+      notes: null,
+      promptVersion: PROMPT,
+    };
+    const dispatcher = new MarkingDispatcher({
+      llmEnabled: true,
+      llmMarker: asMarker(marker),
+      llmPilot: true,
+    });
+    const part = makePart({ expected_response_type: 'medium_text' });
+    const outcome = await dispatcher.dispatch({
+      question: makeQuestion(),
+      part,
+      markPoints: NO_MARK_POINTS,
+    });
+    if (outcome.kind === 'llm_awarded') {
+      expect(outcome.moderationStatus).toBe('pending');
+      expect(outcome.pilotShadowStatus).toBe('pending_shadow');
+    }
+  });
+
+  it('leaves pilotShadowStatus null when llmPilot is off (default)', async () => {
+    const marker = new RecordingLlmMarker();
+    const dispatcher = new MarkingDispatcher({
+      llmEnabled: true,
+      llmMarker: asMarker(marker),
+    });
+    const part = makePart({ expected_response_type: 'medium_text' });
+    const outcome = await dispatcher.dispatch({
+      question: makeQuestion(),
+      part,
+      markPoints: NO_MARK_POINTS,
+    });
+    if (outcome.kind === 'llm_awarded') {
+      expect(outcome.pilotShadowStatus).toBeNull();
+      expect(outcome.auditDetails.pilot_shadow).toBeUndefined();
+    }
+  });
 });

@@ -209,6 +209,7 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
     llmEnabled: config.LLM_ENABLED,
     llmMarker,
     contentGuards: contentGuardService,
+    llmPilot: config.LLM_MARKING_PILOT,
   });
   const attemptService = new AttemptService(
     attemptRepo,

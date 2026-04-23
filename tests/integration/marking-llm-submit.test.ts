@@ -87,7 +87,10 @@ function okResponse(payload: FamilyBPayload): Response {
   );
 }
 
-async function buildLlmAttemptService(fetchImpl: typeof fetch): Promise<AttemptService> {
+async function buildLlmAttemptService(
+  fetchImpl: typeof fetch,
+  opts: { llmPilot?: boolean } = {},
+): Promise<AttemptService> {
   const prompts = new PromptVersionService(promptRepo);
   await prompts.loadActive();
   const client = new LlmClient(llmCallRepo, {
@@ -97,7 +100,11 @@ async function buildLlmAttemptService(fetchImpl: typeof fetch): Promise<AttemptS
     timeoutMs: 500,
   });
   const marker = new LlmOpenResponseMarker(client, prompts);
-  const dispatcher = new MarkingDispatcher({ llmEnabled: true, llmMarker: marker });
+  const dispatcher = new MarkingDispatcher({
+    llmEnabled: true,
+    llmMarker: marker,
+    llmPilot: opts.llmPilot ?? false,
+  });
   return new AttemptService(attemptRepo, classRepo, auditService, undefined, dispatcher);
 }
 
@@ -482,5 +489,155 @@ describe('AttemptService.submitAttempt — LLM path for code/algorithm (Chunk 3f
       [part.id],
     );
     expect(callRows).toHaveLength(0);
+  });
+});
+
+// Chunk 3i. Pilot flag: every LLM-awarded row is additionally
+// queued for teacher-shadow review by writing pilot_shadow_status
+// alongside the usual awarded_marks columns. Gate-clean rows stay
+// live-visible to the pupil (moderation_status='not_required') so
+// the teacher can compare in parallel rather than blocking the
+// class on their shadow-review.
+describe('AttemptService.submitAttempt — LLM pilot mode (Chunk 3i)', () => {
+  it('writes pilot_shadow_status=pending_shadow on a clean LLM-awarded row without gating the pupil view', async () => {
+    const { teacher, pupil } = await setup();
+    await createQuestion(pool, teacher.id, {
+      topicCode: '1.2',
+      active: true,
+      approvalStatus: 'approved',
+      modelAnswer: 'The CPU executes instructions.',
+      parts: [
+        {
+          label: '(a)',
+          prompt: 'Explain what the CPU does.',
+          marks: 2,
+          expectedResponseType: 'medium_text',
+          markPoints: [
+            { text: 'CPU executes instructions', marks: 1 },
+            { text: 'CPU fetches from memory', marks: 1 },
+          ],
+        },
+      ],
+    });
+    await seedActivePrompt();
+
+    let payload: FamilyBPayload | null = null;
+    const fetchImpl: typeof fetch = () => {
+      if (!payload) return Promise.reject(new Error('payload not prepared'));
+      return Promise.resolve(okResponse(payload));
+    };
+    const service = await buildLlmAttemptService(fetchImpl, { llmPilot: true });
+
+    const actor = { id: pupil.id, role: 'pupil' as const };
+    const { attemptId } = await service.startTopicSet(actor, '1.2');
+    const bundle = await attemptRepo.loadAttemptBundle(attemptId);
+    const part = bundle!.partsByQuestion.get(bundle!.questions[0]!.id)![0]!;
+    const mps = bundle!.markPointsByPart.get(part.question_part_id)!;
+
+    await service.saveAnswer(actor, attemptId, [
+      {
+        attemptPartId: part.id,
+        rawAnswer: 'The CPU executes instructions and fetches from memory.',
+      },
+    ]);
+
+    payload = {
+      marks_awarded: 2,
+      mark_points_hit: [
+        { mark_point_id: mps[0]!.id, evidence_quote: 'The CPU executes instructions' },
+        { mark_point_id: mps[1]!.id, evidence_quote: 'fetches from memory' },
+      ],
+      mark_points_missed: [],
+      contradiction_detected: false,
+      over_answer_detected: false,
+      confidence: 0.93,
+      feedback_for_pupil: {
+        what_went_well: 'Both mark points covered clearly.',
+        how_to_gain_more: 'Mention the decode stage for completeness.',
+        next_focus: 'Fetch-decode-execute cycle as a single sentence.',
+      },
+      feedback_for_teacher: { summary: 'Clean, both points hit.' },
+      refusal: false,
+    };
+
+    await service.submitAttempt(actor, attemptId);
+
+    const { rows: awardedRows } = await pool.query<{
+      marker: string;
+      moderation_status: string;
+      pilot_shadow_status: string | null;
+    }>(
+      `SELECT marker, moderation_status, pilot_shadow_status
+         FROM awarded_marks WHERE attempt_part_id = $1::bigint`,
+      [part.id],
+    );
+    expect(awardedRows).toHaveLength(1);
+    expect(awardedRows[0]!.marker).toBe('llm');
+    // Gate-clean ⇒ pupil sees the mark; pilot shadow is orthogonal.
+    expect(awardedRows[0]!.moderation_status).toBe('not_required');
+    expect(awardedRows[0]!.pilot_shadow_status).toBe('pending_shadow');
+  });
+
+  it('leaves pilot_shadow_status NULL when the pilot flag is off', async () => {
+    const { teacher, pupil } = await setup();
+    await createQuestion(pool, teacher.id, {
+      topicCode: '1.2',
+      active: true,
+      approvalStatus: 'approved',
+      modelAnswer: 'The CPU executes instructions.',
+      parts: [
+        {
+          label: '(a)',
+          prompt: 'Explain what the CPU does.',
+          marks: 2,
+          expectedResponseType: 'medium_text',
+          markPoints: [{ text: 'CPU executes instructions', marks: 2 }],
+        },
+      ],
+    });
+    await seedActivePrompt();
+
+    let payload: FamilyBPayload | null = null;
+    const fetchImpl: typeof fetch = () => {
+      if (!payload) return Promise.reject(new Error('payload not prepared'));
+      return Promise.resolve(okResponse(payload));
+    };
+    const service = await buildLlmAttemptService(fetchImpl); // llmPilot: false
+
+    const actor = { id: pupil.id, role: 'pupil' as const };
+    const { attemptId } = await service.startTopicSet(actor, '1.2');
+    const bundle = await attemptRepo.loadAttemptBundle(attemptId);
+    const part = bundle!.partsByQuestion.get(bundle!.questions[0]!.id)![0]!;
+    const mps = bundle!.markPointsByPart.get(part.question_part_id)!;
+
+    await service.saveAnswer(actor, attemptId, [
+      { attemptPartId: part.id, rawAnswer: 'The CPU executes instructions.' },
+    ]);
+
+    payload = {
+      marks_awarded: 2,
+      mark_points_hit: [
+        { mark_point_id: mps[0]!.id, evidence_quote: 'The CPU executes instructions' },
+      ],
+      mark_points_missed: [],
+      contradiction_detected: false,
+      over_answer_detected: false,
+      confidence: 0.91,
+      feedback_for_pupil: {
+        what_went_well: 'Clear answer.',
+        how_to_gain_more: 'Add an example instruction.',
+        next_focus: 'Keep it concise.',
+      },
+      feedback_for_teacher: { summary: 'OK.' },
+      refusal: false,
+    };
+
+    await service.submitAttempt(actor, attemptId);
+
+    const { rows } = await pool.query<{ pilot_shadow_status: string | null }>(
+      `SELECT pilot_shadow_status FROM awarded_marks WHERE attempt_part_id = $1::bigint`,
+      [part.id],
+    );
+    expect(rows[0]!.pilot_shadow_status).toBeNull();
   });
 });

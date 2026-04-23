@@ -16,6 +16,16 @@ const ConfigSchema = z
       .enum(['true', 'false'])
       .default('false')
       .transform((v) => v === 'true'),
+    // Chunk 3i. When true, every LLM-awarded row is additionally
+    // queued at /admin/moderation?mode=pilot for parallel teacher
+    // review, and the pilot-report CSV rolls up agreement stats. The
+    // pilot flag is independent of the safety gate — a row can be
+    // gate-clean AND shadow-pending at the same time. Implies
+    // LLM_ENABLED=true (enforced by superRefine).
+    LLM_MARKING_PILOT: z
+      .enum(['true', 'false'])
+      .default('false')
+      .transform((v) => v === 'true'),
     OPENAI_API_KEY: z.string().optional(),
     OPENAI_MODEL_MARKING: z.string().optional(),
     OPENAI_MODEL_GENERATION: z.string().optional(),
@@ -47,6 +57,14 @@ const ConfigSchema = z
         code: z.ZodIssueCode.custom,
         path: ['OPENAI_API_KEY'],
         message: 'OPENAI_API_KEY is required when LLM_ENABLED=true',
+      });
+    }
+    if (cfg.LLM_MARKING_PILOT && !cfg.LLM_ENABLED) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['LLM_MARKING_PILOT'],
+        message:
+          'LLM_MARKING_PILOT=true requires LLM_ENABLED=true — no LLM marks to shadow otherwise',
       });
     }
   });

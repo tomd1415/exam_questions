@@ -487,6 +487,7 @@ export class AttemptService {
         moderationStatus: outcome.moderationStatus,
         moderationNotes: outcome.moderationNotes,
         feedbackForPupil: outcome.feedbackForPupil,
+        pilotShadowStatus: outcome.pilotShadowStatus,
       });
       await this.audit.record(
         { userId: actor.id, role: actor.role },
