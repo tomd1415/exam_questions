@@ -204,6 +204,39 @@ Point the admin page at a non-default directory via `EVAL_OUT_DIR=/path/to/out` 
 
 The shipped fixtures (5 per prompt) are a synthetic seed; chunk 3h's full ask is 30 anonymised real submissions per prompt, which the pilot (chunk 3i) generates. See [prompts/eval/README.md](prompts/eval/README.md).
 
+### 5.4 Running a pilot week (chunk 3i)
+
+One-topic-one-class-one-week teacher-shadow pilot. While `LLM_MARKING_PILOT=true`, every LLM-awarded open-response row is added to a parallel shadow queue at `/admin/moderation?mode=pilot` in addition to its usual moderation handling; pupils keep seeing their AI marks throughout. The teacher records their own mark + a short reason for each row (even when they agree — agreement is the load-bearing accuracy signal), which writes a `teacher_override` row against the same `attempt_part_id`. At the end of the week, `npm run pilot:report` emits a CSV + markdown rollup and checks the 85 % within-±1 exit criterion from [PHASE3_PLAN.md §5 chunk 3i](PHASE3_PLAN.md).
+
+Pre-flight:
+
+1. Confirm the kill switch: `LLM_ENABLED=true` + a valid `OPENAI_API_KEY` in `/etc/exam-questions/env`.
+2. Add the pilot flag: `LLM_MARKING_PILOT=true`.
+3. Restart: `sudo systemctl restart exam-questions`. Confirm the boot log reports `LLM marking pilot: on`.
+4. Clear the two moderation queues at `/admin/moderation` and `/admin/moderation?mode=pilot` — they must both start empty. A residual row here contaminates the accuracy calculation.
+
+During the week:
+
+- Pupils use the app as normal.
+- The teacher signs in to `/admin/moderation?mode=pilot` each day and records their shadow mark + reason for every new row. The CTA is "Record shadow review" (single form) rather than accept/override — because _every_ review writes a `teacher_override` row, agreement included.
+- The safety-gate queue at `/admin/moderation` continues to work as normal. Pilot rows that the gate also flagged appear in both queues.
+
+End of week:
+
+```bash
+npm run pilot:report
+```
+
+Writes `scripts/eval/out/pilot-{timestamp}.csv` (opened in Excel / Google Sheets for per-part analysis) and `scripts/eval/out/pilot-{timestamp}.md` (pasted into `RUNBOOK.md §10` as the pilot sign-off row). The markdown summary carries the four exit-criteria numbers — within-±1 rate, mean absolute error, exact-agreement count, and the full offenders list (|AI − teacher| ≥ 2).
+
+Exit codes:
+
+- `0` — at least one reviewed pair, report written.
+- `1` — zero reviewed pairs (pilot was likely off, or no teacher has visited the queue).
+- `2` — uncaught exception (usually a DB connectivity issue).
+
+To end the pilot: set `LLM_MARKING_PILOT=false` in env, restart. Existing pilot rows that were already reviewed stay as-is; unreviewed rows remain in the queue but new rows stop being added.
+
 ## 6. Backup and restore drill
 
 The school's existing backup regime captures the VM. **In addition**, this project requires a DB-level dump so that a restore can be exercised without the full VM-restore path.
@@ -311,3 +344,4 @@ Append-only. One line per significant operation. Keep it terse.
 | 2026-04-23 | TD       | Phase 3 chunk 3h landed (prompt eval harness)                                            | PASS — 1100/1100 tests green, axe-core clean on `/admin/evals/latest` in both themes, `npm run eval` + `EVAL_DRY_RUN=1 npm run eval` both green against the synthetic seed fixtures (5 per prompt). Full 30-per-prompt fixture set remains a chunk 3i pilot deliverable. See [AUDIT_2026-04-23.md](AUDIT_2026-04-23.md) for the chunk 3h audit.                                                                                                                                                                                                                          |
 | 2026-04-23 | TD       | Structured Outputs schema bug fixed on first real OpenAI call                            | FIX — `FAMILY_B_OUTPUT_SCHEMA` had optional properties (`notes`, two `feedback_for_teacher.suggested_*` fields) missing from `required`; OpenAI strict mode rejected every live call with `invalid_json_schema`. Added to `required` + typed as `["string", "null"]`; `prompt_versions.output_schema` rows updated in place; test stubs + `tests/setup.ts` updated so CI cannot accidentally hit the real endpoint. First live call after the fix: 2/2 marks on pupil1, ~1p, 57s latency, safety gate clean. See [AUDIT_2026-04-23.md §Latent bug](AUDIT_2026-04-23.md). |
 | 2026-04-23 | TD       | Pupil AI-feedback demo seeders added                                                     | `npm run seed:ai-feedback-demo` (synthetic, 0p) and `npm run seed:ai-feedback-live -- --yes` (one real OpenAI call, ~1p) documented in [TEST_USERS.md](TEST_USERS.md). Both idempotent; live rows tagged `[LIVE AI DEMO …]` in `attempt_parts.raw_answer`.                                                                                                                                                                                                                                                                                                               |
+| 2026-04-23 | TD       | Phase 3 chunk 3i landed (pilot-shadow infrastructure + queue UI + CSV rollup)            | PASS — migration 0033 adds `awarded_marks.pilot_shadow_status`; `LLM_MARKING_PILOT` config flag and dispatcher wiring; `/admin/moderation?mode=pilot` tab + pilot-review POST (always writes a `teacher_override` row, leaves pupil-facing `moderation_status` alone); `npm run pilot:report` emits a CSV + markdown with PASS/FAIL against the 85 % within-±1 exit criterion. 128 test files / 1128 tests passing. Pilot-week procedure at [RUNBOOK §5.4](RUNBOOK.md). Next gate: pilot sign-off row here once the first real week's `pilot:report` lands.              |

@@ -577,20 +577,35 @@ a deliberately sabotaged prompt version shows a drop.
 same open responses in parallel to the AI. Every disagreement is
 investigated.
 
-**App code.**
+**App code.** Infrastructure landed 2026-04-23 across three commits
+(phase A migration + dispatch, phase B queue UI, phase C CSV
+emitter). Pilot week itself is still to run.
 
-- `src/config.ts` — `LLM_MARKING_PILOT` flag.
-- Dispatch change: when `PILOT` is on, LLM marking runs as
-  normal, _and_ the row is additionally added to a "teacher
-  shadow queue" visible at `GET /admin/moderation?mode=pilot`.
-  The teacher's manual mark is recorded as a `teacher_override`
-  row even when they agree — agreement is a deliberate signal
-  for the accuracy calc, not a no-op.
-- `src/routes/admin-moderation.ts` — `mode=pilot` filter.
-- `scripts/eval/pilot-report.ts` — after the pilot week, emits a
-  CSV of AI vs teacher marks per part, mean absolute error,
-  agreement distribution, list of every part where |AI −
-  teacher| ≥ 2.
+- `src/config.ts` — `LLM_MARKING_PILOT` flag. ✅
+- `migrations/0033_awarded_marks_pilot_shadow.sql` adds the
+  `pilot_shadow_status` column + partial index. ✅
+- Dispatch change: when `PILOT` is on, every LLM-awarded row
+  gains `pilot_shadow_status='pending_shadow'` alongside its
+  usual moderation handling; gate-clean rows stay live-visible
+  to the pupil. ✅
+- `src/routes/admin-moderation.ts` — `mode=pilot` filter and
+  `/admin/moderation/:id/pilot-review` POST. The pilot review
+  form always writes a `teacher_override` row — agreement is a
+  deliberate signal for the accuracy calc, not a no-op. ✅
+- `scripts/eval/pilot-report.ts` + `src/services/eval/pilot.ts`
+  — emits `pilot-{timestamp}.csv` and `pilot-{timestamp}.md`
+  with mean absolute error, agreement distribution, list of
+  every part where |AI − teacher| ≥ 2, and a PASS/FAIL badge
+  against the 85 % within-±1 exit criterion. ✅
+
+**Still to do for chunk 3i sign-off.**
+
+- Run the pilot with a real class for at least one week.
+- Land the pilot report row in `RUNBOOK.md §10` with the four
+  exit-criteria numbers.
+- Replace the synthetic eval fixtures (5 per prompt) with 30
+  anonymised real submissions per prompt in
+  [prompts/eval/](prompts/eval/) as a by-product of the pilot.
 
 **Exit criteria (hard gate for chunk 3j).**
 

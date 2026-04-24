@@ -137,6 +137,23 @@ below exactly.
 - **Printable mode** — same attempt powers `/attempts/:id?answers=1`
   variants used in the Phase 2.5 human-test walker.
 
+## Pilot-shadow queue (chunk 3i)
+
+Turning on the pilot flag exercises the teacher-parallel review flow end-to-end against the seeded users:
+
+```bash
+# 1. Set LLM_MARKING_PILOT=true in .env (LLM_ENABLED=true + OPENAI_API_KEY required).
+# 2. Restart: `npm run dev` (or sudo systemctl restart exam-questions in prod).
+# 3. Sign in as pupil1 (password-001), start topic 2.1, submit at least one open-response part.
+#    The LLM path runs; pupil sees the AI-marked feedback immediately.
+# 4. Sign in as admin. Visit /admin/moderation?mode=pilot — the same row appears there too.
+# 5. Click "Shadow-review", enter your own mark + a short reason, submit.
+#    A teacher_override row lands against the same attempt_part_id; pilot_shadow_status → 'reviewed'.
+# 6. npm run pilot:report → CSV + markdown with PASS/FAIL vs the 85 % within-±1 gate.
+```
+
+The "Record shadow review" form is deliberately different from the accept/override pair on the safety-gate queue: every submission writes a `teacher_override` row, including full agreement. Agreement is the load-bearing signal for the pilot-week accuracy calculation — a no-op would invisibly count as a disagreement. See [RUNBOOK.md §5.4](RUNBOOK.md) for the full pilot-week operational procedure.
+
 ## Prompt-eval harness sanity check
 
 With this fixture set the chunk 3h harness runs end-to-end:
