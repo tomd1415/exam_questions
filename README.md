@@ -85,7 +85,7 @@ exam_questions/
 ├── src/                       application code (Fastify app, routes, services, repos, templates, CLI scripts)
 ├── content/                   curated question bank + OCR mappings (Phase 1 seed lands in `content/curated/`)
 ├── prompts/                   (Phase 3+) versioned prompt templates
-└── migrations/                numbered SQL migrations (0001–0032 currently)
+└── migrations/                numbered SQL migrations (0001–0033 currently)
 ```
 
 ## Getting started
