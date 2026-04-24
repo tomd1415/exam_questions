@@ -93,7 +93,22 @@ const reviewActions =
           <div class="review-columns">
             <div class="pupil-col">
               <h3 class="review-col__heading">Your answer:</h3>
-              <pre class="review-col__answer"><%= part.raw_answer || '(blank)' %></pre>
+              <%
+                // Image-variant widgets (flowchart / logic_diagram) serialise
+                // the drawing as `image=data:image/png;base64,…`. Rendering
+                // rule lives in src/lib/pupil-answer-view.ts.
+                const ra_r = part.raw_answer || '';
+                const firstLine_r = ra_r.split('\n').find(function(l) { return l.length > 0; }) || '';
+                const isImage_r = firstLine_r.indexOf('image=data:image/') === 0;
+              %>
+              <% if (isImage_r) { %>
+                <img class="pupil-answer-image review-col__answer"
+                     src="<%= firstLine_r.slice('image='.length) %>"
+                     alt="Your drawn answer (<%= part.expected_response_type %>)"
+                     loading="lazy" />
+              <% } else { %>
+                <pre class="review-col__answer"><%= ra_r || '(blank)' %></pre>
+              <% } %>
             </div>
             <div class="model-col">
               <h3 class="review-col__heading">

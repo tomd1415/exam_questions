@@ -3602,3 +3602,22 @@ input[type='number'].input {
   color: var(--color-ink-1);
   border-bottom-color: var(--color-brand-500);
 }
+
+/* Chunk 3i follow-up. Image-variant widgets (flowchart /
+   logic_diagram) store the pupil drawing as a `image=data:...`
+   data-URL. Admin marking + moderation + the pupil review page
+   render the payload as <img class="pupil-answer-image">. The
+   fit rules below keep a large drawing from blowing through the
+   admin card on narrow viewports, and the dashed outline makes
+   it obvious that this is the pupil's canvas output (as opposed
+   to a curriculum image like a diagram-labels source). */
+.pupil-answer-image {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin-top: var(--space-1);
+  background: var(--color-surface-0);
+  border: 1px dashed var(--color-surface-3);
+  border-radius: var(--radius-sm, 4px);
+  padding: var(--space-1);
+}

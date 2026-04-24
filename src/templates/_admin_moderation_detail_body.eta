@@ -41,10 +41,28 @@
   </dl>
 </section>
 
+<%
+  // For image-variant widgets (flowchart / logic_diagram) the raw
+  // answer is `image=data:image/png;base64,…` (see
+  // src/lib/pupil-answer-view.ts). Evidence highlighting makes no
+  // sense on an image; fall through to <img>. Text answers keep
+  // the existing highlight-evidence treatment.
+  const ra_m = detail.raw_answer || '';
+  const firstLine_m = ra_m.split('\n').find(function(l) { return l.length > 0; }) || '';
+  const isImage_m = firstLine_m.indexOf('image=data:image/') === 0;
+%>
 <section class="admin-card">
   <header class="admin-card__header"><h2>Pupil's answer</h2></header>
-  <div class="pupil-answer-box"><%~ it.highlightedAnswerHtml %></div>
-  <p class="admin-card__sub">Highlighted spans are the evidence quotes the model cited.</p>
+  <% if (isImage_m) { %>
+    <img class="pupil-answer-image"
+         src="<%= firstLine_m.slice('image='.length) %>"
+         alt="Pupil's drawn answer (<%= detail.expected_response_type %>)"
+         loading="lazy" />
+    <p class="admin-card__sub">Drawing-widget answer — evidence highlighting does not apply.</p>
+  <% } else { %>
+    <div class="pupil-answer-box"><%~ it.highlightedAnswerHtml %></div>
+    <p class="admin-card__sub">Highlighted spans are the evidence quotes the model cited.</p>
+  <% } %>
 </section>
 
 <section class="admin-card">
