@@ -4,7 +4,7 @@ import { AttemptAccessError } from '../services/attempts.js';
 import { FONT_PREFERENCES, REVEAL_MODES, THEME_PREFERENCES } from '../repos/users.js';
 import { isWidgetTipKey, WIDGET_TIPS } from '../lib/widget-tips.js';
 import { buildPupilFeedback, type PupilFeedback } from '../lib/pupil-feedback.js';
-import { buildPupilAnswerView } from '../lib/pupil-answer-view.js';
+import { buildPupilAnswerViewMap } from '../lib/pupil-answer-view.js';
 import type { AttemptBundle } from '../repos/attempts.js';
 
 const StartBody = z.object({ _csrf: z.string().min(1) });
@@ -351,7 +351,8 @@ export function registerAttemptRoutes(app: FastifyInstance): void {
         widgetTipsDismissed: dismissed,
         widgetTips: WIDGET_TIPS,
         pupilFeedbackByPart,
-        buildPupilAnswerView,
+        // Chunk 3i follow-up: see admin-attempts for the rationale.
+        answerViewByPart: buildPupilAnswerViewMap(bundle.partsByQuestion.values()),
       });
     } catch (err) {
       if (err instanceof AttemptAccessError) {

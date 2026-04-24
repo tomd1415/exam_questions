@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { AttemptAccessError } from '../services/attempts.js';
 import { TeacherMarkingError } from '../services/marking/teacher.js';
 import { canManageClasses, ClassAccessError } from '../services/classes.js';
-import { buildPupilAnswerView } from '../lib/pupil-answer-view.js';
+import { buildPupilAnswerViewMap } from '../lib/pupil-answer-view.js';
 
 const ClassParams = z.object({ id: z.coerce.number().int().positive() });
 const AttemptParams = z.object({ id: z.coerce.number().int().positive() });
@@ -114,17 +114,20 @@ export function registerAdminAttemptRoutes(app: FastifyInstance): void {
       if (bundle.attempt.submitted_at === null) {
         return reply.code(409).send('Attempt not submitted yet');
       }
+      // Chunk 3i follow-up: decoded pupil-answer view per attempt_part
+      // so the marking template can render matching / cloze / trace /
+      // matrix answers human-readably and image widgets as <img>.
+      // Passed as data (Map) rather than a function through the view
+      // context, so a missing wiring fails loud in TS rather than
+      // 500ing the render at runtime.
+      const answerViewByPart = buildPupilAnswerViewMap(bundle.partsByQuestion.values());
       return reply.view('admin_attempt_detail.eta', {
         title: `Mark · Attempt ${bundle.attempt.id}`,
         currentUser: req.currentUser,
         csrfToken: reply.generateCsrf(),
         bundle,
         flash: readQueryFlash(req),
-        // Chunk 3i follow-up: decoded pupil answer per part so the
-        // marking template can render matching/cloze/trace/matrix
-        // answers in a human-readable form instead of the line-
-        // encoded wire format.
-        buildPupilAnswerView,
+        answerViewByPart,
       });
     } catch (err) {
       if (err instanceof AttemptAccessError) {

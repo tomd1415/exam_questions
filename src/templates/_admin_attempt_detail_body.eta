@@ -73,7 +73,8 @@ const subtitle =
           <div class="question-part__answer">
             <strong>Pupil answer:</strong>
             <%~ include('_pupil_answer_preview', {
-              view: it.buildPupilAnswerView(part.raw_answer, part.expected_response_type, part.part_config)
+              view: (it.answerViewByPart && it.answerViewByPart.get(part.id))
+                    || { kind: 'text', text: part.raw_answer || '' }
             }) %>
           </div>
 

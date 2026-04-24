@@ -94,7 +94,8 @@ const reviewActions =
             <div class="pupil-col">
               <h3 class="review-col__heading">Your answer:</h3>
               <%~ include('_pupil_answer_preview', {
-                view: it.buildPupilAnswerView(part.raw_answer, part.expected_response_type, part.part_config)
+                view: (it.answerViewByPart && it.answerViewByPart.get(part.id))
+                      || { kind: 'text', text: part.raw_answer || '' }
               }) %>
             </div>
             <div class="model-col">

@@ -413,3 +413,228 @@ describe('POST /admin/attempts/:id/parts/:partId/mark', () => {
     expect(res.statusCode).toBe(403);
   });
 });
+
+// Regression guard for the 500 that bit the teacher on day one of
+// the chunk 3i pilot: clicking an attempt containing a drawn
+// flowchart answer produced
+//   "it.buildPupilAnswerView is not a function"
+// because the template was calling a function threaded through the
+// view context from the route. We now compute the decoded views in
+// the route and pass them as data (a Map keyed by attempt_part_id);
+// the template falls back to a plain text render if the map is
+// absent. This test seeds an attempt with every tricky widget
+// shape — flowchart image, matching, trace_table — and asserts the
+// detail page still 200s and renders the decoded output.
+async function seedStructuredSubmission(params: {
+  teacher: CreatedUser;
+  pupil: CreatedUser;
+  topicCode: string;
+}): Promise<{ classId: string; attemptId: string }> {
+  const p = pool();
+  const cls = await p.query<{ id: string }>(
+    `INSERT INTO classes (name, teacher_id, academic_year)
+     VALUES ('Structured widgets regression', $1::bigint, '2025/26')
+     RETURNING id::text`,
+    [params.teacher.id],
+  );
+  const classId = cls.rows[0]!.id;
+  await p.query(`INSERT INTO enrolments (class_id, user_id) VALUES ($1::bigint, $2::bigint)`, [
+    classId,
+    params.pupil.id,
+  ]);
+
+  const matchingCfg = {
+    left: ['Sodium', 'Iron'],
+    right: ['Metal', 'Alkali metal'],
+    correctPairs: [
+      [0, 1],
+      [1, 0],
+    ],
+  };
+  const traceCfg = {
+    rows: 2,
+    columns: [{ name: 'i' }, { name: 'sum' }],
+    expected: { '0,0': '0', '0,1': '0', '1,0': '1', '1,1': '1' },
+    marking: { mode: 'perCell' },
+  };
+  const flowchartCfg = { variant: 'image', canvas: { width: 400, height: 300 } };
+
+  const q = await createQuestion(p, params.teacher.id, {
+    topicCode: params.topicCode,
+    subtopicCode: `${params.topicCode}.1`,
+    active: true,
+    approvalStatus: 'approved',
+    parts: [
+      {
+        label: '(a)',
+        prompt: 'Draw the flowchart.',
+        marks: 3,
+        expectedResponseType: 'flowchart',
+        partConfig: flowchartCfg,
+      },
+      {
+        label: '(b)',
+        prompt: 'Match elements to categories.',
+        marks: 2,
+        expectedResponseType: 'matching',
+        partConfig: matchingCfg,
+        markPoints: [
+          { text: 'Sodium ↔ Alkali metal', marks: 1 },
+          { text: 'Iron ↔ Metal', marks: 1 },
+        ],
+      },
+      {
+        label: '(c)',
+        prompt: 'Trace the loop.',
+        marks: 4,
+        expectedResponseType: 'trace_table',
+        partConfig: traceCfg,
+      },
+    ],
+  });
+
+  const attempt = await p.query<{ id: string }>(
+    `INSERT INTO attempts (user_id, class_id, target_topic_code, mode, submitted_at)
+     VALUES ($1::bigint, $2::bigint, $3, 'topic_set', now())
+     RETURNING id::text`,
+    [params.pupil.id, classId, params.topicCode],
+  );
+  const attemptId = attempt.rows[0]!.id;
+  const aq = await p.query<{ id: string }>(
+    `INSERT INTO attempt_questions (attempt_id, question_id, display_order)
+     VALUES ($1::bigint, $2::bigint, 1)
+     RETURNING id::text`,
+    [attemptId, q.id],
+  );
+  const aqId = aq.rows[0]!.id;
+  const parts = await p.query<{ id: string; part_label: string }>(
+    `INSERT INTO attempt_parts (attempt_question_id, question_part_id, raw_answer)
+     SELECT $1::bigint, qp.id,
+            CASE qp.part_label
+              WHEN '(a)' THEN 'image=data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNgAAIAAAUAAen63NgAAAAASUVORK5CYII='
+              WHEN '(b)' THEN E'0=1\n1=0'
+              WHEN '(c)' THEN E'0,0=0\n0,1=0\n1,0=1\n1,1=1'
+            END
+       FROM question_parts qp
+      WHERE qp.question_id = $2::bigint
+      ORDER BY qp.display_order
+    RETURNING id::text, (SELECT part_label FROM question_parts qp2 WHERE qp2.id = question_part_id)`,
+    [aqId, q.id],
+  );
+  expect(parts.rowCount).toBe(3);
+  return { classId, attemptId };
+}
+
+describe('GET /admin/attempts/:id — structured widget rendering (regression)', () => {
+  it('renders a 200 for an attempt with flowchart image + matching + trace_table parts', async () => {
+    const teacher = await createUser(pool(), { role: 'teacher' });
+    const pupil = await createUser(pool(), { role: 'pupil' });
+    const { attemptId } = await seedStructuredSubmission({
+      teacher,
+      pupil,
+      topicCode: '1.2',
+    });
+    const jar = await loginAs(teacher);
+    const res = await app.inject({
+      method: 'GET',
+      url: `/admin/attempts/${attemptId}`,
+      headers: { cookie: cookieHeader(jar) },
+    });
+    expect(res.statusCode).toBe(200);
+    // Flowchart image: rendered as <img>, not as the raw base64 string.
+    expect(res.payload).toMatch(/<img\s+class="pupil-answer-image"/);
+    expect(res.payload).not.toContain('image=data:image/png');
+    // Matching: decoded into left-prompt rows using the authored labels.
+    expect(res.payload).toContain('Sodium');
+    expect(res.payload).toContain('Alkali metal');
+    expect(res.payload).toContain('Iron');
+    // Trace table: rendered as a 2D grid with the pupil's values.
+    expect(res.payload).toMatch(/class="pupil-answer-grid"/);
+    // And the raw `0,0=0` wire format must not leak through.
+    expect(res.payload).not.toContain('0,0=0');
+  });
+
+  it('falls back to a plain-text render if answerViewByPart is not passed', async () => {
+    // Belt-and-braces: the template's fallback branch protects a
+    // future route that renders admin_attempt_detail.eta without
+    // wiring the map — better to show the raw encoded answer than
+    // 500 the page. The real routes always pass the map; this test
+    // validates the fallback without having to remove it from the
+    // real route.
+    const Eta = await import('eta');
+    const path = await import('node:path');
+    const { fileURLToPath } = await import('node:url');
+    const templatesDir = path.resolve(
+      path.dirname(fileURLToPath(import.meta.url)),
+      '..',
+      '..',
+      'src',
+      'templates',
+    );
+    const eta = new Eta.Eta({ views: templatesDir, cache: false });
+    const bundle = {
+      attempt: {
+        id: '1',
+        user_id: '1',
+        class_id: '1',
+        started_at: new Date(),
+        submitted_at: new Date(),
+        mode: 'topic_set' as const,
+        target_topic_code: '1.2',
+        reveal_mode: 'per_question' as const,
+        timer_minutes: null,
+        elapsed_seconds: null,
+      },
+      questions: [
+        {
+          id: '10',
+          attempt_id: '1',
+          question_id: '100',
+          display_order: 1,
+          stem: 'Stem',
+          model_answer: 'Model',
+          topic_code: '1.2',
+          subtopic_code: '1.2.1',
+          command_word_code: 'explain',
+          marks_total: 2,
+          submitted_at: new Date(),
+        },
+      ],
+      partsByQuestion: new Map([
+        [
+          '10',
+          [
+            {
+              id: '20',
+              attempt_question_id: '10',
+              question_part_id: '200',
+              part_label: '(a)',
+              prompt: 'Describe.',
+              marks: 2,
+              expected_response_type: 'medium_text',
+              part_config: null,
+              display_order: 1,
+              raw_answer: 'Prose answer.',
+              last_saved_at: new Date(),
+              submitted_at: null,
+              pupil_self_marks: null,
+              pupil_feedback_fallback: null,
+            },
+          ],
+        ],
+      ]),
+      markPointsByPart: new Map(),
+      awardedByAttemptPart: new Map(),
+    };
+    // Intentionally omit answerViewByPart from the render context.
+    const html = await eta.renderAsync('admin_attempt_detail', {
+      title: 't',
+      currentUser: { id: '1', role: 'admin' },
+      csrfToken: 'x',
+      bundle,
+      flash: null,
+    });
+    expect(html).toContain('Prose answer.');
+    expect(html).not.toContain('buildPupilAnswerView is not a function');
+  });
+});

@@ -68,6 +68,33 @@ function nonBlank(s: string): boolean {
   return s !== undefined && s !== null && s.trim().length > 0;
 }
 
+// Convenience for routes that render an AttemptBundle. Walks every
+// attempt_part and returns a Map keyed by attempt_part_id. Templates
+// then read the decoded view directly from the map — no
+// function-through-view-context dependency, so a route forgetting
+// to pass the helper cannot 500 the page.
+export interface AttemptPartLike {
+  readonly id: string;
+  readonly raw_answer: string;
+  readonly expected_response_type: string;
+  readonly part_config: unknown;
+}
+
+export function buildPupilAnswerViewMap(
+  partsByQuestion: Iterable<readonly AttemptPartLike[]>,
+): Map<string, PupilAnswerView> {
+  const out = new Map<string, PupilAnswerView>();
+  for (const list of partsByQuestion) {
+    for (const part of list) {
+      out.set(
+        part.id,
+        buildPupilAnswerView(part.raw_answer, part.expected_response_type, part.part_config),
+      );
+    }
+  }
+  return out;
+}
+
 export function buildPupilAnswerView(
   rawAnswer: string | null | undefined,
   expectedResponseType: string | null | undefined,
