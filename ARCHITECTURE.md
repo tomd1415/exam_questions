@@ -97,6 +97,8 @@ A single module that:
 
 All LLM calls go through this wrapper. There is no other path to the API.
 
+**Follow-up (post-Phase-3-pilot):** evaluate the Anthropic Claude API as a second provider behind the same wrapper. The wrapper's shape (load-prompt → validate-input → call-provider → validate-response → record) is provider-neutral; the concrete change would be a second `LlmClient` implementation selected by a `LLM_PROVIDER=openai|anthropic` env flag, plus per-provider prompt-version rows so the schema and model id stay pinned to the provider they were tested against. Motivation is vendor risk (RISKS.md §1.2 data-handling terms, availability, and pricing), not dissatisfaction with OpenAI — the eval harness from chunk 3h provides the neutral comparison surface.
+
 ### Background jobs (Phase 4+)
 
 - Difficulty recalibration (per question, on schedule).
