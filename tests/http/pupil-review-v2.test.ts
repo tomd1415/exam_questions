@@ -228,6 +228,9 @@ describe('Pupil review v2 layout (Chunk 5)', () => {
     expect(review.payload).toContain('Line one.');
     expect(review.payload).toContain('Line two.');
     expect(review.payload).toContain('Line three.');
-    expect(review.payload).toContain('class="review-col__answer"');
+    // Since the chunk-3i-follow-up refactor, plain-text answers are
+    // rendered by _pupil_answer_preview as <pre class="pupil-answer-text">
+    // (which still has white-space: pre-wrap, preserving newlines).
+    expect(review.payload).toContain('class="pupil-answer-text"');
   });
 });

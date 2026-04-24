@@ -1,47 +1,265 @@
-// Decides whether an attempt_parts.raw_answer should render as an
-// image (widgets whose pupil-facing output is a drawing — flowchart
-// variant=image, logic_diagram variant=image) or as plain text
-// (every other widget). Used by every template that displays a
-// pupil answer to a teacher or admin: pupil review, teacher marking,
-// AI moderation, and pilot shadow review.
+// Decides how an attempt_parts.raw_answer should render on a
+// marking / review surface (admin attempt detail, admin moderation,
+// admin pilot shadow review, pupil attempt review). Every template
+// that surfaces a pupil answer should route through this function —
+// a raw `<pre>` of the encoded answer is unreadable for structured
+// widgets (matching, matrix_tick_*, trace_table, cloze, diagram_labels)
+// and useless for image widgets (flowchart / logic_diagram, where
+// the raw value is `image=data:image/png;base64,…`).
 //
-// The flowchart + logic_diagram widgets serialise the drawing as:
-//   image=data:image/png;base64,<payload>
-// matching FLOWCHART_DATA_URL_PREFIX / LOGIC_DIAGRAM_DATA_URL_PREFIX
-// in src/lib/flowchart.ts and src/lib/logic-diagram.ts. Any other
-// raw_answer shape falls through to the text branch unchanged.
+// The shape matrix:
+//   - empty / blank pupil answer       → { kind: 'empty' }
+//   - image-variant drawing widgets    → { kind: 'image', dataUrl, alt }
+//   - matching                         → { kind: 'rows' } with left-prompt rows + answer text
+//   - matrix_tick_single / multi       → { kind: 'rows' } with row-label rows + selected column(s)
+//   - diagram_labels                   → { kind: 'rows' } with hotspot labels + pupil labels
+//   - cloze_* (free / with_bank / code) → { kind: 'rows' } with gap id/prompt rows + pupil text
+//   - trace_table                      → { kind: 'grid' } with the 2D cell values
+//   - medium_text / extended_response / code / algorithm / anything
+//     else                             → { kind: 'text', text }
 //
-// Chunk 3i follow-up: before this helper, admin marking templates
-// displayed the raw `image=data:...` string as a <pre>, which looks
-// like a URL and is useless for marking — flagged during the first
-// pilot day.
+// Authored labels (left prompts, column names, hotspot ids, gap ids)
+// come from `part_config`; decoders are intentionally lenient — if
+// part_config is malformed or absent, we fall through to the text
+// branch rather than crashing the render. The templates never need
+// to decode raw_answer themselves.
+
+import { parseMatchingRawAnswer } from './matching.js';
+import { parseTraceGridRawAnswer } from './trace-grid.js';
+import { parseClozeRawAnswer } from './cloze.js';
+import { parseDiagramLabelsRawAnswer } from './diagram-labels.js';
+import { parseMatrixTickRawAnswer } from '../services/marking/deterministic.js';
 
 const IMAGE_LINE_PREFIX = 'image=data:image/';
+
+export interface PupilAnswerRow {
+  readonly label: string;
+  readonly value: string;
+  readonly blank: boolean;
+}
+
+export interface PupilAnswerGridCell {
+  readonly value: string;
+  readonly blank: boolean;
+  readonly prefilled: boolean;
+}
 
 export type PupilAnswerView =
   | { kind: 'empty' }
   | { kind: 'image'; dataUrl: string; alt: string }
+  | { kind: 'rows'; heading: string; rows: readonly PupilAnswerRow[] }
+  | {
+      kind: 'grid';
+      heading: string;
+      columns: readonly string[];
+      rows: readonly (readonly PupilAnswerGridCell[])[];
+    }
   | { kind: 'text'; text: string };
+
+function isEmpty(raw: string | null | undefined): raw is null | undefined | '' {
+  return raw === null || raw === undefined || raw.length === 0;
+}
+
+function firstNonBlankLine(raw: string): string {
+  return raw.split('\n').find((line) => line.length > 0) ?? '';
+}
+
+function nonBlank(s: string): boolean {
+  return s !== undefined && s !== null && s.trim().length > 0;
+}
 
 export function buildPupilAnswerView(
   rawAnswer: string | null | undefined,
   expectedResponseType: string | null | undefined,
+  partConfig: unknown = null,
 ): PupilAnswerView {
-  if (!rawAnswer || rawAnswer.length === 0) return { kind: 'empty' };
+  if (isEmpty(rawAnswer)) return { kind: 'empty' };
 
-  // The image variants use a single-line `image=data:image/...` payload
-  // at (or near) the start. Trim leading blank lines to be forgiving of
-  // incoming data.
-  const firstNonBlank = rawAnswer.split('\n').find((line) => line.length > 0) ?? '';
-  if (firstNonBlank.startsWith(IMAGE_LINE_PREFIX)) {
-    const dataUrl = firstNonBlank.slice('image='.length);
-    const widgetName = expectedResponseType ?? 'widget';
+  const firstLine = firstNonBlankLine(rawAnswer);
+  if (firstLine.startsWith(IMAGE_LINE_PREFIX)) {
     return {
       kind: 'image',
-      dataUrl,
-      alt: `Pupil's drawn answer (${widgetName})`,
+      dataUrl: firstLine.slice('image='.length),
+      alt: `Pupil's drawn answer (${expectedResponseType ?? 'widget'})`,
     };
   }
 
+  const cfg = isObject(partConfig) ? (partConfig as Record<string, unknown>) : null;
+
+  if (expectedResponseType === 'matching' && cfg) {
+    const view = decodeMatching(rawAnswer, cfg);
+    if (view) return view;
+  }
+  if (expectedResponseType === 'matrix_tick_single' && cfg) {
+    const view = decodeMatrixTickSingle(rawAnswer, cfg);
+    if (view) return view;
+  }
+  if (expectedResponseType === 'matrix_tick_multi' && cfg) {
+    const view = decodeMatrixTickMulti(rawAnswer, cfg);
+    if (view) return view;
+  }
+  if (expectedResponseType === 'diagram_labels' && cfg) {
+    const view = decodeDiagramLabels(rawAnswer, cfg);
+    if (view) return view;
+  }
+  if (
+    (expectedResponseType === 'cloze_free' ||
+      expectedResponseType === 'cloze_with_bank' ||
+      expectedResponseType === 'cloze_code') &&
+    cfg
+  ) {
+    const view = decodeCloze(rawAnswer, cfg);
+    if (view) return view;
+  }
+  if (expectedResponseType === 'trace_table' && cfg) {
+    const view = decodeTraceTable(rawAnswer, cfg);
+    if (view) return view;
+  }
+
   return { kind: 'text', text: rawAnswer };
+}
+
+function isObject(v: unknown): boolean {
+  return v !== null && typeof v === 'object' && !Array.isArray(v);
+}
+
+function asStringArray(v: unknown): readonly string[] | null {
+  if (!Array.isArray(v)) return null;
+  if (!v.every((x) => typeof x === 'string')) return null;
+  return v as readonly string[];
+}
+
+function decodeMatching(rawAnswer: string, cfg: Record<string, unknown>): PupilAnswerView | null {
+  const left = asStringArray(cfg['left']);
+  const right = asStringArray(cfg['right']);
+  if (!left || !right) return null;
+  const map = parseMatchingRawAnswer(rawAnswer);
+  const rows: PupilAnswerRow[] = left.map((prompt, idx) => {
+    const rightIdx = map.get(idx);
+    if (rightIdx === undefined || right[rightIdx] === undefined) {
+      return { label: prompt, value: '(not paired)', blank: true };
+    }
+    return { label: prompt, value: right[rightIdx], blank: false };
+  });
+  return { kind: 'rows', heading: 'Pupil matched:', rows };
+}
+
+function decodeMatrixTickSingle(
+  rawAnswer: string,
+  cfg: Record<string, unknown>,
+): PupilAnswerView | null {
+  const rowsCfg = asStringArray(cfg['rows']);
+  if (!rowsCfg) return null;
+  const selected = parseMatrixTickRawAnswer(rawAnswer);
+  const rows: PupilAnswerRow[] = rowsCfg.map((label, idx) => {
+    const pick = selected.get(idx);
+    if (!nonBlank(pick ?? '')) {
+      return { label, value: '(no selection)', blank: true };
+    }
+    return { label, value: pick!, blank: false };
+  });
+  return { kind: 'rows', heading: 'Pupil ticked:', rows };
+}
+
+function decodeMatrixTickMulti(
+  rawAnswer: string,
+  cfg: Record<string, unknown>,
+): PupilAnswerView | null {
+  const rowsCfg = asStringArray(cfg['rows']);
+  if (!rowsCfg) return null;
+  // matrix_tick_multi allows CSV-style multiple ticks per row; the
+  // deterministic parser drops duplicates, so splitting on `,` here
+  // is just to pretty-print the values the pupil actually sent.
+  const perRow = parseMatrixTickRawAnswer(rawAnswer);
+  const rows: PupilAnswerRow[] = rowsCfg.map((label, idx) => {
+    const pick = perRow.get(idx);
+    if (!nonBlank(pick ?? '')) {
+      return { label, value: '(no selections)', blank: true };
+    }
+    const parts = pick!
+      .split(',')
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0);
+    return { label, value: parts.join(', '), blank: parts.length === 0 };
+  });
+  return { kind: 'rows', heading: 'Pupil ticked:', rows };
+}
+
+function decodeDiagramLabels(
+  rawAnswer: string,
+  cfg: Record<string, unknown>,
+): PupilAnswerView | null {
+  const hotspots = cfg['hotspots'];
+  if (!Array.isArray(hotspots)) return null;
+  const values = parseDiagramLabelsRawAnswer(rawAnswer);
+  const rows: PupilAnswerRow[] = [];
+  for (const h of hotspots) {
+    if (!isObject(h)) continue;
+    const hot = h as Record<string, unknown>;
+    const id = typeof hot['id'] === 'string' ? hot['id'] : null;
+    if (!id) continue;
+    const value = values.get(id);
+    if (!nonBlank(value ?? '')) {
+      rows.push({ label: id, value: '(unlabelled)', blank: true });
+    } else {
+      rows.push({ label: id, value: value!, blank: false });
+    }
+  }
+  if (rows.length === 0) return null;
+  return { kind: 'rows', heading: 'Pupil labelled:', rows };
+}
+
+function decodeCloze(rawAnswer: string, cfg: Record<string, unknown>): PupilAnswerView | null {
+  const gaps = cfg['gaps'];
+  if (!Array.isArray(gaps)) return null;
+  const values = parseClozeRawAnswer(rawAnswer);
+  const rows: PupilAnswerRow[] = [];
+  for (const g of gaps) {
+    if (!isObject(g)) continue;
+    const gap = g as Record<string, unknown>;
+    const id = typeof gap['id'] === 'string' ? gap['id'] : null;
+    if (!id) continue;
+    const value = values.get(id);
+    if (!nonBlank(value ?? '')) {
+      rows.push({ label: id, value: '(left blank)', blank: true });
+    } else {
+      rows.push({ label: id, value: value!, blank: false });
+    }
+  }
+  if (rows.length === 0) return null;
+  return { kind: 'rows', heading: 'Pupil filled:', rows };
+}
+
+function decodeTraceTable(rawAnswer: string, cfg: Record<string, unknown>): PupilAnswerView | null {
+  const columns = Array.isArray(cfg['columns'])
+    ? (cfg['columns'] as unknown[])
+        .map((c) => (isObject(c) ? ((c as Record<string, unknown>)['name'] as string) : null))
+        .filter((n): n is string => typeof n === 'string')
+    : null;
+  const rowCount = typeof cfg['rows'] === 'number' ? cfg['rows'] : null;
+  if (!columns || columns.length === 0 || rowCount === null || rowCount <= 0) return null;
+
+  const prefill = isObject(cfg['prefill']) ? (cfg['prefill'] as Record<string, string>) : {};
+  const pupilValues = parseTraceGridRawAnswer(rawAnswer);
+
+  const cells: PupilAnswerGridCell[][] = [];
+  for (let r = 0; r < rowCount; r++) {
+    const row: PupilAnswerGridCell[] = [];
+    for (let c = 0; c < columns.length; c++) {
+      const key = `${r},${c}`;
+      const pre = typeof prefill[key] === 'string' ? prefill[key] : undefined;
+      if (pre !== undefined) {
+        row.push({ value: pre, blank: false, prefilled: true });
+        continue;
+      }
+      const v = pupilValues.get(key);
+      if (!nonBlank(v ?? '')) {
+        row.push({ value: '', blank: true, prefilled: false });
+      } else {
+        row.push({ value: v!, blank: false, prefilled: false });
+      }
+    }
+    cells.push(row);
+  }
+  return { kind: 'grid', heading: 'Pupil trace:', columns, rows: cells };
 }

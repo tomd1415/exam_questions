@@ -1,0 +1,52 @@
+<%
+  // Renders a PupilAnswerView (see src/lib/pupil-answer-view.ts).
+  // Expects `it.view` with one of the four kinds:
+  //   empty  → "(blank)" placeholder
+  //   image  → <img> with a dashed outline
+  //   rows   → labelled pair list (matching / cloze / matrix_tick / diagram_labels)
+  //   grid   → 2D table (trace_table)
+  //   text   → <pre> fallback for open-response prose and any widget
+  //            whose part_config is missing or malformed at render time
+%>
+<% if (it.view.kind === 'empty') { %>
+  <pre class="pupil-answer-text">(blank)</pre>
+<% } else if (it.view.kind === 'image') { %>
+  <img class="pupil-answer-image"
+       src="<%= it.view.dataUrl %>"
+       alt="<%= it.view.alt %>"
+       loading="lazy" />
+<% } else if (it.view.kind === 'rows') { %>
+  <p class="pupil-answer-heading"><%= it.view.heading %></p>
+  <dl class="pupil-answer-rows">
+    <% it.view.rows.forEach(function(row) { %>
+      <dt class="pupil-answer-rows__label"><%= row.label %></dt>
+      <dd class="pupil-answer-rows__value<% if (row.blank) { %> pupil-answer-rows__value--blank<% } %>">
+        <%= row.value %>
+      </dd>
+    <% }); %>
+  </dl>
+<% } else if (it.view.kind === 'grid') { %>
+  <p class="pupil-answer-heading"><%= it.view.heading %></p>
+  <table class="pupil-answer-grid">
+    <thead>
+      <tr>
+        <% it.view.columns.forEach(function(c) { %>
+          <th scope="col"><%= c %></th>
+        <% }); %>
+      </tr>
+    </thead>
+    <tbody>
+      <% it.view.rows.forEach(function(row) { %>
+        <tr>
+          <% row.forEach(function(cell) { %>
+            <td class="pupil-answer-grid__cell<% if (cell.prefilled) { %> pupil-answer-grid__cell--prefilled<% } else if (cell.blank) { %> pupil-answer-grid__cell--blank<% } %>">
+              <% if (cell.blank) { %>&nbsp;<% } else { %><%= cell.value %><% } %>
+            </td>
+          <% }); %>
+        </tr>
+      <% }); %>
+    </tbody>
+  </table>
+<% } else { %>
+  <pre class="pupil-answer-text"><%= it.view.text %></pre>
+<% } %>

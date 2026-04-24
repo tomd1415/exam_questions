@@ -962,6 +962,7 @@ export class AttemptRepo {
               ap.raw_answer,
               qp.marks AS part_marks,
               qp.expected_response_type,
+              qp.part_config,
               aq.id::text AS attempt_question_id,
               q.stem AS question_stem,
               q.model_answer,
@@ -1296,6 +1297,7 @@ export interface ModerationDetailRow {
   raw_answer: string;
   part_marks: number;
   expected_response_type: string;
+  part_config: unknown;
   attempt_question_id: string;
   question_stem: string;
   model_answer: string;

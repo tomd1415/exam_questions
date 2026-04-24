@@ -1,6 +1,7 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { z } from 'zod';
 import { ModerationError } from '../services/marking/moderation.js';
+import { buildPupilAnswerView } from '../lib/pupil-answer-view.js';
 
 // Admin-only moderation queue for LLM-flagged marks (chunk 3d).
 // Teachers see their own pending-teacher queue at /admin/attempts;
@@ -93,6 +94,11 @@ export function registerAdminModerationRoutes(app: FastifyInstance): void {
       );
       const hitSet = new Set(detail.mark_points_hit ?? []);
       const missedSet = new Set(detail.mark_points_missed ?? []);
+      const answerView = buildPupilAnswerView(
+        detail.raw_answer,
+        detail.expected_response_type,
+        detail.part_config,
+      );
       return reply.view('admin_moderation_detail.eta', {
         title: mode === 'pilot' ? 'Pilot shadow review' : 'Moderation review',
         currentUser: req.currentUser,
@@ -112,6 +118,7 @@ export function registerAdminModerationRoutes(app: FastifyInstance): void {
           detail.raw_answer ?? '',
           detail.evidence_quotes ?? [],
         ),
+        answerView,
         flash: readQueryFlash(req),
         mode,
       });

@@ -72,22 +72,9 @@ const subtitle =
 
           <div class="question-part__answer">
             <strong>Pupil answer:</strong>
-            <%
-              // Flowchart / logic_diagram image-variant widgets serialise
-              // the pupil drawing as `image=data:image/png;base64,…` — see
-              // src/lib/pupil-answer-view.ts for the authoritative rule.
-              const ra = part.raw_answer || '';
-              const firstLine = ra.split('\n').find(function(l) { return l.length > 0; }) || '';
-              const isImage = firstLine.indexOf('image=data:image/') === 0;
-            %>
-            <% if (isImage) { %>
-              <img class="pupil-answer-image"
-                   src="<%= firstLine.slice('image='.length) %>"
-                   alt="Pupil's drawn answer (<%= part.expected_response_type %>)"
-                   loading="lazy" />
-            <% } else { %>
-              <pre><%= ra || '(blank)' %></pre>
-            <% } %>
+            <%~ include('_pupil_answer_preview', {
+              view: it.buildPupilAnswerView(part.raw_answer, part.expected_response_type, part.part_config)
+            }) %>
           </div>
 
           <% if (markPoints.length > 0) { %>

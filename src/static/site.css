@@ -3621,3 +3621,60 @@ input[type='number'].input {
   border-radius: var(--radius-sm, 4px);
   padding: var(--space-1);
 }
+.pupil-answer-text {
+  margin-top: var(--space-1);
+  white-space: pre-wrap;
+  font-family: inherit;
+}
+.pupil-answer-heading {
+  margin: var(--space-1) 0 var(--space-1);
+  font-weight: 600;
+  color: var(--color-ink-2);
+}
+/* Labelled-row list for matching / matrix_tick_* / cloze / diagram_labels
+   previews. Two columns on anything wider than a phone; stacked on narrow. */
+.pupil-answer-rows {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: var(--space-1) var(--space-2);
+  margin: 0;
+  padding: var(--space-1) var(--space-2);
+  background: var(--color-surface-1);
+  border: 1px solid var(--color-surface-3);
+  border-radius: var(--radius-sm, 4px);
+}
+.pupil-answer-rows__label {
+  font-weight: 600;
+  color: var(--color-ink-2);
+}
+.pupil-answer-rows__value {
+  margin: 0;
+  color: var(--color-ink-1);
+  word-break: break-word;
+}
+.pupil-answer-rows__value--blank {
+  color: var(--color-ink-4);
+  font-style: italic;
+}
+/* Trace-table / truth-table preview. Pre-filled cells are visually
+   distinct from pupil-typed cells so the moderator can tell at a
+   glance which parts of the grid the pupil actually wrote. */
+.pupil-answer-grid {
+  width: auto;
+  margin-top: var(--space-1);
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+.pupil-answer-grid th,
+.pupil-answer-grid td {
+  border: 1px solid var(--color-surface-3);
+  padding: var(--space-1) var(--space-2);
+  text-align: left;
+}
+.pupil-answer-grid__cell--prefilled {
+  background: var(--color-surface-2);
+  color: var(--color-ink-2);
+}
+.pupil-answer-grid__cell--blank {
+  background: var(--color-surface-0);
+}

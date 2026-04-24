@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { AttemptAccessError } from '../services/attempts.js';
 import { TeacherMarkingError } from '../services/marking/teacher.js';
 import { canManageClasses, ClassAccessError } from '../services/classes.js';
+import { buildPupilAnswerView } from '../lib/pupil-answer-view.js';
 
 const ClassParams = z.object({ id: z.coerce.number().int().positive() });
 const AttemptParams = z.object({ id: z.coerce.number().int().positive() });
@@ -119,6 +120,11 @@ export function registerAdminAttemptRoutes(app: FastifyInstance): void {
         csrfToken: reply.generateCsrf(),
         bundle,
         flash: readQueryFlash(req),
+        // Chunk 3i follow-up: decoded pupil answer per part so the
+        // marking template can render matching/cloze/trace/matrix
+        // answers in a human-readable form instead of the line-
+        // encoded wire format.
+        buildPupilAnswerView,
       });
     } catch (err) {
       if (err instanceof AttemptAccessError) {
