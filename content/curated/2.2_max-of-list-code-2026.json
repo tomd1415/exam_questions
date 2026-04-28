@@ -1,0 +1,32 @@
+{
+  "external_key": "j277-2-2-max-of-list-code-2026",
+  "component_code": "J277/02",
+  "topic_code": "2.2",
+  "subtopic_code": "2.2.3",
+  "command_word_code": "write_rewrite",
+  "archetype_code": "code_writing",
+  "expected_response_type": "code",
+  "stem": "A list called temperatures contains the daily high temperatures for a fortnight.",
+  "model_answer": "best = temperatures[0]\nfor t in temperatures:\n    if t > best:\n        best = t\nprint(\"Highest:\", best)",
+  "difficulty_band": 4,
+  "difficulty_step": 2,
+  "source_type": "teacher",
+  "review_notes": "Teacher-marked. Look for: best initialised to the first element (or to a sentinel that survives every value), loop covers every element, comparison + update, output. Allow `max(temperatures)` but credit the understanding marks only when the candidate also writes equivalent logic.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Write a program that finds and prints the highest value in the list `temperatures`. Do not use the built-in max() function.",
+      "marks": 3,
+      "expected_response_type": "code",
+      "mark_points": [
+        { "text": "running maximum initialised to the first element (or equivalent)", "marks": 1 },
+        { "text": "loop covers every element in `temperatures`", "marks": 1 },
+        {
+          "text": "comparison updates the running maximum when a larger value is found",
+          "marks": 1
+        },
+        { "text": "outputs the final maximum", "marks": 1 }
+      ]
+    }
+  ]
+}

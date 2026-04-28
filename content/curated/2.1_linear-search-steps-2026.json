@@ -1,0 +1,35 @@
+{
+  "external_key": "j277-2-1-linear-search-steps-2026",
+  "component_code": "J277/02",
+  "topic_code": "2.1",
+  "subtopic_code": "2.1.3",
+  "command_word_code": "describe",
+  "archetype_code": "algorithm_completion",
+  "expected_response_type": "algorithm",
+  "stem": "A linear search is being used to find the value 7 in the list [3, 1, 4, 1, 5, 9, 2, 6, 7, 5].",
+  "model_answer": "Start at the first element. Check whether it equals 7; if so, stop and return its position. Otherwise move to the next element. Continue until either a match is found or every element has been checked. For this list the search compares 3, 1, 4, 1, 5, 9, 2, 6, 7 — the ninth comparison matches, so the search returns position 9 (or index 8 if 0-based).",
+  "difficulty_band": 4,
+  "difficulty_step": 2,
+  "source_type": "teacher",
+  "review_notes": "Teacher-marked. Look for: pointer at the start, equality check, advance if no match, terminate at match or end of list. Either 0- or 1-indexed positions are fine.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Describe, using numbered steps, how a linear search would find the value 7 in the list above. Show how many comparisons are made.",
+      "marks": 4,
+      "expected_response_type": "algorithm",
+      "mark_points": [
+        { "text": "starts at the first element / first index", "marks": 1 },
+        { "text": "compares each element with the target value 7 in order", "marks": 1 },
+        {
+          "text": "stops when a match is found OR when every element has been checked",
+          "marks": 1
+        },
+        {
+          "text": "states the answer reaches 7 after 9 comparisons (or position 9 / index 8)",
+          "marks": 1
+        }
+      ]
+    }
+  ]
+}

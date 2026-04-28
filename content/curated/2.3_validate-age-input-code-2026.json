@@ -1,0 +1,34 @@
+{
+  "external_key": "j277-2-3-validate-age-input-code-2026",
+  "component_code": "J277/02",
+  "topic_code": "2.3",
+  "subtopic_code": "2.3.1",
+  "command_word_code": "write_rewrite",
+  "archetype_code": "code_writing",
+  "expected_response_type": "code",
+  "stem": "A library system needs the user to enter their age before issuing a card. Acceptable values are whole numbers from 5 to 110 inclusive.",
+  "model_answer": "while True:\n    raw = input(\"Enter your age: \")\n    if raw.isdigit():\n        age = int(raw)\n        if 5 <= age <= 110:\n            print(\"Age accepted:\", age)\n            break\n    print(\"Please enter a whole number from 5 to 110.\")",
+  "difficulty_band": 5,
+  "difficulty_step": 2,
+  "source_type": "teacher",
+  "review_notes": "Teacher-marked. Accept OCR pseudocode or Python. Look for: type/format validation (isdigit / try-int), range validation, loop until valid, accept message. The order of the two validations is flexible.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Write a program that asks the user for their age and only accepts whole numbers from 5 to 110 inclusive. Print 'Age accepted: <age>' once a valid value is entered. Otherwise, ask again.",
+      "marks": 3,
+      "expected_response_type": "code",
+      "mark_points": [
+        {
+          "text": "checks the input is a whole number (isdigit / try-int / equivalent)",
+          "marks": 1
+        },
+        { "text": "checks the value is between 5 and 110 inclusive (both bounds)", "marks": 1 },
+        {
+          "text": "loop repeats until a valid value has been entered, and prints the acceptance message at the end",
+          "marks": 1
+        }
+      ]
+    }
+  ]
+}

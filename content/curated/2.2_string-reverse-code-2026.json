@@ -1,0 +1,28 @@
+{
+  "external_key": "j277-2-2-string-reverse-code-2026",
+  "component_code": "J277/02",
+  "topic_code": "2.2",
+  "subtopic_code": "2.2.3",
+  "command_word_code": "write_rewrite",
+  "archetype_code": "code_writing",
+  "expected_response_type": "code",
+  "stem": "A pupil wants a program that asks for a word and prints it backwards. For example, hello → olleh.",
+  "model_answer": "word = input(\"Enter a word: \")\nresult = \"\"\nfor i in range(len(word) - 1, -1, -1):\n    result = result + word[i]\nprint(result)",
+  "difficulty_band": 5,
+  "difficulty_step": 2,
+  "source_type": "teacher",
+  "review_notes": "Teacher-marked. Accept any approach that produces the reversed string: index-based reverse loop, accumulating from the front of the original (`result = c + result`), or recognise `word[::-1]`. Reward the loop reasoning either way.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Write a program that reads a word and prints it reversed. Do not use a built-in reverse() function.",
+      "marks": 3,
+      "expected_response_type": "code",
+      "mark_points": [
+        { "text": "reads a word from the user", "marks": 1 },
+        { "text": "iterates over the characters of the word (any direction)", "marks": 1 },
+        { "text": "builds the reversed string and prints it", "marks": 1 }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "external_key": "j277-1-3-packet-switching-explain-2026",
+  "component_code": "J277/01",
+  "topic_code": "1.3",
+  "subtopic_code": "1.3.2",
+  "command_word_code": "explain",
+  "archetype_code": "explain",
+  "expected_response_type": "medium_text",
+  "stem": "A user uploads a 12 MB file from their laptop to a cloud-storage server.",
+  "model_answer": "The file is split into smaller packets, each carrying a small piece of the data plus a header containing the source IP, the destination IP, a sequence number and a checksum. Routers forward each packet independently, possibly along different paths. At the destination, packets are reassembled in sequence-number order and any missing or corrupted ones are re-requested.",
+  "difficulty_band": 5,
+  "difficulty_step": 2,
+  "source_type": "teacher",
+  "review_notes": "Teacher-marked. Award marks for: split into packets, header content (addresses + sequence), independent routing, reassembly at the destination.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Explain how packet switching is used to send the file across the internet.",
+      "marks": 3,
+      "expected_response_type": "medium_text",
+      "mark_points": [
+        { "text": "the file is split into multiple smaller packets", "marks": 1 },
+        {
+          "text": "each packet has source/destination IPs and a sequence number (and/or checksum)",
+          "marks": 1
+        },
+        { "text": "packets are routed independently and may take different paths", "marks": 1 },
+        {
+          "text": "packets are reassembled in order at the destination (and missing ones requested again)",
+          "marks": 1
+        }
+      ]
+    }
+  ]
+}

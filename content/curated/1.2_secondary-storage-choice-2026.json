@@ -1,0 +1,37 @@
+{
+  "external_key": "j277-1-2-secondary-storage-choice-2026",
+  "component_code": "J277/01",
+  "topic_code": "1.2",
+  "subtopic_code": "1.2.2",
+  "command_word_code": "compare",
+  "archetype_code": "compare",
+  "expected_response_type": "extended_response",
+  "stem": "A photographer needs a way to back up tens of thousands of high-resolution photographs. They are choosing between an internal hard disk drive (HDD), a portable solid-state drive (SSD) and an optical disc archive (Blu-ray).",
+  "model_answer": "Compare two characteristics across each option, with the photographer's needs in mind. HDDs offer the highest capacity per pound and are well-suited to bulk archives, but they are mechanical so are easier to damage in transit. SSDs are fast and silent with no moving parts, ideal for daily working backups, but cost much more per gigabyte. Optical discs are very long-lived and cheap per disc once the burner is bought, but capacities are smaller and writing is slow. A reasonable recommendation is to keep a working SSD copy and an HDD or Blu-ray archive.",
+  "difficulty_band": 6,
+  "difficulty_step": 2,
+  "source_type": "teacher",
+  "review_notes": "Teacher-marked. 6 marks: 1 mark per accurate characteristic (capacity / speed / portability / durability / cost) and 1 mark for a recommendation that addresses 'tens of thousands of high-res photos'. Generic 'SSD is faster' without context caps at L2.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Compare the suitability of an HDD, an SSD and optical discs for the photographer's backup needs. Make a recommendation.",
+      "marks": 6,
+      "expected_response_type": "extended_response",
+      "mark_points": [
+        { "text": "HDD: high capacity / cheap per GB", "marks": 1 },
+        { "text": "HDD drawback: mechanical / fragile / slower than SSD", "marks": 1 },
+        { "text": "SSD: fast read/write, no moving parts, robust in transit", "marks": 1 },
+        { "text": "SSD drawback: more expensive per GB", "marks": 1 },
+        {
+          "text": "Optical: long-lived archival medium / low cost per disc, but slow and lower capacity",
+          "marks": 1
+        },
+        {
+          "text": "Justified recommendation that references the photographer's context (volume of photos, working vs archive)",
+          "marks": 1
+        }
+      ]
+    }
+  ]
+}

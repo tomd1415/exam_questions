@@ -1,0 +1,31 @@
+{
+  "external_key": "j277-2-4-truth-table-and-or-2026",
+  "component_code": "J277/02",
+  "topic_code": "2.4",
+  "subtopic_code": "2.4.1",
+  "command_word_code": "describe",
+  "archetype_code": "explain",
+  "expected_response_type": "medium_text",
+  "stem": "A pupil is comparing the AND, OR and NOT logic gates.",
+  "model_answer": "AND outputs 1 only when ALL inputs are 1, otherwise it outputs 0. OR outputs 1 when AT LEAST ONE input is 1; it only outputs 0 when every input is 0. NOT (the inverter) takes a single input and outputs the opposite — 0 becomes 1 and 1 becomes 0. The truth tables capture this exhaustively for two-input AND and OR (4 rows each) and one-input NOT (2 rows).",
+  "difficulty_band": 4,
+  "difficulty_step": 1,
+  "source_type": "teacher",
+  "review_notes": "Teacher-marked. Award one mark per correct gate description; partial credit for getting two right.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Describe what AND, OR and NOT gates do.",
+      "marks": 3,
+      "expected_response_type": "medium_text",
+      "mark_points": [
+        { "text": "AND outputs 1 only when all inputs are 1", "marks": 1 },
+        {
+          "text": "OR outputs 1 when at least one input is 1 (only 0 when all inputs are 0)",
+          "marks": 1
+        },
+        { "text": "NOT outputs the opposite of its single input (1↔0)", "marks": 1 }
+      ]
+    }
+  ]
+}

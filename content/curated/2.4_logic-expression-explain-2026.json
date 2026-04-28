@@ -1,0 +1,36 @@
+{
+  "external_key": "j277-2-4-logic-expression-explain-2026",
+  "component_code": "J277/02",
+  "topic_code": "2.4",
+  "subtopic_code": "2.4.1",
+  "command_word_code": "explain",
+  "archetype_code": "explain",
+  "expected_response_type": "medium_text",
+  "stem": "A pupil writes the Boolean expression `Q = A AND (B OR NOT C)` and is asked to read it in plain English.",
+  "model_answer": "Q is true when A is true AND at least one of two things is true: B, or C is false (because NOT C reverses C). For example, with A=1, B=0, C=0: NOT C = 1, B OR NOT C = 1, A AND 1 = 1, so Q = 1. With A=0, the AND clause forces Q = 0 regardless of the rest.",
+  "difficulty_band": 5,
+  "difficulty_step": 2,
+  "source_type": "teacher",
+  "review_notes": "Teacher-marked. Reward correct precedence (NOT before AND/OR, brackets first) and a worked example with values that illustrates the meaning.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Explain in words what `Q = A AND (B OR NOT C)` evaluates to. Include a worked example with values for A, B and C.",
+      "marks": 2,
+      "expected_response_type": "medium_text",
+      "mark_points": [
+        { "text": "explains that Q is 1 only when A is 1 AND (B is 1 OR C is 0)", "marks": 1 },
+        {
+          "text": "gives a worked example using specific values that produces a defensible Q",
+          "marks": 1
+        }
+      ],
+      "misconceptions": [
+        {
+          "label": "Ignoring NOT precedence",
+          "description": "NOT applies to a single operand. `B OR NOT C` is `B OR (NOT C)`, not `NOT (B OR C)`."
+        }
+      ]
+    }
+  ]
+}

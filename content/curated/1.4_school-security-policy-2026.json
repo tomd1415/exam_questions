@@ -1,0 +1,37 @@
+{
+  "external_key": "j277-1-4-school-security-policy-2026",
+  "component_code": "J277/01",
+  "topic_code": "1.4",
+  "subtopic_code": "1.4.2",
+  "command_word_code": "discuss",
+  "archetype_code": "evaluate",
+  "expected_response_type": "extended_response",
+  "stem": "A secondary school is updating its IT acceptable-use and security policy. Pupils use shared school computers and bring their own laptops on a 'bring your own device' (BYOD) scheme.",
+  "model_answer": "A strong policy combines technical and human controls. Technical controls: enforce strong passwords with a minimum length and complexity, require regular automatic updates of operating system and antivirus software, run a firewall to filter incoming traffic, and use a managed Wi-Fi network with separate guest and BYOD VLANs so pupil devices cannot reach the admin network. Human controls: regular training (phishing awareness, not sharing passwords), clear consequences for misuse, and a backup policy so pupil work is recoverable. BYOD adds risk because the school does not own the devices, so the policy should mandate that personal devices have antivirus software, are kept up to date, and only access a sandboxed VLAN. The recommendation should explicitly weigh educational benefit (BYOD lets pupils continue work at home) against the extra security work.",
+  "difficulty_band": 7,
+  "difficulty_step": 2,
+  "source_type": "teacher",
+  "review_notes": "Teacher-marked. Mark by levels (L1 1-2, L2 3-4, L3 5-6). Award marks for: technical controls named, human controls named, BYOD-specific risk addressed, recommendation tied to a school context.",
+  "parts": [
+    {
+      "label": "(a)*",
+      "prompt": "Discuss the technical and human measures the school should include in its security policy. Explain how the policy would handle the BYOD scheme.",
+      "marks": 6,
+      "expected_response_type": "extended_response",
+      "mark_points": [
+        {
+          "text": "named technical control with rationale (passwords, MFA, firewall, antivirus, updates, encryption)",
+          "marks": 1
+        },
+        { "text": "second technical control / network segmentation for BYOD", "marks": 1 },
+        { "text": "human control with rationale (training, AUP, sanctions, audits)", "marks": 1 },
+        {
+          "text": "specific BYOD risk addressed (devices not school-owned / cannot fully manage them)",
+          "marks": 1
+        },
+        { "text": "trade-off named (e.g. usability vs security, budget vs coverage)", "marks": 1 },
+        { "text": "recommendation that joins technical and human controls coherently", "marks": 1 }
+      ]
+    }
+  ]
+}

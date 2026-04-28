@@ -1,0 +1,40 @@
+{
+  "external_key": "j277-1-2-image-storage-bits-2026",
+  "component_code": "J277/01",
+  "topic_code": "1.2",
+  "subtopic_code": "1.2.4",
+  "command_word_code": "explain",
+  "archetype_code": "explain",
+  "expected_response_type": "medium_text",
+  "stem": "A bitmap image is 800 pixels wide and 600 pixels tall. The image uses a colour depth of 24 bits per pixel.",
+  "model_answer": "File size in bits = width × height × colour depth = 800 × 600 × 24 = 11 520 000 bits. Increasing the colour depth (e.g. to 32 bpp) records more colour information per pixel, so each pixel needs more bits and the file gets larger; reducing the colour depth makes the file smaller but limits the number of distinct colours that can be shown.",
+  "difficulty_band": 5,
+  "difficulty_step": 2,
+  "source_type": "teacher",
+  "review_notes": "Teacher-marked. Award the calculation (formula or final value), and an explanation of how colour depth changes file size. Convert to bytes is acceptable: 11 520 000 / 8 = 1 440 000 bytes ≈ 1.44 MB.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Explain how to calculate the file size of this image and how the file size would change if the colour depth was increased.",
+      "marks": 3,
+      "expected_response_type": "medium_text",
+      "mark_points": [
+        {
+          "text": "file size = width × height × colour depth (bits) (or equivalent worked calculation)",
+          "marks": 1
+        },
+        {
+          "text": "uses the values to reach 11 520 000 bits / 1 440 000 bytes / ≈ 1.44 MB",
+          "marks": 1
+        },
+        { "text": "increasing colour depth increases file size (more bits per pixel)", "marks": 1 }
+      ],
+      "misconceptions": [
+        {
+          "label": "Forgets the colour depth term",
+          "description": "Calculating only width × height gives pixels, not bits. Mark scheme requires multiplication by colour depth."
+        }
+      ]
+    }
+  ]
+}

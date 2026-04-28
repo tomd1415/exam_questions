@@ -1,0 +1,37 @@
+{
+  "external_key": "j277-1-4-sql-injection-explain-2026",
+  "component_code": "J277/01",
+  "topic_code": "1.4",
+  "subtopic_code": "1.4.1",
+  "command_word_code": "explain",
+  "archetype_code": "explain",
+  "expected_response_type": "medium_text",
+  "stem": "An online shop has a search box that builds an SQL query by joining the user's input straight into a string.",
+  "model_answer": "An SQL injection attack puts SQL syntax into the input box (for example `' OR 1=1 --`) so that the joined query reads as instructions to the database rather than as a search term. This can leak rows the user shouldn't see, modify data, or even drop tables. The fix is to use parameterised queries (or prepared statements) so the user's input is treated as data only, plus input validation that rejects unexpected characters.",
+  "difficulty_band": 6,
+  "difficulty_step": 2,
+  "source_type": "teacher",
+  "review_notes": "Teacher-marked. Reward an accurate description of how the attack works (definition mark, example mark) and one preventative measure mark — parameterised queries, input validation, escaping, principle of least privilege.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Explain what an SQL injection attack is, give an example of what the attacker might enter, and describe one way the shop could prevent it.",
+      "marks": 3,
+      "expected_response_type": "medium_text",
+      "mark_points": [
+        {
+          "text": "attacker types SQL into an input field which is concatenated into a query, causing the database to execute it",
+          "marks": 1
+        },
+        {
+          "text": "example of malicious input that changes the query (e.g. `' OR 1=1 --`, `;DROP TABLE`, comment-out)",
+          "marks": 1
+        },
+        {
+          "text": "prevention: parameterised / prepared queries OR input validation OR escaping",
+          "marks": 1
+        }
+      ]
+    }
+  ]
+}

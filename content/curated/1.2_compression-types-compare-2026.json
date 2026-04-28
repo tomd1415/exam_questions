@@ -1,0 +1,34 @@
+{
+  "external_key": "j277-1-2-compression-types-compare-2026",
+  "component_code": "J277/01",
+  "topic_code": "1.2",
+  "subtopic_code": "1.2.5",
+  "command_word_code": "describe",
+  "archetype_code": "compare",
+  "expected_response_type": "medium_text",
+  "stem": "A music producer wants to share a master recording online. They have to choose between lossy and lossless compression.",
+  "model_answer": "Lossless compression keeps every bit of the original data and recreates the exact original file when decompressed. Lossy compression removes some information (data the listener is unlikely to notice) and cannot recreate the exact original — but it produces a much smaller file. For a master recording the producer would prefer lossless to keep audio quality; for a streaming preview lossy would be fine because the smaller file streams faster.",
+  "difficulty_band": 5,
+  "difficulty_step": 1,
+  "source_type": "teacher",
+  "review_notes": "Teacher-marked. Award one mark for each technique definition and one mark for a sensible application to a music context.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Describe the difference between lossy and lossless compression and explain which is more suitable for a master recording.",
+      "marks": 3,
+      "expected_response_type": "medium_text",
+      "mark_points": [
+        { "text": "Lossless: original data fully recovered on decompression", "marks": 1 },
+        {
+          "text": "Lossy: some data is permanently removed; cannot recover the exact original",
+          "marks": 1
+        },
+        {
+          "text": "Applies to music: master should be lossless to preserve audio quality",
+          "marks": 1
+        }
+      ]
+    }
+  ]
+}

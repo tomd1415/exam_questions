@@ -1,0 +1,32 @@
+{
+  "external_key": "j277-2-2-count-vowels-code-2026",
+  "component_code": "J277/02",
+  "topic_code": "2.2",
+  "subtopic_code": "2.2.3",
+  "command_word_code": "write_rewrite",
+  "archetype_code": "code_writing",
+  "expected_response_type": "code",
+  "stem": "A pupil wants to count how many vowels are in a string entered by the user.",
+  "model_answer": "text = input(\"Enter a sentence: \").lower()\nvowels = \"aeiou\"\ncount = 0\nfor ch in text:\n    if ch in vowels:\n        count = count + 1\nprint(count)",
+  "difficulty_band": 4,
+  "difficulty_step": 2,
+  "source_type": "teacher",
+  "review_notes": "Teacher-marked. Look for: case handling (lower-case the input or compare to both cases), iteration over each character, membership test against the vowel set, counter, output.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Write a program that counts the vowels in a sentence the user types. Treat upper-case and lower-case vowels the same.",
+      "marks": 3,
+      "expected_response_type": "code",
+      "mark_points": [
+        {
+          "text": "input read and case normalised (lower() OR explicit upper-case checks)",
+          "marks": 1
+        },
+        { "text": "iterates over every character", "marks": 1 },
+        { "text": "tests if character is a vowel and increments a counter", "marks": 1 },
+        { "text": "outputs the final count", "marks": 1 }
+      ]
+    }
+  ]
+}

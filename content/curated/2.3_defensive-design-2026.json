@@ -1,0 +1,31 @@
+{
+  "external_key": "j277-2-3-defensive-design-2026",
+  "component_code": "J277/02",
+  "topic_code": "2.3",
+  "subtopic_code": "2.3.1",
+  "command_word_code": "describe",
+  "archetype_code": "explain",
+  "expected_response_type": "medium_text",
+  "stem": "A small online quiz program lets users enter their age, the answer to a multiple-choice question and a comment.",
+  "model_answer": "Defensive design anticipates misuse. The program should validate inputs (age must be an integer in a sensible range, the multiple-choice answer must be one of the allowed options, the comment must not exceed a maximum length); it should authenticate users (login + password) so people cannot quiz as someone else; and it should handle errors with a friendly message instead of crashing — for example a try/except around input conversion. These together keep the program reliable when a user makes a mistake or tries to break it.",
+  "difficulty_band": 5,
+  "difficulty_step": 2,
+  "source_type": "teacher",
+  "review_notes": "Teacher-marked. Look for the term 'validation' and a concrete example, plus one other defensive technique (authentication, error handling).",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Describe three defensive design techniques the program should use. Give an example of each in this scenario.",
+      "marks": 3,
+      "expected_response_type": "medium_text",
+      "mark_points": [
+        {
+          "text": "input validation (range / lookup / length / type) — applied to age or comment",
+          "marks": 1
+        },
+        { "text": "authentication (e.g. login + password before quiz)", "marks": 1 },
+        { "text": "error handling (catch exception so program does not crash)", "marks": 1 }
+      ]
+    }
+  ]
+}

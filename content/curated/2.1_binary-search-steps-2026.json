@@ -1,0 +1,38 @@
+{
+  "external_key": "j277-2-1-binary-search-steps-2026",
+  "component_code": "J277/02",
+  "topic_code": "2.1",
+  "subtopic_code": "2.1.3",
+  "command_word_code": "describe",
+  "archetype_code": "algorithm_completion",
+  "expected_response_type": "algorithm",
+  "stem": "A binary search is being used to find the value 13 in the sorted list [1, 4, 7, 9, 11, 13, 17, 21, 25].",
+  "model_answer": "Step 1: take the middle element of the list (index 4 → 11). Compare with 13: 13 > 11, so search the right half (indices 5..8 → [13, 17, 21, 25]). Step 2: take the middle of [13, 17, 21, 25] (index 6 → 17 in the original list). Compare: 13 < 17, so search the left half ([13]). Step 3: middle is 13, which matches. Found in 3 comparisons. Binary search relies on the list being sorted.",
+  "difficulty_band": 6,
+  "difficulty_step": 2,
+  "source_type": "teacher",
+  "review_notes": "Teacher-marked. Look for: list must be sorted, middle element compared, halve based on comparison, repeat until found or empty. Accept variations in indexing convention.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Describe, with numbered steps, how a binary search finds the value 13 in the list above. Use the values from the list to illustrate each step.",
+      "marks": 4,
+      "expected_response_type": "algorithm",
+      "mark_points": [
+        { "text": "states that the list must be sorted (precondition)", "marks": 1 },
+        { "text": "compares the target with the middle element on each step", "marks": 1 },
+        {
+          "text": "if target is greater than the middle, discards the lower half (and vice versa)",
+          "marks": 1
+        },
+        { "text": "uses the values to reach 13 in 3 (or fewer) comparisons", "marks": 1 }
+      ],
+      "misconceptions": [
+        {
+          "label": "Binary search on unsorted list",
+          "description": "Binary search assumes a sorted list. Applying it to unsorted data can return 'not found' for an element that is present."
+        }
+      ]
+    }
+  ]
+}

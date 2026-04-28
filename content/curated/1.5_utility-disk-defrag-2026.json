@@ -1,0 +1,46 @@
+{
+  "external_key": "j277-1-5-utility-disk-defrag-2026",
+  "component_code": "J277/01",
+  "topic_code": "1.5",
+  "subtopic_code": "1.5.2",
+  "command_word_code": "discuss",
+  "archetype_code": "evaluate",
+  "expected_response_type": "extended_response",
+  "stem": "A school IT technician maintains classroom HDDs by running utility software regularly. The technician uses defragmentation software, backup software and full-disk encryption.",
+  "model_answer": "Defragmentation rearranges fragmented files so the read/write head of an HDD can read each file in one continuous sweep, improving access time. It is unnecessary on SSDs (which have no moving parts) and can shorten their life by causing extra writes. Backup software keeps a recoverable copy of files in case of disk failure or ransomware; the school should keep at least one off-site copy. Full-disk encryption stops a stolen drive being read on another computer; pupils' personal data is protected even if the laptop is lost. Together these utilities protect availability, integrity and confidentiality, but the technician should not run defragmentation on SSD-equipped devices.",
+  "difficulty_band": 6,
+  "difficulty_step": 2,
+  "source_type": "teacher",
+  "review_notes": "Teacher-marked. Mark by levels. Look for: each utility's purpose, a benefit applied to the school, an awareness that defragmentation is HDD-specific, a recommendation that ties the three utilities together.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Discuss the purpose and benefit of each utility for the school, and explain whether defragmentation should be run on every device.",
+      "marks": 6,
+      "expected_response_type": "extended_response",
+      "mark_points": [
+        {
+          "text": "Defragmentation purpose: rearranges fragmented files for faster HDD reads",
+          "marks": 1
+        },
+        {
+          "text": "Backup purpose: recover after disk failure / ransomware / human error",
+          "marks": 1
+        },
+        { "text": "Encryption purpose: protect data on a stolen / lost device", "marks": 1 },
+        {
+          "text": "Defragmentation should NOT be run on SSDs (no benefit, shortens life)",
+          "marks": 1
+        },
+        {
+          "text": "applies one or more utilities to a school context (pupil data, classroom availability)",
+          "marks": 1
+        },
+        {
+          "text": "joined recommendation that links the three utilities (availability, integrity, confidentiality)",
+          "marks": 1
+        }
+      ]
+    }
+  ]
+}

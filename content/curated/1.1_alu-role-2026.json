@@ -1,0 +1,37 @@
+{
+  "external_key": "j277-1-1-alu-role-2026",
+  "component_code": "J277/01",
+  "topic_code": "1.1",
+  "subtopic_code": "1.1.1",
+  "command_word_code": "describe",
+  "archetype_code": "explain",
+  "expected_response_type": "medium_text",
+  "stem": "The CPU contains several components that work together when an instruction is executed.",
+  "model_answer": "The Arithmetic Logic Unit (ALU) carries out arithmetic operations such as addition and subtraction and logical operations such as AND, OR and comparisons. Results are written to a register (often the accumulator) so that following instructions can use them.",
+  "difficulty_band": 4,
+  "difficulty_step": 2,
+  "source_type": "teacher",
+  "review_notes": "Teacher-marked. Look for: arithmetic operations named, logic operations named, output to a register/accumulator. Mentioning 'fetches instructions' or 'decodes' is not creditable here — that is the control unit / fetch-execute cycle, not the ALU.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Describe the role of the ALU in the CPU.",
+      "marks": 2,
+      "expected_response_type": "medium_text",
+      "mark_points": [
+        { "text": "performs arithmetic operations (e.g. addition, subtraction)", "marks": 1 },
+        {
+          "text": "performs logical operations (e.g. AND, OR, comparisons / Boolean tests)",
+          "marks": 1
+        },
+        { "text": "stores the result in a register / accumulator", "marks": 1 }
+      ],
+      "misconceptions": [
+        {
+          "label": "ALU fetches instructions",
+          "description": "Fetching and decoding are control-unit jobs. The ALU only operates on values the control unit hands it."
+        }
+      ]
+    }
+  ]
+}

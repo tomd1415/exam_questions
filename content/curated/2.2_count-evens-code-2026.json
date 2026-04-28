@@ -1,0 +1,38 @@
+{
+  "external_key": "j277-2-2-count-evens-code-2026",
+  "component_code": "J277/02",
+  "topic_code": "2.2",
+  "subtopic_code": "2.2.3",
+  "command_word_code": "write_rewrite",
+  "archetype_code": "code_writing",
+  "expected_response_type": "code",
+  "stem": "A pupil has a list of integers stored in a variable called numbers and wants to know how many of them are even.",
+  "model_answer": "count = 0\nfor n in numbers:\n    if n % 2 == 0:\n        count = count + 1\nprint(count)",
+  "difficulty_band": 4,
+  "difficulty_step": 2,
+  "source_type": "teacher",
+  "review_notes": "Teacher-marked. Accept OCR pseudocode or Python. Look for: counter initialised to 0, loop over the list, evenness test (`% 2 == 0` or equivalent), increment, output the result.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Write a program in OCR pseudocode or Python that counts how many of the values in the list `numbers` are even and prints the count.",
+      "marks": 3,
+      "expected_response_type": "code",
+      "mark_points": [
+        { "text": "counter initialised to 0 before the loop", "marks": 1 },
+        { "text": "iterates over every element of `numbers`", "marks": 1 },
+        {
+          "text": "tests for even (`% 2 == 0` or MOD 2 == 0) and increments the counter",
+          "marks": 1
+        },
+        { "text": "outputs the final count", "marks": 1 }
+      ],
+      "misconceptions": [
+        {
+          "label": "Single-element check",
+          "description": "Programs that test only one value (no loop) cannot reach the count-many-evens behaviour."
+        }
+      ]
+    }
+  ]
+}

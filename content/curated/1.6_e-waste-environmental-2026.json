@@ -1,0 +1,34 @@
+{
+  "external_key": "j277-1-6-e-waste-environmental-2026",
+  "component_code": "J277/01",
+  "topic_code": "1.6",
+  "subtopic_code": "1.6.1",
+  "command_word_code": "explain",
+  "archetype_code": "explain",
+  "expected_response_type": "medium_text",
+  "stem": "Many of the laptops in a school are replaced with new models every three years. The old laptops are sometimes thrown away.",
+  "model_answer": "Old computers contain heavy metals (lead, mercury, cadmium) that leach into soil and water from landfill, harming wildlife and entering the food chain. Plastics in casings break down very slowly. Manufacturing each new laptop also costs raw materials and energy. To reduce e-waste the school should refurbish or donate working laptops, recycle the metals from broken ones through a licensed processor, and choose models with longer support lifetimes.",
+  "difficulty_band": 5,
+  "difficulty_step": 2,
+  "source_type": "teacher",
+  "review_notes": "Teacher-marked. Look for an environmental harm, a manufacturing-energy or raw-material point, and at least one practical mitigation.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Explain the environmental impact of disposing of old laptops in this way and one action the school could take to reduce that impact.",
+      "marks": 3,
+      "expected_response_type": "medium_text",
+      "mark_points": [
+        {
+          "text": "old computers contain toxic materials that pollute soil/water if landfilled",
+          "marks": 1
+        },
+        { "text": "manufacturing replacements uses raw materials / energy", "marks": 1 },
+        {
+          "text": "mitigation: refurbish, donate, recycle through a licensed processor, extend support life",
+          "marks": 1
+        }
+      ]
+    }
+  ]
+}

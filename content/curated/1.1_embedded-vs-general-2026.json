@@ -1,0 +1,52 @@
+{
+  "external_key": "j277-1-1-embedded-vs-general-2026",
+  "component_code": "J277/01",
+  "topic_code": "1.1",
+  "subtopic_code": "1.1.3",
+  "command_word_code": "compare",
+  "archetype_code": "compare",
+  "expected_response_type": "extended_response",
+  "stem": "A washing-machine manufacturer is choosing between using an embedded system and a general-purpose computer to control the machine.",
+  "model_answer": "An embedded system is a small computer built into a larger device for one specific task, typically with limited memory and storage and a fixed program in ROM. A general-purpose computer (e.g. a laptop) runs many different programs, has much more RAM and storage and a full operating system. For a washing machine, an embedded system is the right choice: it is cheaper per unit, more reliable, draws less power, fits in a small enclosure and only needs to run the wash-cycle program. A general-purpose computer would be wasteful (most of its capability would be unused) and harder to fit, but the manufacturer would gain easy software updates and the ability to run unrelated apps.",
+  "difficulty_band": 6,
+  "difficulty_step": 2,
+  "source_type": "teacher",
+  "review_notes": "Teacher-marked. 6 marks: 2 for clear features of each, 2 for a sensible benefit of each in this context, 2 for a justified recommendation tied to the washing machine. Reject answers that just list features with no comparison.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Compare an embedded system and a general-purpose computer as ways of controlling the washing machine. Recommend, with reasons, which the manufacturer should choose.",
+      "marks": 6,
+      "expected_response_type": "extended_response",
+      "mark_points": [
+        { "text": "Embedded system: built into a device, runs a single fixed program", "marks": 1 },
+        {
+          "text": "General-purpose computer: runs many programs, has an operating system",
+          "marks": 1
+        },
+        {
+          "text": "Embedded benefit applied to a washing machine (cheap, small, low power, reliable)",
+          "marks": 1
+        },
+        {
+          "text": "General-purpose benefit applied (e.g. easier updates / additional features)",
+          "marks": 1
+        },
+        {
+          "text": "Embedded drawback (harder to update / less flexible) OR general-purpose drawback (cost, size, complexity overkill)",
+          "marks": 1
+        },
+        {
+          "text": "Justified recommendation that names the choice and ties at least one reason to the washing-machine context",
+          "marks": 1
+        }
+      ],
+      "misconceptions": [
+        {
+          "label": "List with no comparison",
+          "description": "Answers that describe each system separately without contrasting them or making a recommendation cap at half marks."
+        }
+      ]
+    }
+  ]
+}

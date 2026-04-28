@@ -1,0 +1,33 @@
+{
+  "external_key": "j277-2-1-decomposition-purpose-2026",
+  "component_code": "J277/02",
+  "topic_code": "2.1",
+  "subtopic_code": "2.1.1",
+  "command_word_code": "explain",
+  "archetype_code": "explain",
+  "expected_response_type": "medium_text",
+  "stem": "A team of three programmers is starting work on an online quiz application.",
+  "model_answer": "Decomposition splits a large problem into smaller, more manageable sub-problems. For the quiz app, the team can decompose the system into login/account, question display, marking, and results storage. Each sub-problem can be assigned to a different programmer, tested independently and joined together at the end. Smaller sub-problems are easier to reason about and bugs are less likely to cross module boundaries.",
+  "difficulty_band": 4,
+  "difficulty_step": 1,
+  "source_type": "teacher",
+  "review_notes": "Teacher-marked. Award one mark for the definition and one mark for a benefit applied to the team / project context.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Explain what decomposition means and why it is useful for the quiz-app team.",
+      "marks": 2,
+      "expected_response_type": "medium_text",
+      "mark_points": [
+        {
+          "text": "decomposition splits a problem into smaller sub-problems / modules",
+          "marks": 1
+        },
+        {
+          "text": "benefit applied to a team (parallel work / each module easier to test / bugs isolated)",
+          "marks": 1
+        }
+      ]
+    }
+  ]
+}

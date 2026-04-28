@@ -1,0 +1,30 @@
+{
+  "external_key": "j277-1-5-user-interface-types-2026",
+  "component_code": "J277/01",
+  "topic_code": "1.5",
+  "subtopic_code": "1.5.1",
+  "command_word_code": "describe",
+  "archetype_code": "compare",
+  "expected_response_type": "medium_text",
+  "stem": "A computer can present a Graphical User Interface (GUI) or a Command Line Interface (CLI).",
+  "model_answer": "A GUI uses windows, icons, menus and a pointer (WIMP) so users interact mainly with the mouse. It is intuitive for beginners but uses more system resources. A CLI is text-only: users type commands into a terminal. It is faster for experienced users and uses very few resources, but has a steep learning curve and error messages are often terse. A typical school user prefers the GUI; a server administrator prefers the CLI for scripting and remote access.",
+  "difficulty_band": 4,
+  "difficulty_step": 1,
+  "source_type": "teacher",
+  "review_notes": "Teacher-marked. Award one accurate description of each interface type.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Describe one advantage of a GUI and one advantage of a CLI.",
+      "marks": 2,
+      "expected_response_type": "medium_text",
+      "mark_points": [
+        { "text": "GUI advantage: easy/intuitive to use without training (WIMP)", "marks": 1 },
+        {
+          "text": "CLI advantage: faster for experienced users / scriptable / uses fewer resources",
+          "marks": 1
+        }
+      ]
+    }
+  ]
+}

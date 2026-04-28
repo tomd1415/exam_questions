@@ -1,0 +1,29 @@
+{
+  "external_key": "j277-2-2-average-list-code-2026",
+  "component_code": "J277/02",
+  "topic_code": "2.2",
+  "subtopic_code": "2.2.3",
+  "command_word_code": "write_rewrite",
+  "archetype_code": "code_writing",
+  "expected_response_type": "code",
+  "stem": "A list called scores contains the marks of every pupil in a class.",
+  "model_answer": "total = 0\nfor s in scores:\n    total = total + s\naverage = total / len(scores)\nprint(average)",
+  "difficulty_band": 4,
+  "difficulty_step": 2,
+  "source_type": "teacher",
+  "review_notes": "Teacher-marked. Accept OCR pseudocode or Python. Look for: running total initialised, loop sums every score, divides by the length of the list, outputs the result. `sum(scores) / len(scores)` is acceptable but the marker should still see understanding of summing.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Write a program that calculates and prints the average of the values in the list `scores`.",
+      "marks": 3,
+      "expected_response_type": "code",
+      "mark_points": [
+        { "text": "running total initialised to 0", "marks": 1 },
+        { "text": "loop adds each value in `scores` to the running total", "marks": 1 },
+        { "text": "divides the total by the length of the list", "marks": 1 },
+        { "text": "outputs the result", "marks": 1 }
+      ]
+    }
+  ]
+}

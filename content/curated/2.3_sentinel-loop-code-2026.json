@@ -1,0 +1,35 @@
+{
+  "external_key": "j277-2-3-sentinel-loop-code-2026",
+  "component_code": "J277/02",
+  "topic_code": "2.3",
+  "subtopic_code": "2.3.1",
+  "command_word_code": "write_rewrite",
+  "archetype_code": "code_writing",
+  "expected_response_type": "code",
+  "stem": "A program asks the user to enter exam scores. The user types `done` (in any case) when they have finished. The program then prints the total of the scores.",
+  "model_answer": "total = 0\nwhile True:\n    raw = input(\"Score (or 'done'): \")\n    if raw.lower() == \"done\":\n        break\n    if raw.isdigit():\n        total = total + int(raw)\n    else:\n        print(\"Please enter a whole number or 'done'.\")\nprint(\"Total:\", total)",
+  "difficulty_band": 6,
+  "difficulty_step": 2,
+  "source_type": "teacher",
+  "review_notes": "Teacher-marked. Accept OCR pseudocode or Python. Look for: sentinel detection (case-insensitive 'done'), running total, defensive handling for non-numeric input, final output. Marks scale with how robust the loop is.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Write a program that lets the user enter as many scores as they want and types 'done' (any case) to finish. The program then prints the total of the entered scores.",
+      "marks": 4,
+      "expected_response_type": "code",
+      "mark_points": [
+        { "text": "loops, asking for input each time", "marks": 1 },
+        { "text": "detects the sentinel 'done' case-insensitively and exits the loop", "marks": 1 },
+        { "text": "accumulates a running total of the numeric scores", "marks": 1 },
+        { "text": "prints the final total once the loop ends", "marks": 1 }
+      ],
+      "misconceptions": [
+        {
+          "label": "Hard-coded count",
+          "description": "A `for i in range(N)` loop is not a sentinel-controlled loop — the user controls when to stop in this scenario."
+        }
+      ]
+    }
+  ]
+}

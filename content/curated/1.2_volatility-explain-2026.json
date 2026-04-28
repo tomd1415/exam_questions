@@ -1,0 +1,33 @@
+{
+  "external_key": "j277-1-2-volatility-explain-2026",
+  "component_code": "J277/01",
+  "topic_code": "1.2",
+  "subtopic_code": "1.2.1",
+  "command_word_code": "explain",
+  "archetype_code": "explain",
+  "expected_response_type": "medium_text",
+  "stem": "A computer's primary storage includes both RAM and ROM.",
+  "model_answer": "RAM is volatile, meaning its contents are lost when the power is removed. ROM is non-volatile, meaning its contents are kept even with the power off. RAM is used to hold programs and data the CPU is currently working on; ROM holds the bootloader / firmware that the computer needs to start up.",
+  "difficulty_band": 4,
+  "difficulty_step": 1,
+  "source_type": "teacher",
+  "review_notes": "Teacher-marked. Look for the volatile/non-volatile contrast and an example of why each is suited to its job. 'Permanent' vs 'temporary' is acceptable wording but the term 'volatile' should be recognised.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Explain what is meant by volatile and non-volatile storage, using RAM and ROM as examples.",
+      "marks": 2,
+      "expected_response_type": "medium_text",
+      "mark_points": [
+        {
+          "text": "Volatile = loses contents when the power is removed (RAM is volatile)",
+          "marks": 1
+        },
+        {
+          "text": "Non-volatile = keeps contents when the power is removed (ROM is non-volatile)",
+          "marks": 1
+        }
+      ]
+    }
+  ]
+}

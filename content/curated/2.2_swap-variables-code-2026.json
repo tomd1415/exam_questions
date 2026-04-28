@@ -1,0 +1,39 @@
+{
+  "external_key": "j277-2-2-swap-variables-code-2026",
+  "component_code": "J277/02",
+  "topic_code": "2.2",
+  "subtopic_code": "2.2.1",
+  "command_word_code": "write_rewrite",
+  "archetype_code": "code_writing",
+  "expected_response_type": "code",
+  "stem": "A pupil wants to swap the values stored in two variables, a and b.",
+  "model_answer": "temp = a\na = b\nb = temp\nprint(a, b)",
+  "difficulty_band": 3,
+  "difficulty_step": 1,
+  "source_type": "teacher",
+  "review_notes": "Teacher-marked. Look for the use of a temporary variable (or equivalent tuple-swap in Python). Reject `a = b; b = a;` (loses a's value).",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Write a program that swaps the contents of variables `a` and `b` and then prints both values.",
+      "marks": 2,
+      "expected_response_type": "code",
+      "mark_points": [
+        {
+          "text": "uses a temporary variable to hold one of the original values (or equivalent atomic swap)",
+          "marks": 1
+        },
+        {
+          "text": "after the swap, both variables hold each other's original value, and both are printed",
+          "marks": 1
+        }
+      ],
+      "misconceptions": [
+        {
+          "label": "Direct overwrite",
+          "description": "`a = b` followed by `b = a` overwrites `a` first, so `b` ends up with the same value as the new `a` — the original `a` is lost."
+        }
+      ]
+    }
+  ]
+}

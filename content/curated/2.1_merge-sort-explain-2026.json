@@ -1,0 +1,38 @@
+{
+  "external_key": "j277-2-1-merge-sort-explain-2026",
+  "component_code": "J277/02",
+  "topic_code": "2.1",
+  "subtopic_code": "2.1.3",
+  "command_word_code": "describe",
+  "archetype_code": "algorithm_completion",
+  "expected_response_type": "algorithm",
+  "stem": "A teacher is showing how merge sort orders the list [9, 5, 7, 1, 3, 8] into ascending order.",
+  "model_answer": "Divide step: split the list in half, repeatedly, until each sub-list contains a single element: [9],[5],[7],[1],[3],[8]. Conquer step: merge pairs of sub-lists in order to produce sorted longer sub-lists: [9]+[5] → [5,9]; [7]+[1] → [1,7]; [3]+[8] → [3,8]. Merge again: [5,9]+[1,7] → [1,5,7,9] and [3,8] is left; finally merge [1,5,7,9]+[3,8] → [1,3,5,7,8,9]. Each merge compares the front element of two sorted sub-lists and takes the smaller, building one sorted output.",
+  "difficulty_band": 6,
+  "difficulty_step": 2,
+  "source_type": "teacher",
+  "review_notes": "Teacher-marked. Award marks for: divide-into-halves until single-element lists, merge step compares fronts, repeats until one sorted list remains, applied to the example values.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Describe how merge sort would sort the list [9, 5, 7, 1, 3, 8] into ascending order. Use numbered steps and show at least one intermediate stage.",
+      "marks": 4,
+      "expected_response_type": "algorithm",
+      "mark_points": [
+        {
+          "text": "divide: split the list in half repeatedly until each sub-list has 1 element",
+          "marks": 1
+        },
+        {
+          "text": "conquer/merge: combine pairs of sorted sub-lists by comparing their front elements",
+          "marks": 1
+        },
+        { "text": "repeats until a single sorted list remains", "marks": 1 },
+        {
+          "text": "uses the example values to show at least one intermediate state (e.g. [5,9],[1,7],[3,8])",
+          "marks": 1
+        }
+      ]
+    }
+  ]
+}

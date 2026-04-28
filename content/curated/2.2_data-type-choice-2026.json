@@ -1,0 +1,28 @@
+{
+  "external_key": "j277-2-2-data-type-choice-2026",
+  "component_code": "J277/02",
+  "topic_code": "2.2",
+  "subtopic_code": "2.2.2",
+  "command_word_code": "explain",
+  "archetype_code": "explain",
+  "expected_response_type": "medium_text",
+  "stem": "A pupil is writing a program that stores: a person's age, their average exam score and whether they are a club member.",
+  "model_answer": "Age is a whole number, so use an integer. The average score may have a fractional part (e.g. 73.5), so use a real / float. Membership is yes/no, so use a Boolean. Each type uses just enough memory to represent the data and avoids accidental misuse — for example, you cannot accidentally store '73.5 years old' if age is an integer.",
+  "difficulty_band": 4,
+  "difficulty_step": 1,
+  "source_type": "teacher",
+  "review_notes": "Teacher-marked. Award one mark per correct (data type + reason) pair, capped at 3.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "State the most appropriate data type for each of the three values and explain why.",
+      "marks": 3,
+      "expected_response_type": "medium_text",
+      "mark_points": [
+        { "text": "age → integer (whole number)", "marks": 1 },
+        { "text": "average score → real / float (can have a fractional part)", "marks": 1 },
+        { "text": "membership → Boolean (true / false)", "marks": 1 }
+      ]
+    }
+  ]
+}

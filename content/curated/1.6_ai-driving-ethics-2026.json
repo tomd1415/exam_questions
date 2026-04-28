@@ -1,0 +1,60 @@
+{
+  "external_key": "j277-1-6-ai-driving-ethics-2026",
+  "component_code": "J277/01",
+  "topic_code": "1.6",
+  "subtopic_code": "1.6.1",
+  "command_word_code": "discuss",
+  "archetype_code": "evaluate",
+  "expected_response_type": "extended_response",
+  "stem": "A car manufacturer is developing a self-driving car. The car uses an AI system to decide how to react in an emergency, including situations where a collision cannot be avoided.",
+  "model_answer": "Ethical issues: who is morally responsible for the AI's decisions in a fatal collision (manufacturer, programmer, owner)? How is the AI trained to choose between harming the passenger or a pedestrian? Are training data sets biased (e.g. underrepresenting some groups)? Legal issues: liability and insurance — current law assumes a human driver; manufacturers may be sued for product defects. Data-protection law applies to the camera and location data the car collects. Cultural impact: the car may displace driving jobs (taxis, delivery) but increase mobility for disabled or elderly passengers. Environmental impact: an electric self-driving fleet could reduce emissions, but the data centres that train the AI use a lot of energy. A strong answer balances these and recommends ongoing safety regulation, transparent training data, and clear liability rules before public deployment.",
+  "difficulty_band": 8,
+  "difficulty_step": 3,
+  "source_type": "teacher",
+  "review_notes": "QER (8 marks). Mark by levels: L1 1-2, L2 3-5, L3 6-8. Strong answers cover at least three of ethical / legal / cultural / environmental and conclude with a defensible recommendation.",
+  "parts": [
+    {
+      "label": "(a)*",
+      "prompt": "Discuss the ethical, legal, cultural and environmental issues raised by the use of AI in a self-driving car. Make a recommendation about whether and how the manufacturer should release the car.",
+      "marks": 8,
+      "expected_response_type": "extended_response",
+      "mark_points": [
+        {
+          "text": "ethical: responsibility for AI decisions / dilemma in unavoidable collisions",
+          "marks": 1
+        },
+        {
+          "text": "ethical: bias in training data / potential discriminatory outcomes",
+          "marks": 1
+        },
+        { "text": "legal: liability / insurance / regulation of self-driving cars", "marks": 1 },
+        {
+          "text": "legal/privacy: cameras and sensor data fall under data-protection law",
+          "marks": 1
+        },
+        {
+          "text": "cultural: displacement of driving jobs / improved mobility for elderly or disabled",
+          "marks": 1
+        },
+        {
+          "text": "environmental: efficient fleets reduce emissions / training centres use a lot of energy",
+          "marks": 1
+        },
+        {
+          "text": "balances at least three issue types coherently rather than listing",
+          "marks": 1
+        },
+        {
+          "text": "justified recommendation that addresses safety regulation / staged release",
+          "marks": 1
+        }
+      ],
+      "misconceptions": [
+        {
+          "label": "Lists with no balance",
+          "description": "Answers that only list pros or only list issues without weighing them against benefits cannot reach L3."
+        }
+      ]
+    }
+  ]
+}

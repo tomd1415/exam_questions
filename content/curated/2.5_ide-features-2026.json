@@ -1,0 +1,34 @@
+{
+  "external_key": "j277-2-5-ide-features-2026",
+  "component_code": "J277/02",
+  "topic_code": "2.5",
+  "subtopic_code": "2.5.2",
+  "command_word_code": "describe",
+  "archetype_code": "explain",
+  "expected_response_type": "medium_text",
+  "stem": "A pupil is starting work on a Python program in an Integrated Development Environment (IDE).",
+  "model_answer": "An IDE bundles together tools that help write and debug code. Common features include: an editor with syntax highlighting and auto-indent so mistakes are visible at a glance; a built-in interpreter or 'run' button so the program can be tested without leaving the IDE; and a debugger with breakpoints, single-step, and a variable watch so the pupil can pause execution and inspect state. Most IDEs also offer error messages with line numbers and suggestions, and integrated documentation.",
+  "difficulty_band": 4,
+  "difficulty_step": 1,
+  "source_type": "teacher",
+  "review_notes": "Teacher-marked. Look for at least three named IDE features with a one-line purpose for each.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Describe three features of an IDE that help a pupil write and debug a Python program.",
+      "marks": 3,
+      "expected_response_type": "medium_text",
+      "mark_points": [
+        { "text": "editor with syntax highlighting / auto-indent / line numbers", "marks": 1 },
+        {
+          "text": "run/build button or integrated interpreter to execute without switching to a terminal",
+          "marks": 1
+        },
+        {
+          "text": "debugger (breakpoints / step-into / variable watch) — only one of these is enough",
+          "marks": 1
+        }
+      ]
+    }
+  ]
+}

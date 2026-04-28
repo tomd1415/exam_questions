@@ -1,0 +1,43 @@
+{
+  "external_key": "j277-1-3-topology-star-bus-compare-2026",
+  "component_code": "J277/01",
+  "topic_code": "1.3",
+  "subtopic_code": "1.3.1",
+  "command_word_code": "compare",
+  "archetype_code": "compare",
+  "expected_response_type": "extended_response",
+  "stem": "A small business is choosing between a star topology and a mesh topology for the LAN in their new office.",
+  "model_answer": "In a star topology every device connects to a central switch; if a single cable fails only that one device is affected, but the whole network depends on the switch. In a mesh every device connects to many others, so there are multiple paths between any two devices: the network keeps working when any single link fails, and traffic can be balanced across paths. Stars are cheaper and simpler to add to; meshes are more resilient and offer higher throughput, but they need far more cabling and are more expensive. For a small office, a star is usually the best choice — predictable cost, easy to manage, switch-failure risk mitigated by keeping a spare.",
+  "difficulty_band": 6,
+  "difficulty_step": 2,
+  "source_type": "teacher",
+  "review_notes": "Teacher-marked. Award marks for: feature of star, feature of mesh, benefit of one applied to a small office, drawback of one, recommendation tied to office context. 6 marks total.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Compare a star topology and a mesh topology and recommend, with reasons, which is better for the small office.",
+      "marks": 6,
+      "expected_response_type": "extended_response",
+      "mark_points": [
+        { "text": "Star: each device connects to a central switch / hub", "marks": 1 },
+        {
+          "text": "Mesh: each device connects to many others / multiple paths between devices",
+          "marks": 1
+        },
+        {
+          "text": "Benefit: star is cheap and easy to add new devices; mesh is resilient if a single link fails",
+          "marks": 1
+        },
+        {
+          "text": "Drawback: star fails entirely if the switch fails; mesh needs much more cabling",
+          "marks": 1
+        },
+        {
+          "text": "Applies the comparison to a small office (cost / scale / failure tolerance)",
+          "marks": 1
+        },
+        { "text": "Justified recommendation that names the choice", "marks": 1 }
+      ]
+    }
+  ]
+}

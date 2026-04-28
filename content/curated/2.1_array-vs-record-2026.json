@@ -1,0 +1,34 @@
+{
+  "external_key": "j277-2-1-array-vs-record-2026",
+  "component_code": "J277/02",
+  "topic_code": "2.1",
+  "subtopic_code": "2.1.1",
+  "command_word_code": "explain",
+  "archetype_code": "compare",
+  "expected_response_type": "medium_text",
+  "stem": "A pupil is choosing whether to store a list of pupils' names with a 1D array or a record (struct) per pupil.",
+  "model_answer": "A 1D array stores many values of the SAME type — a single column. It is right when every pupil only needs one piece of data (e.g. a name). A record groups several DIFFERENT pieces of data about ONE thing (e.g. name, age, year_group, form_tutor). Records make it easier to keep related fields together and pass them around as a unit, but accessing a value needs a field name (`pupil.name`) rather than just an index. If the pupil only ever needs to store names, an array is simplest; if any extra data per pupil might be added later, a record is the better long-term choice.",
+  "difficulty_band": 5,
+  "difficulty_step": 1,
+  "source_type": "teacher",
+  "review_notes": "Teacher-marked. Award marks for: definition of each, contrast (single type vs heterogeneous fields), an applied recommendation.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Explain the difference between a 1D array and a record, and recommend which the pupil should use to store the data.",
+      "marks": 3,
+      "expected_response_type": "medium_text",
+      "mark_points": [
+        { "text": "array stores multiple values of the SAME type, accessed by index", "marks": 1 },
+        {
+          "text": "record stores several different fields about a single entity, accessed by field name",
+          "marks": 1
+        },
+        {
+          "text": "applied recommendation that fits the scenario (array for names only / record if future fields)",
+          "marks": 1
+        }
+      ]
+    }
+  ]
+}

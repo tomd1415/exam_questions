@@ -1,0 +1,39 @@
+{
+  "external_key": "j277-1-4-phishing-prevent-2026",
+  "component_code": "J277/01",
+  "topic_code": "1.4",
+  "subtopic_code": "1.4.2",
+  "command_word_code": "describe",
+  "archetype_code": "explain",
+  "expected_response_type": "medium_text",
+  "stem": "A school is worried about phishing emails being sent to staff.",
+  "model_answer": "Phishing tries to trick a recipient into giving away credentials, usually by linking to a fake login page that looks legitimate. To reduce risk the school can train staff to spot suspicious senders, hover over links to check the real URL before clicking, and never enter passwords from a link in an email; technical defences include a spam filter that flags external domains, mandatory two-factor authentication so a stolen password alone cannot log in, and regular software updates to close any browser exploits.",
+  "difficulty_band": 4,
+  "difficulty_step": 2,
+  "source_type": "teacher",
+  "review_notes": "Teacher-marked. Look for one definition mark and one prevention measure mark. Either user-education or technical control is acceptable.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Describe what is meant by a phishing attack and one way the school could reduce the risk of staff falling for one.",
+      "marks": 2,
+      "expected_response_type": "medium_text",
+      "mark_points": [
+        {
+          "text": "phishing attempts to trick a user into giving away credentials / personal data, typically via a fake email or website",
+          "marks": 1
+        },
+        {
+          "text": "a sensible mitigation (staff training, MFA, spam filter, link inspection, no credentials via email)",
+          "marks": 1
+        }
+      ],
+      "misconceptions": [
+        {
+          "label": "Phishing = virus",
+          "description": "Phishing is a social-engineering attack on the user, not a piece of malware. Mark schemes do not credit 'install antivirus' on its own."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "external_key": "j277-1-5-drivers-purpose-2026",
+  "component_code": "J277/01",
+  "topic_code": "1.5",
+  "subtopic_code": "1.5.1",
+  "command_word_code": "explain",
+  "archetype_code": "explain",
+  "expected_response_type": "medium_text",
+  "stem": "A pupil plugs a brand-new printer into a Windows laptop. The operating system displays a notification: 'Installing device driver…'.",
+  "model_answer": "A device driver is a piece of software that lets the operating system talk to a particular piece of hardware. The driver translates the OS's generic 'print this' instruction into the specific commands the printer's controller understands. Without the right driver the OS would not know what features the printer supports or how to send data to it, so the printer would either not work or only work in a fallback mode.",
+  "difficulty_band": 4,
+  "difficulty_step": 1,
+  "source_type": "teacher",
+  "review_notes": "Teacher-marked. Award one mark for the translator role, one mark for an example or consequence of not having the right driver.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Explain what a device driver is and why the laptop needs one for the new printer.",
+      "marks": 2,
+      "expected_response_type": "medium_text",
+      "mark_points": [
+        {
+          "text": "a driver is software that translates between the OS and a specific piece of hardware",
+          "marks": 1
+        },
+        {
+          "text": "without the right driver the printer cannot be controlled / would not work properly",
+          "marks": 1
+        }
+      ]
+    }
+  ]
+}

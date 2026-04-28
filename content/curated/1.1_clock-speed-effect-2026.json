@@ -1,0 +1,31 @@
+{
+  "external_key": "j277-1-1-clock-speed-effect-2026",
+  "component_code": "J277/01",
+  "topic_code": "1.1",
+  "subtopic_code": "1.1.2",
+  "command_word_code": "explain",
+  "archetype_code": "explain",
+  "expected_response_type": "medium_text",
+  "stem": "A pupil is comparing two CPUs. CPU A runs at 2.4 GHz and CPU B runs at 3.6 GHz. The two CPUs have the same number of cores and the same cache size.",
+  "model_answer": "Clock speed measures how many fetch-execute cycles a CPU can perform each second (1 GHz = 1 billion cycles per second). CPU B has a higher clock speed than CPU A, so it can carry out more instructions in the same amount of time and the program will, all other things being equal, finish more quickly.",
+  "difficulty_band": 5,
+  "difficulty_step": 2,
+  "source_type": "teacher",
+  "review_notes": "Teacher-marked. Credit: definition of clock speed (cycles/second), implication for instruction throughput, comparison applied to A vs B. Do NOT credit unrelated factors (cores, cache, RAM) — the question fixes them.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Explain the effect of CPU B's higher clock speed on the time taken to run a program.",
+      "marks": 3,
+      "expected_response_type": "medium_text",
+      "mark_points": [
+        {
+          "text": "clock speed = number of fetch-execute cycles per second (Hz / GHz)",
+          "marks": 1
+        },
+        { "text": "higher clock speed → more instructions executed per unit of time", "marks": 1 },
+        { "text": "applied to context: program runs faster on CPU B than CPU A", "marks": 1 }
+      ]
+    }
+  ]
+}

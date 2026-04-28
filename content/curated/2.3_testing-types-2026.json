@@ -1,0 +1,34 @@
+{
+  "external_key": "j277-2-3-testing-types-2026",
+  "component_code": "J277/02",
+  "topic_code": "2.3",
+  "subtopic_code": "2.3.2",
+  "command_word_code": "describe",
+  "archetype_code": "explain",
+  "expected_response_type": "medium_text",
+  "stem": "A pupil has finished writing a program that calculates a final mark from a percentage between 0 and 100.",
+  "model_answer": "Iterative testing happens during development: after each small change, run the part of the program that just changed to check it still works. Final testing happens once the program is complete: run a planned set of tests covering normal data (e.g. 73), boundary data (0, 100) and erroneous data (-5, 150, 'cat'). For each test, expected output is recorded and compared against actual. Bugs found in iterative testing are usually cheap to fix; bugs found only at final testing are more expensive because more code may need to change.",
+  "difficulty_band": 5,
+  "difficulty_step": 2,
+  "source_type": "teacher",
+  "review_notes": "Teacher-marked. Award marks for naming iterative + final, the three test-data classes (normal/boundary/erroneous), and an applied example.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Describe the difference between iterative and final testing, and give one example of normal, boundary and erroneous test data the pupil could use.",
+      "marks": 3,
+      "expected_response_type": "medium_text",
+      "mark_points": [
+        {
+          "text": "iterative testing happens during development; final testing once the program is complete",
+          "marks": 1
+        },
+        {
+          "text": "normal data example (e.g. 73) and boundary data example (0 OR 100)",
+          "marks": 1
+        },
+        { "text": "erroneous data example (negative number / >100 / non-numeric)", "marks": 1 }
+      ]
+    }
+  ]
+}

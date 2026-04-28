@@ -1,0 +1,40 @@
+{
+  "external_key": "j277-1-2-binary-add-explain-2026",
+  "component_code": "J277/01",
+  "topic_code": "1.2",
+  "subtopic_code": "1.2.3",
+  "command_word_code": "explain",
+  "archetype_code": "explain",
+  "expected_response_type": "medium_text",
+  "stem": "A pupil adds the two 8-bit numbers 10110101 and 01011110 using binary addition.",
+  "model_answer": "Add column-by-column from the right: 1+0=1, 0+1=1, 1+1=10 (write 0, carry 1), 0+1+1=10 (write 0, carry 1), 1+1+1=11 (write 1, carry 1), 1+0+1=10 (write 0, carry 1), 0+1+1=10 (write 0, carry 1), 1+0+1=10 (write 0, carry 1). The 9th-bit carry exceeds 8 bits, so the result is reported as overflow. The 8-bit answer recorded would be 00010011 with the carry-out flag set.",
+  "difficulty_band": 6,
+  "difficulty_step": 2,
+  "source_type": "teacher",
+  "review_notes": "Teacher-marked. Award marks for: column-by-column addition method, recognition of carries, identification of 9th-bit overflow on this 8-bit sum.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Explain how to perform 10110101 + 01011110 in binary, and state whether overflow has occurred.",
+      "marks": 3,
+      "expected_response_type": "medium_text",
+      "mark_points": [
+        { "text": "adds column-by-column from the right (least-significant bit)", "marks": 1 },
+        {
+          "text": "carries a 1 into the next column whenever the column total is 2 or more",
+          "marks": 1
+        },
+        {
+          "text": "identifies overflow because the sum produces a 9th bit beyond the 8-bit register",
+          "marks": 1
+        }
+      ],
+      "misconceptions": [
+        {
+          "label": "Overflow ignored",
+          "description": "Forgetting to mention the 9th-bit carry-out leaves the answer incomplete — register width matters."
+        }
+      ]
+    }
+  ]
+}

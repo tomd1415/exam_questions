@@ -1,0 +1,31 @@
+{
+  "external_key": "j277-1-1-cache-purpose-2026",
+  "component_code": "J277/01",
+  "topic_code": "1.1",
+  "subtopic_code": "1.1.2",
+  "command_word_code": "explain",
+  "archetype_code": "explain",
+  "expected_response_type": "medium_text",
+  "stem": "A CPU has a small amount of cache memory in addition to the main RAM.",
+  "model_answer": "Cache is a very small block of fast memory close to the CPU. The CPU keeps a copy of recently used (and likely-to-be-needed-again) instructions and data in cache so it can fetch them in far fewer clock cycles than going all the way out to RAM. Larger caches and more cache levels reduce the number of times the CPU has to wait for slow main memory, so programs run faster overall.",
+  "difficulty_band": 5,
+  "difficulty_step": 2,
+  "source_type": "teacher",
+  "review_notes": "Teacher-marked. Look for: cache is faster but smaller, holds frequently used data, reduces RAM access time.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Explain why a CPU has cache memory and how it improves performance.",
+      "marks": 3,
+      "expected_response_type": "medium_text",
+      "mark_points": [
+        { "text": "cache is small but very fast memory close to the CPU", "marks": 1 },
+        { "text": "stores recently used / frequently used instructions or data", "marks": 1 },
+        {
+          "text": "reduces the time the CPU spends waiting for main RAM, so programs run faster",
+          "marks": 1
+        }
+      ]
+    }
+  ]
+}

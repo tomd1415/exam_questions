@@ -1,0 +1,41 @@
+{
+  "external_key": "j277-2-2-validation-range-code-2026",
+  "component_code": "J277/02",
+  "topic_code": "2.2",
+  "subtopic_code": "2.2.1",
+  "command_word_code": "write_rewrite",
+  "archetype_code": "code_writing",
+  "expected_response_type": "code",
+  "stem": "A program asks the user for an exam mark out of 100. The mark must be a whole number from 0 to 100 inclusive. The user keeps trying until they enter a valid mark.",
+  "model_answer": "mark = int(input(\"Enter mark: \"))\nwhile mark < 0 or mark > 100:\n    print(\"Invalid mark.\")\n    mark = int(input(\"Enter mark: \"))\nprint(\"Mark accepted:\", mark)",
+  "difficulty_band": 5,
+  "difficulty_step": 2,
+  "source_type": "teacher",
+  "review_notes": "Teacher-marked. Accept OCR pseudocode or Python. Look for: input + cast to int, condition correctly handles both ends of the range, loop repeats until valid, friendly message and final acceptance.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Write a program that asks the user for a mark and keeps asking until the value is a whole number between 0 and 100 inclusive. After a valid value is entered, print 'Mark accepted: <mark>'.",
+      "marks": 4,
+      "expected_response_type": "code",
+      "mark_points": [
+        {
+          "text": "reads input and converts to integer (or equivalent input.toInteger() / int(input))",
+          "marks": 1
+        },
+        {
+          "text": "condition correctly checks BOTH bounds (mark < 0 OR mark > 100, OR `not 0 <= mark <= 100`)",
+          "marks": 1
+        },
+        { "text": "uses a loop that repeats until a valid value has been entered", "marks": 1 },
+        { "text": "prints the acceptance message including the entered mark", "marks": 1 }
+      ],
+      "misconceptions": [
+        {
+          "label": "Off-by-one bound",
+          "description": "Conditions like `mark > 0 and mark < 100` reject 0 and 100, which are valid marks."
+        }
+      ]
+    }
+  ]
+}

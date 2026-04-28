@@ -1,0 +1,31 @@
+{
+  "external_key": "j277-1-5-os-memory-management-2026",
+  "component_code": "J277/01",
+  "topic_code": "1.5",
+  "subtopic_code": "1.5.1",
+  "command_word_code": "describe",
+  "archetype_code": "explain",
+  "expected_response_type": "medium_text",
+  "stem": "A pupil is running a web browser, a word processor and a music player at the same time on a 4 GB laptop.",
+  "model_answer": "The operating system's memory manager allocates a region of RAM to each running program when it starts, keeps a record of which addresses each program owns, and stops one program from reading or writing to another's region. When RAM is fully used, the OS can swap out the least-recently-used pages to disk (virtual memory) so a new program can start; this is slower but the user only sees more memory available.",
+  "difficulty_band": 5,
+  "difficulty_step": 2,
+  "source_type": "teacher",
+  "review_notes": "Teacher-marked. Look for: the OS allocates RAM, isolates programs, and uses virtual memory / paging when RAM is full. 'OS shares the RAM' alone is too vague.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Describe how the operating system manages memory while several programs are running at once.",
+      "marks": 3,
+      "expected_response_type": "medium_text",
+      "mark_points": [
+        { "text": "allocates a portion of RAM to each running program", "marks": 1 },
+        {
+          "text": "keeps programs isolated so they cannot read/write each other's memory",
+          "marks": 1
+        },
+        { "text": "uses virtual memory / paging when RAM is full (swap to disk)", "marks": 1 }
+      ]
+    }
+  ]
+}
