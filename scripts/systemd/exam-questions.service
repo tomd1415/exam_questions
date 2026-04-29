@@ -1,0 +1,79 @@
+# exam-questions.service — systemd unit for the production deploy.
+#
+# Install with:
+#   sudo bash scripts/install-systemd.sh
+# which is idempotent and copies this file into /etc/systemd/system/,
+# creates the `exam` system user + the /etc/exam-questions/env file
+# if needed, and runs `systemctl daemon-reload`.
+#
+# Manual install (equivalent to the script):
+#   sudo install -m 0644 scripts/systemd/exam-questions.service \
+#     /etc/systemd/system/exam-questions.service
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now exam-questions
+#
+# This unit assumes the RUNBOOK §5 release-directory layout:
+#   /opt/exam-questions/releases/<timestamp>/   ← built artefact
+#   /opt/exam-questions/current → releases/<latest>   ← symlink
+# WorkingDirectory below points at the symlink, so a deploy is
+# nothing more than building a new release dir, switching the
+# symlink, and `systemctl restart exam-questions`.
+#
+# The hardening directives below are the systemd >= 252 set that
+# Debian 12 ships. If you're on an older base, comment out the
+# directives the daemon doesn't recognise — `systemctl status` will
+# tell you which by name.
+
+[Unit]
+Description=Exam Questions (J277 revision)
+Documentation=https://github.com/tomd1415/exam_questions/blob/main/RUNBOOK.md
+After=network-online.target postgresql.service
+Wants=network-online.target
+# Postgres is required, not just wanted: the app cannot serve a
+# request without it, so we'd rather fail loud than restart-loop.
+Requires=postgresql.service
+
+[Service]
+Type=simple
+User=exam
+Group=exam
+
+WorkingDirectory=/opt/exam-questions/current
+EnvironmentFile=/etc/exam-questions/env
+ExecStart=/usr/bin/node dist/index.js
+
+# Graceful shutdown — Fastify already handles SIGTERM by closing
+# in-flight requests and the pg pool.
+Restart=on-failure
+RestartSec=5s
+TimeoutStopSec=15s
+KillSignal=SIGTERM
+KillMode=mixed
+
+# Sandboxing.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+RestrictNamespaces=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+SystemCallFilter=~@privileged @resources
+
+# File descriptors — generous for the connection pool.
+LimitNOFILE=65535
+
+# Logging — Pino emits JSON to stdout in production; journald
+# captures it. View with `journalctl -u exam-questions`.
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=exam-questions
+
+[Install]
+WantedBy=multi-user.target

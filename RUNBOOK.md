@@ -61,32 +61,22 @@ Either way:
 
 ## 4. Process management
 
-The Node.js app runs under systemd. Suggested unit (install at `/etc/systemd/system/exam-questions.service`):
+The Node.js app runs under systemd in production. The unit file ships in the repo at [scripts/systemd/exam-questions.service](scripts/systemd/exam-questions.service); install + first-time setup uses the idempotent helper:
 
-```ini
-[Unit]
-Description=Exam Questions (J277 revision)
-After=network.target postgresql.service
-Wants=postgresql.service
-
-[Service]
-Type=simple
-User=exam
-Group=exam
-WorkingDirectory=/opt/exam-questions/current
-EnvironmentFile=/etc/exam-questions/env
-ExecStart=/usr/bin/node dist/index.js
-Restart=on-failure
-RestartSec=5s
-NoNewPrivileges=true
-ProtectSystem=strict
-ProtectHome=true
-PrivateTmp=true
-ReadWritePaths=/var/log/exam-questions
-
-[Install]
-WantedBy=multi-user.target
+```bash
+sudo bash scripts/install-systemd.sh
 ```
+
+That script creates the `exam` system user, the `/etc/exam-questions/` directory + empty `env` file (mode 0640, root-owned, group-readable by `exam`), the `/opt/exam-questions/releases/` deploy target, and copies the unit into `/etc/systemd/system/`. It does **not** enable or start the service — populate the env file and put a built release at `/opt/exam-questions/current` first, then:
+
+```bash
+sudo systemctl enable --now exam-questions
+sudo systemctl status exam-questions
+```
+
+The unit assumes the §5 release-directory layout (`/opt/exam-questions/releases/<ts>/` + a `current` symlink). The hardening directives target Debian 12's systemd 252 (`ProtectKernel*`, `RestrictAddressFamilies`, `SystemCallFilter`); on an older base the daemon will tell you which it doesn't recognise via `systemctl status`.
+
+If you'd rather see the unit content, read [scripts/systemd/exam-questions.service](scripts/systemd/exam-questions.service) — it carries inline comments explaining each directive.
 
 Common operations:
 
