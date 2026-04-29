@@ -26,7 +26,7 @@
 
 import { parseMatchingRawAnswer } from './matching.js';
 import { parseTraceGridRawAnswer } from './trace-grid.js';
-import { parseClozeRawAnswer } from './cloze.js';
+import { parseClozeRawAnswer, parseClozeText } from './cloze.js';
 import { parseDiagramLabelsRawAnswer } from './diagram-labels.js';
 import { parseMatrixTickRawAnswer } from '../services/marking/deterministic.js';
 
@@ -65,6 +65,39 @@ export interface PupilAnswerGridCell {
   readonly prefilled: boolean;
 }
 
+// `cloze`-kind segments. The original prose has `{{gap-id}}` markers;
+// we split on those and emit a series of `text` runs interleaved with
+// `gap` runs that carry the pupil's value (or null if left blank).
+// The teacher reads the prose as-written instead of a list of opaque
+// gap ids — this is the chunk 3i pilot UX fix that surfaced when
+// the marker hit `gap-instr=instruction\ngap-mem=RAM` and could not
+// see the surrounding sentence.
+export type PupilAnswerClozeSegment =
+  | { readonly kind: 'text'; readonly text: string }
+  | { readonly kind: 'gap'; readonly id: string; readonly value: string | null };
+
+// `matching`-kind context. Carries the full left + right columns the
+// pupil chose between, plus their picked pair per left row, so the
+// teacher can see what alternatives were on offer.
+export interface PupilAnswerMatchingPair {
+  readonly leftLabel: string;
+  readonly chosenRight: string | null;
+}
+
+// `diagram-labels`-kind context. Source image URL + hotspot
+// rectangles in image-pixel coords + the pupil's typed label per
+// hotspot. The template renders the image with absolute-positioned
+// overlay boxes, so the teacher sees the labels in the same place
+// the pupil typed them.
+export interface PupilAnswerDiagramHotspot {
+  readonly id: string;
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+  readonly value: string | null;
+}
+
 export type PupilAnswerView =
   | { kind: 'empty' }
   | { kind: 'image'; dataUrl: string; alt: string }
@@ -74,6 +107,21 @@ export type PupilAnswerView =
       heading: string;
       columns: readonly string[];
       rows: readonly (readonly PupilAnswerGridCell[])[];
+    }
+  | { kind: 'cloze'; segments: readonly PupilAnswerClozeSegment[]; bank: readonly string[] | null }
+  | {
+      kind: 'matching';
+      leftLabels: readonly string[];
+      rightLabels: readonly string[];
+      pairs: readonly PupilAnswerMatchingPair[];
+    }
+  | {
+      kind: 'diagram-labels';
+      imageUrl: string;
+      imageAlt: string;
+      width: number;
+      height: number;
+      hotspots: readonly PupilAnswerDiagramHotspot[];
     }
   | { kind: 'text'; text: string };
 
@@ -209,14 +257,12 @@ function decodeMatching(rawAnswer: string, cfg: Record<string, unknown>): PupilA
   const right = asStringArray(cfg['right']);
   if (!left || !right) return null;
   const map = parseMatchingRawAnswer(rawAnswer);
-  const rows: PupilAnswerRow[] = left.map((prompt, idx) => {
+  const pairs: PupilAnswerMatchingPair[] = left.map((leftLabel, idx) => {
     const rightIdx = map.get(idx);
-    if (rightIdx === undefined || right[rightIdx] === undefined) {
-      return { label: prompt, value: '(not paired)', blank: true };
-    }
-    return { label: prompt, value: right[rightIdx], blank: false };
+    const chosen = rightIdx === undefined || right[rightIdx] === undefined ? null : right[rightIdx];
+    return { leftLabel, chosenRight: chosen };
   });
-  return { kind: 'rows', heading: 'Pupil matched:', rows };
+  return { kind: 'matching', leftLabels: left, rightLabels: right, pairs };
 }
 
 function decodeMatrixTickSingle(
@@ -264,45 +310,81 @@ function decodeDiagramLabels(
   rawAnswer: string,
   cfg: Record<string, unknown>,
 ): PupilAnswerView | null {
-  const hotspots = cfg['hotspots'];
-  if (!Array.isArray(hotspots)) return null;
+  // Render the source image with the pupil's labels overlaid in the
+  // hotspot rectangles, mirroring what the pupil saw. Falling back
+  // to a row list — the previous behaviour — would lose the visual
+  // context entirely; the teacher could not tell `alu` from `cu`
+  // without going back to the question itself.
+  const imageUrl = typeof cfg['imageUrl'] === 'string' ? cfg['imageUrl'] : null;
+  const imageAlt = typeof cfg['imageAlt'] === 'string' ? cfg['imageAlt'] : 'diagram';
+  const widthAny = cfg['width'];
+  const heightAny = cfg['height'];
+  const hotspotsAny = cfg['hotspots'];
+  if (!imageUrl || !Number.isInteger(widthAny) || !Number.isInteger(heightAny)) return null;
+  if (!Array.isArray(hotspotsAny)) return null;
+  const width = widthAny as number;
+  const height = heightAny as number;
   const values = parseDiagramLabelsRawAnswer(rawAnswer);
-  const rows: PupilAnswerRow[] = [];
-  for (const h of hotspots) {
+  const hotspots: PupilAnswerDiagramHotspot[] = [];
+  for (const h of hotspotsAny) {
     if (!isObject(h)) continue;
     const hot = h as Record<string, unknown>;
     const id = typeof hot['id'] === 'string' ? hot['id'] : null;
     if (!id) continue;
-    const value = values.get(id);
-    if (!nonBlank(value ?? '')) {
-      rows.push({ label: id, value: '(unlabelled)', blank: true });
-    } else {
-      rows.push({ label: id, value: value!, blank: false });
+    const x = hot['x'];
+    const y = hot['y'];
+    const w = hot['width'];
+    const ht = hot['height'];
+    if (
+      !Number.isInteger(x) ||
+      !Number.isInteger(y) ||
+      !Number.isInteger(w) ||
+      !Number.isInteger(ht)
+    ) {
+      continue;
     }
+    const value = values.get(id);
+    hotspots.push({
+      id,
+      x: x as number,
+      y: y as number,
+      width: w as number,
+      height: ht as number,
+      value: nonBlank(value ?? '') ? value! : null,
+    });
   }
-  if (rows.length === 0) return null;
-  return { kind: 'rows', heading: 'Pupil labelled:', rows };
+  if (hotspots.length === 0) return null;
+  return { kind: 'diagram-labels', imageUrl, imageAlt, width, height, hotspots };
 }
 
 function decodeCloze(rawAnswer: string, cfg: Record<string, unknown>): PupilAnswerView | null {
-  const gaps = cfg['gaps'];
-  if (!Array.isArray(gaps)) return null;
+  // Cloze answers used to render as opaque `gap-instr=instruction`
+  // pairs. Now we interleave the prose with the pupil's gap values
+  // so the teacher reads a complete sentence — exactly what the
+  // pupil saw, just with the blanks filled in.
+  const text = typeof cfg['text'] === 'string' ? cfg['text'] : null;
+  const bank = asStringArray(cfg['bank']);
+  if (!text) return null;
   const values = parseClozeRawAnswer(rawAnswer);
-  const rows: PupilAnswerRow[] = [];
-  for (const g of gaps) {
-    if (!isObject(g)) continue;
-    const gap = g as Record<string, unknown>;
-    const id = typeof gap['id'] === 'string' ? gap['id'] : null;
-    if (!id) continue;
-    const value = values.get(id);
-    if (!nonBlank(value ?? '')) {
-      rows.push({ label: id, value: '(left blank)', blank: true });
-    } else {
-      rows.push({ label: id, value: value!, blank: false });
-    }
+  let parsedSegments: ReturnType<typeof parseClozeText>;
+  try {
+    parsedSegments = parseClozeText(text);
+  } catch {
+    // If the prose is malformed (mismatched braces), fall through
+    // so the existing text view shows the raw answer. The marking
+    // page should never crash on a content authoring bug.
+    return null;
   }
-  if (rows.length === 0) return null;
-  return { kind: 'rows', heading: 'Pupil filled:', rows };
+  const segments: PupilAnswerClozeSegment[] = parsedSegments.map((s) =>
+    s.kind === 'text'
+      ? { kind: 'text', text: s.text }
+      : {
+          kind: 'gap',
+          id: s.id,
+          value: nonBlank(values.get(s.id) ?? '') ? values.get(s.id)! : null,
+        },
+  );
+  return { kind: 'cloze', segments, bank };
 }
 
 function decodeTraceTable(rawAnswer: string, cfg: Record<string, unknown>): PupilAnswerView | null {

@@ -48,9 +48,9 @@
     <p class="admin-card__sub">Highlighted spans are the evidence quotes the model cited.</p>
   <% } else { %>
     <%~ include('_pupil_answer_preview', { view: it.answerView }) %>
-    <% if (it.answerView.kind === 'image') { %>
+    <% if (it.answerView.kind === 'image' || it.answerView.kind === 'diagram-labels') { %>
       <p class="admin-card__sub">Drawing-widget answer — evidence highlighting does not apply.</p>
-    <% } else if (it.answerView.kind === 'rows' || it.answerView.kind === 'grid') { %>
+    <% } else { %>
       <p class="admin-card__sub">Structured-widget answer — evidence highlighting does not apply.</p>
     <% } %>
   <% } %>

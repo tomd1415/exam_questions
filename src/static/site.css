@@ -3678,3 +3678,120 @@ input[type='number'].input {
 .pupil-answer-grid__cell--blank {
   background: var(--color-surface-0);
 }
+
+/* Cloze: render the original prose with the pupil's gap values
+   inline. The teacher reads the sentence as-written and sees the
+   pupil's choice highlighted in <mark>; blank gaps are visually
+   distinct so unanswered fields cannot be confused with prose. */
+.pupil-answer-heading--minor {
+  font-size: 0.95em;
+  color: var(--color-ink-3);
+  margin-top: var(--space-2);
+}
+.pupil-answer-cloze {
+  margin: var(--space-1) 0 0;
+  padding: var(--space-2);
+  background: var(--color-surface-1);
+  border: 1px solid var(--color-surface-3);
+  border-radius: var(--radius-sm, 4px);
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+.pupil-answer-cloze__bank {
+  margin: var(--space-1) 0;
+  padding: var(--space-1) var(--space-2);
+  background: var(--color-surface-2);
+  border-radius: var(--radius-sm, 4px);
+  color: var(--color-ink-2);
+  font-size: 0.95em;
+}
+.pupil-answer-cloze__gap {
+  display: inline-block;
+  padding: 0 var(--space-1);
+  border-radius: var(--radius-sm, 4px);
+  font-weight: 600;
+}
+.pupil-answer-cloze__gap--filled {
+  background: #fff3a8; /* gentle highlight; explicit so it works in both themes */
+  color: var(--color-ink-1);
+}
+.pupil-answer-cloze__gap--blank {
+  background: var(--color-surface-3);
+  color: var(--color-ink-3);
+  font-style: italic;
+}
+
+/* Matching: 2-column table of (left prompt, pupil's right pick),
+   plus a list of all right-column options so the teacher can see
+   what alternatives were on offer. */
+.pupil-answer-matching {
+  width: 100%;
+  margin-top: var(--space-1);
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+.pupil-answer-matching th,
+.pupil-answer-matching td {
+  border: 1px solid var(--color-surface-3);
+  padding: var(--space-1) var(--space-2);
+  text-align: left;
+}
+.pupil-answer-matching__left {
+  font-weight: 600;
+  color: var(--color-ink-2);
+  background: var(--color-surface-1);
+}
+.pupil-answer-matching__right--blank {
+  color: var(--color-ink-4);
+  font-style: italic;
+}
+.pupil-answer-matching__options {
+  margin: var(--space-1) 0 0;
+  padding-left: var(--space-3);
+  color: var(--color-ink-2);
+}
+
+/* Diagram labels: the source image with hotspot rectangles
+   absolutely-positioned over it, each carrying the pupil's typed
+   label. The wrapper uses aspect-ratio so the overlays scale with
+   the image responsively. */
+.pupil-answer-diagram {
+  margin-top: var(--space-1);
+  border: 1px dashed var(--color-surface-3);
+  background: var(--color-surface-0);
+  overflow: hidden;
+}
+.pupil-answer-diagram__image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.pupil-answer-diagram__hotspot {
+  position: absolute;
+  border: 2px solid var(--color-brand-500);
+  background: rgba(29, 78, 216, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.pupil-answer-diagram__hotspot--blank {
+  border-color: var(--color-ink-4);
+  background: rgba(138, 138, 153, 0.12);
+}
+.pupil-answer-diagram__label {
+  background: var(--color-surface-0);
+  padding: 0 var(--space-1);
+  border-radius: var(--radius-sm, 4px);
+  font-size: 0.9em;
+  font-weight: 600;
+  color: var(--color-ink-1);
+  max-width: 95%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pupil-answer-diagram__hotspot--blank .pupil-answer-diagram__label {
+  color: var(--color-ink-4);
+  font-style: italic;
+}

@@ -1,12 +1,23 @@
 <%
   // Renders a PupilAnswerView (see src/lib/pupil-answer-view.ts).
-  // Expects `it.view` with one of the four kinds:
-  //   empty  → "(blank)" placeholder
-  //   image  → <img> with a dashed outline
-  //   rows   → labelled pair list (matching / cloze / matrix_tick / diagram_labels)
-  //   grid   → 2D table (trace_table)
-  //   text   → <pre> fallback for open-response prose and any widget
-  //            whose part_config is missing or malformed at render time
+  // Expects `it.view` with one of:
+  //   empty           → "(blank)" placeholder
+  //   image           → <img> with a dashed outline (flowchart / logic_diagram)
+  //   rows            → labelled pair list (matrix_tick / older fallbacks)
+  //   grid            → 2D table (trace_table)
+  //   cloze           → original prose with the pupil's gap values inline
+  //   matching        → 2-column layout, pupil's right-side picks highlighted
+  //   diagram-labels  → source image with hotspot rectangles + pupil labels overlaid
+  //   text            → <pre> fallback for open-response prose and any widget
+  //                     whose part_config is missing or malformed at render time
+  //
+  // Chunk 3i pilot UX: the cloze / matching / diagram-labels branches
+  // render the question's structural context alongside the pupil's
+  // selection so the teacher can see what the pupil saw at marking
+  // time. Without this, a cloze answer reads as `gap-instr=instruction`
+  // — opaque without the surrounding prose; matching reads as
+  // numeric pairs with no sense of what alternatives were on offer;
+  // diagram_labels loses the source image entirely.
 %>
 <% if (it.view.kind === 'empty') { %>
   <pre class="pupil-answer-text">(blank)</pre>
@@ -47,6 +58,74 @@
       <% }); %>
     </tbody>
   </table>
+<% } else if (it.view.kind === 'cloze') { %>
+  <p class="pupil-answer-heading">Pupil's answer in context:</p>
+  <% if (it.view.bank && it.view.bank.length > 0) { %>
+    <p class="pupil-answer-cloze__bank"><strong>Word bank:</strong>
+      <% it.view.bank.forEach(function(b, i) { %>
+        <% if (i > 0) { %> · <% } %><%= b %>
+      <% }); %>
+    </p>
+  <% } %>
+  <p class="pupil-answer-cloze">
+    <% it.view.segments.forEach(function(seg) { %>
+      <% if (seg.kind === 'text') { %>
+        <%= seg.text %>
+      <% } else if (seg.value === null) { %>
+        <span class="pupil-answer-cloze__gap pupil-answer-cloze__gap--blank"
+              title="left blank by pupil (gap id: <%= seg.id %>)">[ blank ]</span>
+      <% } else { %>
+        <mark class="pupil-answer-cloze__gap pupil-answer-cloze__gap--filled"
+              title="gap id: <%= seg.id %>"><%= seg.value %></mark>
+      <% } %>
+    <% }); %>
+  </p>
+<% } else if (it.view.kind === 'matching') { %>
+  <p class="pupil-answer-heading">Pupil matched:</p>
+  <table class="pupil-answer-matching">
+    <thead>
+      <tr><th scope="col">Item</th><th scope="col">Pupil's answer</th></tr>
+    </thead>
+    <tbody>
+      <% it.view.pairs.forEach(function(pair) { %>
+        <tr>
+          <td class="pupil-answer-matching__left"><%= pair.leftLabel %></td>
+          <% if (pair.chosenRight === null) { %>
+            <td class="pupil-answer-matching__right pupil-answer-matching__right--blank">(not paired)</td>
+          <% } else { %>
+            <td class="pupil-answer-matching__right"><%= pair.chosenRight %></td>
+          <% } %>
+        </tr>
+      <% }); %>
+    </tbody>
+  </table>
+  <p class="pupil-answer-heading pupil-answer-heading--minor">Right-column options on offer:</p>
+  <ul class="pupil-answer-matching__options">
+    <% it.view.rightLabels.forEach(function(r) { %>
+      <li><%= r %></li>
+    <% }); %>
+  </ul>
+<% } else if (it.view.kind === 'diagram-labels') { %>
+  <p class="pupil-answer-heading">Pupil's labels on the diagram:</p>
+  <div class="pupil-answer-diagram"
+       style="width: 100%; max-width: <%= it.view.width %>px; aspect-ratio: <%= it.view.width %> / <%= it.view.height %>; position: relative;">
+    <img src="<%= it.view.imageUrl %>"
+         alt="<%= it.view.imageAlt %>"
+         loading="lazy"
+         class="pupil-answer-diagram__image" />
+    <% it.view.hotspots.forEach(function(h) { %>
+      <div class="pupil-answer-diagram__hotspot<% if (h.value === null) { %> pupil-answer-diagram__hotspot--blank<% } %>"
+           style="left: <%= (100 * h.x / it.view.width).toFixed(2) %>%;
+                  top: <%= (100 * h.y / it.view.height).toFixed(2) %>%;
+                  width: <%= (100 * h.width / it.view.width).toFixed(2) %>%;
+                  height: <%= (100 * h.height / it.view.height).toFixed(2) %>%;"
+           title="hotspot id: <%= h.id %>">
+        <span class="pupil-answer-diagram__label">
+          <% if (h.value === null) { %>(unlabelled)<% } else { %><%= h.value %><% } %>
+        </span>
+      </div>
+    <% }); %>
+  </div>
 <% } else { %>
   <pre class="pupil-answer-text"><%= it.view.text %></pre>
 <% } %>

@@ -102,24 +102,26 @@ describe('buildPupilAnswerView — matching', () => {
     ],
   };
 
-  it('decodes pairs into labelled rows using the authored left + right strings', () => {
+  it('returns the matching kind with full left + right columns plus the pupil pairs', () => {
     const view = buildPupilAnswerView('0=2\n1=0\n2=1', 'matching', cfg);
-    expect(view.kind).toBe('rows');
-    if (view.kind === 'rows') {
-      expect(view.rows).toEqual([
-        { label: 'Sodium', value: 'Alkali metal', blank: false },
-        { label: 'Iron', value: 'Metal', blank: false },
-        { label: 'Oxygen', value: 'Non-metal', blank: false },
+    expect(view.kind).toBe('matching');
+    if (view.kind === 'matching') {
+      expect(view.leftLabels).toEqual(cfg.left);
+      expect(view.rightLabels).toEqual(cfg.right);
+      expect(view.pairs).toEqual([
+        { leftLabel: 'Sodium', chosenRight: 'Alkali metal' },
+        { leftLabel: 'Iron', chosenRight: 'Metal' },
+        { leftLabel: 'Oxygen', chosenRight: 'Non-metal' },
       ]);
     }
   });
 
-  it('marks un-paired left rows as blank', () => {
+  it('marks un-paired left rows as chosenRight=null', () => {
     const view = buildPupilAnswerView('0=2', 'matching', cfg);
-    if (view.kind === 'rows') {
-      expect(view.rows[1]!.blank).toBe(true);
-      expect(view.rows[2]!.blank).toBe(true);
-      expect(view.rows[0]!.value).toBe('Alkali metal');
+    if (view.kind === 'matching') {
+      expect(view.pairs[0]!.chosenRight).toBe('Alkali metal');
+      expect(view.pairs[1]!.chosenRight).toBeNull();
+      expect(view.pairs[2]!.chosenRight).toBeNull();
     }
   });
 
@@ -183,17 +185,36 @@ describe('buildPupilAnswerView — diagram_labels', () => {
     ],
   };
 
-  it('decodes hotspot answers by id', () => {
+  it('returns the diagram-labels kind with the source image, dimensions, and hotspot positions', () => {
     const view = buildPupilAnswerView('alu=ALU\ncu=Control Unit', 'diagram_labels', cfg);
-    if (view.kind === 'rows') {
-      expect(view.rows[0]).toEqual({ label: 'alu', value: 'ALU', blank: false });
-      expect(view.rows[1]!.value).toBe('Control Unit');
+    expect(view.kind).toBe('diagram-labels');
+    if (view.kind === 'diagram-labels') {
+      expect(view.imageUrl).toBe('/static/img/cpu.png');
+      expect(view.width).toBe(400);
+      expect(view.height).toBe(300);
+      expect(view.hotspots[0]).toEqual({
+        id: 'alu',
+        x: 10,
+        y: 10,
+        width: 50,
+        height: 20,
+        value: 'ALU',
+      });
+      expect(view.hotspots[1]!.value).toBe('Control Unit');
     }
   });
 
-  it('marks unlabelled hotspots as blank', () => {
+  it('marks unlabelled hotspots as value=null', () => {
     const view = buildPupilAnswerView('alu=ALU', 'diagram_labels', cfg);
-    if (view.kind === 'rows') expect(view.rows[1]!.blank).toBe(true);
+    if (view.kind === 'diagram-labels') {
+      expect(view.hotspots[0]!.value).toBe('ALU');
+      expect(view.hotspots[1]!.value).toBeNull();
+    }
+  });
+
+  it('falls through to text when imageUrl or dimensions are missing', () => {
+    const broken = { ...cfg, width: 'not-a-number' as unknown as number };
+    expect(buildPupilAnswerView('alu=ALU', 'diagram_labels', broken).kind).toBe('text');
   });
 });
 
@@ -206,21 +227,41 @@ describe('buildPupilAnswerView — cloze', () => {
     ],
   };
 
-  it('decodes gap fills into labelled rows', () => {
+  it('returns the cloze kind with the prose split into segments and pupil values inlined', () => {
     const view = buildPupilAnswerView('gap-instr=instruction\ngap-mem=RAM', 'cloze_free', cfg);
-    if (view.kind === 'rows') {
-      expect(view.rows[0]).toEqual({
-        label: 'gap-instr',
-        value: 'instruction',
-        blank: false,
-      });
-      expect(view.rows[1]!.value).toBe('RAM');
+    expect(view.kind).toBe('cloze');
+    if (view.kind === 'cloze') {
+      // Segments: "The CPU fetches an " (text) → gap(gap-instr=instruction) →
+      // " from " (text) → gap(gap-mem=RAM) → "." (text).
+      expect(view.segments).toEqual([
+        { kind: 'text', text: 'The CPU fetches an ' },
+        { kind: 'gap', id: 'gap-instr', value: 'instruction' },
+        { kind: 'text', text: ' from ' },
+        { kind: 'gap', id: 'gap-mem', value: 'RAM' },
+        { kind: 'text', text: '.' },
+      ]);
     }
   });
 
-  it('marks blank gaps as blank', () => {
-    const view = buildPupilAnswerView('gap-instr=instruction', 'cloze_with_bank', cfg);
-    if (view.kind === 'rows') expect(view.rows[1]!.blank).toBe(true);
+  it('records value=null for blank gaps so the template can render a placeholder', () => {
+    const view = buildPupilAnswerView('gap-instr=instruction', 'cloze_with_bank', {
+      ...cfg,
+      bank: ['instruction', 'RAM'],
+    });
+    if (view.kind === 'cloze') {
+      const gaps = view.segments.filter((s) => s.kind === 'gap');
+      expect(gaps[0]!.value).toBe('instruction');
+      expect(gaps[1]!.value).toBeNull();
+      expect(view.bank).toEqual(['instruction', 'RAM']);
+    }
+  });
+
+  it('falls through to text when the cloze prose is malformed (mismatched braces)', () => {
+    const view = buildPupilAnswerView('gap-instr=instruction', 'cloze_free', {
+      text: 'broken {{gap-instr without closing',
+      gaps: cfg.gaps,
+    });
+    expect(view.kind).toBe('text');
   });
 });
 
