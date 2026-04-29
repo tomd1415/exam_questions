@@ -30,7 +30,28 @@ import { parseClozeRawAnswer } from './cloze.js';
 import { parseDiagramLabelsRawAnswer } from './diagram-labels.js';
 import { parseMatrixTickRawAnswer } from '../services/marking/deterministic.js';
 
-const IMAGE_LINE_PREFIX = 'image=data:image/';
+// The current widget editors serialise a drawing as
+// `image=data:image/png;base64,<payload>`. Older pupil answers in the
+// production DB may have been written by an earlier widget version
+// that omitted the `image=` prefix or used a different MIME type
+// (jpeg, svg+xml, webp). Both shapes are safe to render — a data URL
+// IS a complete <img src> — so we pattern-match on either, plus a
+// permissive MIME-type list. This is defence in depth: if a teacher
+// reports they still see a base64 string for a pre-existing answer,
+// they're hitting a shape this list doesn't yet cover, and we add
+// it here. Adding shapes is always cheaper than guessing them right
+// the first time. See AUDIT_2026-04-23.md for the chunk 3i pilot
+// context that surfaced this.
+const KEYED_IMAGE_LINE_PREFIX = 'image=data:image/';
+const RAW_IMAGE_LINE_PREFIX = 'data:image/';
+const RECOGNISED_MIME_TYPES = [
+  'image/png',
+  'image/jpeg',
+  'image/jpg',
+  'image/gif',
+  'image/webp',
+  'image/svg+xml',
+];
 
 export interface PupilAnswerRow {
   readonly label: string;
@@ -62,6 +83,32 @@ function isEmpty(raw: string | null | undefined): raw is null | undefined | '' {
 
 function firstNonBlankLine(raw: string): string {
   return raw.split('\n').find((line) => line.length > 0) ?? '';
+}
+
+// Pulls a `data:image/<mime>;...` URL out of the first line of a
+// raw_answer if it represents a drawing. Returns null otherwise.
+// Handles both shapes produced by the widget set:
+//   image=data:image/png;base64,…   ← current widget editors
+//   data:image/png;base64,…         ← legacy / future variants
+// and the wider MIME set listed in RECOGNISED_MIME_TYPES (jpeg,
+// gif, webp, svg+xml) so older or differently-encoded drawings
+// surface as <img> rather than as a wall of base64 text.
+function extractImageDataUrl(firstLine: string): string | null {
+  let candidate: string | null = null;
+  if (firstLine.startsWith(KEYED_IMAGE_LINE_PREFIX)) {
+    candidate = firstLine.slice('image='.length);
+  } else if (firstLine.startsWith(RAW_IMAGE_LINE_PREFIX)) {
+    candidate = firstLine;
+  }
+  if (candidate === null) return null;
+  // Only return the URL if the MIME type is one we trust. A bare
+  // `data:image/foo` from an unknown source is more likely garbage
+  // than a real drawing — falling through to the text branch keeps
+  // the teacher seeing the raw answer rather than a broken <img>.
+  for (const mime of RECOGNISED_MIME_TYPES) {
+    if (candidate.startsWith(`data:${mime}`)) return candidate;
+  }
+  return null;
 }
 
 function nonBlank(s: string): boolean {
@@ -103,10 +150,11 @@ export function buildPupilAnswerView(
   if (isEmpty(rawAnswer)) return { kind: 'empty' };
 
   const firstLine = firstNonBlankLine(rawAnswer);
-  if (firstLine.startsWith(IMAGE_LINE_PREFIX)) {
+  const imageDataUrl = extractImageDataUrl(firstLine);
+  if (imageDataUrl !== null) {
     return {
       kind: 'image',
-      dataUrl: firstLine.slice('image='.length),
+      dataUrl: imageDataUrl,
       alt: `Pupil's drawn answer (${expectedResponseType ?? 'widget'})`,
     };
   }

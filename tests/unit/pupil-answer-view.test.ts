@@ -44,6 +44,51 @@ describe('buildPupilAnswerView — empty / image branches', () => {
     );
     expect(view.kind).toBe('text');
   });
+
+  // Defence in depth for older pupil answers (pre-pilot data on the
+  // production DB). The current widget editors always emit
+  // `image=data:image/png;base64,…`, but earlier widget versions or a
+  // future canvas variant might omit the `image=` prefix or use a
+  // different MIME type — a teacher should still see a drawing, not
+  // a base64 wall. A drift-detector that 'just rendered' anything
+  // starting with `data:` would be unsafe (a pupil could paste a
+  // genuine prose `data:` and get a broken image), so we restrict to
+  // a known MIME-type whitelist. See pupil-answer-view.ts for the
+  // canonical rule.
+  it('detects bare data:image/png (no `image=` prefix)', () => {
+    const view = buildPupilAnswerView('data:image/png;base64,QUJD', 'flowchart');
+    expect(view.kind).toBe('image');
+    if (view.kind === 'image') expect(view.dataUrl).toBe('data:image/png;base64,QUJD');
+  });
+
+  it('accepts the JPEG MIME type', () => {
+    const view = buildPupilAnswerView('image=data:image/jpeg;base64,/9j/4AAQ', 'logic_diagram');
+    expect(view.kind).toBe('image');
+    if (view.kind === 'image') expect(view.dataUrl).toBe('data:image/jpeg;base64,/9j/4AAQ');
+  });
+
+  it('accepts SVG (utf8 inline) — common when widgets emit a vector drawing', () => {
+    const svgUrl = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg'/>";
+    const view = buildPupilAnswerView(svgUrl, 'flowchart');
+    expect(view.kind).toBe('image');
+    if (view.kind === 'image') expect(view.dataUrl).toBe(svgUrl);
+  });
+
+  it('accepts WebP and GIF', () => {
+    expect(buildPupilAnswerView('image=data:image/webp;base64,UkVQRg==', 'flowchart').kind).toBe(
+      'image',
+    );
+    expect(buildPupilAnswerView('data:image/gif;base64,R0lGODlhAQA=', 'flowchart').kind).toBe(
+      'image',
+    );
+  });
+
+  it('does NOT render `data:image/foo;base64,…` for an unknown MIME type', () => {
+    // Falling through to text is safer than rendering a broken <img>
+    // that hides the raw payload from the teacher entirely.
+    const view = buildPupilAnswerView('data:image/x-unknown;base64,AAAA', 'medium_text');
+    expect(view.kind).toBe('text');
+  });
 });
 
 describe('buildPupilAnswerView — matching', () => {

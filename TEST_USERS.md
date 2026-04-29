@@ -132,8 +132,10 @@ below exactly.
 ### Widget harness (`test_pupil`, `test_teacher`)
 
 - **Every widget variant in one attempt** — attempt id 1 has 2 questions
-  per `expected_response_type` (34 widget fixtures) plus all 29 live
-  curated questions attached. Matches [RUNBOOK.md §5.2](RUNBOOK.md).
+  per `expected_response_type` (34 widget fixtures) plus every live
+  curated question attached. Matches [RUNBOOK.md §5.2](RUNBOOK.md).
+  Re-run `npm run test-questions:seed -- --reset` after a content
+  refresh to pick up newly-added curated questions.
 - **Printable mode** — same attempt powers `/attempts/:id?answers=1`
   variants used in the Phase 2.5 human-test walker.
 
@@ -233,6 +235,42 @@ gate that production uses also run here, so a flagged row lands in
 Re-running either script tears down its own prior demo attempt
 (matched by sentinel prefix) before writing the new one — they are
 idempotent and do not accumulate clutter.
+
+## Content bank shape (post 2026-04-24 batch)
+
+The curated content lives in [content/curated/](content/curated/) and
+is loaded by `npm run content:seed`. After the chunk 3i pilot-prep
+batch the bank covers every J277 topic from 1.1 to 2.5, with the
+proportions weighted toward the LLM-marked types so the pilot
+exercises the AI marker on every topic-set:
+
+| Type                                                                                                                         | Parts         |
+| ---------------------------------------------------------------------------------------------------------------------------- | ------------- |
+| `medium_text`                                                                                                                | 28            |
+| `code`                                                                                                                       | 10            |
+| `extended_response`                                                                                                          | 8             |
+| `algorithm`                                                                                                                  | 4             |
+| **LLM total**                                                                                                                | **50 (69 %)** |
+| `matching`                                                                                                                   | 4             |
+| `matrix_tick_*`                                                                                                              | 4             |
+| `cloze_*`                                                                                                                    | 4             |
+| `tick_box`, `multiple_choice`, `short_text`, `trace_table`, `flowchart`, `logic_diagram`, `diagram_labels` (one or two each) | 10            |
+| **Non-LLM total**                                                                                                            | **22 (31 %)** |
+| **Grand total**                                                                                                              | **72**        |
+
+To check the live shape on a tenant, the SQL is:
+
+```sql
+SELECT topic_code,
+       COUNT(*) FILTER (WHERE expected_response_type
+         IN ('medium_text','extended_response','code','algorithm')) AS llm_parts,
+       COUNT(*) AS all_parts
+  FROM questions q
+  JOIN question_parts qp ON qp.question_id = q.id
+ WHERE q.similarity_hash LIKE 'curated:%'
+ GROUP BY 1
+ ORDER BY 1;
+```
 
 ## What is NOT seeded and why
 
