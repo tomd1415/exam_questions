@@ -12,9 +12,13 @@ const MarkParams = z.object({
   partId: z.coerce.number().int().positive(),
 });
 
+// Reason is optional at the route layer (closes bug_notes.md #4 —
+// confirming a mark with no change should not require typing a
+// rationale). The service layer still requires a reason on the
+// override branch where the marks are actually changing.
 const MarkBody = z.object({
   marks_awarded: z.coerce.number().int().min(0).max(100),
-  reason: z.string().trim().min(1).max(500),
+  reason: z.string().trim().max(500).default(''),
   _csrf: z.string().min(1),
 });
 
@@ -121,6 +125,14 @@ export function registerAdminAttemptRoutes(app: FastifyInstance): void {
       // context, so a missing wiring fails loud in TS rather than
       // 500ing the render at runtime.
       const answerViewByPart = buildPupilAnswerViewMap(bundle.partsByQuestion.values());
+      // bug_notes.md #5: prior teacher_overrides reasons for the same
+      // question_part — surfaced as a <datalist> on each form so the
+      // marker can pick a previously-used phrase instead of retyping.
+      const allPartIds: string[] = [];
+      for (const list of bundle.partsByQuestion.values()) {
+        for (const part of list) allPartIds.push(part.id);
+      }
+      const priorReasonsByPart = await app.repos.attempts.listPriorTeacherReasons(allPartIds);
       return reply.view('admin_attempt_detail.eta', {
         title: `Mark · Attempt ${bundle.attempt.id}`,
         currentUser: req.currentUser,
@@ -128,6 +140,7 @@ export function registerAdminAttemptRoutes(app: FastifyInstance): void {
         bundle,
         flash: readQueryFlash(req),
         answerViewByPart,
+        priorReasonsByPart,
       });
     } catch (err) {
       if (err instanceof AttemptAccessError) {
@@ -146,23 +159,29 @@ export function registerAdminAttemptRoutes(app: FastifyInstance): void {
       if (!actor) return reply;
       const params = MarkParams.safeParse(req.params);
       if (!params.success) return reply.code(404).send('Not found');
+      // Closes bug_notes.md #2 (29 Apr 2026): every save-mark redirect
+      // anchors back to `#part-<partId>` so the browser restores the
+      // teacher's scroll position instead of jumping to the top.
+      const partAnchor = `#part-${params.data.partId}`;
       const parsed = MarkBody.safeParse(req.body);
       if (!parsed.success) {
         return reply.redirect(
           `/admin/attempts/${params.data.id}?flash=${encodeURIComponent(
             'Enter a whole-number mark and a reason (up to 500 characters).',
-          )}`,
+          )}${partAnchor}`,
         );
       }
       try {
-        await app.services.teacherMarking.setTeacherMark(
+        const result = await app.services.teacherMarking.setTeacherMark(
           actor,
           String(params.data.partId),
           parsed.data.marks_awarded,
           parsed.data.reason,
         );
+        const flash =
+          result.kind === 'confirmed' ? 'Mark confirmed (unchanged).' : 'Mark overridden.';
         return reply.redirect(
-          `/admin/attempts/${params.data.id}?flash=${encodeURIComponent('Mark updated.')}`,
+          `/admin/attempts/${params.data.id}?flash=${encodeURIComponent(flash)}${partAnchor}`,
         );
       } catch (err) {
         if (err instanceof TeacherMarkingError) {
@@ -179,7 +198,7 @@ export function registerAdminAttemptRoutes(app: FastifyInstance): void {
                   ? 'That attempt has not been submitted yet.'
                   : 'Could not save the mark.';
           return reply.redirect(
-            `/admin/attempts/${params.data.id}?flash=${encodeURIComponent(message)}`,
+            `/admin/attempts/${params.data.id}?flash=${encodeURIComponent(message)}${partAnchor}`,
           );
         }
         throw err;

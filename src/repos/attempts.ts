@@ -852,6 +852,58 @@ export class AttemptRepo {
     return rows[0] ?? null;
   }
 
+  // Closes bug_notes.md #5 (29 Apr 2026). Returns the distinct, recent
+  // teacher_overrides.reason values for the same question_part_id as
+  // a target attempt_part — the marking template renders these as a
+  // <datalist> so the marker can pick a phrase they (or another
+  // teacher) have already typed against this question rather than
+  // retyping it. Capped at 12 to keep the dropdown short. Limit is
+  // applied per attempt_part rather than globally so that suggestions
+  // are scoped to the question, not to whatever the marker typed
+  // most recently across all questions.
+  async listPriorTeacherReasons(
+    attemptPartIds: readonly string[],
+    perPartLimit = 12,
+  ): Promise<Map<string, string[]>> {
+    const out = new Map<string, string[]>();
+    if (attemptPartIds.length === 0) return out;
+    const { rows } = await this.pool.query<{ attempt_part_id: string; reasons: string[] }>(
+      `WITH target_parts AS (
+         SELECT id::text AS attempt_part_id, question_part_id
+           FROM attempt_parts
+          WHERE id = ANY ($1::bigint[])
+       ),
+       prior AS (
+         SELECT tp_target.attempt_part_id,
+                tov.reason,
+                MAX(tov.created_at) AS most_recent
+           FROM target_parts tp_target
+           JOIN attempt_parts ap_other ON ap_other.question_part_id = tp_target.question_part_id
+           JOIN awarded_marks am       ON am.attempt_part_id = ap_other.id
+                                       AND am.marker = 'teacher_override'
+           JOIN teacher_overrides tov  ON tov.awarded_mark_id = am.id
+          WHERE TRIM(tov.reason) <> ''
+          GROUP BY tp_target.attempt_part_id, tov.reason
+       )
+       SELECT attempt_part_id,
+              array_agg(reason ORDER BY most_recent DESC) FILTER (WHERE rn <= $2) AS reasons
+         FROM (
+           SELECT attempt_part_id, reason, most_recent,
+                  ROW_NUMBER() OVER (
+                    PARTITION BY attempt_part_id
+                    ORDER BY most_recent DESC
+                  ) AS rn
+             FROM prior
+         ) ranked
+        GROUP BY attempt_part_id`,
+      [attemptPartIds, perPartLimit],
+    );
+    for (const row of rows) {
+      out.set(row.attempt_part_id, row.reasons ?? []);
+    }
+    return out;
+  }
+
   async insertTeacherOverride(input: {
     attemptPartId: string;
     teacherId: string;

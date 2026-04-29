@@ -681,6 +681,14 @@ input[type='number'].input {
   background: var(--color-surface-3);
   color: var(--color-ink-3);
 }
+/* Amber override badge (chunk 3i pilot UX): only attached when the
+   teacher's mark differed from the AI / deterministic mark, so a
+   plain confirmation never shows the badge. Closes bug_notes.md #3
+   (29 Apr 2026). */
+.badge--warn {
+  background: #fde68a;
+  color: #78350f;
+}
 .question-card__stem {
   font-size: 1.05rem;
   margin: 0 0 var(--space-6) 0;
@@ -694,6 +702,17 @@ input[type='number'].input {
   border-radius: var(--radius-md);
   padding: var(--space-3) var(--space-4);
   margin: 0;
+  /* Smooth target-flash so the post-save anchor scroll is gentle.
+     `scroll-margin-top` keeps the part below the sticky admin chrome
+     when the browser jumps to `#part-<id>` after a redirect. */
+  scroll-margin-top: var(--space-5);
+}
+/* Subtle amber tint when the teacher overrode the AI / deterministic
+   mark — the question hasn't been deleted, but the marker has
+   intervened. A confirmed mark gets no extra style. Bug_notes.md #3. */
+.question-part--overridden {
+  border-color: #fde68a;
+  background: rgba(254, 243, 199, 0.35);
 }
 .question-part legend {
   font-weight: 600;

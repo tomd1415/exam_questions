@@ -56,14 +56,22 @@ const subtitle =
       <% (it.bundle.partsByQuestion.get(q.id) || []).forEach(function(part) { %>
         <% const awarded = it.bundle.awardedByAttemptPart.get(part.id); %>
         <% const markPoints = it.bundle.markPointsByPart.get(part.question_part_id) || []; %>
-        <div class="question-part question-part--admin">
+        <% const isOverride = awarded && awarded.marker === 'teacher_override'; %>
+        <%/* Anchor id used by the save-mark redirect's #part-<id>
+              fragment so the page scrolls back to the form the
+              teacher just submitted instead of jumping to the top.
+              Closes bug_notes.md #2 (29 Apr 2026). */%>
+        <div id="part-<%= part.id %>"
+             class="question-part question-part--admin<% if (isOverride) { %> question-part--overridden<% } %>">
           <div class="question-part__head">
             <span class="question-part__label"><%= part.part_label %></span>
             <span class="question-part__prompt"><%= part.prompt %></span>
             <span class="question-part__marks">
               <% if (awarded) { %>
                 <%= awarded.marks_awarded %> / <%= part.marks %>
-                · <span class="badge badge--muted"><%= awarded.marker %></span>
+                <% if (isOverride) { %>
+                  · <span class="badge badge--warn">teacher override</span>
+                <% } %>
               <% } else { %>
                 pending / <%= part.marks %>
               <% } %>
@@ -105,10 +113,29 @@ const subtitle =
                      value="<%= awarded ? awarded.marks_awarded : 0 %>" required />
               <span class="muted">/ <%= part.marks %></span>
             </label>
+            <%
+              // Reason is OPTIONAL when the teacher confirms an
+              // existing mark; the service makes it mandatory only
+              // when the marks change. Closes bug_notes.md #4 + #5.
+              const priorReasons = (it.priorReasonsByPart && it.priorReasonsByPart.get(part.id)) || [];
+              const datalistId = 'reasons-' + part.id;
+              const hasPriors = priorReasons.length > 0;
+            %>
             <label>
               <span>Reason</span>
-              <input type="text" name="reason" maxlength="500" required
-                     placeholder="Why this mark (visible to teachers only)" />
+              <% if (hasPriors) { %>
+                <input type="text" name="reason" maxlength="500"
+                       placeholder="Required only when changing the mark"
+                       list="<%= datalistId %>" />
+                <datalist id="<%= datalistId %>">
+                  <% priorReasons.forEach(function(r) { %>
+                    <option value="<%= r %>"></option>
+                  <% }); %>
+                </datalist>
+              <% } else { %>
+                <input type="text" name="reason" maxlength="500"
+                       placeholder="Required only when changing the mark" />
+              <% } %>
             </label>
             <button type="submit" class="btn btn--primary btn--sm">Save mark</button>
           </form>

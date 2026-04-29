@@ -273,7 +273,12 @@ describe('POST /admin/attempts/:id/parts/:partId/mark', () => {
       }),
     });
     expect(res.statusCode).toBe(302);
-    expect(decodeURIComponent(res.headers.location!)).toContain('Mark updated.');
+    // bug_notes.md #2 + #3: redirect carries the part anchor and the
+    // flash distinguishes confirmed vs overridden. The seeded part has
+    // no prior awarded mark, so this submission takes the override
+    // branch.
+    expect(decodeURIComponent(res.headers.location!)).toContain('Mark overridden.');
+    expect(res.headers.location!).toContain(`#part-${openPartId}`);
 
     // Pupil revisits their review — updated score.
     const pupilJar = await loginAs(pupil);
@@ -323,7 +328,7 @@ describe('POST /admin/attempts/:id/parts/:partId/mark', () => {
     expect(decodeURIComponent(res.headers.location!)).toContain('outside the allowed range');
   });
 
-  it('rejects an empty reason', async () => {
+  it('rejects an empty reason on the override branch (marks differ from existing mark)', async () => {
     const teacher = await createUser(pool(), { role: 'teacher' });
     const pupil = await createUser(pool(), { role: 'pupil' });
     const { attemptId, openPartId } = await seedMixedSubmission({
@@ -340,6 +345,9 @@ describe('POST /admin/attempts/:id/parts/:partId/mark', () => {
     updateJar(jar, detail);
     const csrf = extractCsrfToken(detail.payload);
 
+    // The seeded extended_response part has no awarded row yet, so a
+    // submit with marks=3 takes the override branch and a reason is
+    // mandatory.
     const res = await app.inject({
       method: 'POST',
       url: `/admin/attempts/${attemptId}/parts/${openPartId}/mark`,
@@ -351,6 +359,59 @@ describe('POST /admin/attempts/:id/parts/:partId/mark', () => {
     });
     expect(res.statusCode).toBe(302);
     expect(decodeURIComponent(res.headers.location!)).toContain('reason');
+  });
+
+  // Closes bug_notes.md #3 + #4 (29 Apr 2026): saving the same mark
+  // that's already on the row is a confirmation, not an override.
+  // No new awarded_marks row is written, no `teacher_override` badge
+  // appears on the page, and an empty reason is allowed.
+  it('confirms an unchanged mark without writing a teacher_override row, even with an empty reason', async () => {
+    const teacher = await createUser(pool(), { role: 'teacher' });
+    const pupil = await createUser(pool(), { role: 'pupil' });
+    const { attemptId, mcPartId } = await seedMixedSubmission({
+      teacher,
+      pupil,
+      topicCode: '1.2',
+    });
+    // The MC part was deterministically marked at submit time. Look
+    // up the existing awarded mark so we know the value to confirm.
+    const existing = await pool().query<{ marks_awarded: number; marker: string }>(
+      `SELECT marks_awarded, marker FROM awarded_marks WHERE attempt_part_id = $1::bigint`,
+      [mcPartId],
+    );
+    expect(existing.rows).toHaveLength(1);
+    const existingMarks = existing.rows[0]!.marks_awarded;
+    const existingMarker = existing.rows[0]!.marker;
+
+    const jar = await loginAs(teacher);
+    const detail = await app.inject({
+      method: 'GET',
+      url: `/admin/attempts/${attemptId}`,
+      headers: { cookie: cookieHeader(jar) },
+    });
+    updateJar(jar, detail);
+    const csrf = extractCsrfToken(detail.payload);
+
+    const res = await app.inject({
+      method: 'POST',
+      url: `/admin/attempts/${attemptId}/parts/${mcPartId}/mark`,
+      headers: {
+        'content-type': 'application/x-www-form-urlencoded',
+        cookie: cookieHeader(jar),
+      },
+      payload: form({ _csrf: csrf, marks_awarded: String(existingMarks), reason: '' }),
+    });
+    expect(res.statusCode).toBe(302);
+    expect(decodeURIComponent(res.headers.location!)).toContain('Mark confirmed (unchanged).');
+    expect(res.headers.location!).toContain(`#part-${mcPartId}`);
+
+    // The marker on the row should NOT have flipped to teacher_override.
+    const after = await pool().query<{ marker: string }>(
+      `SELECT marker FROM awarded_marks WHERE attempt_part_id = $1::bigint ORDER BY created_at DESC`,
+      [mcPartId],
+    );
+    expect(after.rows).toHaveLength(1);
+    expect(after.rows[0]!.marker).toBe(existingMarker);
   });
 
   it('403s a teacher marking an attempt that belongs to a different teacher\u2019s class', async () => {
