@@ -1,0 +1,44 @@
+{
+  "external_key": "j277-2-2-while-loop-cloze-code-2026",
+  "component_code": "J277/02",
+  "topic_code": "2.2",
+  "subtopic_code": "2.2.1",
+  "command_word_code": "complete",
+  "archetype_code": "code_writing",
+  "expected_response_type": "cloze_code",
+  "stem": "The pseudocode below should keep asking for a number until the user enters a positive number, then print it.",
+  "model_answer": "{\"g1\": \"-1\", \"g2\": \"num <= 0\", \"g3\": \"input\", \"g4\": \"num\"}",
+  "difficulty_band": 4,
+  "difficulty_step": 2,
+  "source_type": "teacher",
+  "review_notes": "Common pupil errors: condition the wrong way round (`num >= 0`), forgetting to re-input inside the loop body. Accept lists allow common operator/whitespace forms.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Complete the pseudocode by filling each gap.",
+      "marks": 4,
+      "expected_response_type": "cloze_code",
+      "part_config": {
+        "text": "num = {{g1}}\nwhile {{g2}}\n  num = {{g3}}(\"Enter a positive number: \")\nendwhile\nprint({{g4}})",
+        "gaps": [
+          { "id": "g1", "accept": ["-1", "0", "0 - 1"] },
+          { "id": "g2", "accept": ["num <= 0", "num<=0", "num < 1", "num<1"] },
+          { "id": "g3", "accept": ["input"] },
+          { "id": "g4", "accept": ["num"] }
+        ]
+      },
+      "mark_points": [
+        { "text": "sentinel value forces loop to run at least once", "marks": 1 },
+        { "text": "loop condition rejects zero and negatives", "marks": 1 },
+        { "text": "input() called inside loop body", "marks": 1 },
+        { "text": "print num after the loop", "marks": 1 }
+      ],
+      "misconceptions": [
+        {
+          "label": "Condition reversed",
+          "description": "Pupils often write `while num >= 0` thinking the loop should run while the number is positive. The loop must run while the input is *not yet* positive."
+        }
+      ]
+    }
+  ]
+}

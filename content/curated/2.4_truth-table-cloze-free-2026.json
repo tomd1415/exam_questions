@@ -1,0 +1,40 @@
+{
+  "external_key": "j277-2-4-truth-table-cloze-free-2026",
+  "component_code": "J277/02",
+  "topic_code": "2.4",
+  "subtopic_code": "2.4.1",
+  "command_word_code": "complete",
+  "archetype_code": "recall",
+  "expected_response_type": "cloze_free",
+  "stem": "Complete the description of the three basic logic gates.",
+  "model_answer": "{\"g1\": \"AND\", \"g2\": \"OR\", \"g3\": \"NOT\", \"g4\": \"1\", \"g5\": \"0\"}",
+  "difficulty_band": 3,
+  "difficulty_step": 1,
+  "source_type": "teacher",
+  "review_notes": "Free-typed cloze. Accept gate names in any case; 1/true and 0/false interchangeable.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Type the missing gate name or value into each gap.",
+      "marks": 5,
+      "expected_response_type": "cloze_free",
+      "part_config": {
+        "text": "An {{g1}} gate outputs 1 only when both inputs are 1. An {{g2}} gate outputs 1 when at least one input is 1. A {{g3}} gate inverts a single input. So when its input is 0 a NOT gate outputs {{g4}}, and when its input is 1 it outputs {{g5}}.",
+        "gaps": [
+          { "id": "g1", "accept": ["and"] },
+          { "id": "g2", "accept": ["or"] },
+          { "id": "g3", "accept": ["not"] },
+          { "id": "g4", "accept": ["1", "true"] },
+          { "id": "g5", "accept": ["0", "false"] }
+        ]
+      },
+      "mark_points": [
+        { "text": "AND — both inputs 1", "marks": 1 },
+        { "text": "OR — at least one input 1", "marks": 1 },
+        { "text": "NOT — inverter", "marks": 1 },
+        { "text": "NOT(0) = 1", "marks": 1 },
+        { "text": "NOT(1) = 0", "marks": 1 }
+      ]
+    }
+  ]
+}

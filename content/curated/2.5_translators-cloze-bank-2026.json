@@ -1,0 +1,55 @@
+{
+  "external_key": "j277-2-5-translators-cloze-bank-2026",
+  "component_code": "J277/02",
+  "topic_code": "2.5",
+  "subtopic_code": "2.5.2",
+  "command_word_code": "complete",
+  "archetype_code": "recall",
+  "expected_response_type": "cloze_with_bank",
+  "stem": "Translators turn programs from one language into another.",
+  "model_answer": "{\"g1\": \"compiler\", \"g2\": \"machine code\", \"g3\": \"interpreter\", \"g4\": \"line\", \"g5\": \"assembler\", \"g6\": \"assembly\"}",
+  "difficulty_band": 4,
+  "difficulty_step": 2,
+  "source_type": "teacher",
+  "review_notes": "Word bank with distractors. Pupils often confuse compiler vs assembler — both produce machine code, but assembler works from assembly language.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Drag a word from the bank into each gap. Not every word is used.",
+      "marks": 6,
+      "expected_response_type": "cloze_with_bank",
+      "part_config": {
+        "text": "A {{g1}} translates the whole high-level program at once into {{g2}} that the CPU can run directly. An {{g3}} instead translates and runs the program one {{g4}} at a time, which makes it slower but easier to debug. An {{g5}} is a translator used for {{g6}} language only.",
+        "gaps": [
+          { "id": "g1", "accept": ["compiler"] },
+          { "id": "g2", "accept": ["machine code"] },
+          { "id": "g3", "accept": ["interpreter"] },
+          { "id": "g4", "accept": ["line"] },
+          { "id": "g5", "accept": ["assembler"] },
+          { "id": "g6", "accept": ["assembly"] }
+        ],
+        "bank": [
+          "assembler",
+          "assembly",
+          "binary",
+          "compiler",
+          "decoder",
+          "high-level",
+          "interpreter",
+          "line",
+          "machine code",
+          "object",
+          "source code"
+        ]
+      },
+      "mark_points": [
+        { "text": "compiler", "marks": 1 },
+        { "text": "machine code", "marks": 1 },
+        { "text": "interpreter", "marks": 1 },
+        { "text": "line at a time", "marks": 1 },
+        { "text": "assembler", "marks": 1 },
+        { "text": "assembly", "marks": 1 }
+      ]
+    }
+  ]
+}

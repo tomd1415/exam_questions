@@ -1,0 +1,52 @@
+{
+  "external_key": "j277-1-4-security-cloze-bank-2026",
+  "component_code": "J277/01",
+  "topic_code": "1.4",
+  "subtopic_code": "1.4.1",
+  "command_word_code": "complete",
+  "archetype_code": "recall",
+  "expected_response_type": "cloze_with_bank",
+  "stem": "A school's IT technician is briefing pupils on common security threats.",
+  "model_answer": "{\"g1\": \"phishing\", \"g2\": \"malware\", \"g3\": \"social engineering\", \"g4\": \"firewall\", \"g5\": \"penetration testing\"}",
+  "difficulty_band": 4,
+  "difficulty_step": 2,
+  "source_type": "teacher",
+  "review_notes": "Word bank includes distractors. Not every word is used.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Drag a word from the bank into each gap. Not every word is used.",
+      "marks": 5,
+      "expected_response_type": "cloze_with_bank",
+      "part_config": {
+        "text": "An email pretending to be from the bank to trick the user into clicking a fake login link is called {{g1}}. Hostile software such as a virus or ransomware is collectively called {{g2}}. Tricking someone into giving up their password by pretending to be IT support is an example of {{g3}}. A {{g4}} blocks unwanted network traffic before it reaches the LAN. To check whether the school's defences actually work, the technician hires an outside team to attack the system in a controlled way — this is called {{g5}}.",
+        "gaps": [
+          { "id": "g1", "accept": ["phishing"] },
+          { "id": "g2", "accept": ["malware"] },
+          { "id": "g3", "accept": ["social engineering"] },
+          { "id": "g4", "accept": ["firewall"] },
+          { "id": "g5", "accept": ["penetration testing"] }
+        ],
+        "bank": [
+          "anti-virus",
+          "brute force",
+          "encryption",
+          "firewall",
+          "malware",
+          "patch",
+          "penetration testing",
+          "phishing",
+          "shoulder surfing",
+          "social engineering"
+        ]
+      },
+      "mark_points": [
+        { "text": "phishing", "marks": 1 },
+        { "text": "malware", "marks": 1 },
+        { "text": "social engineering", "marks": 1 },
+        { "text": "firewall", "marks": 1 },
+        { "text": "penetration testing", "marks": 1 }
+      ]
+    }
+  ]
+}

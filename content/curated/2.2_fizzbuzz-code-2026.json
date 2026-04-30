@@ -1,0 +1,38 @@
+{
+  "external_key": "j277-2-2-fizzbuzz-code-2026",
+  "component_code": "J277/02",
+  "topic_code": "2.2",
+  "subtopic_code": "2.2.1",
+  "command_word_code": "write_rewrite",
+  "archetype_code": "code_writing",
+  "expected_response_type": "code",
+  "stem": "A pupil is writing a 'FizzBuzz' program. For every number from 1 to 30 the program prints 'Fizz' if the number is a multiple of 3, 'Buzz' if it is a multiple of 5, 'FizzBuzz' if both, otherwise the number itself.",
+  "model_answer": "for n in range(1, 31):\n    if n % 15 == 0:\n        print(\"FizzBuzz\")\n    elif n % 3 == 0:\n        print(\"Fizz\")\n    elif n % 5 == 0:\n        print(\"Buzz\")\n    else:\n        print(n)",
+  "difficulty_band": 5,
+  "difficulty_step": 2,
+  "source_type": "teacher",
+  "review_notes": "Teacher-marked. Accept OCR pseudocode or Python. Look for: loop covers 1..30 inclusive, divisibility tests use MOD/%, the both-multiples case (15) is checked first OR the if/elif ordering produces correct output, prints either Fizz/Buzz/FizzBuzz or n.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Write the FizzBuzz program for the numbers 1 to 30 inclusive.",
+      "marks": 4,
+      "expected_response_type": "code",
+      "mark_points": [
+        { "text": "loops over the values 1 to 30 inclusive", "marks": 1 },
+        { "text": "tests divisibility using MOD / % (or equivalent) for 3 and 5", "marks": 1 },
+        {
+          "text": "handles the multiples-of-both case correctly (test 15 first, OR if/elif ordering)",
+          "marks": 1
+        },
+        { "text": "prints Fizz / Buzz / FizzBuzz / n in the right cases", "marks": 1 }
+      ],
+      "misconceptions": [
+        {
+          "label": "Fizz and Buzz instead of FizzBuzz",
+          "description": "If 3 is checked before 15, n=15 prints 'Fizz' and exits — losing the FizzBuzz mark. Either combine 3+5 first or use elif ordering."
+        }
+      ]
+    }
+  ]
+}

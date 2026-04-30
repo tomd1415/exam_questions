@@ -1,0 +1,52 @@
+{
+  "external_key": "j277-1-3-protocols-matching-2026",
+  "component_code": "J277/01",
+  "topic_code": "1.3",
+  "subtopic_code": "1.3.2",
+  "command_word_code": "identify",
+  "archetype_code": "recall",
+  "expected_response_type": "matching",
+  "stem": "Each of the protocols below is best known for one job on the network.",
+  "model_answer": "[[0, 0], [1, 1], [2, 2], [3, 3]]",
+  "difficulty_band": 3,
+  "difficulty_step": 2,
+  "source_type": "teacher",
+  "review_notes": "Match the four protocols to their primary purpose. Right column has one distractor.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Match each protocol to the job it does.",
+      "marks": 4,
+      "expected_response_type": "matching",
+      "part_config": {
+        "left": ["HTTP", "FTP", "SMTP", "TCP"],
+        "right": [
+          "Fetches web pages from a server",
+          "Transfers files between client and server",
+          "Sends email between mail servers",
+          "Provides reliable, ordered delivery of packets",
+          "Translates domain names to IP addresses"
+        ],
+        "correctPairs": [
+          [0, 0],
+          [1, 1],
+          [2, 2],
+          [3, 3]
+        ],
+        "partialCredit": true
+      },
+      "mark_points": [
+        { "text": "HTTP — fetches web pages", "marks": 1 },
+        { "text": "FTP — file transfer", "marks": 1 },
+        { "text": "SMTP — email between mail servers", "marks": 1 },
+        { "text": "TCP — reliable ordered delivery", "marks": 1 }
+      ],
+      "misconceptions": [
+        {
+          "label": "DNS confused with TCP",
+          "description": "Domain → IP translation is DNS, the distractor in the right column. TCP is about delivery guarantees."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "external_key": "j277-2-2-count-words-code-2026",
+  "component_code": "J277/02",
+  "topic_code": "2.2",
+  "subtopic_code": "2.2.3",
+  "command_word_code": "write_rewrite",
+  "archetype_code": "code_writing",
+  "expected_response_type": "code",
+  "stem": "A pupil wants a program that asks the user for a sentence and prints how many words it contains. Words are separated by one or more spaces.",
+  "model_answer": "sentence = input(\"Enter a sentence: \").strip()\nif sentence == \"\":\n    print(0)\nelse:\n    words = sentence.split()\n    print(len(words))",
+  "difficulty_band": 5,
+  "difficulty_step": 2,
+  "source_type": "teacher",
+  "review_notes": "Teacher-marked. Accept OCR pseudocode or Python. The empty-input case is worth a mark — `''.split()` returns 0 in Python (which is correct) but a manual implementation might miscount. Multiple spaces should not produce phantom words.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Write a program that reads a sentence and prints the number of words it contains. An empty input should print 0.",
+      "marks": 3,
+      "expected_response_type": "code",
+      "mark_points": [
+        { "text": "reads input and trims surrounding whitespace", "marks": 1 },
+        {
+          "text": "splits on whitespace and counts the resulting tokens (or equivalent loop counting transitions)",
+          "marks": 1
+        },
+        {
+          "text": "outputs the count, including 0 for an empty / whitespace-only input",
+          "marks": 1
+        }
+      ]
+    }
+  ]
+}

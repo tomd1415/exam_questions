@@ -1,0 +1,27 @@
+{
+  "external_key": "j277-2-4-logic-gate-symbol-mc-2026",
+  "component_code": "J277/02",
+  "topic_code": "2.4",
+  "subtopic_code": "2.4.1",
+  "command_word_code": "identify",
+  "archetype_code": "recall",
+  "expected_response_type": "multiple_choice",
+  "stem": "A truth table shows the output of a single two-input logic gate. The output is 1 only when both inputs are 1.",
+  "model_answer": "AND",
+  "difficulty_band": 2,
+  "difficulty_step": 1,
+  "source_type": "teacher",
+  "review_notes": "Single-answer MC. AND outputs 1 iff all inputs are 1.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Which gate's output matches the description above?",
+      "marks": 1,
+      "expected_response_type": "multiple_choice",
+      "part_config": {
+        "options": ["AND", "OR", "NOT", "XOR"]
+      },
+      "mark_points": [{ "text": "AND", "marks": 1 }]
+    }
+  ]
+}

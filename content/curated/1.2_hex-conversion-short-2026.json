@@ -1,0 +1,30 @@
+{
+  "external_key": "j277-1-2-hex-conversion-short-2026",
+  "component_code": "J277/01",
+  "topic_code": "1.2",
+  "subtopic_code": "1.2.3",
+  "command_word_code": "convert",
+  "archetype_code": "recall",
+  "expected_response_type": "short_text",
+  "stem": "A pupil is converting between hexadecimal and denary by hand.",
+  "model_answer": "47",
+  "difficulty_band": 3,
+  "difficulty_step": 1,
+  "source_type": "teacher",
+  "review_notes": "Short_text. Accept '47' or '47 (denary)'. Working: 2*16 + 15 = 47.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Convert the hexadecimal number 2F into denary.",
+      "marks": 1,
+      "expected_response_type": "short_text",
+      "mark_points": [
+        {
+          "text": "47",
+          "marks": 1,
+          "accepted_alternatives": ["47 denary", "47 (denary)", "0x2F = 47"]
+        }
+      ]
+    }
+  ]
+}

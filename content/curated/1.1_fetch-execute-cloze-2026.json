@@ -1,0 +1,42 @@
+{
+  "external_key": "j277-1-1-fetch-execute-cloze-2026",
+  "component_code": "J277/01",
+  "topic_code": "1.1",
+  "subtopic_code": "1.1.1",
+  "command_word_code": "complete",
+  "archetype_code": "recall",
+  "expected_response_type": "cloze_free",
+  "stem": "Complete the description of the fetch-execute cycle by typing the missing word into each gap.",
+  "model_answer": "{\"g1\": \"program counter\", \"g2\": \"address\", \"g3\": \"MAR\", \"g4\": \"MDR\", \"g5\": \"decoded\", \"g6\": \"executed\"}",
+  "difficulty_band": 4,
+  "difficulty_step": 2,
+  "source_type": "teacher",
+  "review_notes": "Free-typed cloze. Accept lists are case-insensitive lowercase canonical forms; PC and MAR / MDR allowed in caps too.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Type the missing word or abbreviation into each gap.",
+      "marks": 6,
+      "expected_response_type": "cloze_free",
+      "part_config": {
+        "text": "At the start of each cycle the {{g1}} holds the {{g2}} of the next instruction. That value is copied into the {{g3}} so memory can be read. The instruction itself comes back into the {{g4}}. Once in the CPU the instruction is {{g5}} by the control unit and then {{g6}} by the appropriate part of the processor.",
+        "gaps": [
+          { "id": "g1", "accept": ["program counter", "pc"] },
+          { "id": "g2", "accept": ["address"] },
+          { "id": "g3", "accept": ["mar", "memory address register"] },
+          { "id": "g4", "accept": ["mdr", "memory data register"] },
+          { "id": "g5", "accept": ["decoded"] },
+          { "id": "g6", "accept": ["executed"] }
+        ]
+      },
+      "mark_points": [
+        { "text": "program counter holds the address", "marks": 1 },
+        { "text": "address of next instruction", "marks": 1 },
+        { "text": "MAR receives the address", "marks": 1 },
+        { "text": "MDR holds the fetched instruction", "marks": 1 },
+        { "text": "decoded by control unit", "marks": 1 },
+        { "text": "executed by appropriate part of CPU", "marks": 1 }
+      ]
+    }
+  ]
+}

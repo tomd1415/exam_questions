@@ -1,0 +1,27 @@
+{
+  "external_key": "j277-1-2-binary-units-mc-2026",
+  "component_code": "J277/01",
+  "topic_code": "1.2",
+  "subtopic_code": "1.2.3",
+  "command_word_code": "identify",
+  "archetype_code": "recall",
+  "expected_response_type": "multiple_choice",
+  "stem": "Computer storage capacities are measured in standard units.",
+  "model_answer": "1024 bytes",
+  "difficulty_band": 2,
+  "difficulty_step": 1,
+  "source_type": "teacher",
+  "review_notes": "Single-answer MC. The OCR J277 spec uses the binary (1024) prefixes; SI (1000) is wrong here.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "How many bytes are in 1 kilobyte (KB)?",
+      "marks": 1,
+      "expected_response_type": "multiple_choice",
+      "part_config": {
+        "options": ["1024 bytes", "1000 bytes", "8 bits", "1024 bits"]
+      },
+      "mark_points": [{ "text": "1024 bytes", "marks": 1 }]
+    }
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "external_key": "j277-2-1-loop-trace-table-2026",
+  "component_code": "J277/02",
+  "topic_code": "2.1",
+  "subtopic_code": "2.1.2",
+  "command_word_code": "complete",
+  "archetype_code": "trace_table",
+  "expected_response_type": "trace_table",
+  "stem": "Consider this pseudocode:\n\n  total = 0\n  for i = 1 to 5\n    total = total + i\n  next i\n  print(total)\n",
+  "model_answer": "{\"0,1\": \"1\", \"1,1\": \"3\", \"2,1\": \"6\", \"3,1\": \"10\", \"4,1\": \"15\", \"4,2\": \"15\"}",
+  "difficulty_band": 3,
+  "difficulty_step": 1,
+  "source_type": "teacher",
+  "review_notes": "Triangular numbers 1, 3, 6, 10, 15. The i column is prefilled. Final output appears only on the last row.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Complete the trace table showing the value of total after each iteration. The i column is filled in for you.",
+      "marks": 5,
+      "expected_response_type": "trace_table",
+      "part_config": {
+        "columns": [
+          { "name": "i", "width": 3 },
+          { "name": "total", "width": 5 },
+          { "name": "output", "width": 6 }
+        ],
+        "rows": 5,
+        "prefill": {
+          "0,0": "1",
+          "1,0": "2",
+          "2,0": "3",
+          "3,0": "4",
+          "4,0": "5"
+        },
+        "expected": {
+          "0,1": "1",
+          "1,1": "3",
+          "2,1": "6",
+          "3,1": "10",
+          "4,1": "15",
+          "4,2": "15"
+        },
+        "marking": {
+          "mode": "perCell"
+        }
+      },
+      "mark_points": [
+        { "text": "row 1: total = 1", "marks": 1 },
+        { "text": "row 2: total = 3", "marks": 1 },
+        { "text": "row 3: total = 6", "marks": 1 },
+        { "text": "row 4: total = 10", "marks": 1 },
+        { "text": "row 5: total = 15 and output 15", "marks": 1 }
+      ]
+    }
+  ]
+}

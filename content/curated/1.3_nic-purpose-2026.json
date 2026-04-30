@@ -1,0 +1,30 @@
+{
+  "external_key": "j277-1-3-nic-purpose-2026",
+  "component_code": "J277/01",
+  "topic_code": "1.3",
+  "subtopic_code": "1.3.2",
+  "command_word_code": "describe",
+  "archetype_code": "explain",
+  "expected_response_type": "medium_text",
+  "stem": "Every device that connects to a computer network has a Network Interface Card (NIC).",
+  "model_answer": "A NIC is the hardware that lets a device send and receive data on a network — wired (Ethernet socket) or wireless (Wi-Fi). It carries a unique MAC address burned in at manufacture, used to identify the device on the local network. The NIC turns the data the operating system wants to send into electrical signals or radio waves, and reverses the process for incoming data.",
+  "difficulty_band": 4,
+  "difficulty_step": 1,
+  "source_type": "teacher",
+  "review_notes": "Teacher-marked. Look for: hardware that allows network connection, mention of MAC address, and an idea of converting between digital data and the medium (electrical / radio).",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Describe the purpose of a NIC and one piece of information stored on it.",
+      "marks": 2,
+      "expected_response_type": "medium_text",
+      "mark_points": [
+        {
+          "text": "lets the device send / receive data on a network (wired or wireless)",
+          "marks": 1
+        },
+        { "text": "stores a unique MAC address used to identify the device on the LAN", "marks": 1 }
+      ]
+    }
+  ]
+}

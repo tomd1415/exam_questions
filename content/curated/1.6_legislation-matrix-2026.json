@@ -1,0 +1,53 @@
+{
+  "external_key": "j277-1-6-legislation-matrix-2026",
+  "component_code": "J277/01",
+  "topic_code": "1.6",
+  "subtopic_code": "1.6.1",
+  "command_word_code": "identify",
+  "archetype_code": "recall",
+  "expected_response_type": "matrix_tick_single",
+  "stem": "Each row below describes an action. Tick the UK law that the action most directly breaks.",
+  "model_answer": "{\"Logging in to a friend's school account using their password without permission\": \"Computer Misuse Act 1990\", \"Downloading the latest film from a torrent site for free\": \"Copyright, Designs and Patents Act 1988\", \"A company keeping pupil contact details forever after the pupil leaves\": \"Data Protection Act 2018 / UK GDPR\", \"Writing a virus that wipes hard drives in a school's network\": \"Computer Misuse Act 1990\"}",
+  "difficulty_band": 4,
+  "difficulty_step": 2,
+  "source_type": "teacher",
+  "review_notes": "One tick per row. Common pupil confusion: copyright vs data protection when files contain personal data.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Tick the law that each action most directly breaks. One tick per row.",
+      "marks": 4,
+      "expected_response_type": "matrix_tick_single",
+      "part_config": {
+        "rows": [
+          "Logging in to a friend's school account using their password without permission",
+          "Downloading the latest film from a torrent site for free",
+          "A company keeping pupil contact details forever after the pupil leaves",
+          "Writing a virus that wipes hard drives in a school's network"
+        ],
+        "columns": [
+          "Computer Misuse Act 1990",
+          "Copyright, Designs and Patents Act 1988",
+          "Data Protection Act 2018 / UK GDPR",
+          "Equality Act 2010"
+        ],
+        "correctByRow": [
+          "Computer Misuse Act 1990",
+          "Copyright, Designs and Patents Act 1988",
+          "Data Protection Act 2018 / UK GDPR",
+          "Computer Misuse Act 1990"
+        ],
+        "allOrNothing": false
+      },
+      "mark_points": [
+        { "text": "unauthorised access — Computer Misuse Act 1990", "marks": 1 },
+        { "text": "illegal download — Copyright, Designs and Patents Act 1988", "marks": 1 },
+        {
+          "text": "indefinite retention of personal data — Data Protection Act 2018 / UK GDPR",
+          "marks": 1
+        },
+        { "text": "writing/distributing malware — Computer Misuse Act 1990", "marks": 1 }
+      ]
+    }
+  ]
+}

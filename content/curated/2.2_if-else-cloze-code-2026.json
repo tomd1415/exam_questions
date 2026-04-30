@@ -1,0 +1,44 @@
+{
+  "external_key": "j277-2-2-if-else-cloze-code-2026",
+  "component_code": "J277/02",
+  "topic_code": "2.2",
+  "subtopic_code": "2.2.1",
+  "command_word_code": "complete",
+  "archetype_code": "code_writing",
+  "expected_response_type": "cloze_code",
+  "stem": "The pseudocode below should classify a pupil's percentage score as Pass (>= 50), Merit (>= 70), or Distinction (>= 85).",
+  "model_answer": "{\"g1\": \"score >= 85\", \"g2\": \"score >= 70\", \"g3\": \"score >= 50\", \"g4\": \"Fail\"}",
+  "difficulty_band": 4,
+  "difficulty_step": 2,
+  "source_type": "teacher",
+  "review_notes": "Order matters: must check Distinction first, then Merit, then Pass — otherwise everyone with >= 50 prints Pass before the higher branches run.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Complete the pseudocode by filling each gap. The conditions must be in the correct order.",
+      "marks": 4,
+      "expected_response_type": "cloze_code",
+      "part_config": {
+        "text": "if {{g1}} then\n  print(\"Distinction\")\nelseif {{g2}} then\n  print(\"Merit\")\nelseif {{g3}} then\n  print(\"Pass\")\nelse\n  print(\"{{g4}}\")\nendif",
+        "gaps": [
+          { "id": "g1", "accept": ["score >= 85", "score>=85"] },
+          { "id": "g2", "accept": ["score >= 70", "score>=70"] },
+          { "id": "g3", "accept": ["score >= 50", "score>=50"] },
+          { "id": "g4", "accept": ["Fail", "fail"] }
+        ]
+      },
+      "mark_points": [
+        { "text": "highest band (Distinction) checked first", "marks": 1 },
+        { "text": "Merit threshold 70", "marks": 1 },
+        { "text": "Pass threshold 50", "marks": 1 },
+        { "text": "fall-through label is Fail", "marks": 1 }
+      ],
+      "misconceptions": [
+        {
+          "label": "Conditions in the wrong order",
+          "description": "Putting `score >= 50` first means a pupil with 90% prints `Pass` and never reaches the Distinction branch. Order branches from highest threshold to lowest."
+        }
+      ]
+    }
+  ]
+}

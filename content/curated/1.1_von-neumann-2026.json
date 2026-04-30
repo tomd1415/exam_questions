@@ -1,0 +1,31 @@
+{
+  "external_key": "j277-1-1-von-neumann-2026",
+  "component_code": "J277/01",
+  "topic_code": "1.1",
+  "subtopic_code": "1.1.1",
+  "command_word_code": "describe",
+  "archetype_code": "explain",
+  "expected_response_type": "medium_text",
+  "stem": "Most modern computers follow the Von Neumann architecture.",
+  "model_answer": "In Von Neumann architecture instructions and data share the same main memory and travel along the same bus to a single CPU. Instructions are fetched, decoded and executed one at a time. The CPU contains the ALU (arithmetic and logic), the control unit (sequencing) and a small set of registers (e.g. program counter, MAR, MDR, accumulator). The shared bus and shared memory make hardware simpler and cheaper but limit how fast instructions and data can be moved (the 'Von Neumann bottleneck').",
+  "difficulty_band": 5,
+  "difficulty_step": 2,
+  "source_type": "teacher",
+  "review_notes": "Teacher-marked. Award marks for: shared memory for code+data, single CPU executing instructions sequentially, named CPU components, and (bonus) the bottleneck idea.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Describe what is meant by the Von Neumann architecture.",
+      "marks": 3,
+      "expected_response_type": "medium_text",
+      "mark_points": [
+        { "text": "stores instructions AND data in the same main memory", "marks": 1 },
+        { "text": "a single CPU fetches, decodes, executes instructions sequentially", "marks": 1 },
+        {
+          "text": "names CPU components (ALU, control unit, registers / accumulator / PC / MAR / MDR)",
+          "marks": 1
+        }
+      ]
+    }
+  ]
+}

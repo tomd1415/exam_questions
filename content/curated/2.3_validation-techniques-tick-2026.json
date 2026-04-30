@@ -1,0 +1,42 @@
+{
+  "external_key": "j277-2-3-validation-techniques-tick-2026",
+  "component_code": "J277/02",
+  "topic_code": "2.3",
+  "subtopic_code": "2.3.1",
+  "command_word_code": "tick",
+  "archetype_code": "recall",
+  "expected_response_type": "tick_box",
+  "stem": "A program checks user input. Some of the items below are validation techniques and some are unrelated.",
+  "model_answer": "[\"Range check\", \"Length check\", \"Format check\", \"Type check\"]",
+  "difficulty_band": 3,
+  "difficulty_step": 1,
+  "source_type": "teacher",
+  "review_notes": "Tick exactly four. The distractors are real terms but not validation techniques.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Tick the four items below that are validation techniques.",
+      "marks": 4,
+      "expected_response_type": "tick_box",
+      "part_config": {
+        "tickExactly": 4,
+        "options": [
+          "Range check",
+          "Length check",
+          "Format check",
+          "Type check",
+          "Compilation",
+          "Authentication",
+          "Encryption",
+          "Iteration"
+        ]
+      },
+      "mark_points": [
+        { "text": "Range check", "marks": 1 },
+        { "text": "Length check", "marks": 1 },
+        { "text": "Format check", "marks": 1 },
+        { "text": "Type check", "marks": 1 }
+      ]
+    }
+  ]
+}

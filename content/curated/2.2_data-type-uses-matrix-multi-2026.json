@@ -1,0 +1,50 @@
+{
+  "external_key": "j277-2-2-data-type-uses-matrix-multi-2026",
+  "component_code": "J277/02",
+  "topic_code": "2.2",
+  "subtopic_code": "2.2.1",
+  "command_word_code": "identify",
+  "archetype_code": "recall",
+  "expected_response_type": "matrix_tick_multi",
+  "stem": "A pupil is choosing data types for fields in a school records program.",
+  "model_answer": "{\"integer\": [\"Number of pupils in a class\", \"Year group\"], \"real\": [\"Average homework score\", \"Height in metres\"], \"boolean\": [\"Whether the pupil takes packed lunch\"], \"string\": [\"Pupil first name\", \"Postcode\"]}",
+  "difficulty_band": 3,
+  "difficulty_step": 2,
+  "source_type": "teacher",
+  "review_notes": "Tick every field that suits each data type. Year group is integer (whole-number). Postcodes are strings because they contain letters and spaces.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Tick every field that is best stored as each data type.",
+      "marks": 6,
+      "expected_response_type": "matrix_tick_multi",
+      "part_config": {
+        "rows": ["integer", "real", "boolean", "string"],
+        "columns": [
+          "Number of pupils in a class",
+          "Year group",
+          "Average homework score",
+          "Height in metres",
+          "Whether the pupil takes packed lunch",
+          "Pupil first name",
+          "Postcode"
+        ],
+        "correctByRow": [
+          ["Number of pupils in a class", "Year group"],
+          ["Average homework score", "Height in metres"],
+          ["Whether the pupil takes packed lunch"],
+          ["Pupil first name", "Postcode"]
+        ],
+        "partialCredit": true
+      },
+      "mark_points": [
+        { "text": "integer — number of pupils, year group", "marks": 1 },
+        { "text": "real — average homework score", "marks": 1 },
+        { "text": "real — height in metres", "marks": 1 },
+        { "text": "boolean — packed-lunch yes/no", "marks": 1 },
+        { "text": "string — pupil first name", "marks": 1 },
+        { "text": "string — postcode (letters/spaces)", "marks": 1 }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,51 @@
+{
+  "external_key": "j277-2-5-ide-tools-matching-2026",
+  "component_code": "J277/02",
+  "topic_code": "2.5",
+  "subtopic_code": "2.5.2",
+  "command_word_code": "identify",
+  "archetype_code": "recall",
+  "expected_response_type": "matching",
+  "stem": "Modern IDEs bundle several tools that help write and debug a program.",
+  "model_answer": "[[0, 0], [1, 1], [2, 2], [3, 3]]",
+  "difficulty_band": 3,
+  "difficulty_step": 1,
+  "source_type": "teacher",
+  "review_notes": "Match the four IDE tools to their primary purpose. One distractor in the right column.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Match each IDE tool to its purpose.",
+      "marks": 4,
+      "expected_response_type": "matching",
+      "part_config": {
+        "left": [
+          "Editor with syntax highlighting",
+          "Compiler / Interpreter",
+          "Debugger",
+          "Auto-complete"
+        ],
+        "right": [
+          "Colours keywords and shows errors as you type",
+          "Translates the source code into something the computer can run",
+          "Pauses execution at breakpoints and inspects variables",
+          "Suggests function and variable names from the surrounding code",
+          "Encrypts files in a Git repository"
+        ],
+        "correctPairs": [
+          [0, 0],
+          [1, 1],
+          [2, 2],
+          [3, 3]
+        ],
+        "partialCredit": true
+      },
+      "mark_points": [
+        { "text": "Editor — colours keywords / shows errors as you type", "marks": 1 },
+        { "text": "Compiler/Interpreter — translates source for execution", "marks": 1 },
+        { "text": "Debugger — breakpoints and variable inspection", "marks": 1 },
+        { "text": "Auto-complete — suggests names from context", "marks": 1 }
+      ]
+    }
+  ]
+}

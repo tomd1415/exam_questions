@@ -1,0 +1,50 @@
+{
+  "external_key": "j277-1-1-register-purpose-matrix-2026",
+  "component_code": "J277/01",
+  "topic_code": "1.1",
+  "subtopic_code": "1.1.1",
+  "command_word_code": "identify",
+  "archetype_code": "recall",
+  "expected_response_type": "matrix_tick_single",
+  "stem": "Each row below names a CPU register and asks you to tick the role it performs.",
+  "model_answer": "{\"Program Counter (PC)\": \"Holds the address of the next instruction to fetch\", \"Memory Address Register (MAR)\": \"Holds the address of the memory cell being read or written\", \"Memory Data Register (MDR)\": \"Holds the data being transferred to or from memory\", \"Accumulator (ACC)\": \"Stores the result of the latest ALU calculation\"}",
+  "difficulty_band": 3,
+  "difficulty_step": 2,
+  "source_type": "teacher",
+  "review_notes": "One tick per row. Common pupil confusion: PC vs MAR (both hold addresses).",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Tick the role that each register performs. One tick per row.",
+      "marks": 4,
+      "expected_response_type": "matrix_tick_single",
+      "part_config": {
+        "rows": [
+          "Program Counter (PC)",
+          "Memory Address Register (MAR)",
+          "Memory Data Register (MDR)",
+          "Accumulator (ACC)"
+        ],
+        "columns": [
+          "Holds the address of the next instruction to fetch",
+          "Holds the address of the memory cell being read or written",
+          "Holds the data being transferred to or from memory",
+          "Stores the result of the latest ALU calculation"
+        ],
+        "correctByRow": [
+          "Holds the address of the next instruction to fetch",
+          "Holds the address of the memory cell being read or written",
+          "Holds the data being transferred to or from memory",
+          "Stores the result of the latest ALU calculation"
+        ],
+        "allOrNothing": false
+      },
+      "mark_points": [
+        { "text": "PC — address of next instruction", "marks": 1 },
+        { "text": "MAR — address being accessed", "marks": 1 },
+        { "text": "MDR — data being transferred", "marks": 1 },
+        { "text": "ACC — latest ALU result", "marks": 1 }
+      ]
+    }
+  ]
+}

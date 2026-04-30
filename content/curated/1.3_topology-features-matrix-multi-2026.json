@@ -1,0 +1,49 @@
+{
+  "external_key": "j277-1-3-topology-features-matrix-multi-2026",
+  "component_code": "J277/01",
+  "topic_code": "1.3",
+  "subtopic_code": "1.3.2",
+  "command_word_code": "identify",
+  "archetype_code": "recall",
+  "expected_response_type": "matrix_tick_multi",
+  "stem": "A school is comparing star and mesh network topologies before refitting a classroom.",
+  "model_answer": "{\"Star\": [\"Every device has its own cable to a central switch\", \"If the central switch fails the whole network goes down\"], \"Mesh\": [\"Devices forward traffic for each other\", \"Adding more devices increases overall reliability\"]}",
+  "difficulty_band": 4,
+  "difficulty_step": 2,
+  "source_type": "teacher",
+  "review_notes": "Tick every feature that applies. Each row scores up to 2; partial credit allowed.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Tick every feature that applies to each topology.",
+      "marks": 4,
+      "expected_response_type": "matrix_tick_multi",
+      "part_config": {
+        "rows": ["Star", "Mesh"],
+        "columns": [
+          "Every device has its own cable to a central switch",
+          "If the central switch fails the whole network goes down",
+          "Devices forward traffic for each other",
+          "Adding more devices increases overall reliability"
+        ],
+        "correctByRow": [
+          [
+            "Every device has its own cable to a central switch",
+            "If the central switch fails the whole network goes down"
+          ],
+          [
+            "Devices forward traffic for each other",
+            "Adding more devices increases overall reliability"
+          ]
+        ],
+        "partialCredit": true
+      },
+      "mark_points": [
+        { "text": "Star — own cable to central switch", "marks": 1 },
+        { "text": "Star — single point of failure at the switch", "marks": 1 },
+        { "text": "Mesh — devices forward traffic for each other", "marks": 1 },
+        { "text": "Mesh — more devices increases reliability", "marks": 1 }
+      ]
+    }
+  ]
+}

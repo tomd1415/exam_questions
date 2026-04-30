@@ -1,0 +1,42 @@
+{
+  "external_key": "j277-1-4-security-threats-tick-2026",
+  "component_code": "J277/01",
+  "topic_code": "1.4",
+  "subtopic_code": "1.4.1",
+  "command_word_code": "tick",
+  "archetype_code": "recall",
+  "expected_response_type": "tick_box",
+  "stem": "A list of items contains both real network-security threats and other unrelated terms.",
+  "model_answer": "[\"Phishing\", \"SQL injection\", \"Brute-force attack\", \"DDoS attack\"]",
+  "difficulty_band": 3,
+  "difficulty_step": 1,
+  "source_type": "teacher",
+  "review_notes": "Tick exactly four. Distractors are unrelated networking / OS terms.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Tick the four items below that are network-security threats covered by the J277 specification.",
+      "marks": 4,
+      "expected_response_type": "tick_box",
+      "part_config": {
+        "tickExactly": 4,
+        "options": [
+          "Phishing",
+          "SQL injection",
+          "Brute-force attack",
+          "DDoS attack",
+          "Defragmentation",
+          "Compression",
+          "Packet switching",
+          "DNS lookup"
+        ]
+      },
+      "mark_points": [
+        { "text": "Phishing", "marks": 1 },
+        { "text": "SQL injection", "marks": 1 },
+        { "text": "Brute-force attack", "marks": 1 },
+        { "text": "DDoS attack", "marks": 1 }
+      ]
+    }
+  ]
+}

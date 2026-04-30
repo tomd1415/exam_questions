@@ -1,0 +1,30 @@
+{
+  "external_key": "j277-2-4-truth-table-output-short-2026",
+  "component_code": "J277/02",
+  "topic_code": "2.4",
+  "subtopic_code": "2.4.1",
+  "command_word_code": "calculate",
+  "archetype_code": "recall",
+  "expected_response_type": "short_text",
+  "stem": "A pupil is given the Boolean expression `Q = A AND (NOT B)` with A = 1 and B = 0.",
+  "model_answer": "1",
+  "difficulty_band": 3,
+  "difficulty_step": 1,
+  "source_type": "teacher",
+  "review_notes": "Short_text. Working: NOT B = 1; A AND 1 = 1. Accept '1', 'true', 'TRUE'.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "What is the value of Q?",
+      "marks": 1,
+      "expected_response_type": "short_text",
+      "mark_points": [
+        {
+          "text": "1",
+          "marks": 1,
+          "accepted_alternatives": ["true", "True", "TRUE"]
+        }
+      ]
+    }
+  ]
+}

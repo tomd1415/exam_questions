@@ -1,0 +1,34 @@
+{
+  "external_key": "j277-1-4-brute-force-vs-dictionary-2026",
+  "component_code": "J277/01",
+  "topic_code": "1.4",
+  "subtopic_code": "1.4.1",
+  "command_word_code": "compare",
+  "archetype_code": "compare",
+  "expected_response_type": "medium_text",
+  "stem": "An attacker is trying to guess a user's password.",
+  "model_answer": "A brute-force attack tries every possible combination of characters in turn (a, b, … aa, ab, … ). It always succeeds eventually but the time grows exponentially with password length. A dictionary attack is faster — it tries entries from a list of common words or leaked passwords first. Dictionary attacks succeed quickly against weak passwords (`password`, `12345678`, `qwerty`); brute force is the fallback when the password isn't in the dictionary. The defence in both cases is the same: long passwords mixing word classes, account-lockout after N failed attempts, and a hash that is slow to compute (Argon2 / bcrypt).",
+  "difficulty_band": 5,
+  "difficulty_step": 2,
+  "source_type": "teacher",
+  "review_notes": "Teacher-marked. Award marks for: brute-force exhaustive search, dictionary tries common words first, one shared mitigation (length / lockout / slow hash).",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Compare a brute-force attack and a dictionary attack, and describe one mitigation that defends against both.",
+      "marks": 3,
+      "expected_response_type": "medium_text",
+      "mark_points": [
+        { "text": "brute force = tries every combination of characters in turn", "marks": 1 },
+        {
+          "text": "dictionary = tries common words / leaked passwords first (faster against weak passwords)",
+          "marks": 1
+        },
+        {
+          "text": "shared mitigation: long/complex passwords, account lockout, slow password hash",
+          "marks": 1
+        }
+      ]
+    }
+  ]
+}

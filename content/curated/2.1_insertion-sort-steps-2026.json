@@ -1,0 +1,38 @@
+{
+  "external_key": "j277-2-1-insertion-sort-steps-2026",
+  "component_code": "J277/02",
+  "topic_code": "2.1",
+  "subtopic_code": "2.1.3",
+  "command_word_code": "describe",
+  "archetype_code": "algorithm_completion",
+  "expected_response_type": "algorithm",
+  "stem": "An insertion sort is being used to sort the list [4, 1, 5, 2] into ascending order.",
+  "model_answer": "Treat the first element (4) as a sorted sub-list. Take the next element (1), compare with 4: 1 < 4, so shift 4 right and insert 1 at the front → [1, 4, 5, 2]. Take 5, compare with 4: 5 > 4, leave in place → [1, 4, 5, 2]. Take 2, compare with 5 (shift), then with 4 (shift), then with 1 (stop, 2 > 1) → insert 2 between 1 and 4 → [1, 2, 4, 5]. The list is now sorted.",
+  "difficulty_band": 6,
+  "difficulty_step": 2,
+  "source_type": "teacher",
+  "review_notes": "Teacher-marked. Award marks for: take next element, compare backwards through sorted prefix, shift larger items right, insert in correct position, applied to the example values.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Describe how insertion sort would sort the list [4, 1, 5, 2] into ascending order. Use numbered steps and show the list after each pass.",
+      "marks": 4,
+      "expected_response_type": "algorithm",
+      "mark_points": [
+        {
+          "text": "treats the first element as a sorted sub-list and walks through the rest one element at a time",
+          "marks": 1
+        },
+        { "text": "compares the new element backwards through the sorted prefix", "marks": 1 },
+        {
+          "text": "shifts items greater than the new element one position to the right",
+          "marks": 1
+        },
+        {
+          "text": "inserts the element in its correct position; uses the example values to show at least one intermediate state",
+          "marks": 1
+        }
+      ]
+    }
+  ]
+}

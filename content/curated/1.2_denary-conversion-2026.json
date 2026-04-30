@@ -1,0 +1,33 @@
+{
+  "external_key": "j277-1-2-denary-conversion-2026",
+  "component_code": "J277/01",
+  "topic_code": "1.2",
+  "subtopic_code": "1.2.4",
+  "command_word_code": "explain",
+  "archetype_code": "explain",
+  "expected_response_type": "medium_text",
+  "stem": "A pupil needs to convert the denary number 156 into 8-bit binary by hand.",
+  "model_answer": "Write out the place values for 8 bits: 128, 64, 32, 16, 8, 4, 2, 1. Starting from the largest, ask whether each fits into the remaining value: 128 fits (remainder 28), so write 1. 64 doesn't fit (still 28), 0. 32 doesn't fit, 0. 16 fits (remainder 12), 1. 8 fits (remainder 4), 1. 4 fits (remainder 0), 1. 2 doesn't fit, 0. 1 doesn't fit, 0. Result: 10011100. Check: 128 + 16 + 8 + 4 = 156.",
+  "difficulty_band": 4,
+  "difficulty_step": 2,
+  "source_type": "teacher",
+  "review_notes": "Teacher-marked. Award one mark for the place-value method, one mark for the correct answer 10011100. Working that explicitly checks the sum is a useful confidence boost but not separately credited.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Explain how to convert 156 into 8-bit binary and state the result.",
+      "marks": 2,
+      "expected_response_type": "medium_text",
+      "mark_points": [
+        {
+          "text": "uses the place-value method (128, 64, 32, …, 1) subtracting each that fits",
+          "marks": 1
+        },
+        {
+          "text": "states the answer 10011100 (or equivalent verified by 128+16+8+4=156)",
+          "marks": 1
+        }
+      ]
+    }
+  ]
+}

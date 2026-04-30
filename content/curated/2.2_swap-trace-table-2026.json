@@ -1,0 +1,53 @@
+{
+  "external_key": "j277-2-2-swap-trace-table-2026",
+  "component_code": "J277/02",
+  "topic_code": "2.2",
+  "subtopic_code": "2.2.1",
+  "command_word_code": "complete",
+  "archetype_code": "trace_table",
+  "expected_response_type": "trace_table",
+  "stem": "Consider this pseudocode that swaps two variables using a temporary variable:\n\n  a = 7\n  b = 3\n  temp = a\n  a = b\n  b = temp\n  print(a)\n  print(b)\n",
+  "model_answer": "{\"2,2\": \"7\", \"3,0\": \"3\", \"4,1\": \"7\", \"5,3\": \"3\", \"6,3\": \"7\"}",
+  "difficulty_band": 4,
+  "difficulty_step": 2,
+  "source_type": "teacher",
+  "review_notes": "One row per line of code, in order. Prefilled cells show the first two assignments. Pupils only fill cells where a value changes on that line. Common error: pupils clobber a before saving it into temp.",
+  "parts": [
+    {
+      "label": "(a)",
+      "prompt": "Complete the trace table. Each row corresponds to one line of code, in order. Only fill a cell when that variable's value changes on that line.",
+      "marks": 5,
+      "expected_response_type": "trace_table",
+      "part_config": {
+        "columns": [
+          { "name": "a", "width": 3 },
+          { "name": "b", "width": 3 },
+          { "name": "temp", "width": 5 },
+          { "name": "output", "width": 6 }
+        ],
+        "rows": 7,
+        "prefill": {
+          "0,0": "7",
+          "1,1": "3"
+        },
+        "expected": {
+          "2,2": "7",
+          "3,0": "3",
+          "4,1": "7",
+          "5,3": "3",
+          "6,3": "7"
+        },
+        "marking": {
+          "mode": "perCell"
+        }
+      },
+      "mark_points": [
+        { "text": "temp = a copies 7 into temp", "marks": 1 },
+        { "text": "a = b copies 3 into a", "marks": 1 },
+        { "text": "b = temp copies 7 into b", "marks": 1 },
+        { "text": "first print outputs 3", "marks": 1 },
+        { "text": "second print outputs 7", "marks": 1 }
+      ]
+    }
+  ]
+}
