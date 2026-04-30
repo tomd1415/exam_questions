@@ -8,5 +8,4 @@
 - When marking the questions there should be an option to leave no comment (just change the mark)
   and to select from pre-existing teacher responses, that are sourced from previous typed responses
   to that question.
-- When marking the pupils work it would be very useful if the teacher could tick the part of the mark
-  scheme that the pupil got correct.
+- When marking the pupils work it would be very useful if the teacher could tick the part of the mark scheme that the pupil got correct.

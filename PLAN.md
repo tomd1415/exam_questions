@@ -330,6 +330,59 @@ AI marks shown to pupils in this phase are explicitly labelled as "marked with A
 
 ---
 
+## Phase 3.5 — Teacher question sets and class assignment
+
+**Duration estimate:** 1–2 weeks.
+
+### Why this phase exists
+
+Topic-set attempts (Phase 1) draw N random questions from a topic and are useful for revision. They are not enough for homework: the teacher cannot say "do these specific 12 questions on 1.4 by Friday". Until that workflow exists, the platform replaces in-class quizzing but not the teacher's homework cycle, and the teacher has no way to send a targeted intervention to a small group of pupils who got something wrong in the last lesson. This phase closes that gap with the smallest feature that does the job — a hand-picked, named bundle of questions with an assignment to one or more classes — and explicitly defers timed/mock behaviour to Phase 7 paper mode.
+
+### Goal
+
+A teacher can pick questions from the bank, save them as a named set, assign that set to one or more of their classes (optionally with a due date), and see per-pupil progress on the set. Pupils see assigned sets in their dashboard and can start them like any other attempt.
+
+### Build
+
+- New tables / columns:
+  - `question_sets` (id, owner_teacher_id, name, description, created_at, archived_at).
+  - `question_set_items` (question_set_id, question_id, display_order) — preserves the teacher's chosen ordering.
+  - `class_question_set_assignments` (class_id, question_set_id, assigned_at, due_at NULL, available_from NULL, created_by) — many-to-many; a set can be assigned to several classes and a class can hold several open sets.
+  - `attempts.source_question_set_id` (nullable FK) — when a pupil opens an assigned set, the resulting attempt is tagged so per-set progress can be aggregated without re-querying the assignment table.
+- Teacher set-builder UI:
+  - Pick from existing curated/approved questions via the same picker the topic-set flow uses, plus filters by topic, command word, response type, marks, and difficulty band.
+  - Re-order, remove, save as draft, publish.
+  - Duplicate an existing set as a starting point.
+- Teacher class-assignment UI: assign one set to N classes in one action; set due/available windows; un-assign; archive a set without deleting (preserves audit trail of past assignments).
+- Pupil dashboard: an "Assigned by your teacher" section listing open sets with due dates; pupils start a set the same way they start a topic-set attempt.
+- Per-set progress view for the teacher: per-pupil status (not started / in progress / submitted / marked), score, and a class summary roll-up. Re-uses the marking-queue plumbing — assigned-set attempts route through the same marking pipeline as everything else.
+- Idempotent seed support: question sets can be exported/imported as JSON alongside curated questions, so the teacher's department library survives a `db:reset`.
+
+### Do not build
+
+- Timed / mock behaviour, paper layout, or "no feedback until end" — that is Phase 7 paper mode and intentionally separate from sets.
+- Whole-paper auto-construction by mark tariff or topic mix — Phase 7 paper builder.
+- Adaptive ordering within a set — Phase 4 may use a set as the candidate pool, but this phase ships fixed teacher-chosen order.
+- Cross-teacher sharing of sets or a department library — Phase 7 multi-teacher rollout.
+- AI-generated question sets — Phase 5 generation; question sets are content composed of _already-approved_ questions.
+
+### User test
+
+- The teacher builds three sets (one per recent topic), assigns each to their class with a Friday due date, and runs the homework cycle for two weeks. Measure: time to build a set vs. building the same homework outside the platform; pupil completion rate vs. the previous topic-set-only flow.
+
+### Success criteria
+
+- The teacher can build a 12-question set in under 5 minutes from a familiar topic, including assigning it to a class with a due date.
+- Pupils find and start their assigned set without being told where to look.
+- Assigned-set attempts flow through the existing marking queue with no special-case code paths in the marking surfaces.
+- Archiving a set hides it from teacher pickers but preserves the historical attempts and per-set progress views read-only.
+
+### Forward-compatibility note
+
+Phase 4's adaptive selector should be able to use a question-set as its candidate pool ("adapt within Mr Duguid's homework set", not just "adapt across the whole topic"). Phase 7's paper builder should be able to _promote_ a question set into a paper by adding the timing / no-feedback flags rather than by re-implementing question selection. Both depend on the data shape this phase introduces.
+
+---
+
 ## Phase 4 — Adaptive sequencing
 
 **Duration estimate:** 3–4 weeks.
@@ -345,6 +398,7 @@ The next question is chosen for each pupil based on their mastery profile rather
 - Question selector: 70% in target zone, 20% one band easier, 10% one band harder. Frustration protection: never serve three "fail" questions in a row.
 - "Weakest areas" mode and "spaced retrieval" mode for pupils.
 - Live calibration: difficulty estimates update from real attempt data once a question has ≥30 attempts.
+- Adaptive ordering inside a Phase 3.5 question set: when a set is opened, the selector may reorder its items per pupil from the set's own pool rather than the whole bank, keeping the teacher's chosen scope while still adapting difficulty.
 
 ### Do not build
 
@@ -441,7 +495,7 @@ Move from "the teacher's class uses it" to "the department uses it". Paper mode 
 
 ### Build
 
-- Paper builder: by component, by topic mix, by total marks, by duration.
+- Paper builder: by component, by topic mix, by total marks, by duration. A Phase 3.5 question set can be _promoted_ into a paper by adding the timing / no-feedback flags, rather than re-implementing question selection.
 - Mock exam mode with strict no-feedback-until-end behaviour.
 - Multi-teacher support: classes per teacher, shared question bank, per-teacher dashboards.
 - Bulk pupil import (CSV from school MIS).

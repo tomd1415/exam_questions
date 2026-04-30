@@ -822,7 +822,7 @@ in scope, in expected order:
 `0030_awarded_marks_moderation_notes.sql` (3d),
 `0031_question_part_pupil_feedback_fallback.sql` (3e).
 
-## 10. Deliverables checklist (sign off before starting Phase 4)
+## 10. Deliverables checklist (sign off before starting Phase 3.5)
 
 - [ ] Chunks 3a–3j merged with tests green.
 - [ ] Phase 3 pilot report attached to
@@ -847,13 +847,14 @@ in scope, in expected order:
       response from the pilot (lightly redacted).
 - [ ] DATA_MODEL.md reflects migrations 0028–0033.
 - [ ] PUPIL_FEEDBACK.md gains a Phase 3 row-set with the lesson
-      date; any `new` rows are triaged before Phase 4 starts.
+      date; any `new` rows are triaged before Phase 3.5 starts.
 - [ ] PLAN.md §Phase 3 "Success criteria" all ticked, or a
       documented reason for any exception (with the exception
-      itself producing a Phase 3.1 plan before Phase 4).
-- [ ] Go/no-go decision for Phase 4 recorded in
+      itself producing a Phase 3.1 plan before the next phase).
+- [ ] Go/no-go decision for Phase 3.5 recorded in
       [RUNBOOK.md](RUNBOOK.md) §10 (one line: date, initials,
-      PASS/FAIL, link to pilot report).
+      PASS/FAIL, link to pilot report). Phase 3.5 is the
+      teacher question-sets feature; see [PLAN.md §Phase 3.5](PLAN.md#phase-35--teacher-question-sets-and-class-assignment).
 
 ## Appendix — Revision history
 
